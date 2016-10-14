@@ -12,11 +12,11 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 * [How to manually load firmware on NXP chip](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
  * Used to load old firmware on controller to monitor update process via Steam
  * Will be used to load custom firmware on to read/write EEPROM if necessary?
-* [Pilatomic Stream Controller Singer](https://gitlab.com/Pilatomic/SteamControllerSinger)
+* [Pilatomic Steam Controller Singer](https://gitlab.com/Pilatomic/SteamControllerSinger)
  * Great example of using the haptics to play music
  * Example of code written in C using libusb
  * Downside is that it takes over controller when playing custom music
-* [Standalone Stream Controller Driver](https://github.com/ynsta/steamcontroller)
+* [Standalone Steam Controller Driver](https://github.com/ynsta/steamcontroller)
  * OK source for breaking down some USB commands
  * Goal of this project is to subvert Steam platform. I have no issues with Valve or Steam and I want to add configuration ability to controller, not subvert or reproduce (though some reproduction will be necessary) what is already there
 * [Teardown of Steam Controller](https://www.ifixit.com/Teardown/Steam+Controller+Teardown/52578)
@@ -65,7 +65,7 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * TODO: check if this works with firmware previous to 5653a68a
 
 * Load firmware
- * Reproduction of what Stream does automatically when it detects out of date firmware, but this will allow for loading custom firmware or specifying which previous firmware specified in vdf should be installed
+ * Reproduction of what Steam does automatically when it detects out of date firmware, but this will allow for loading custom firmware or specifying which previous firmware specified in vdf should be installed
  * Status: Captured USB data 
  * TODO: Analyze USB data and implement function. Look for failure retry in captured data. 
 
