@@ -26,6 +26,9 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * [Secondary Bootloader App Note](http://www.nxp.com/documents/application_note/AN11732.zip?fasp=1&WT_TYPE=Application%20Notes&WT_VENDOR=FREESCALE&WT_FILE_FORMAT=zip&WT_ASSET=Documentation&fileExt=.zip)
 * [Steam Controller Update News](http://store.steampowered.com/news/?appids=353370)
  * Use to get an idea of what changed from firmware to firwmare release
+* Steam Communities
+ * [Official Group](http://steamcommunity.com/games/353370#announcements/detail/901091250587237164)
+ * [Custom Sounds Discussion](https://steamcommunity.com/app/353370/discussions/0/458607699626517823/)
 
 # Goals/Requirements
 
