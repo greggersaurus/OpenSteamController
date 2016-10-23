@@ -9,6 +9,19 @@ class FirmwareParser:
 	Takes Steam Controller firmware and decodes it as best as possible.
 	"""
 
+	RESET_VEC_ADDR = 0x04
+	NMI_VEC_ADDR = 0x08
+	HARD_FAULT_VEC_ADDR = 0x0C
+	SV_CALL_VEC_ADDR = 0x2C
+	PEND_SV_VEC_ADDR = 0x38
+	SYS_TICK_VEC_ADDR = 0x3C
+	IRQ_N_VEC_ADDR = [
+		0x40, 0x44, 0x48, 0x4C, 0x50, 0x54, 0x58, 0x5C,
+		0x60, 0x64, 0x68, 0x6C, 0x70, 0x74, 0x78, 0x7C,
+		0x80, 0x84, 0x88, 0x8C, 0x90, 0x94, 0x98, 0x9C,
+		0xA0, 0xA4, 0xA8, 0xAC, 0xB0, 0xB4, 0xB8, 0xBC,
+		]
+
 	# List of all data words read from firmware file. Combined and
 	#  categorized as best as possible.
 	dataWords = []
@@ -71,9 +84,26 @@ class FirmwareParser:
 		# Identify vector table data 
 		self.__identifyVectorTable()
 
+		# Identify start instructions based on specific vector entries
+		dataWord = self.__getDataWord(self.RESET_VEC_ADDR)
+		self.__decodeInstruction(dataWord.binData)
+		dataWord = self.__getDataWord(self.NMI_VEC_ADDR)
+		self.__decodeInstruction(dataWord.binData)
+		dataWord = self.__getDataWord(self.HARD_FAULT_VEC_ADDR)
+		self.__decodeInstruction(dataWord.binData)
+		dataWord = self.__getDataWord(self.SV_CALL_VEC_ADDR)
+		self.__decodeInstruction(dataWord.binData)
+		dataWord = self.__getDataWord(self.PEND_SV_VEC_ADDR)
+		self.__decodeInstruction(dataWord.binData)
+		dataWord = self.__getDataWord(self.SYS_TICK_VEC_ADDR)
+		self.__decodeInstruction(dataWord.binData)
+		for i, addr in enumerate(self.IRQ_N_VEC_ADDR):
+			dataWord = self.__getDataWord(addr)
+			self.__decodeInstruction(dataWord.binData)
+
 	def __read16(self, inFile):
 		"""
-		Read 16 bit word (assuming little endian)
+		Read 16 bit word (little endian) from file
 
 		Params:
 		inFile File to read from
@@ -117,53 +147,23 @@ class FirmwareParser:
 		"""
 
 		self.__setVectorTableEntry(0x00, 'Initial SP Value')
-		self.__setVectorTableEntry(0x04, 'Reset')
-		self.__setVectorTableEntry(0x08, 'NMI')
-		self.__setVectorTableEntry(0x0C, 'Hard Fault')
+		self.__setVectorTableEntry(self.RESET_VEC_ADDR, 'Reset')
+		self.__setVectorTableEntry(self.NMI_VEC_ADDR, 'NMI')
+		self.__setVectorTableEntry(self.HARD_FAULT_VEC_ADDR, 'Hard Fault')
 		self.__setVectorTableEntry(0x10, 'RESERVED')
 		self.__setVectorTableEntry(0x14, 'RESERVED')
 		self.__setVectorTableEntry(0x18, 'RESERVED')
-		self.__setVectorTableEntry(0x1C, 'RESERVED: Checksum')
+		self.__setVectorTableEntry(0x1C, 'RESERVED (Checksum)')
 		self.__setVectorTableEntry(0x20, 'RESERVED')
 		self.__setVectorTableEntry(0x24, 'RESERVED')
 		self.__setVectorTableEntry(0x28, 'RESERVED')
-		self.__setVectorTableEntry(0x2C, 'SVCall')
+		self.__setVectorTableEntry(self.SV_CALL_VEC_ADDR, 'SVCall')
 		self.__setVectorTableEntry(0x30, 'RESERVED')
 		self.__setVectorTableEntry(0x34, 'RESERVED')
-		self.__setVectorTableEntry(0x38, 'PendSV')
-		self.__setVectorTableEntry(0x3C, 'SysTick')
-		self.__setVectorTableEntry(0x40, 'IRQ0')
-		self.__setVectorTableEntry(0x44, 'IRQ1')
-		self.__setVectorTableEntry(0x48, 'IRQ2')
-		self.__setVectorTableEntry(0x4C, 'IRQ3')
-		self.__setVectorTableEntry(0x50, 'IRQ4')
-		self.__setVectorTableEntry(0x54, 'IRQ5')
-		self.__setVectorTableEntry(0x58, 'IRQ6')
-		self.__setVectorTableEntry(0x5C, 'IRQ7')
-		self.__setVectorTableEntry(0x60, 'IRQ8')
-		self.__setVectorTableEntry(0x64, 'IRQ9')
-		self.__setVectorTableEntry(0x68, 'IRQ10')
-		self.__setVectorTableEntry(0x6C, 'IRQ11')
-		self.__setVectorTableEntry(0x70, 'IRQ12')
-		self.__setVectorTableEntry(0x74, 'IRQ13')
-		self.__setVectorTableEntry(0x78, 'IRQ14')
-		self.__setVectorTableEntry(0x7C, 'IRQ15')
-		self.__setVectorTableEntry(0x80, 'IRQ16')
-		self.__setVectorTableEntry(0x84, 'IRQ17')
-		self.__setVectorTableEntry(0x88, 'IRQ18')
-		self.__setVectorTableEntry(0x8C, 'IRQ19')
-		self.__setVectorTableEntry(0x90, 'IRQ20')
-		self.__setVectorTableEntry(0x94, 'IRQ21')
-		self.__setVectorTableEntry(0x98, 'IRQ22')
-		self.__setVectorTableEntry(0x9C, 'IRQ23')
-		self.__setVectorTableEntry(0xA0, 'IRQ24')
-		self.__setVectorTableEntry(0xA4, 'IRQ25')
-		self.__setVectorTableEntry(0xA8, 'IRQ26')
-		self.__setVectorTableEntry(0xAC, 'IRQ27')
-		self.__setVectorTableEntry(0xB0, 'IRQ28')
-		self.__setVectorTableEntry(0xB4, 'IRQ29')
-		self.__setVectorTableEntry(0xB8, 'IRQ30')
-		self.__setVectorTableEntry(0xBC, 'IRQ31')
+		self.__setVectorTableEntry(self.PEND_SV_VEC_ADDR, 'PendSV')
+		self.__setVectorTableEntry(self.SYS_TICK_VEC_ADDR, 'SysTick')
+		for i, addr in enumerate(self.IRQ_N_VEC_ADDR):
+			self.__setVectorTableEntry(addr, 'IRQ' + str(i))
 
 	def __setVectorTableEntry(self, addr, desc):
 		"""
@@ -180,6 +180,31 @@ class FirmwareParser:
 		dataWord.decodeString = desc
 		dataWord.dataType = DataWord.TYPE_VECTOR_TABLE
 		dataWord.combine(self.__getDataWord(addr+2))
+
+	def __decodeInstruction(self, addr):
+		"""
+		Decode instruction at given address
+
+		Params:
+		addr The address of the (potential) instruction
+		"""
+
+		if (addr == 0):
+			# TODO: just silently exit on NULL pointer or make note somewhere?
+			return
+
+		dataWord = self.__getDataWord(addr)
+
+		# Check if the addr does not point to an already labeled DataWord
+#TODO
+
+		# Check if instruction decodes to 32-bit or 16-bit
+#TODO
+			
+		# Mark this DataWord is an instruction
+		dataWord.dataType = DataWord.TYPE_INSTRUCTION
+
+#TODO: decode to actual instructions		
 		
 class DataWord:
 	"""
@@ -249,6 +274,7 @@ class DataWord:
 		dataWord The data word to combine into this one
 		"""
 
+#TODO: check that given DataWord is "free"
 		self.binData = dataWord.binData << 16 | self.binData
 		self.is32Bit = True
 		dataWord.parent = self
