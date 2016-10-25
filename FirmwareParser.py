@@ -101,6 +101,15 @@ class FirmwareParser:
 			dataWord = self.__getDataWord(addr)
 			self.__decodeInstruction(dataWord.binData)
 
+		# Identify possible instructions
+#TODO: Do this right
+		for data in self.dataWords:
+			if (data.dataType == DataWord.TYPE_UNKNOWN):	
+				if ((data.binData & 0xF800) == 0x4100):
+					data.decodeString += ' Possible Instruction Load from Literal Pool'
+				elif ((data.binData & 0xF000) == 0x5000 or (data.binData & 0xE000) == 0x6000 or (data.binData & 0xE000) == 0x8000):
+					data.decodeString += ' Possible Instruction Load/store single data item '
+
 	def __read16(self, inFile):
 		"""
 		Read 16 bit word (little endian) from file
@@ -174,12 +183,17 @@ class FirmwareParser:
 		desc Describes the vector
 		"""
 
-#TODO: check that DataWord and adjcent are "free" (needs better wording)
+		dataWordLo = self.__getDataWord(addr)
+		dataWordHi = self.__getDataWord(addr+2)
 
-		dataWord = self.__getDataWord(addr)
-		dataWord.decodeString = desc
-		dataWord.dataType = DataWord.TYPE_VECTOR_TABLE
-		dataWord.combine(self.__getDataWord(addr+2))
+		if (dataWordLo.dataType != DataWord.TYPE_UNKNOWN):
+			raise ValueError('DataWord at offset 0x%x is of type %s' % (dataWordLo.offset, dataWordLo.dataType))	
+		if (dataWordHi.dataType != DataWord.TYPE_UNKNOWN):
+			raise ValueError('DataWord at offset 0x%x is of type %s' % (dataWordHi.offset, dataWordHi.dataType))	
+
+		dataWordLo.decodeString = desc
+		dataWordLo.combine(dataWordHi)
+		dataWordLo.dataType = DataWord.TYPE_VECTOR_TABLE
 
 	def __decodeInstruction(self, addr):
 		"""
@@ -195,8 +209,13 @@ class FirmwareParser:
 
 		dataWord = self.__getDataWord(addr)
 
+		# Checkif it was already decoded
+		if (dataWord.dataType == DataWord.TYPE_INSTRUCTION):
+			return
+
 		# Check if the addr does not point to an already labeled DataWord
-#TODO
+		if (dataWord.dataType != DataWord.TYPE_UNKNOWN):
+			raise ValueError('DataWord at offset 0x%x is of type %s' % (dataWord.offset, dataWord.dataType))	
 
 		# Check if instruction decodes to 32-bit or 16-bit
 #TODO
@@ -206,7 +225,7 @@ class FirmwareParser:
 
 #TODO: decode to actual instructions		
 		
-class DataWord:
+class DataWord(object):
 	"""
 	Class to encapsulate a 32 or 16-bit data word read from the firmware file.
 	"""
@@ -218,17 +237,18 @@ class DataWord:
 	TYPE_DATA = "Data"
 
 	# Raw binary data from firmware file
-	binData = 0
+	__binData = 0
 	# Memory location in firmware where this data word can be found
-	offset = 0
+	__offset = 0
 	# Defines how the data has been categorized
-	dataType = TYPE_UNKNOWN
+	__dataType = TYPE_UNKNOWN
 	# Type specific string to make understanding this instruction easier
 	decodeString = ''
 	# Set to another DataWord if this has been combined
-	parent = None
-	# Tells us whether this is a 32-bit DataWord or not
-	is32Bit = False
+	__parent = None
+	# Tells us whether this is a 32-bit DataWord or not, and where the 
+	#  upper 16-bits of data are if this is 32-bit
+	__child = None
 
 	def __init__(self, binData, offset):
 		"""
@@ -240,8 +260,41 @@ class DataWord:
 			was read from
 		"""
 
-		self.binData = binData
-		self.offset = offset
+		self.__binData = binData
+		self.__offset = offset
+
+	@property
+	def parent(self):
+		return self.__parent
+
+	@property
+	def dataType(self):
+		return self.__dataType
+
+	@dataType.setter
+	def dataType(self, value):
+		if (self.__child != None):
+			self.__child.dataType = value
+
+		if (self.dataType != DataWord.TYPE_UNKNOWN):
+			raise ValueError('DataWord at offset 0x%x is of type %s' % (self.offset, self.dataType))	
+
+		self.__dataType = value 
+
+	@property
+	def offset(self):
+		return self.__offset
+
+	@property
+	def binData(self):
+		retval = 0;
+
+		if (self.__child != None):
+			retval = self.__child.binData << 16;
+
+		retval |= self.__binData
+
+		return retval
 
 	def __str__(self):
 		retval = '';
@@ -250,8 +303,8 @@ class DataWord:
 		retval += '{0:06x}: '.format(self.offset)
 
 		# Upper 16 bits of raw binary data
-		if (self.is32Bit):
-			retval += ' {0:04x}'.format(self.binData/0x10000)
+		if (self.__child != None):
+			retval += ' {0:04x}'.format(self.__child.binData)
 		else:
 			retval += '     '
 
@@ -268,16 +321,41 @@ class DataWord:
 
 	def combine(self, dataWord):
 		"""
-		Combine the given DataWord into this word
+		Combine the given DataWord into this word. 
 
 		Params:
-		dataWord The data word to combine into this one
+		dataWord DataWord higher in memory than self
 		"""
 
-#TODO: check that given DataWord is "free"
-		self.binData = dataWord.binData << 16 | self.binData
-		self.is32Bit = True
-		dataWord.parent = self
+		if (self.dataType != DataWord.TYPE_UNKNOWN):
+			raise ValueError('DataWord at offset 0x%x is of type %s' % (self.offset, self.dataType))	
+		if (dataWord.dataType != DataWord.TYPE_UNKNOWN):
+			raise ValueError('DataWord at offset 0x%x is of type %s' % (dataWord.offset, dataWord.dataType))	
+			
+		self.__child = dataWord
+		dataWord.__parent = self
+			
+
+class Instruction:
+	"""
+	Represents an assembly instruction
+	"""
+
+	def is32bit(dataWord16):
+		"""
+		Check if 16-bit data word indicates it is part of 32-bit instruction
+
+		Params:
+		dataWord16 16-bit data word
+		"""	
+		retval = False
+
+		bitsToCheck = dataWord16 & 0xF800
+	
+		if (bitsToCheck == 0xF100 or bitsToCheck == 0xF000 or bitsToCheck == 0xE100):
+			retval = True
+
+		return retval 
 
 def main(argv):
 	print "Hello World"
