@@ -86,29 +86,30 @@ class FirmwareParser:
 
 		# Identify start instructions based on specific vector entries
 		dataWord = self.__getDataWord(self.RESET_VEC_ADDR)
-		self.__decodeInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData)
 		dataWord = self.__getDataWord(self.NMI_VEC_ADDR)
-		self.__decodeInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData)
 		dataWord = self.__getDataWord(self.HARD_FAULT_VEC_ADDR)
-		self.__decodeInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData)
 		dataWord = self.__getDataWord(self.SV_CALL_VEC_ADDR)
-		self.__decodeInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData)
 		dataWord = self.__getDataWord(self.PEND_SV_VEC_ADDR)
-		self.__decodeInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData)
 		dataWord = self.__getDataWord(self.SYS_TICK_VEC_ADDR)
-		self.__decodeInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData)
 		for i, addr in enumerate(self.IRQ_N_VEC_ADDR):
 			dataWord = self.__getDataWord(addr)
-			self.__decodeInstruction(dataWord.binData)
+			self.__markInstruction(dataWord.binData)
+
+		# Set children for 32-bit instructions?
+#TODO
 
 		# Identify possible instructions
-#TODO: Do this right
 		for data in self.dataWords:
-			if (data.dataType == DataWord.TYPE_UNKNOWN):	
-				if ((data.binData & 0xF800) == 0x4100):
-					data.decodeString += ' Possible Instruction Load from Literal Pool'
-				elif ((data.binData & 0xF000) == 0x5000 or (data.binData & 0xE000) == 0x6000 or (data.binData & 0xE000) == 0x8000):
-					data.decodeString += ' Possible Instruction Load/store single data item '
+			try:
+				data.instruction = Instruction(data)
+			except ValueError:
+				data.instruction = None
 
 	def __read16(self, inFile):
 		"""
@@ -195,16 +196,16 @@ class FirmwareParser:
 		dataWordLo.combine(dataWordHi)
 		dataWordLo.dataType = DataWord.TYPE_VECTOR_TABLE
 
-	def __decodeInstruction(self, addr):
+	def __markInstruction(self, addr):
 		"""
-		Decode instruction at given address
+		Mark that DataWord at given address is a known instruction
 
 		Params:
 		addr The address of the (potential) instruction
 		"""
 
 		if (addr == 0):
-			# TODO: just silently exit on NULL pointer or make note somewhere?
+			# It is valid for vector table to pointer to NULL. Ignore it
 			return
 
 		dataWord = self.__getDataWord(addr)
@@ -216,14 +217,9 @@ class FirmwareParser:
 		# Check if the addr does not point to an already labeled DataWord
 		if (dataWord.dataType != DataWord.TYPE_UNKNOWN):
 			raise ValueError('DataWord at offset 0x%x is of type %s' % (dataWord.offset, dataWord.dataType))	
-
-		# Check if instruction decodes to 32-bit or 16-bit
-#TODO
 			
 		# Mark this DataWord is an instruction
 		dataWord.dataType = DataWord.TYPE_INSTRUCTION
-
-#TODO: decode to actual instructions		
 		
 class DataWord(object):
 	"""
@@ -249,6 +245,8 @@ class DataWord(object):
 	# Tells us whether this is a 32-bit DataWord or not, and where the 
 	#  upper 16-bits of data are if this is 32-bit
 	__child = None
+	# Decode of __binData into an instruction. Check type to know is 100% valid.
+	instruction = None
 
 	def __init__(self, binData, offset):
 		"""
@@ -263,6 +261,7 @@ class DataWord(object):
 		self.__binData = binData
 		self.__offset = offset
 
+#TODO: do we really want read access to parent?
 	@property
 	def parent(self):
 		return self.__parent
@@ -317,6 +316,12 @@ class DataWord(object):
 		# More specific info on the data
 		retval += '	' + self.decodeString
 
+		if (self.instruction != None):
+			if (self.dataType == DataWord.TYPE_UNKNOWN):
+				retval += 'Possible Instruction: '
+
+			retval += self.instruction.description
+
 		return retval
 
 	def combine(self, dataWord):
@@ -340,6 +345,34 @@ class Instruction:
 	"""
 	Represents an assembly instruction
 	"""
+
+	description = ''
+	command = ''
+	args = []
+
+	def __init__(self, dataWord):
+		"""
+		dataWord
+		"""
+		binData = dataWord.binData 
+
+		if ((binData & 0xF800) == 0x4800):
+			self.__decodeLoadFromLiteralPool(binData)
+		elif ((binData & 0xF000) == 0x5000 or \
+			(binData & 0xE000) == 0x6000 or \
+			(binData & 0xE000) == 0x8000): 
+			self.__decodeLoadStoreSingle(binData)
+		else:
+			raise ValueError('Not a valid instruction')	
+		
+	def __decodeLoadFromLiteralPool(self, binData):
+		self.command = 'LDR'
+		self.description = 'Load Register (literal)'
+		#TODO: set arguments
+
+	def __decodeLoadStoreSingle(self, binData):
+		self.description = 'Load/Store'
+		#TODO: decode further and call more sub functions
 
 	def is32bit(dataWord16):
 		"""
