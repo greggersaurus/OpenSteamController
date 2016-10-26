@@ -45,14 +45,30 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 ### LPCXpresso IDE
 
 #### [Generating .bin file](https://community.nxp.com/thread/389005)
+
 * AXF file (ELF/DWARF) to binary
  * arm-none-eabi-objcopy -v -O binary "FirstProject.axf" "FirstProject.bin"
-* TODO: What is this doing? This is where we find layout of .bin file?
+
+#### .bin File Layout
+* Starts with vector table
+ * From 20.7 of UM10462: The reserved ARM Cortex-M0 exception vector location 7 (offset 0x0000 001C in the vector table) should contain the 2’s complement of the check-sum of table entries 0 through 6. This causes the checksum of the first 8 table entries to be 0. The bootloader code checksums the first 8 locations in sector 0 of the flash. If the result is 0, then execution control is transferred to the user code.
+
+* See Section 24.3.3.4 (Fig 24-80) of UM10462 for layout of vector table
+ * 0x0000 00004 - Entry point to code in ARM Cortex-M0 vector table. See 20.15.1 of UM10462
+ * 0x0000 0001C - Vector location 7. Must contain 2's complement of vector table entries 0-6. See 20.7 or UM10462
+
+* Endianness
+ * Certain sections default to little endian
+ * Other sections are configurable
+ * TODO: Where is this stated in UM10462?
 
 #### [LPC Image Checksums](https://community.nxp.com/thread/389046)
+
 * Checksum is stored at 0x1C for Cortex-M based parts
+ * checksum -p ${TargetChip} -d "${BuildArtifactFileBaseName}.bin"
 * This checksum is calculated from the contents of the vector table, not the whole image (probably why I got away with chaning USB info strings)
  * For more details please see the user manual for the MCU that you are using.
+* [Creating checksum manually](https://community.nxp.com/thread/388993)
 
 ## [Steam Controller Update News](http://store.steampowered.com/news/?appids=353370)
 * Use to get an idea of what changed from firmware to firwmare release
@@ -66,11 +82,29 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 ### [Reverse Engineering for Beginners](https://github.com/dennis714/RE-for-beginners)
 
 ### [Radare](http://www.radare.org/r/)
-* Steep learning curve
+
+* [Steep learning curve](https://www.gitbook.com/book/radare/radare2book/details)
  * TODO: Compile test code using LPCXpresso so we have .bin and known source
 * Has option to disassemble ARM, but how exactly does it handle ARMv6-M?
  * Does not automatically work with firmware.bin as input
  * What about #if 0  section iwth armv6 options?
+
+### [Fracture](https://github.com/draperlaboratory/fracture)
+
+* Decompiles to LLVM intermediate representation
+
+### LPCXpresso
+
+* Disassemble axf https://community.nxp.com/thread/388997.
+ * TODO: how to access disassembler outside of GUI?
+ * TODO: Can use this to disassemble .bin?
+
+### FirmwareParser.py
+
+* Starts with known info (vector table) and attempts to decompile from there
+ * Vector table points to known instructions
+ * Attempt to decompile remaining instructions
+ * From instructions such as load/store can infer potential data sections
 
 # Goals/Requirements
 
