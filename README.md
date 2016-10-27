@@ -79,6 +79,9 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 
 ## Disassembly 
 
+* Going to dig into and work with a number of tools and approaches
+ * Use different tools to verify each other
+
 ### [Reverse Engineering for Beginners](https://github.com/dennis714/RE-for-beginners)
 
 ### [Radare](http://www.radare.org/r/)
@@ -99,12 +102,29 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * TODO: how to access disassembler outside of GUI?
  * TODO: Can use this to disassemble .bin?
 
+### [pinkySim](https://github.com/adamgreen/pinkySim)
+
+* ARMv6-M Thumb instruction simulator.
+* Only so useful accessing APB registers often returns hard faults.
+* Plus of gaining more experience with gbd
+
+### [Online Disassembler](https://onlinedisassembler.com/odaweb/)
+
+* Good source to punch individual instruction in quickly
+* Make minor mods to instructions to verify understanding of how they are being decoded and behaving (i.e. LDR)
+* Finicky 
+
 ### FirmwareParser.py
 
-* Starts with known info (vector table) and attempts to decompile from there
+* I am writing this, even though there are a host of other tools that cover this functionality
+ * Act of creating disassembler drives in knowledge of how instructions function
+ * One more scenario to get better with Python
+* Starts with known info (vector table) and attempts to decompile by stepping through known paths and accesses
  * Vector table points to known instructions
- * Attempt to decompile remaining instructions
- * From instructions such as load/store can infer potential data sections
+ * After each known instruction decode can next instructions or possible data
+ * Attempt to decompile remaining instructions?
+ * From instructions such as load/store can infer potential data sections?
+* Will only progress this as far as is useful
 
 # Goals/Requirements
 
