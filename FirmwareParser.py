@@ -101,7 +101,8 @@ class FirmwareParser:
 			dataWord = self.__getDataWord(addr)
 			self.__markInstruction(dataWord.binData)
 
-		# Set children for 32-bit instructions?
+		# Set children for 32-bit instructions so that instruction 
+		#  identification will have all potential necessary data
 #TODO
 
 		# Identify possible instructions
@@ -134,12 +135,12 @@ class FirmwareParser:
 		return retval
 
 	def __str__(self):
-#TODO: this is stupid, understand python way of doing things
+		retval = ''
+
 		for data in self.dataWords:
-			if (data.parent == None):
-				print data
+			retval += str(data)
 		
-		return ''
+		return retval
 
 	def __getDataWord(self, addr):
 		"""
@@ -261,11 +262,6 @@ class DataWord(object):
 		self.__binData = binData
 		self.__offset = offset
 
-#TODO: do we really want read access to parent?
-	@property
-	def parent(self):
-		return self.__parent
-
 	@property
 	def dataType(self):
 		return self.__dataType
@@ -296,7 +292,10 @@ class DataWord(object):
 		return retval
 
 	def __str__(self):
-		retval = '';
+		if (self.__parent != None):
+			return ''
+
+		retval = ''
 
 		# Offset address in hex
 		retval += '{0:06x}: '.format(self.offset)
@@ -321,6 +320,9 @@ class DataWord(object):
 				retval += 'Possible Instruction: '
 
 			retval += self.instruction.description
+			retval += ' ' + str(self.instruction)
+
+		retval += '\n'
 
 		return retval
 
@@ -347,30 +349,41 @@ class Instruction:
 	"""
 
 	description = ''
-	command = ''
 	args = []
 
 	def __init__(self, dataWord):
 		"""
 		dataWord
 		"""
+		self.args = []
+
 		binData = dataWord.binData 
 
 		if ((binData & 0xF800) == 0x4800):
-			self.__decodeLoadFromLiteralPool(binData)
+			self.__decodeLoadFromLiteralPool(dataWord)
 		elif ((binData & 0xF000) == 0x5000 or \
 			(binData & 0xE000) == 0x6000 or \
 			(binData & 0xE000) == 0x8000): 
-			self.__decodeLoadStoreSingle(binData)
+			self.__decodeLoadStoreSingle(dataWord)
 		else:
 			raise ValueError('Not a valid instruction')	
 		
-	def __decodeLoadFromLiteralPool(self, binData):
-		self.command = 'LDR'
+	def __decodeLoadFromLiteralPool(self, dataWord):
 		self.description = 'Load Register (literal)'
-		#TODO: set arguments
 
-	def __decodeLoadStoreSingle(self, binData):
+		self.args.append('LDR')
+
+		self.args.append('R' + str(0x3 & (dataWord.binData >> 8)))
+
+		arg = (0xFF & dataWord.binData) << 2
+		arg += dataWord.offset + 4
+		self.args.append(hex(arg))
+
+#TODO Once instruction is decoded, how to we map action for 'execution' (i.e. so we can mark LDR locations as potential data (though this does not preclude them from being instructions as well?) or jump location as instructions)
+# Note: LDR is a 32-bit load
+# Make assumption that loads mean those 32 bits are data (we will gen exception if we reach them as an exception later and can correct if needed)
+
+	def __decodeLoadStoreSingle(self, dataWord):
 		self.description = 'Load/Store'
 		#TODO: decode further and call more sub functions
 
@@ -389,6 +402,14 @@ class Instruction:
 			retval = True
 
 		return retval 
+
+	def __str__(self):
+		retval = ''	
+
+		for arg in self.args:
+			retval += arg + ' '
+		
+		return retval
 
 def main(argv):
 	print "Hello World"
