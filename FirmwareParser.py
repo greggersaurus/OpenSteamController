@@ -86,31 +86,30 @@ class FirmwareParser:
 
 		# Identify start instructions based on specific vector entries
 		dataWord = self.__getDataWord(self.RESET_VEC_ADDR)
-		self.__markInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData, 'Called by Reset Vector; ')
 		dataWord = self.__getDataWord(self.NMI_VEC_ADDR)
-		self.__markInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData, 'Called by NMI Vector; ')
 		dataWord = self.__getDataWord(self.HARD_FAULT_VEC_ADDR)
-		self.__markInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData, 'Called by Hard Fault Vector; ')
 		dataWord = self.__getDataWord(self.SV_CALL_VEC_ADDR)
-		self.__markInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData, 'Called by SV Call Vector; ')
 		dataWord = self.__getDataWord(self.PEND_SV_VEC_ADDR)
-		self.__markInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData, 'Called by Pend SV Vector; ')
 		dataWord = self.__getDataWord(self.SYS_TICK_VEC_ADDR)
-		self.__markInstruction(dataWord.binData)
+		self.__markInstruction(dataWord.binData, 'Called by Sys Tick Vector; ')
 		for i, addr in enumerate(self.IRQ_N_VEC_ADDR):
 			dataWord = self.__getDataWord(addr)
-			self.__markInstruction(dataWord.binData)
+			self.__markInstruction(dataWord.binData, 'Called by IRQ ' + str(i) + ' Vector; ')
 
-		# Set children for 32-bit instructions so that instruction 
-		#  identification will have all potential necessary data
-#TODO
 
 		# Identify possible instructions
-		for data in self.dataWords:
-			try:
-				data.instruction = Instruction(data)
-			except ValueError:
-				data.instruction = None
+#		for data in self.dataWords:
+#			try:
+#				data.instruction = Instruction(data)
+#			except ValueError:
+#				data.instruction = None
+
+#		self.__markRawData(0x244, 'Called by instruction at offset 0xbe')
 
 	def __read16(self, inFile):
 		"""
@@ -197,16 +196,18 @@ class FirmwareParser:
 		dataWordLo.combine(dataWordHi)
 		dataWordLo.dataType = DataWord.TYPE_VECTOR_TABLE
 
-	def __markInstruction(self, addr):
+	def __markInstruction(self, addr, comment):
 		"""
 		Mark that DataWord at given address is a known instruction
 
 		Params:
-		addr The address of the (potential) instruction
+		addr The address of the known instruction
+		comment Appended to decodeString (i.e. tell which instruction called this as instruction)
 		"""
 
 		if (addr == 0):
 			# It is valid for vector table to pointer to NULL. Ignore it
+			dataWord.decodeString += comment
 			return
 
 		dataWord = self.__getDataWord(addr)
@@ -221,6 +222,55 @@ class FirmwareParser:
 			
 		# Mark this DataWord is an instruction
 		dataWord.dataType = DataWord.TYPE_INSTRUCTION
+
+		# Set children for 32-bit instructions so that instruction 
+		#  identification will have all necessary data
+#TODO
+
+		# Decode dataword as instruction
+		dataWord.instruction = Instruction(dataWord)
+
+		dataWord.decodeString += comment
+
+		# Run through indentified DataWords
+#TODO: Update instruction.identifiedDataWords with link back to dataWords owned by self?
+		for nextDataWord in dataWord.instruction.identifiedDataWords:
+			if nextDataWord.dataType == DataWord.TYPE_INSTRUCTION:
+				self.__markInstruction(nextDataWord.offset, 'Called by ' + str(hex(dataWord.offset)) + '; ')
+			elif nextDataWord.dataType == DataWord.TYPE_RAW_DATA:
+				self.__markRawData(nextDataWord.offset, 'Called by ' + str(hex(dataWord.offset)) + '; ')
+			else:
+				raise ValueError('nextDataWord at identified by instruction TODO')	
+
+	def __markRawData(self, addr, comment):
+		"""
+		Mark that DataWord at given address is a known raw data
+
+		Params:
+		addr The address of the known raw data 
+		comment Appended to decodeString (i.e. tell which instruction called this as data)
+		"""
+
+		dataWord = self.__getDataWord(addr)
+
+		# Checkif it was already decoded
+		if (dataWord.dataType == DataWord.TYPE_RAW_DATA):
+			dataWord.decodeString += comment
+			return
+
+		# Check if the addr does not point to an already labeled DataWord
+		if (dataWord.dataType != DataWord.TYPE_UNKNOWN):
+			raise ValueError('DataWord at offset 0x%x is of type %s' % (dataWord.offset, dataWord.dataType))	
+
+		# Raw Data is 32-bit (TODO: this may not be true... differentiate between 8, 16 and 32-bit loads (A4.6 in ISA)
+		child = self.__getDataWord(addr+2)
+
+		dataWord.combine(child)
+			
+		# Mark this DataWord is an instruction
+		dataWord.dataType = DataWord.TYPE_RAW_DATA
+
+		dataWord.decodeString += comment
 		
 class DataWord(object):
 	"""
@@ -231,7 +281,7 @@ class DataWord(object):
 	TYPE_UNKNOWN = "Unknown"
 	TYPE_VECTOR_TABLE = "Vector Table"
 	TYPE_INSTRUCTION = "Instruction"
-	TYPE_DATA = "Data"
+	TYPE_RAW_DATA = "Raw Data"
 
 	# Raw binary data from firmware file
 	__binData = 0
@@ -313,14 +363,16 @@ class DataWord(object):
 		retval += ' {0:>16s}'.format(self.dataType)
 		
 		# More specific info on the data
-		retval += '	' + self.decodeString
+		retval += '	'
 
 		if (self.instruction != None):
 			if (self.dataType == DataWord.TYPE_UNKNOWN):
 				retval += 'Possible Instruction: '
 
-			retval += self.instruction.description
-			retval += ' ' + str(self.instruction)
+			retval += self.instruction.description + ': '
+			retval += str(self.instruction) + '; '
+
+		retval += self.decodeString
 
 		retval += '\n'
 
@@ -350,6 +402,8 @@ class Instruction:
 
 	description = ''
 	args = []
+	# Defines which DataWords can be idenfitied by actions of this instruction
+	identifiedDataWords = []
 
 	def __init__(self, dataWord):
 		"""
@@ -365,23 +419,37 @@ class Instruction:
 			(binData & 0xE000) == 0x6000 or \
 			(binData & 0xE000) == 0x8000): 
 			self.__decodeLoadStoreSingle(dataWord)
-		else:
-			raise ValueError('Not a valid instruction')	
+#TODO: commented out to see how things playout when we reach an instruction we do not yet know how to decode
+		#else:
+			#raise ValueError('Not a valid instruction')	
 		
 	def __decodeLoadFromLiteralPool(self, dataWord):
 		self.description = 'Load Register (literal)'
 
+		# Instruction name
 		self.args.append('LDR')
 
-		self.args.append('R' + str(0x3 & (dataWord.binData >> 8)))
+		# Number of register to be loaded with raw data
+		load_reg_num = 0x3 & (dataWord.binData >> 8)
+		self.args.append('R' + str(load_reg_num))
 
-		arg = (0xFF & dataWord.binData) << 2
-		arg += dataWord.offset + 4
-		self.args.append(hex(arg))
+		# Offset of where to load from
+		offset = (0xFF & dataWord.binData) << 2
+		offset += dataWord.offset + 4
+		self.args.append(hex(offset))
 
-#TODO Once instruction is decoded, how to we map action for 'execution' (i.e. so we can mark LDR locations as potential data (though this does not preclude them from being instructions as well?) or jump location as instructions)
-# Note: LDR is a 32-bit load
-# Make assumption that loads mean those 32 bits are data (we will gen exception if we reach them as an exception later and can correct if needed)
+		# Identify DataWord we are loading data from
+		identDataWord = DataWord(0, offset)
+		identDataWord.dataType = DataWord.TYPE_RAW_DATA
+		self.identifiedDataWords.append(identDataWord)
+
+		# Identify instruction coming up next (as this is not a branch)
+		identDataWord = DataWord(0, dataWord.offset + 2)
+		identDataWord.dataType = DataWord.TYPE_INSTRUCTION
+		self.identifiedDataWords.append(identDataWord)
+
+		#TODO: At this point can we make any further assumptions or setup for how value loaded into register will be used?
+		# i.e. some of these values are clearly accessing peripherals, others are going to access data in firmware maybe?
 
 	def __decodeLoadStoreSingle(self, dataWord):
 		self.description = 'Load/Store'
