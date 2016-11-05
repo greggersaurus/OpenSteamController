@@ -413,7 +413,9 @@ class Instruction:
 
 		binData = dataWord.binData 
 
-		if ((binData & 0xF800) == 0x4800):
+		if ((binData & 0xFC00) == 0x4400):
+			self.__decodeSpecialDataBranchExchange(dataWord)
+		elif ((binData & 0xF800) == 0x4800):
 			self.__decodeLoadFromLiteralPool(dataWord)
 		elif ((binData & 0xF000) == 0x5000 or \
 			(binData & 0xE000) == 0x6000 or \
@@ -423,6 +425,41 @@ class Instruction:
 		#else:
 			#raise ValueError('Not a valid instruction')	
 		
+	def __decodeSpecialDataBranchExchange(self, dataWord):
+		binData = dataWord.binData
+
+		opCode = (binData >> 6) & 0xF
+
+		if ((opCode & 0xC) == 0x0):
+			self.description = 'Add Registers'
+			#TODO: decode further and call more sub functions
+			self.args.append('TODO')
+		elif (opCode == 0x4):
+			self.description = 'Unpredictable'
+			#TODO: decode further and call more sub functions
+			self.args.append('TODO')
+			#TODO: throw exception?
+		elif (opCode == 0x5 or (opCode & 0xE) == 0x6):
+			self.description = 'Compare Registers'
+			#TODO: decode further and call more sub functions
+			self.args.append('TODO')
+		elif ((opCode & 0xC) == 0x8):
+			self.description = 'Move Registers'
+			#TODO: decode further and call more sub functions
+			self.args.append('TODO')
+		elif ((opCode & 0xE) == 0xC):
+			self.description = 'Branch and Exchange'
+			#TODO: decode further and call more sub functions
+			self.args.append('TODO')
+		elif ((opCode & 0xE) == 0xE):
+			self.description = 'Branch with Link and Exchange'
+			#TODO: decode further and call more sub functions
+			self.args.append('TODO')
+		else:
+			#TODO: throw exception?
+			self.args.append('TODO')
+			
+
 	def __decodeLoadFromLiteralPool(self, dataWord):
 		self.description = 'Load Register (literal)'
 
@@ -453,7 +490,9 @@ class Instruction:
 
 	def __decodeLoadStoreSingle(self, dataWord):
 		self.description = 'Load/Store'
+
 		#TODO: decode further and call more sub functions
+		self.args.append('TODO')
 
 	def is32bit(dataWord16):
 		"""
