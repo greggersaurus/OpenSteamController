@@ -220,12 +220,12 @@ class FirmwareParser:
 		if (dataWord.dataType != DataWord.TYPE_UNKNOWN):
 			raise ValueError('DataWord at offset 0x%x is of type %s' % (dataWord.offset, dataWord.dataType))	
 			
-		# Mark this DataWord is an instruction
-		dataWord.dataType = DataWord.TYPE_INSTRUCTION
-
 		# Set children for 32-bit instructions so that instruction 
 		#  identification will have all necessary data
-#TODO
+#TODO Instruction.is32bit(dataWord16)
+
+		# Mark this DataWord is an instruction
+		dataWord.dataType = DataWord.TYPE_INSTRUCTION
 
 		# Decode dataword as instruction
 		dataWord.instruction = Instruction(dataWord)
@@ -487,6 +487,7 @@ class Instruction:
 
 		#TODO: At this point can we make any further assumptions or setup for how value loaded into register will be used?
 		# i.e. some of these values are clearly accessing peripherals, others are going to access data in firmware maybe?
+		# Is there a way to decode this one step further and say what is being loaded from calculated offset?
 
 	def __decodeLoadStoreSingle(self, dataWord):
 		self.description = 'Load/Store'
