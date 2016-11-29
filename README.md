@@ -48,6 +48,9 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 
 * AXF file (ELF/DWARF) to binary
  * arm-none-eabi-objcopy -v -O binary "FirstProject.axf" "FirstProject.bin"
+* From objcopy [man page](https://sourceware.org/binutils/docs/binutils/objcopy.html)
+ * "When objcopy generates a raw binary file, it will essentially produce a memory dump of the contents of the input object file. All symbols and relocation information will be discarded. The memory dump will start at the load address of the lowest section copied into the output file."
+ * TODO: How does this affect disassembly? How we do rebuild symbols, etc.?
 
 #### .bin File Layout
 * Starts with vector table
@@ -136,6 +139,14 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * 0x4f0 instruction comment (Mark treat word starting at offset 0x4f0 as instruction)
  * App will accept text file and read this in
  * When instructions are decoded they make their own array of these to automatically identify more of fw (non-branch instruction always marks next instruction)
+
+### [objdump](https://sourceware.org/binutils/docs/binutils/objdump.html)
+
+* ./arm-none-eabi-objdump -b binary -D vcf_wired_controller_d0g_57bf5c10.bin -m arm attempts to disassemble binary file
+ * TODO: note that -d instead of -D produces nothing, while -D is all wrong
+* TODO: read up more on objdump as it seems to just try and decode every line. What other options might be useful?
+* ndiasm was given as an example when looking up "disassemble binary file" but this is for x86. See what we can learn from what was done here and what objdump tries to do. 
+* TODO: read up on idea of [sync points](http://www.nasm.us/doc/nasmdoca.html) (is this common nomenclature?) 
 
 # Goals/Requirements
 
