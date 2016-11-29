@@ -95,6 +95,7 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 ### [Fracture](https://github.com/draperlaboratory/fracture)
 
 * Decompiles to LLVM intermediate representation
+ * TODO: It looks like this does not work with binary file format. Dig deeper to confirm and cross off list if so.
 
 ### LPCXpresso
 
@@ -125,6 +126,16 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * Attempt to decompile remaining instructions?
  * From instructions such as load/store can infer potential data sections?
 * Will only progress this as far as is useful
+
+#### TODO:
+* test decoding of LDR address
+* ability to enter classification of bin file
+ * Move this forward by being able to decode more instructions?
+ * Also consider this should allow full classification of firmware.bin (unless jumps are based on reg vals...), but may only take us so far as certain instructions are based on register values... 
+ * 0x2f0 data comment (Mark 32-bit word starting at offset 0x2f0 as data)
+ * 0x4f0 instruction comment (Mark treat word starting at offset 0x4f0 as instruction)
+ * App will accept text file and read this in
+ * When instructions are decoded they make their own array of these to automatically identify more of fw (non-branch instruction always marks next instruction)
 
 # Goals/Requirements
 
