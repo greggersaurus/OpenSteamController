@@ -105,6 +105,7 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 * Disassemble axf https://community.nxp.com/thread/388997.
  * TODO: how to access disassembler outside of GUI?
  * TODO: Can use this to disassemble .bin?
+ * TODO: Is this just using objdump?
 
 ### [pinkySim](https://github.com/adamgreen/pinkySim)
 
@@ -117,6 +118,7 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 * Good source to punch individual instruction in quickly
 * Make minor mods to instructions to verify understanding of how they are being decoded and behaving (i.e. LDR)
 * Finicky 
+ * Might work better if file is uploaded instead of copy paste
 
 ### FirmwareParser.py
 
@@ -139,14 +141,25 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * 0x4f0 instruction comment (Mark treat word starting at offset 0x4f0 as instruction)
  * App will accept text file and read this in
  * When instructions are decoded they make their own array of these to automatically identify more of fw (non-branch instruction always marks next instruction)
+* Read up on and understand compilers better (i.e. Relocation)
 
 ### [objdump](https://sourceware.org/binutils/docs/binutils/objdump.html)
 
 * ./arm-none-eabi-objdump -b binary -D vcf_wired_controller_d0g_57bf5c10.bin -m arm attempts to disassemble binary file
  * TODO: note that -d instead of -D produces nothing, while -D is all wrong
 * TODO: read up more on objdump as it seems to just try and decode every line. What other options might be useful?
+ * For VAX, you can specify function entry addresses with -M entry:0xf00ba.  You can use this multiple times to properly disassemble VAX binary files that don't contain symbol tables (like ROM dumps).  In these cases, the function entry mask would otherwise be decoded as VAX instructions, which would probably lead the rest of the function being wrongly disassembled."
+ * Are compiler options from LPCXpresso helpful at all? (arm-none-eabi-c++ -D__NEWLIB__ -DNDEBUG -D__CODE_RED -DCORE_M0 -D__USE_ROMDIVIDE_ -DCPP_USE_HEAP -D__LPC11UXX__ -Os -fno-common -Os -g -Wall -c -fmessage-length=0 -fno-builtin -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -mcpu=cortex-m0 -mthumb -MMD -MP -MF"src/FirstProject.d" -MT"src/FirstProject.o" -MT"src/FirstProject.d" -o "src/FirstProject.o" "../src/FirstProject.cpp"
 * ndiasm was given as an example when looking up "disassemble binary file" but this is for x86. See what we can learn from what was done here and what objdump tries to do. 
 * TODO: read up on idea of [sync points](http://www.nasm.us/doc/nasmdoca.html) (is this common nomenclature?) 
+
+### [ARMu](http://pel.hu/armu/)
+
+* For ARMv5TE, but might be worth understanding approach if this works from binary
+
+### [Capstone](http://www.capstone-engine.org/)
+
+* Worth looking into?
 
 # Goals/Requirements
 
