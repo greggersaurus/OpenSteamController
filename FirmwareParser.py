@@ -222,7 +222,9 @@ class FirmwareParser:
 			
 		# Set children for 32-bit instructions so that instruction 
 		#  identification will have all necessary data
-#TODO Instruction.is32bit(dataWord16)
+		if Instruction.is32bit(dataWord.binData):
+			raise ValueError('Found a 32-bit instruction. Decode logic needed!')
+			# Should just need to set child and everything else falls through?
 
 		# Mark this DataWord is an instruction
 		dataWord.dataType = DataWord.TYPE_INSTRUCTION
@@ -454,6 +456,10 @@ class Instruction:
 		elif ((opCode & 0xE) == 0xE):
 			self.description = 'Branch with Link and Exchange'
 			#TODO: decode further and call more sub functions
+			# Issue here is that our branch address is based on the value in a register. 
+			# In order to decode this we need to know register values when we get to this instruction.
+			# Should each instruction have a register history?
+			# Or we just have one set of registers and reference them as we decode
 			self.args.append('TODO')
 		else:
 			#TODO: throw exception?
@@ -495,6 +501,12 @@ class Instruction:
 		#TODO: decode further and call more sub functions
 		self.args.append('TODO')
 
+		# Identify instruction coming up next (as this is not a branch)
+		identDataWord = DataWord(0, dataWord.offset + 2)
+		identDataWord.dataType = DataWord.TYPE_INSTRUCTION
+		self.identifiedDataWords.append(identDataWord)
+
+	@staticmethod
 	def is32bit(dataWord16):
 		"""
 		Check if 16-bit data word indicates it is part of 32-bit instruction
