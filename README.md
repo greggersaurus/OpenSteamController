@@ -87,6 +87,15 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 
 ### [Reverse Engineering for Beginners](https://github.com/dennis714/RE-for-beginners)
 
+### [pinkySim](https://github.com/greggersaurus/pinkySim)
+
+* ARMv6-M Thumb instruction simulator.
+* Forked and working on logging function to recreate symbol table, etc.
+* Only so useful as accessing APB registers often returns hard faults.
+ * But this may be our best bet as symbol table has been stripped when conversion to binary occurred. 
+* Plus of gaining more experience with gbd
+ * Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb)
+
 ### [Radare](http://www.radare.org/r/)
 
 * [Steep learning curve](https://www.gitbook.com/book/radare/radare2book/details)
@@ -106,12 +115,6 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * TODO: how to access disassembler outside of GUI?
  * TODO: Can use this to disassemble .bin?
  * TODO: Is this just using objdump?
-
-### [pinkySim](https://github.com/adamgreen/pinkySim)
-
-* ARMv6-M Thumb instruction simulator.
-* Only so useful accessing APB registers often returns hard faults.
-* Plus of gaining more experience with gbd
 
 ### [Online Disassembler](https://onlinedisassembler.com/odaweb/)
 
