@@ -90,11 +90,22 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 ### [pinkySim](https://github.com/greggersaurus/pinkySim)
 
 * ARMv6-M Thumb instruction simulator.
-* Forked and working on logging function to recreate symbol table, etc.
-* Only so useful as accessing APB registers often returns hard faults.
- * But this may be our best bet as symbol table has been stripped when conversion to binary occurred. 
-* Plus of gaining more experience with gbd
+* Forked and working on logging function.
+ * Helpful to have (slightly more) human readable log of what code is doing.
+ * Can possibly be used to recreate symbol table for firmware binary.
+* Incentive of gaining more experience with gbd
  * Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb)
+
+#### Setup:
+
+##### Launch Simulator (with proper memory map)
+* ./pinkySim --breakOnStart --flash 0 131072 --ram 268435456 8192 --flash 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
+
+##### Set Memory Defaults (to get through initialization)
+* Set 0x4004800c to 0x00000001 to indicate System PLL is locked                  
+ * set {int}0x4004800c = 1 
+* Set 0x40048014 to 0x00000001 to indicate USB PLL is locked
+ * set {int}0x40048014 = 1
 
 ### [Radare](http://www.radare.org/r/)
 
