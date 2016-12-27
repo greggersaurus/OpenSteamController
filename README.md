@@ -101,11 +101,22 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 ##### Launch Simulator (with proper memory map)
 * ./pinkySim --breakOnStart --flash 0 131072 --ram 268435456 8192 --flash 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
 
-##### Set Memory Defaults (to get through initialization)
+##### Set Memory Defaults (to simulate peripherals and get through initialization)
+
+* ./gdb -ex "target remote localhost:3333" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1"
+
+* Connect to remote simulator being run on port 3333 of local machine
+ * target remote localhost:3333
 * Set 0x4004800c to 0x00000001 to indicate System PLL is locked                  
  * set {int}0x4004800c = 1 
 * Set 0x40048014 to 0x00000001 to indicate USB PLL is locked
  * set {int}0x40048014 = 1
+
+* TODO: Need to fill in boot ROM 
+ * Application is currently falling apart upon blx to 0x1fff1ff0
+ * USB driver exists somewhere in boot ROM. Could this be what the code is trying to access?
+ * boot ROM memory defaults to 0's in sim and this results in repeated lslImmediate until seg fault because PC steps into reserved memory.
+ * How do we get the boot ROM contents? Or can we work around this??
 
 ### [Radare](http://www.radare.org/r/)
 
