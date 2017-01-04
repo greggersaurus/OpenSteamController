@@ -103,20 +103,51 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 
 ##### Set Memory Defaults (to simulate peripherals and get through initialization)
 
-* ./gdb -ex "target remote localhost:3333" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1"
+* ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40048000 = 2" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048028 = 0x080" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0"
 
 * Connect to remote simulator being run on port 3333 of local machine
  * target remote localhost:3333
+* Set 0x40048000 to 0x00000002 (reset value)
+ * set {int}0x40048000 = 2
 * Set 0x4004800c to 0x00000001 to indicate System PLL is locked                  
  * set {int}0x4004800c = 1 
 * Set 0x40048014 to 0x00000001 to indicate USB PLL is locked
  * set {int}0x40048014 = 1
+* Set 0x40048028 to 0x00000080 (reset value)
+ * set {int}0x40048028 = 0x080
+* Set 0x40048030 to 0x00000003 (reset value)
+ * set {int}0x40048030 = 3
+* Set 0x40048040 to 0x00000001 (reset value)
+ * set {int}0x40048040 = 1
+* Set 0x40048044 to 0x00000001 (reset value)
+ * set {int}0x40048044 = 1
+* Set 0x40048074 to 0x00000001 (reset value)
+ * set {int}0x40048074 = 1
+* Set 0x40048078 to 0x00000001 (reset value)
+ * set {int}0x40048078 = 1
+* Set 0x40048080 to 0x0000003F (reset value)
+ * set {int}0x40048080 = 0x3F
+* Set 0x40048170 to 0x00000010 (reset value)
+ * set {int}0x40048170 = 0x10
+* Set 0x4004819C to 0x00000001 (reset value)
+ * set {int}0x4004819C = 1
+* Set 0x40048230 to 0x0000FFFF (reset value)
+ * set {int}0x40048230 = 0xFFFF
+* Set 0x40048234 to 0x0000EDFO (reset value)
+ * set {int}0x40048234 = 0xEDF0
+* Set 0x40048238 to 0x0000EDDO (reset value)
+ * set {int}0x40048238 = 0xEDD0
+
 
 * TODO: Need to fill in boot ROM 
  * Application is currently falling apart upon blx to 0x1fff1ff0
  * USB driver exists somewhere in boot ROM. Could this be what the code is trying to access?
+ * Finding something about IAP in Google searches for this address. (IAP = In-Application Programming).
+ * Also maybe EEPROM related?
  * boot ROM memory defaults to 0's in sim and this results in repeated lslImmediate until seg fault because PC steps into reserved memory.
  * How do we get the boot ROM contents? Or can we work around this??
+  * https://www.lpcware.com/system/files/Bootrom-Listing.txt for LPC114FN28 shows 0x1fff1ff0 in ROM causes subsequent jumps, so best path forward is to get boot ROM dump
+  * Or do we need to modify Steam Controller and make connections USART PIOs for so we can dump contents?
 
 ### [Radare](http://www.radare.org/r/)
 
