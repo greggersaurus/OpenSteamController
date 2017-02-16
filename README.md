@@ -29,7 +29,7 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 ## [Teardown of Steam Controller](https://www.ifixit.com/Teardown/Steam+Controller+Teardown/52578)
 * Picture shows processor is LPC11U37F/501
 
-## [NXP LPC11U37FBD64](http://www.nxp.com/products/microcontrollers-and-processors/arm-processors/lpc-cortex-m-mcus/lpc-cortex-m0-plus-m0/lpc1100-cortex-m0-plus-m0/128kb-flash-12kb-sram-lqfp64-package:LPC11U37FBD64?fpsp=1&tab=Documentation_Tab)
+## [NXP LPC11U37FBD64/501](http://www.nxp.com/products/microcontrollers-and-processors/arm-processors/lpc-cortex-m-mcus/lpc-cortex-m0-plus-m0/lpc1100-cortex-m0-plus-m0/128kb-flash-12kb-sram-lqfp64-package:LPC11U37FBD64?fpsp=1&tab=Documentation_Tab)
 
 ### [Datasheet](http://www.nxp.com/documents/data_sheet/LPC11U3X.pdf?fasp=1&WT_TYPE=Data%20Sheets&WT_VENDOR=FREESCALE&WT_FILE_FORMAT=pdf&WT_ASSET=Documentation&fileExt=.pdf)
 
@@ -54,7 +54,6 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * arm-none-eabi-objcopy -v -O binary "FirstProject.axf" "FirstProject.bin"
 * From objcopy [man page](https://sourceware.org/binutils/docs/binutils/objcopy.html)
  * "When objcopy generates a raw binary file, it will essentially produce a memory dump of the contents of the input object file. All symbols and relocation information will be discarded. The memory dump will start at the load address of the lowest section copied into the output file."
- * TODO: How does this affect disassembly? How we do rebuild symbols, etc.?
 
 #### .bin File Layout
 * Starts with vector table
@@ -109,7 +108,7 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 ##### Set Memory Defaults (to simulate peripherals and get through initialization)
 
 * ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40048000 = 2" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048028 = 0x080" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0"
- * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37U) 
+ * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37H) 
 
 * Connect to remote simulator being run on port 3333 of local machine
  * target remote localhost:3333
@@ -153,33 +152,38 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 ### [Radare](http://www.radare.org/r/)
 
 * [Steep learning curve](https://www.gitbook.com/book/radare/radare2book/details)
- * TODO: Compile test code using LPCXpresso so we have .bin and known source
 * Has option to disassemble ARM, but how exactly does it handle ARMv6-M?
  * Does not automatically work with firmware.bin as input
  * What about #if 0  section iwth armv6 options?
+* With have firmware binary format (i.e. no code/data sections information) this only helps so much. 
+ * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
 ### [Fracture](https://github.com/draperlaboratory/fracture)
 
 * Decompiles to LLVM intermediate representation
- * TODO: It looks like this does not work with binary file format. Dig deeper to confirm and cross off list if so.
+ * It looks like this does not work with binary file format with no code/data sections information.
+ * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
 ### LPCXpresso
 
 * Disassemble axf https://community.nxp.com/thread/388997.
- * TODO: how to access disassembler outside of GUI?
- * TODO: Can use this to disassemble .bin?
- * TODO: Is this just using objdump?
+ * It looks like this does not work with binary file format with no code/data sections information.
 
 ### [Online Disassembler](https://onlinedisassembler.com/odaweb/)
 
 * Good source to punch individual instruction in quickly
 * Make minor mods to instructions to verify understanding of how they are being decoded and behaving (i.e. LDR)
-* Finicky 
+* Finicky interface
  * Might work better if file is uploaded instead of copy paste
+* Without code/data section information tool tries to decode everything
+ * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
 ### FirmwareParser.py
 
-* I am writing this, even though there are a host of other tools that cover this functionality
+* No longer heading down this path. Making custom mods to pinkySim was more efficient path forward.
+ * Did take away some knowledge from this
+ * Leaving below comments for history's sake
+* I was writing this, even though there are a host of other tools that cover this functionality
  * Act of creating disassembler drives in knowledge of how instructions function
  * One more scenario to get better with Python
 * Starts with known info (vector table) and attempts to decompile by stepping through known paths and accesses
@@ -187,9 +191,9 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * After each known instruction decode can next instructions or possible data
  * Attempt to decompile remaining instructions?
  * From instructions such as load/store can infer potential data sections?
-* Will only progress this as far as is useful
+* Plan to only progress this as far as is useful
 
-#### TODO:
+#### Future Thoughts for Improvement:
 * test decoding of LDR address
 * ability to enter classification of bin file
  * Move this forward by being able to decode more instructions?
@@ -203,12 +207,8 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 ### [objdump](https://sourceware.org/binutils/docs/binutils/objdump.html)
 
 * ./arm-none-eabi-objdump -b binary -D vcf_wired_controller_d0g_57bf5c10.bin -m arm attempts to disassemble binary file
- * TODO: note that -d instead of -D produces nothing, while -D is all wrong
-* TODO: read up more on objdump as it seems to just try and decode every line. What other options might be useful?
- * For VAX, you can specify function entry addresses with -M entry:0xf00ba.  You can use this multiple times to properly disassemble VAX binary files that don't contain symbol tables (like ROM dumps).  In these cases, the function entry mask would otherwise be decoded as VAX instructions, which would probably lead the rest of the function being wrongly disassembled."
- * Are compiler options from LPCXpresso helpful at all? (arm-none-eabi-c++ -D__NEWLIB__ -DNDEBUG -D__CODE_RED -DCORE_M0 -D__USE_ROMDIVIDE_ -DCPP_USE_HEAP -D__LPC11UXX__ -Os -fno-common -Os -g -Wall -c -fmessage-length=0 -fno-builtin -ffunction-sections -fdata-sections -fno-rtti -fno-exceptions -mcpu=cortex-m0 -mthumb -MMD -MP -MF"src/FirstProject.d" -MT"src/FirstProject.o" -MT"src/FirstProject.d" -o "src/FirstProject.o" "../src/FirstProject.cpp"
-* ndiasm was given as an example when looking up "disassemble binary file" but this is for x86. See what we can learn from what was done here and what objdump tries to do. 
-* TODO: read up on idea of [sync points](http://www.nasm.us/doc/nasmdoca.html) (is this common nomenclature?) 
+* With have firmware binary format (i.e. no code/data sections information) this only helps so much. 
+ * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
 ### [ARMu](http://pel.hu/armu/)
 
