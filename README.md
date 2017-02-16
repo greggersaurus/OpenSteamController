@@ -10,6 +10,10 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 # Resources and Influences
 
 ## [How to manually load firmware on NXP chip](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
+* Hold right trigger while connecting via USB
+ * Mount "CRP DISABLD" will appear
+ * cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin
+ * eject CRP DISABLD
 * Used to load old firmware on controller to monitor update process via Steam
 * Will be used to load custom firmware on to read/write EEPROM if necessary?
 
