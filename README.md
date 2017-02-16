@@ -93,17 +93,19 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 * Forked and working on logging function.
  * Helpful to have (slightly more) human readable log of what code is doing.
  * Can possibly be used to recreate symbol table for firmware binary.
-* Incentive of gaining more experience with gbd
+* Incentive of gaining more experience with gdb
  * Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb)
 
 #### Setup:
 
 ##### Launch Simulator (with proper memory map)
-* ./pinkySim --breakOnStart --flash 0 131072 --ram 268435456 8192 --flash 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
+* ./pinkySim --breakOnStart --flash 0 131072 --ram 268435456 8192 --ram 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
+ * Note: --ram 536805376 16384 --flash, but since we need to fill this ROM with the boot ROM code via gdb, this needs to be writable
 
 ##### Set Memory Defaults (to simulate peripherals and get through initialization)
 
 * ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40048000 = 2" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048028 = 0x080" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0"
+ * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37U) 
 
 * Connect to remote simulator being run on port 3333 of local machine
  * target remote localhost:3333
@@ -138,16 +140,11 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 * Set 0x40048238 to 0x0000EDDO (reset value)
  * set {int}0x40048238 = 0xEDD0
 
-
-* TODO: Need to fill in boot ROM 
- * Application is currently falling apart upon blx to 0x1fff1ff0
- * USB driver exists somewhere in boot ROM. Could this be what the code is trying to access?
- * Finding something about IAP in Google searches for this address. (IAP = In-Application Programming).
- * Also maybe EEPROM related?
- * boot ROM memory defaults to 0's in sim and this results in repeated lslImmediate until seg fault because PC steps into reserved memory.
- * How do we get the boot ROM contents? Or can we work around this??
-  * https://www.lpcware.com/system/files/Bootrom-Listing.txt for LPC114FN28 shows 0x1fff1ff0 in ROM causes subsequent jumps, so best path forward is to get boot ROM dump
-  * Or do we need to modify Steam Controller and make connections USART PIOs for so we can dump contents?
+##### TODO: Application is currently falling apart after blx to 0x1fff1ff0
+* This seems to be a call into IAP commands (i.e. for accessing EEPROM). 
+* Either simulator cannot handle this or data being returned from "EEPROM read" is sending asm code off in the weeds
+* To make sure we can simulate an IAP EEPROM read by taking lpcopen_v2_03_lpcxpresso_nxp_lpcxpresso_11u37f501 project and having it attempt to access EEPROM via IAP (Use command 62 for EEPROM read and give it a unique RAM address to write to, so we know what Steam Controller firmware IAP command is trying to do)
+ * If this passes then it is what is getting "read" from EEPROM that is causing simulator to run off in the weeds
 
 ### [Radare](http://www.radare.org/r/)
 
