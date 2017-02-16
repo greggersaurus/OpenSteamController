@@ -275,6 +275,11 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  * TODO: see mention above above config/mappings traveling with controller. Does this allow us access?
  * TODO: write custom firmware that dump EEPROM over USB (is this realistic? how to set pins to not damage controller?)
 
+* Working on custom firmware based on nxp_lpcxpresso_11u37_usbd_rom_cdc_uart example. 
+ * Idea is to have have USB port act as UART
+ * Will be able to issue commands to read memory or request EEPROM data
+ * Created code and loaded on controller, but did not work (not sure if it even powered up... Pinmux setting? Dig into 11U37h board.c?)
+
 # USB Data Capture
 
 * Use lsusb to get bus and devnum
