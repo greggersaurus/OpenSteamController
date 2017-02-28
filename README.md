@@ -145,9 +145,15 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 
 ##### TODO: Application is currently falling apart after blx to 0x1fff1ff0
 * This seems to be a call into IAP commands (i.e. for accessing EEPROM). 
-* Either simulator cannot handle this or data being returned from "EEPROM read" is sending asm code off in the weeds
-* To make sure we can simulate an IAP EEPROM read by taking lpcopen_v2_03_lpcxpresso_nxp_lpcxpresso_11u37f501 project and having it attempt to access EEPROM via IAP (Use command 62 for EEPROM read and give it a unique RAM address to write to, so we know what Steam Controller firmware IAP command is trying to do)
- * If this passes then it is what is getting "read" from EEPROM that is causing simulator to run off in the weeds
+ * First there is a read that returns 0's
+ * Then there is a write request (seemingly because 0's were read and not 0xa55a)
+  * The write request seems to not return, looping forever accessing 0x4003cfe0. We could try setting reserved bits. Maybe bit 2 is duplicated or something. Not sure why code left shifts and does not right shift... 
+   * We could try setting this status register to just get us through this code
+
+ * Keep digging into runFile from Steam Controller Firmware and try to figure out why EEPROM read ends in the weeds (unexpected values read back and not handled properly?)
+  * Seems this might be happening on second IAP command, which is a EEPROM write request (my guess is the system reads 0's and want to put something in EEPROM)
+   * TODO: Maybe if we just set return values with values they try to seed EEPROM with we can move past this?
+    * It looks like it should be an 8 bytes -> * 0x10000254 = 0x0000a55a and 0x10000254 = 0, but this must happen when we break at 0x00000bcc (i.e. return from IAP command)
 
 ### [Radare](http://www.radare.org/r/)
 
