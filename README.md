@@ -60,7 +60,7 @@ The following detail the various pieces of controller information that I want to
 
 ## Customize Song/Tune/Jingle Selections
 
-Assumption is that jingle data is coded into firmware or stored in EEPROM on NXP chip and I can come up with a way to change these into user customizable jingles.
+Assumption is that jingle data is coded into firmware or stored in EEPROM on NXP chip and I can come up with a way to modify this data into user customizable jingles.
 
 ### Firmware Assumption 
 
@@ -68,7 +68,7 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 
 #### Status
 
-* Using pinkySim, I am currently able to simulate until firmware sets up 16-bit counter.
+* Using pinkySim, I am currently able to simulate until firmware sets up and waits on 16-bit counter.
     * Unclear if this is enough setup for jingle to be played or not.
         * Adding breakpoint instruction to isolate key code has had mixed results thus far.
 
@@ -91,6 +91,9 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 
 * In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
     * Understanding how USB is setup may be key to understanding how jingle is transmitted.
+
+* Check that defaults are set for all configuration registers being accessed.
+    * Now that we are getting past EEPROM access more registers are being accessed.
 
 ### EEPROM Assumption
 
