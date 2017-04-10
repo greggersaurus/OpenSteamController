@@ -7,42 +7,151 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
  ability to safely customize a Steam Controller in ways not currently supported
  through Steam.
 
-# Resources and Influences
+# Goals and Requirements
 
-## [How to manually load firmware on NXP chip](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
+This section outlines specifics regarding what this project hopes to achieve.
+
+##  Get Controller Information
+
+### Serial Number
+
+* Printed on back of controller 
+* Steam reports same number, but do not see it in traffic...
+    * Possible it is now shown by usbmon as it only prints 32 of 64 bytes on control messages
+    * TODO: capture 0x83 response and look at all data to see if its in there
+
+### Board Revision
+
+* In 0x83 repsonse
+
+### Firmware Revision
+
+* In 0x83 repsonse
+
+### Radio Firmware Revision
+
+* TODO: always zeros for Steam Controller. Not used?
+
+## Play Song/Tune/Jingle Using Haptics
+
+* Instruct controller to play a particular song to demo what it sounds like
+* Reproduction of what Steam does when you select a song for startup or shutdown in config
+* Status: Implemented, but does not work on firmware before 5653a68a
+* TODO: add firmware check and report error if firmware if before 5653a68a
+
+## Config startup and shutdown song 
+
+* Reproduction of what Steam does when you click confirm after viewing/changing controller config
+* Status: Captured data and analyzed
+* TODO: Implement in code
+
+## Configure Steam Button Brightness
+
+* Status: Captured commands broke down represent brightness value
+* TODO: check if this works with firmware previous to 5653a68a
+
+## Load firmware
+
+* Reproduction of what Steam does automatically when it detects out of date firmware, but this will allow for loading custom firmware or specifying which previous firmware specified in vdf should be installed
+* Status: Captured USB data 
+* TODO: Analyze USB data and implement function. Look for failure retry in captured data. 
+
+## Custom Song/Tune/Jingle
+
+Assumption is that jingle data is coded into firmware or stored in EEPROM on NXP chip and I can come up with a way to change these into user customizable jingles.
+
+### Firmware Assumption 
+
+Goal is to find section of firmware where jingle data is, or prove jingle data is not stored in firmware.bin.
+
+#### Status
+
+* Using pinkySim, I am currently able to simulate until firmware sets up 16-bit counter.
+    * Unclear if this is enough setup for jingle to be played or not.
+        * Adding breakpoint instruction to isolate key code has had mixed results thus far.
+
+#### TODO
+
+* Understand and add details to status on what code does as simulated so far.
+
+* Look into moving simulation beyond stopping at 16-bit counter.
+    * Need to break in with gdb to change counter value to progress past, as opposed to being able to change register setting at beginning of simulation.
+
+* Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
+    * Need to be careful that simulation paths for some reason do not match controller paths due to EEPROM config read...
+
+* Consider what if code to play jingle occurs in interrupt handler.
+    * Current simulation never reaches this code.
+    * Which interrupt is for USB and how should interrupt status register be set?
+
+* Full disassembly of firmware.bin to assembly.
+    * Use idea in FirmwareParser, but extend pinkySim's ability to decode and execute instructions.
+
+* In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
+    * Understanding how USB is setup may be key to understanding how jingle is transmitted.
+
+### EEPROM Assumption
+
+Goal is to find section fo EEPROM where jingle data is, or prove jingle data is not stored in EEPROM.
+
+#### Status
+
+* Working on custom firmware based on nxp_lpcxpresso_11u37_usbd_rom_cdc_uart example. 
+    * Idea is to have have USB port act as UART.
+    * Will be able to issue commands to read memory or request EEPROM data.
+    * Created code and loaded on controller, but did not work (not sure if it even powered up... Pinmux setting? Dig into 11U37h board.c?).
+
+#### TODO
+
+* Incorporate data from longer simulation run for more complete setup so that custom firmware works.
+    * Maybe we are missing something to actually keep the system powered up?
+* Once custom firmware is working.
+    * Look at what is in EEPROM. Feed back into simulation to show path actually being take through firmware?
+    * Compare how EEPROM changes between configuration changes via Steam.
+
+# Resources, Utilities and Influences
+
+## [How to Manually Load Firmware](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
+
 * Hold right trigger while connecting via USB
- * Mount "CRP DISABLD" will appear
- * cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin
- * eject CRP DISABLD
+    * Mount "CRP DISABLD" will appear
+    * cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin
+    * eject CRP DISABLD
 * Used to load old firmware on controller to monitor update process via Steam
 * Will be used to load custom firmware on to read/write EEPROM if necessary?
 
 ## [Pilatomic Steam Controller Singer](https://gitlab.com/Pilatomic/SteamControllerSinger)
-* Great example of using the haptics to play music
+
+* Example of using the haptics to play music
 * Example of code written in C using libusb
 * Downside is that it takes over controller when playing custom music
 
 ## [Standalone Steam Controller Driver](https://github.com/ynsta/steamcontroller)
+
 * OK source for breaking down some USB commands
 * Goal of this project is to work outside Steam platform. I want to add configuration ability to controller, not subvert or reproduce (though some reproduction will be necessary) what is already there
 
 ## [Teardown of Steam Controller](https://www.ifixit.com/Teardown/Steam+Controller+Teardown/52578)
+
 * Picture shows processor is LPC11U37F/501
 
-## [NXP LPC11U37FBD64/501](http://www.nxp.com/products/microcontrollers-and-processors/arm-processors/lpc-cortex-m-mcus/lpc-cortex-m0-plus-m0/lpc1100-cortex-m0-plus-m0/128kb-flash-12kb-sram-lqfp64-package:LPC11U37FBD64?fpsp=1&tab=Documentation_Tab)
+## [NXP LPC11U37FBD64/501 Specifics](http://www.nxp.com/products/microcontrollers-and-processors/arm-processors/lpc-cortex-m-mcus/lpc-cortex-m0-plus-m0/lpc1100-cortex-m0-plus-m0/128kb-flash-12kb-sram-lqfp64-package:LPC11U37FBD64?fpsp=1&tab=Documentation_Tab)
 
 ### [Datasheet](http://www.nxp.com/documents/data_sheet/LPC11U3X.pdf?fasp=1&WT_TYPE=Data%20Sheets&WT_VENDOR=FREESCALE&WT_FILE_FORMAT=pdf&WT_ASSET=Documentation&fileExt=.pdf)
 
 ### [User Manual](http://www.nxp.com/documents/user_manual/UM10462.pdf)
+
 * Firmware is 128 kb.
 
 #### Chapter 20: LPC11U3x/2x/1x Flash programming firmware
+
 * UM10462 for details on loading firmware via bootloader
 
 #### Chapter 24: LPC11U3x/2x/1x Appendix ARM Cortex-M0
+
 * 32-bit processor
 * ARMv6-M architecture (16-bit Thumb ISA and includes Thumb-2 technology?)
- * [ISA](http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.subset.architecture.reference/index.html)
+    * [ISA](http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.subset.architecture.reference/index.html)
 
 ### [Secondary Bootloader App Note](http://www.nxp.com/documents/application_note/AN11732.zip?fasp=1&WT_TYPE=Application%20Notes&WT_VENDOR=FREESCALE&WT_FILE_FORMAT=zip&WT_ASSET=Documentation&fileExt=.zip)
 
@@ -51,42 +160,43 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 #### [Generating .bin file](https://community.nxp.com/thread/389005)
 
 * AXF file (ELF/DWARF) to binary
- * arm-none-eabi-objcopy -v -O binary "FirstProject.axf" "FirstProject.bin"
+    * arm-none-eabi-objcopy -v -O binary "FirstProject.axf" "FirstProject.bin"
 * From objcopy [man page](https://sourceware.org/binutils/docs/binutils/objcopy.html)
- * "When objcopy generates a raw binary file, it will essentially produce a memory dump of the contents of the input object file. All symbols and relocation information will be discarded. The memory dump will start at the load address of the lowest section copied into the output file."
+    * "When objcopy generates a raw binary file, it will essentially produce a memory dump of the contents of the input object file. All symbols and relocation information will be discarded. The memory dump will start at the load address of the lowest section copied into the output file."
 
 #### .bin File Layout
 * Starts with vector table
- * From 20.7 of UM10462: The reserved ARM Cortex-M0 exception vector location 7 (offset 0x0000 001C in the vector table) should contain the 2’s complement of the check-sum of table entries 0 through 6. This causes the checksum of the first 8 table entries to be 0. The bootloader code checksums the first 8 locations in sector 0 of the flash. If the result is 0, then execution control is transferred to the user code.
+    * From 20.7 of UM10462: The reserved ARM Cortex-M0 exception vector location 7 (offset 0x0000 001C in the vector table) should contain the 2’s complement of the check-sum of table entries 0 through 6. This causes the checksum of the first 8 table entries to be 0. The bootloader code checksums the first 8 locations in sector 0 of the flash. If the result is 0, then execution control is transferred to the user code.
 
 * See Section 24.3.3.4 (Fig 24-80) of UM10462 for layout of vector table
- * 0x0000 00004 - Entry point to code in ARM Cortex-M0 vector table. See 20.15.1 of UM10462
- * 0x0000 0001C - Vector location 7. Must contain 2's complement of vector table entries 0-6. See 20.7 or UM10462
+    * 0x0000 00004 - Entry point to code in ARM Cortex-M0 vector table. See 20.15.1 of UM10462
+    * 0x0000 0001C - Vector location 7. Must contain 2's complement of vector table entries 0-6. See 20.7 or UM10462
 
 * Endianness
- * Certain sections default to little endian
- * Other sections are configurable
- * TODO: Where is this stated in UM10462?
+    * Certain sections default to little endian
+    * Other sections are configurable
+    * TODO: Where is this stated in UM10462?
 
 #### [LPC Image Checksums](https://community.nxp.com/thread/389046)
 
 * Checksum is stored at 0x1C for Cortex-M based parts
- * checksum -p ${TargetChip} -d "${BuildArtifactFileBaseName}.bin"
+    * checksum -p ${TargetChip} -d "${BuildArtifactFileBaseName}.bin"
 * This checksum is calculated from the contents of the vector table, not the whole image (probably why I got away with chaning USB info strings)
- * For more details please see the user manual for the MCU that you are using.
+    * For more details please see the user manual for the MCU that you are using.
 * [Creating checksum manually](https://community.nxp.com/thread/388993)
 
 ## [Steam Controller Update News](http://store.steampowered.com/news/?appids=353370)
+
 * Use to get an idea of what changed from firmware to firwmare release
 
 ## Steam Communities
+
 * [Official Group](http://steamcommunity.com/games/353370#announcements/detail/901091250587237164)
 * [Custom Sounds Discussion](https://steamcommunity.com/app/353370/discussions/0/458607699626517823/)
 
 ## Disassembly 
 
-* Going to dig into and work with a number of tools and approaches
- * Use different tools to verify each other
+Various approaches, tools and information on disassembly binary firmware.
 
 ### [Reverse Engineering for Beginners](https://github.com/dennis714/RE-for-beginners)
 
@@ -94,127 +204,111 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 
 * ARMv6-M Thumb instruction simulator.
 * Forked and working on logging function.
- * Helpful to have (slightly more) human readable log of what code is doing.
- * Can possibly be used to recreate symbol table for firmware binary.
+    * Helpful to have (slightly more) human readable log of what code is doing.
+    * Can possibly be used to recreate symbol table for firmware binary.
 * Incentive of gaining more experience with gdb
- * Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb)
+    * Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb)
 
 #### Setup:
 
-##### Launch Simulator (with proper memory map)
+##### Launch Simulator 
+
+The following command launches the emulator with the proper memory map of the LPC11U37F501
+
 * ./pinkySim --breakOnStart --flash 0 131072 --ram 268435456 8192 --ram 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
- * Note: --ram 536805376 16384 --flash, but since we need to fill this ROM with the boot ROM code via gdb, this needs to be writable
+    * Note: --ram 536805376 16384 --flash, but since we need to fill this ROM with the boot ROM code via gdb, this needs to be writable
 
-##### Set Memory Defaults (to simulate peripherals and get through initialization)
+##### Set Memory Defaults 
 
-* ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40048000 = 2" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048028 = 0x080" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0"
- * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37H) 
+The following command launches gbd, attaches it to the running eumulator and sets up register to values that allow system to proceed past initialization.
+
+* ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40048000 = 2" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048028 = 0x080" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0" -ex "set {int}0x4003cfe0 = 0xFFFFFFFF"
+    * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37H) 
+
+###### Breakdown of Input Arguments
+
+The following outlines details on the input arguments of the previous section and why they are set the way they are.
 
 * Connect to remote simulator being run on port 3333 of local machine
- * target remote localhost:3333
+    * target remote localhost:3333
 * Set 0x40048000 to 0x00000002 (reset value)
- * set {int}0x40048000 = 2
+    * set {int}0x40048000 = 2
 * Set 0x4004800c to 0x00000001 to indicate System PLL is locked                  
- * set {int}0x4004800c = 1 
+    * set {int}0x4004800c = 1 
 * Set 0x40048014 to 0x00000001 to indicate USB PLL is locked
- * set {int}0x40048014 = 1
+    * set {int}0x40048014 = 1
 * Set 0x40048028 to 0x00000080 (reset value)
- * set {int}0x40048028 = 0x080
+    * set {int}0x40048028 = 0x080
 * Set 0x40048030 to 0x00000003 (reset value)
- * set {int}0x40048030 = 3
+    * set {int}0x40048030 = 3
 * Set 0x40048040 to 0x00000001 (reset value)
- * set {int}0x40048040 = 1
+    * set {int}0x40048040 = 1
 * Set 0x40048044 to 0x00000001 (reset value)
- * set {int}0x40048044 = 1
+    * set {int}0x40048044 = 1
 * Set 0x40048074 to 0x00000001 (reset value)
- * set {int}0x40048074 = 1
+    * set {int}0x40048074 = 1
 * Set 0x40048078 to 0x00000001 (reset value)
- * set {int}0x40048078 = 1
+    * set {int}0x40048078 = 1
 * Set 0x40048080 to 0x0000003F (reset value)
- * set {int}0x40048080 = 0x3F
+    * set {int}0x40048080 = 0x3F
 * Set 0x40048170 to 0x00000010 (reset value)
- * set {int}0x40048170 = 0x10
+    * set {int}0x40048170 = 0x10
 * Set 0x4004819C to 0x00000001 (reset value)
- * set {int}0x4004819C = 1
+    * set {int}0x4004819C = 1
 * Set 0x40048230 to 0x0000FFFF (reset value)
- * set {int}0x40048230 = 0xFFFF
+    * set {int}0x40048230 = 0xFFFF
 * Set 0x40048234 to 0x0000EDFO (reset value)
- * set {int}0x40048234 = 0xEDF0
+    * set {int}0x40048234 = 0xEDF0
 * Set 0x40048238 to 0x0000EDDO (reset value)
- * set {int}0x40048238 = 0xEDD0
-
-##### TODO: Application is currently falling apart after blx to 0x1fff1ff0
-* This seems to be a call into IAP commands (i.e. for accessing EEPROM). 
- * First there is a read that returns 0's
- * Then there is a write request (seemingly because 0's were read and not 0xa55a)
-  * The write request seems to not return, looping forever accessing 0x4003cfe0. We could try setting reserved bits. Maybe bit 2 is duplicated or something. Not sure why code left shifts and does not right shift... 
-   * We could try setting this status register to just get us through this code
-
- * Keep digging into runFile from Steam Controller Firmware and try to figure out why EEPROM read ends in the weeds (unexpected values read back and not handled properly?)
-  * Seems this might be happening on second IAP command, which is a EEPROM write request (my guess is the system reads 0's and want to put something in EEPROM)
-   * TODO: Maybe if we just set return values with values they try to seed EEPROM with we can move past this?
-    * It looks like it should be an 8 bytes -> * 0x10000254 = 0x0000a55a and 0x10000254 = 0, but this must happen when we break at 0x00000bcc (i.e. return from IAP command)
+    * set {int}0x40048238 = 0xEDD0
+* Set 0x4003cfe0 to 0xFFFFFFFF to convince system that EEPROM write finished
+    * NOTE: This must be some weird hardware issue relating to the conditional for checking write. Upper bits should be non-use, but setting bit 2 does not add up to check being performed on register (lsl immediate).
+    * set {int}0x4003cfe0 = 0xFFFFFFFF
 
 ### [Radare](http://www.radare.org/r/)
 
 * [Steep learning curve](https://www.gitbook.com/book/radare/radare2book/details)
 * Has option to disassemble ARM, but how exactly does it handle ARMv6-M?
- * Does not automatically work with firmware.bin as input
- * What about #if 0  section iwth armv6 options?
+    * Does not automatically work with firmware.bin as input
+    * What about #if 0  section iwth armv6 options?
 * With have firmware binary format (i.e. no code/data sections information) this only helps so much. 
- * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
+    * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
 ### [Fracture](https://github.com/draperlaboratory/fracture)
 
 * Decompiles to LLVM intermediate representation
- * It looks like this does not work with binary file format with no code/data sections information.
- * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
+    * It looks like this does not work with binary file format with no code/data sections information.
+    * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
 ### LPCXpresso
 
 * Disassemble axf https://community.nxp.com/thread/388997.
- * It looks like this does not work with binary file format with no code/data sections information.
+    * It looks like this does not work with binary file format with no code/data sections information.
 
 ### [Online Disassembler](https://onlinedisassembler.com/odaweb/)
 
 * Good source to punch individual instruction in quickly
 * Make minor mods to instructions to verify understanding of how they are being decoded and behaving (i.e. LDR)
 * Finicky interface
- * Might work better if file is uploaded instead of copy paste
+    * Might work better if file is uploaded instead of copy paste
 * Without code/data section information tool tries to decode everything
- * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
+    * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
 ### FirmwareParser.py
 
-* No longer heading down this path. Making custom mods to pinkySim was more efficient path forward.
- * Did take away some knowledge from this
- * Leaving below comments for history's sake
-* I was writing this, even though there are a host of other tools that cover this functionality
- * Act of creating disassembler drives in knowledge of how instructions function
- * One more scenario to get better with Python
-* Starts with known info (vector table) and attempts to decompile by stepping through known paths and accesses
- * Vector table points to known instructions
- * After each known instruction decode can next instructions or possible data
- * Attempt to decompile remaining instructions?
- * From instructions such as load/store can infer potential data sections?
-* Plan to only progress this as far as is useful
+Original idea was to create disassembler that can recreate assembly file, 
+distinguishing data versus instructions by evaulating code and all possible
+branches. 
 
-#### Future Thoughts for Improvement:
-* test decoding of LDR address
-* ability to enter classification of bin file
- * Move this forward by being able to decode more instructions?
- * Also consider this should allow full classification of firmware.bin (unless jumps are based on reg vals...), but may only take us so far as certain instructions are based on register values... 
- * 0x2f0 data comment (Mark 32-bit word starting at offset 0x2f0 as data)
- * 0x4f0 instruction comment (Mark treat word starting at offset 0x4f0 as instruction)
- * App will accept text file and read this in
- * When instructions are decoded they make their own array of these to automatically identify more of fw (non-branch instruction always marks next instruction)
-* Read up on and understand compilers better (i.e. Relocation)
+In the end this was a larger undertaking than expected. It would make more 
+sense to leverage pinkySim's ability to decode instructions and their 
+behavior to do this, as opposed to starting from scratch.
 
 ### [objdump](https://sourceware.org/binutils/docs/binutils/objdump.html)
 
 * ./arm-none-eabi-objdump -b binary -D vcf_wired_controller_d0g_57bf5c10.bin -m arm attempts to disassemble binary file
 * With have firmware binary format (i.e. no code/data sections information) this only helps so much. 
- * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
+    * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
 ### [ARMu](http://pel.hu/armu/)
 
@@ -224,79 +318,13 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 
 * Worth looking into?
 
-# Goals/Requirements
-
-## Written in Python
-* While I could produce cross platform code written in C using libusb, producing Python (that using pyusb) seems to be a simpler platform independent solution
-* I do not know much Python, so this will be a good learning experience
-
-##  Get controller info
-
-### Serial Number
-* Printed on back of controller 
-* Steam reports same number, but do not see it in traffic...
- * Possible it is now shown by usbmon as it only prints 32 of 64 bytes on control messages
- * TODO: capture 0x83 response and look at all data to see if its in there
-
-### Board Revision
-* In 0x83 repsonse
-
-### Firmware Revision
-* In 0x83 repsonse
-
-### Radio Firmware Revision
-* TODO: always zeros for Steam Controller. Not used?
-
-## Play song (using haptics)
-* Instruct controller to play a particular song to demo what it sounds like
-* Reproduction of what Steam does when you select a song for startup or shutdown in config
-* Status: Implemented, but does not work on firmware before 5653a68a
-* TODO: add firmware check and report error if firmware if before 5653a68a
-
-## Config startup and shutdown song 
-* Reproduction of what Steam does when you click confirm after viewing/changing controller config
-* Status: Captured data and analyzed
-* TODO: Implement in code
-
-## Configure Steam Button Brightness
-* Status: Captured commands broke down represent brightness value
-* TODO: check if this works with firmware previous to 5653a68a
-
-## Load firmware
-* Reproduction of what Steam does automatically when it detects out of date firmware, but this will allow for loading custom firmware or specifying which previous firmware specified in vdf should be installed
-* Status: Captured USB data 
-* TODO: Analyze USB data and implement function. Look for failure retry in captured data. 
-
-## Custom song 
-* Assumption is that song files are coded into firmware or stored in EEPROM on NXP chip
-
-### Firmware assumption 
-* Start here and definitively determine if it is in code or not
-* TODO: Reverse compile firmware (how is firmware laid out (mapping), look at ARM assembly instructions?)   
- * See Resources related to LPCXpresso and NXP LPC11U37FBD64 and radare
-* TODO: Create example project for chip using LPCXpresso and dig into compiler, etc.
- * See Resources related to LPCXpresso and NXP LPC11U37FBD64 and radare
-* TODO: Look at code changes from 5643849f to 5653a68a. Loading firmware older than 5653a68a results in system not playing song, but could just be different EEPROM setup?
-* TODO: How does Steam react to pre-5653a68a firmware? Saw something in Steam Controller updates about change to firmware and Steam handling this update. Does this mean there are USB commands to access EEPROM?
-* TODO: Look into mention in updates of storing custom configs/mappings and how they travel with controller. Will this allow us access to what we want somehow?
-
-### EEPROM assumption
-* Can we dump EEPROM somehow?
- * TODO: see mention above above config/mappings traveling with controller. Does this allow us access?
- * TODO: write custom firmware that dump EEPROM over USB (is this realistic? how to set pins to not damage controller?)
-
-* Working on custom firmware based on nxp_lpcxpresso_11u37_usbd_rom_cdc_uart example. 
- * Idea is to have have USB port act as UART
- * Will be able to issue commands to read memory or request EEPROM data
- * Created code and loaded on controller, but did not work (not sure if it even powered up... Pinmux setting? Dig into 11U37h board.c?)
-
 # USB Data Capture
 
 * Use lsusb to get bus and devnum
 * Use [usbmon](https://www.kernel.org/doc/Documentation/usb/usbmon.txt)
- * cat /sys/kernel/debug/usb/usbmon/u0 
- * Pipe to grep to filter on data we care about (i.e. bus and devnum)
+    * cat /sys/kernel/debug/usb/usbmon/u0 
+    * Pipe to grep to filter on data we care about (i.e. bus and devnum)
 * Capture actions
- * ssh into Steam Box and cat usbmon file
- * Perform distinct actions and capture data
- * Isolate variables with slight variations on actions
+    * ssh into Steam Box and cat usbmon file
+    * Perform distinct actions and capture data
+    * Isolate variables with slight variations on actions
