@@ -11,7 +11,9 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 
 This section outlines specifics regarding what this project hopes to achieve.
 
-##  Get Controller Information
+##  Get Controller Information via USB
+
+The following detail the various pieces of controller information that I want to retrieve via USB.
 
 ### Serial Number
 
@@ -32,31 +34,31 @@ This section outlines specifics regarding what this project hopes to achieve.
 
 * TODO: always zeros for Steam Controller. Not used?
 
-## Play Song/Tune/Jingle Using Haptics
+## Play Song/Tune/Jingle Using Haptics via USB Request
 
 * Instruct controller to play a particular song to demo what it sounds like
 * Reproduction of what Steam does when you select a song for startup or shutdown in config
 * Status: Implemented, but does not work on firmware before 5653a68a
 * TODO: add firmware check and report error if firmware if before 5653a68a
 
-## Config startup and shutdown song 
+## Config Startup and Shutdown Song via USB Request
 
 * Reproduction of what Steam does when you click confirm after viewing/changing controller config
 * Status: Captured data and analyzed
 * TODO: Implement in code
 
-## Configure Steam Button Brightness
+## Configure Steam Button Brightness via USB Request
 
 * Status: Captured commands broke down represent brightness value
 * TODO: check if this works with firmware previous to 5653a68a
 
-## Load firmware
+## Load Firmware via USB Request
 
 * Reproduction of what Steam does automatically when it detects out of date firmware, but this will allow for loading custom firmware or specifying which previous firmware specified in vdf should be installed
 * Status: Captured USB data 
 * TODO: Analyze USB data and implement function. Look for failure retry in captured data. 
 
-## Custom Song/Tune/Jingle
+## Customize Song/Tune/Jingle Selections
 
 Assumption is that jingle data is coded into firmware or stored in EEPROM on NXP chip and I can come up with a way to change these into user customizable jingles.
 
@@ -137,6 +139,9 @@ Goal is to find section fo EEPROM where jingle data is, or prove jingle data is 
 
 ## [NXP LPC11U37FBD64/501 Specifics](http://www.nxp.com/products/microcontrollers-and-processors/arm-processors/lpc-cortex-m-mcus/lpc-cortex-m0-plus-m0/lpc1100-cortex-m0-plus-m0/128kb-flash-12kb-sram-lqfp64-package:LPC11U37FBD64?fpsp=1&tab=Documentation_Tab)
 
+Below are some accumulated details on the main processor on the Steam Controller. 
+Understanding the processor may be key for meeting some requirements.
+
 ### [Datasheet](http://www.nxp.com/documents/data_sheet/LPC11U3X.pdf?fasp=1&WT_TYPE=Data%20Sheets&WT_VENDOR=FREESCALE&WT_FILE_FORMAT=pdf&WT_ASSET=Documentation&fileExt=.pdf)
 
 ### [User Manual](http://www.nxp.com/documents/user_manual/UM10462.pdf)
@@ -187,7 +192,7 @@ Goal is to find section fo EEPROM where jingle data is, or prove jingle data is 
 
 ## [Steam Controller Update News](http://store.steampowered.com/news/?appids=353370)
 
-* Use to get an idea of what changed from firmware to firwmare release
+Use to get an idea of what changed from firmware to firwmare release
 
 ## Steam Communities
 
@@ -196,9 +201,13 @@ Goal is to find section fo EEPROM where jingle data is, or prove jingle data is 
 
 ## Disassembly 
 
-Various approaches, tools and information on disassembly binary firmware.
+Various approaches, tools and information on disassembling compiled software. 
+It may be necessary to disassemble the Steam Controller firmware to meet goals
+ such as customizing jingles.
 
 ### [Reverse Engineering for Beginners](https://github.com/dennis714/RE-for-beginners)
+
+Free book on how to reverse engineer code.
 
 ### [pinkySim](https://github.com/greggersaurus/pinkySim)
 
@@ -213,21 +222,21 @@ Various approaches, tools and information on disassembly binary firmware.
 
 ##### Launch Simulator 
 
-The following command launches the emulator with the proper memory map of the LPC11U37F501
+The following command launches the emulator with the proper memory map of the LPC11U37F501:
 
 * ./pinkySim --breakOnStart --flash 0 131072 --ram 268435456 8192 --ram 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
     * Note: --ram 536805376 16384 --flash, but since we need to fill this ROM with the boot ROM code via gdb, this needs to be writable
 
 ##### Set Memory Defaults 
 
-The following command launches gbd, attaches it to the running eumulator and sets up register to values that allow system to proceed past initialization.
+The following command launches gbd, attaches it to the running eumulator and sets up register to values that allow system to proceed past initialization:
 
 * ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40048000 = 2" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048028 = 0x080" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0" -ex "set {int}0x4003cfe0 = 0xFFFFFFFF"
     * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37H) 
 
 ###### Breakdown of Input Arguments
 
-The following outlines details on the input arguments of the previous section and why they are set the way they are.
+The following outlines details on the input arguments of the previous section and why they are set the way they are:
 
 * Connect to remote simulator being run on port 3333 of local machine
     * target remote localhost:3333
@@ -319,6 +328,8 @@ behavior to do this, as opposed to starting from scratch.
 * Worth looking into?
 
 # USB Data Capture
+
+This sections outlines how USB commands are captured for analysis.
 
 * Use lsusb to get bus and devnum
 * Use [usbmon](https://www.kernel.org/doc/Documentation/usb/usbmon.txt)
