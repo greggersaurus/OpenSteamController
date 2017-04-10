@@ -58,7 +58,7 @@ The following detail the various pieces of controller information that I want to
 * Status: Captured USB data 
 * TODO: Analyze USB data and implement function. Look for failure retry in captured data. 
 
-## Customize Song/Tune/Jingle Selections
+## Customize Song/Tune/Jingle
 
 Assumption is that jingle data is coded into firmware or stored in EEPROM on NXP chip and I can come up with a way to modify this data into user customizable jingles.
 
@@ -94,6 +94,17 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 
 * Check that defaults are set for all configuration registers being accessed.
     * Now that we are getting past EEPROM access more registers are being accessed.
+
+* Hook up UART to Steam Controller?
+    * Simulation makes it look like USART is being setup
+        * Need to verify it is being setup as UART
+    * Requires solder on to Steam Controller...
+        * Are correct pins obvious?
+
+* Hook up debugger to Steam Controller?
+    * Use debugger on LPCXpresso11U37H Evaluation board OM13074
+    * Create pogo pin adapter to debug spot on Steam Controller
+        * Need to understand how to connect 10 pin header to 6 ping DEBUG
 
 ### EEPROM Assumption
 
