@@ -68,32 +68,34 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 
 #### Status
 
-* Using pinkySim, I am currently able to simulate until firmware sets up and waits on 16-bit counter.
+* Using pinkySim I am currently able to simulate until firmware makes call to Wait For Interrupt (WFI) instruction
+    * Details:
+        * TODO
     * Unclear if this is enough setup for jingle to be played or not.
         * Adding breakpoint instruction to isolate key code has had mixed results thus far.
+    * Unclear if this is particular path of code that for some reason bypasses playing jingle (i.e some error path of the code due to some bad assumption on my part)
 
 #### TODO
 
 * Understand and add details to status on what code does as simulated so far.
+    * Make sure to add details of latest sim with moving past 16-bit counter and reaching WFI.
+        * Pay special attention to NVIC related chanages that are being made here...
 
-* Look into moving simulation beyond stopping at 16-bit counter.
-    * Need to break in with gdb to change counter value to progress past, as opposed to being able to change register setting at beginning of simulation.
+* Check that defaults are set for all configuration registers being accessed and re-simulate
+    * Now that we are getting past EEPROM access more registers are being accessed.
 
-* Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
-    * Need to be careful that simulation paths for some reason do not match controller paths due to EEPROM config read...
+* In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
+    * Understanding how USB is setup may be key to understanding how jingle is transmitted.
 
 * Consider what if code to play jingle occurs in interrupt handler.
     * Current simulation never reaches this code.
     * Which interrupt is for USB and how should interrupt status register be set?
 
+* Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
+    * Need to be careful that simulation paths for some reason do not match controller paths due to EEPROM config read...
+
 * Full disassembly of firmware.bin to assembly.
     * Use idea in FirmwareParser, but extend pinkySim's ability to decode and execute instructions.
-
-* In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
-    * Understanding how USB is setup may be key to understanding how jingle is transmitted.
-
-* Check that defaults are set for all configuration registers being accessed.
-    * Now that we are getting past EEPROM access more registers are being accessed.
 
 * Hook up UART to Steam Controller?
     * Simulation makes it look like USART is being setup
@@ -104,7 +106,7 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 * Hook up debugger to Steam Controller?
     * Use debugger on LPCXpresso11U37H Evaluation board OM13074
     * Create pogo pin adapter to debug spot on Steam Controller
-        * Need to understand how to connect 10 pin header to 6 ping DEBUG
+        * Need to understand how to connect 10 pin header to 6 ping DEBUG (if possible...)
 
 ### EEPROM Assumption
 
