@@ -77,19 +77,44 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 
 #### TODO
 
+* Check that defaults are set for all configuration registers being accessed and re-simulate
+
 * Understand and add details to status on what code does as simulated so far.
     * Make sure to add details of latest sim with moving past 16-bit counter and reaching WFI.
         * Pay special attention to NVIC related chanages that are being made here...
+        * Make mention of how controller maybe actually powers up on battery insert and low level sleeps until button is pushed?
+            * Or was it something else insightful I meant to say here?
+        * Dig into simulation thinking what pushing Steam Button or plugging in USB really does to power up the unit?
+            * A counter to this theory is that the USB plugging in powers the dev board, which definitely is not in a low powered state...
+            * Can we use a multimeter to probe the state of the chip with batteries in and out of the system?
+    * WIP note/thoughts
+        * boot up stuff
+        * 16-bit timer 1 is used as PWM to keep Steam Controller Button LED blinking?
+        * 32-bti timer 1 is used for system to timeout and go back to sleep if not connection is established?
+    * Create dump of all memory before WFI instruction (i.e. RAM contents and register contents)
+        * We want this to be loadable for each time we try to simulation an interrupt handler being called
 
-* Check that defaults are set for all configuration registers being accessed and re-simulate
-    * Now that we are getting past EEPROM access more registers are being accessed.
+* Start trying to simulate interrupt handlers
+    * Assumption is that jingle is played when some interrupt handler is called
+    * Need to run full simulation (until sleep after setting registers) and get memory dump
+        * Make sure we defaults are set for all registers that are read from
+    * Need to set status register properly depending on which 
 
+* Simulate from beginning but change value read from EEPROM 
+    * Have it read back magic word that seems to cause subsequent write and see if simulation is different
+
+* Simulate from beginning but change values of 0x50000003 (GPIOs P0_3 - P0_6?)
+    * Look into which pin values are actually being checked
+
+* Simulate from beginning but change value of 0x40038004 (PMU GPREG0)
+    * Look into how this is being checked and what possible values it could be
+    
 * In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
     * Understanding how USB is setup may be key to understanding how jingle is transmitted.
 
-* Consider what if code to play jingle occurs in interrupt handler.
-    * Current simulation never reaches this code.
-    * Which interrupt is for USB and how should interrupt status register be set?
+* It looks like 16-bit counter/timer 1 might be being used as PWM. Could this be for flashing Steam Controller button before connect?
+    * Try changing period of flashing and loading modified firmware
+    * Read up on specifics of 0x40010074 and how this is set to see if assumption might be right
 
 * Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
     * Need to be careful that simulation paths for some reason do not match controller paths due to EEPROM config read...
@@ -247,7 +272,7 @@ The following command launches the emulator with the proper memory map of the LP
 
 The following command launches gbd, attaches it to the running eumulator and sets up register to values that allow system to proceed past initialization:
 
-* ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40048000 = 2" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048028 = 0x080" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0" -ex "set {int}0x4003cfe0 = 0xFFFFFFFF"
+* ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40008004 = 0" -ex "set {int}0x4000800c = 0" -ex "set {int}0x40008014 = 0x0060" -ex "set {int}0x40010004 = 0" -ex "set {int}0x40010008 = 0" -ex "set {int}0x40010014 = 0" -ex "set {int}0x40010074 = 0" -ex "set {int}0x40018004 = 0" -ex "set {int}0x40018014 = 0" -ex "set {int}0x40038004 = 0" -ex "set {int}0x4003c010 = 2" -ex "set {int}0x4003cfe0 = 0xFFFFFFFF" -ex "set {int}0x40048000 = 2" -ex "set {int}0x40048008 = 0" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048070 = 0" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0" -ex "set {int}0x40080000 = 0x0800" -ex "set {int}0x50000003 = 0" -ex "set {int}0x50002004 = 0" -ex "set {int}0xe000e414 = 0" -ex "set {int}0xe000ed20 = 0"
     * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37H) 
 
 ###### Breakdown of Input Arguments
@@ -256,39 +281,98 @@ The following outlines details on the input arguments of the previous section an
 
 * Connect to remote simulator being run on port 3333 of local machine
     * target remote localhost:3333
-* Set 0x40048000 to 0x00000002 (reset value)
-    * set {int}0x40048000 = 2
-* Set 0x4004800c to 0x00000001 to indicate System PLL is locked                  
-    * set {int}0x4004800c = 1 
-* Set 0x40048014 to 0x00000001 to indicate USB PLL is locked
-    * set {int}0x40048014 = 1
-* Set 0x40048028 to 0x00000080 (reset value)
-    * set {int}0x40048028 = 0x080
-* Set 0x40048030 to 0x00000003 (reset value)
-    * set {int}0x40048030 = 3
-* Set 0x40048040 to 0x00000001 (reset value)
-    * set {int}0x40048040 = 1
-* Set 0x40048044 to 0x00000001 (reset value)
-    * set {int}0x40048044 = 1
-* Set 0x40048074 to 0x00000001 (reset value)
-    * set {int}0x40048074 = 1
-* Set 0x40048078 to 0x00000001 (reset value)
-    * set {int}0x40048078 = 1
-* Set 0x40048080 to 0x0000003F (reset value)
-    * set {int}0x40048080 = 0x3F
-* Set 0x40048170 to 0x00000010 (reset value)
-    * set {int}0x40048170 = 0x10
-* Set 0x4004819C to 0x00000001 (reset value)
-    * set {int}0x4004819C = 1
-* Set 0x40048230 to 0x0000FFFF (reset value)
-    * set {int}0x40048230 = 0xFFFF
-* Set 0x40048234 to 0x0000EDFO (reset value)
-    * set {int}0x40048234 = 0xEDF0
-* Set 0x40048238 to 0x0000EDDO (reset value)
-    * set {int}0x40048238 = 0xEDD0
-* Set 0x4003cfe0 to 0xFFFFFFFF to convince system that EEPROM write finished
-    * NOTE: This must be some weird hardware issue relating to the conditional for checking write. Upper bits should be non-use, but setting bit 2 does not add up to check being performed on register (lsl immediate).
-    * set {int}0x4003cfe0 = 0xFFFFFFFF
+* USART/SMART CARD Register Settings (base offset 0x40008000)
+    * Set USART Divisor Latch Register (when DLAB = 0) 0x40008004 to 0 (reset value)
+        * set {int}0x40008004 = 0
+    * Set USART Line Control Register 0x4000800c to 0x00000000 (reset value)
+        * set {int}0x4000800c = 0
+    * Set Line Status Register (Read Only) 0x40008014 to 0x00000060 (reset value)
+        * set {int}0x40008014 = 0x0060 
+* 16-bit Counter/Timer 1 Register Settings (base offset 0x40010000)
+    * Set Timer Control Register 0x40010004 to 0 (reset value)
+        * set {int}0x40010004 = 0
+    * Set Time Counter Register 0x40010008 to 0 (reset value)
+        * set {int}0x40010008 = 0
+    * Set Match Control Register 0x40010014 to 0 (reset value)
+        * set {int}0x40010014 = 0
+    * Set PWM Control Register 0x40010074 to 0 (reset value)
+        * set {int}0x40010074 = 0
+* 32-bit Counter/Timer 1 Register Settings (base offset 0x40018000)
+    * Set Timer Control Register 0x40018004 to 0 (reset value)
+        * set {int}0x40018004 = 0
+    * Set Match Control Register 0x40018014 to 0 (reset value)
+        * set {int}0x40018014 = 0
+* PMU Register Settings (base offset 0x40038000)
+    * Set General purpose register 0 0x40038004 to 0x00000000 (reset value)
+        * set {int}0x40038004 = 0
+* Flash/EEPROM Controller Register Settings (base offset 0x4003C000)
+    * Set Flash configuration register 0x4003c010 to 0x00000002 (reset value)
+        * set {int}0x4003c010 = 2
+    * Set Flash module status register 0x4003cfe0 to 0xFFFFFFFF to indicate that EEPROM write finished
+        * set {int}0x4003cfe0 = 0xFFFFFFFF
+* System Control Register Settings (base offset 0x40048000)
+    * Set System memory remap register 0x40048000 to 0x00000002 (reset value)
+        * set {int}0x40048000 = 2
+    * Set System PLL contro register 0x40048008 to 0x00000000 (reset value)
+        * set {int}0x40048008 = 0
+    * Set System PLL status register 0x4004800c to 0x00000001 (indicates System PLL is locked)
+        * set {int}0x4004800c = 1 
+    * Set USB PLL status register 0x40048014 to 0x00000001 (indicates USB PLL is locked)
+        * set {int}0x40048014 = 1
+    * Set System reset status register 0x40048030 to 0x00000003 (reset value)
+        * set {int}0x40048030 = 3
+    * Set System PLL clock source register 0x40048040 to 0x00000001 (reset value)
+        * set {int}0x40048040 = 1
+    * Set System PLL clock source update register 0x40048044 to 0x00000001 (reset value)
+        * set {int}0x40048044 = 1
+    * Set Main clock source select register 0x40048070 to 0x00000000 (reset value)
+        * set {int}0x40048070 = 0
+    * Set Main clock source update enable register 0x40048074 to 0x00000001 (reset value)
+        * set {int}0x40048074 = 1
+    * Set System clock divider register 0x40048078 to 0x00000001 (reset value)
+        * set {int}0x40048078 = 1
+    * Set Sytem clock control register 0x40048080 to 0x0000003F (reset value)
+        * set {int}0x40048080 = 0x3F
+    * Set IRQ Latency register 0x40048170 to 0x00000010 (reset value)
+        * set {int}0x40048170 = 0x10
+    * Set USB block status register 0x4004819C to 0x00000001 (reset value)
+        * set {int}0x4004819C = 1
+    * Set Deep-sleep mode configuration register 0x40048230 to 0x0000FFFF (reset value)
+        * set {int}0x40048230 = 0xFFFF
+    * Set Wake-up configuration register 0x40048234 to 0x0000EDFO (reset value)
+        * set {int}0x40048234 = 0xEDF0
+    * Set Power configuration register 0x40048238 to 0x0000EDDO (reset value)
+        * set {int}0x40048238 = 0xEDD0
+* USB Register Settings (base offset 0x40080000)
+    * Set USB Device Command/Status register 0x40080000 to 0x00000800 (reset value)
+        * set {int}0x40080000 = 0x0800
+* GPIO Register Settings (base offset 0x50000000)
+    * Set GPIO port byte pin register 0x50000003 to 0x00000000 (assume external values of P0_3, P0_4, P0_5 and P0_6 are all 0)
+        * set {int}0x50000003 = 0
+        * Note that we do not yet know 100% what these GPIOs should read be reading or how the software reacts to them
+    * Set GPIO direction port 1 register 0x50002004 to 0x00000000 (reset value)
+        * set {int}0x50002004 = 0
+* Private Peripheral Bus Register Settings (base offset 0xE0000000)
+    * Set Input Priority Register 5 0xe000e414 to 0x00000000 (reset value)
+        * set {int}0xe000e414 = 0
+    * Set System Handler Priority Register 3 0xe000ed20 to 0x00000000 (reset value)
+        * set {int}0xe000ed20 = 0
+
+###### Simulation Oddities
+
+This section outlines oddities observed in simulation with possible explanations.
+
+* 0x4003c000 is read from and written to, but UM10462 datasheet makes no mention of this register.
+    * This is done by boot ROM code. So maybe it knows some secrets not mentioned in datasheet.
+* 0x4003c08c is read from and written to, but UM10462 datasheet makes no mention of this register.
+    * This is done by boot ROM code. So maybe it knows some secrets not mentioned in datasheet.
+* 0x4003c094 is read from and written to, but UM10462 datasheet makes no mention of this register.
+    * This is done by boot ROM code. So maybe it knows some secrets not mentioned in datasheet.
+* 0x40048224 is read from and written to, but UM10462 datasheet makes no mention of this register.
+    * This is done by boot ROM code. So maybe it knows some secrets not mentioned in datasheet.
+
+* According to UM10462 datahsset, flash module status register 0x4003cfe0 only has bit 2 as non-reserved, but boot ROM code is checking other bits for status.
+    * Assumptionis that this must be some weird hardware issue with how reserved bits function. Upper bits should be non-use, but setting bit 2 does not add up to check being performed on register (lsl immediate).
 
 ### [Radare](http://www.radare.org/r/)
 
