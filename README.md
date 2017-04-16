@@ -77,8 +77,6 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 
 #### TODO
 
-* Check that defaults are set for all configuration registers being accessed and re-simulate
-
 * Understand and add details to status on what code does as simulated so far.
     * Make sure to add details of latest sim with moving past 16-bit counter and reaching WFI.
         * Pay special attention to NVIC related chanages that are being made here...
@@ -88,16 +86,17 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
             * A counter to this theory is that the USB plugging in powers the dev board, which definitely is not in a low powered state...
             * Can we use a multimeter to probe the state of the chip with batteries in and out of the system?
     * WIP note/thoughts
-        * boot up stuff
+        * Boilerplate init code added to lpcxpresso project targeting llu37 processor
+        * ...
         * 16-bit timer 1 is used as PWM to keep Steam Controller Button LED blinking?
         * 32-bti timer 1 is used for system to timeout and go back to sleep if not connection is established?
-    * Create dump of all memory before WFI instruction (i.e. RAM contents and register contents)
-        * We want this to be loadable for each time we try to simulation an interrupt handler being called
 
 * Start trying to simulate interrupt handlers
     * Assumption is that jingle is played when some interrupt handler is called
-    * Need to run full simulation (until sleep after setting registers) and get memory dump
-        * Make sure we defaults are set for all registers that are read from
+    * Need instructions for loading .bin files saved after sim dump
+        * Need better organization of .bin files? 
+            * Will need different .bin files for different scenarios?
+            * Better way to do this in general?
     * Need to set status register properly depending on which 
 
 * Simulate from beginning but change value read from EEPROM 
@@ -274,6 +273,26 @@ The following command launches gbd, attaches it to the running eumulator and set
 
 * ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40008004 = 0" -ex "set {int}0x4000800c = 0" -ex "set {int}0x40008014 = 0x0060" -ex "set {int}0x40010004 = 0" -ex "set {int}0x40010008 = 0" -ex "set {int}0x40010014 = 0" -ex "set {int}0x40010074 = 0" -ex "set {int}0x40018004 = 0" -ex "set {int}0x40018014 = 0" -ex "set {int}0x40038004 = 0" -ex "set {int}0x4003c010 = 2" -ex "set {int}0x4003cfe0 = 0xFFFFFFFF" -ex "set {int}0x40048000 = 2" -ex "set {int}0x40048008 = 0" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048070 = 0" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0" -ex "set {int}0x40080000 = 0x0800" -ex "set {int}0x50000003 = 0" -ex "set {int}0x50002004 = 0" -ex "set {int}0xe000e414 = 0" -ex "set {int}0xe000ed20 = 0"
     * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37H) 
+    * Execute "continue" to start simulation.
+    * Will need to break (ctrl-c) and execute command "set {int}0x40010008 = 0" to get simulation past waiting for 16-bit counter/timer 1.
+        * User can tell this needs to happen when instructions 0x61a, 0x61c, 0x61e repeat non-stop.
+    * Simulation will end with 0xa6e as last valid instruction.
+        * Next instruction is Wait for Interrupt (WFI), which simulator reports as Unsupported Instruction.
+    * The following commands can be used to save the state of memory if say the user wants to reload state for attempting simulation of interrupts.
+        * 8 kB SRAM
+             * dump binary memory sram.bin 0x10000000 0x10002000
+        * 2 kB USB SRAM
+             * dump binary memory usbsram.bin 0x20004000 0x20004800
+        * APB peripherals
+             * dump binary memory apb1.bin 0x40000000 0x40020000
+             * dump binary memory apb2.bin 0x40038000 0x40050000
+             * dump binary memory apb3.bin 0x40058000 0x40064000
+        * USB registers
+             * dump binary memory usb.bin 0x40080000 0x40084000
+        * GPIO registers
+             * dump binary memory gpio.bin 0x50000000 0x50004000
+        * private peripheral bus
+             * dump binary memory privperiph.bin 0xe0000000 0xe0100000 
 
 ###### Breakdown of Input Arguments
 
