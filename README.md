@@ -85,11 +85,55 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
         * Dig into simulation thinking what pushing Steam Button or plugging in USB really does to power up the unit?
             * A counter to this theory is that the USB plugging in powers the dev board, which definitely is not in a low powered state...
             * Can we use a multimeter to probe the state of the chip with batteries in and out of the system?
-    * WIP note/thoughts
+    * WIP note/thoughts (be clear if anything has been confirmed with quantified hardware behavior changes)
         * Boilerplate init code added to lpcxpresso project targeting llu37 processor
-        * ...
-        * 16-bit timer 1 is used as PWM to keep Steam Controller Button LED blinking?
-        * 32-bti timer 1 is used for system to timeout and go back to sleep if not connection is established?
+            * Add details
+        * More to be added here...
+        * USB
+            * In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
+                * Understanding how USB is setup may be key to understanding how jingle is transmitted.
+            *  58103, alignedMemWrite: IOCON (0x40044018 = 0x00000001) -> PIO0_6 Set pin function to USB CONNECT
+            *  58122, alignedMemWrite: IOCON (0x400440a4 = 0x00000002) -> PIO1_17 Set pin function to RXD
+            *  58141, alignedMemWrite: IOCON (0x400440a8 = 0x00000002) -> PIO1_18 Set pin function to TXD
+        * IOCON
+            *  58085, alignedMemWrite: IOCON (0x4004400c = 0x00000008) -> PIO0_3 Pull-down resistor enabled
+                *  what is this for? USB?
+        * 16-bit timer 1 seems to be used as PWM to keep Steam Controller Button LED blinking
+            * 266733, alignedMemWrite: IOCON (0x40044054 = 0x00000081) -> PIO0_21 Set pin function to CT16B1_MAT0
+            * 266771, alignedMemWrite: 16-bit counter/timer 1 (0x4001000c = 0x00000000) -> Set Prescale Counter to 0
+            * 266777, alignedMemWrite: 16-bit counter/timer 1 (0x40010074 = 0x00000001) -> PWM mode is enabled for CT16B1_MAT0
+                * Why are changes made to MR0 and not MR3?
+                * Check which pin PIO0_21 is physically and if this matches to PCB traces connecting to Steam Controller Button LED (from what can be seen on teardown image)
+            * 266784, alignedMemWrite: 16-bit counter/timer 1 (0x40010024 = 0x00000fff) -> Timer counter match value MR3 is set to 0x0fff
+            * 266787, alignedMemWrite: 16-bit counter/timer 1 (0x40010018 = 0x00001000) -> Timer counter match value MR0 is set to 0x1000
+            * 266793, alignedMemWrite: 16-bit counter/timer 1 (0x40010014 = 0x00000400) -> Reset on MR3: the TC will be reset if MR3 matches it
+            * 266800, alignedMemWrite: 16-bit counter/timer 1 (0x40010004 = 0x00000000) -> The counters are disabled
+            * 266803, alignedMemWrite: 16-bit counter/timer 1 (0x40010008 = 0x00000001) -> Timer counter value set to 1
+            * 266806, alignedMemWrite: 16-bit counter/timer 1 (0x40010004 = 0x00000002) -> The Timer Counter and the Prescale Counter are synchronously reset on the next positive edge of PCLK. The counters remain reset until TCR[1] is returned to zero.
+            * 719056, alignedMemWrite: 16-bit counter/timer 1 (0x40010004 = 0x00000000) -> The counters are disabled
+            * 719062, alignedMemWrite: 16-bit counter/timer 1 (0x40010004 = 0x00000001) -> The Timer Counter and Prescale Counter are enabled for counting
+            * 719082, alignedMemWrite: 16-bit counter/timer 1 (0x40010018 = 0x0000ffff) -> Timer counter match value MR0 is set to 0xffff
+        * 32-bit timer 1 seems to be used for system to timeout and shutdown if no connection is established
+            * 719840, alignedMemWrite: 32-bit counter/timer 1 (0x4001800c = 0x0000bb7f) -> Set Prescale Counter to 0xbb7f
+            * 719848, alignedMemWrite: 32-bit counter/timer 1 (0x40018014 = 0x00000002) -> Reset on MR0: the TC will be reset if MR0 matches it.
+            * 719853, alignedMemWrite: 32-bit counter/timer 1 (0x40018014 = 0x00000003) -> Also, Interrupt on MR0: an interrupt is generated when MR0 matches the value in the TC.
+            * 719856, alignedMemWrite: 32-bit counter/timer 1 (0x40018018 = 0x0000000b) -> Timer counter match value MR0 is set to 0xb
+            * 719960, alignedMemWrite: 32-bit counter/timer 1 (0x40018004 = 0x00000001) -> The Timer Counter and Prescale Counter are enabled for counting.
+
+* Make mods to firmware that are controlled and can be observed concretely via controller behavior changing
+    * Mods to 16-bit and 32-bit counter setup does not seem to change anything
+        * try to simulate modified code to make sure firmware changes simulate as expected
+        * Are discrepencies with what 16-bit and 32-bit timer seem to be doing versus what changes to firmware affects due to changes I am making being on a different code path than what controller is executing?
+    * should focus be to simulate different startup paths and try to mod behavior there?
+        * Simulate from beginning but change value read from EEPROM 
+            * Have it read back magic word that seems to cause subsequent write and see if simulation is different
+            * gdb -> stepi {num_steps} to step to instruction where it is safe to modify memory that EEPROM should be dumping to
+        * Simulate from beginning but change values of 0x50000003 (GPIOs P0_3 - P0_6?)
+            * Look into which pin values are actually being checked
+        * Simulate from beginning but change value of 0x40038004 (PMU GPREG0)
+            * Look into how this is being checked and what possible values it could be
+        * Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
+            * Need to be careful that simulation paths for some reason do not match controller paths due to EEPROM config read...
 
 * Start trying to simulate interrupt handlers
     * Assumption is that jingle is played when some interrupt handler is called
@@ -98,25 +142,8 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
             * Will need different .bin files for different scenarios?
             * Better way to do this in general?
     * Need to set status register properly depending on which 
-
-* Simulate from beginning but change value read from EEPROM 
-    * Have it read back magic word that seems to cause subsequent write and see if simulation is different
-
-* Simulate from beginning but change values of 0x50000003 (GPIOs P0_3 - P0_6?)
-    * Look into which pin values are actually being checked
-
-* Simulate from beginning but change value of 0x40038004 (PMU GPREG0)
-    * Look into how this is being checked and what possible values it could be
-    
-* In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
-    * Understanding how USB is setup may be key to understanding how jingle is transmitted.
-
-* It looks like 16-bit counter/timer 1 might be being used as PWM. Could this be for flashing Steam Controller button before connect?
-    * Try changing period of flashing and loading modified firmware
-    * Read up on specifics of 0x40010074 and how this is set to see if assumption might be right
-
-* Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
-    * Need to be careful that simulation paths for some reason do not match controller paths due to EEPROM config read...
+    * Figure out which interrupt handler happens when 32-bit counter causes shutdown and simualte
+        * Jingle is also played on shutdown
 
 * Full disassembly of firmware.bin to assembly.
     * Use idea in FirmwareParser, but extend pinkySim's ability to decode and execute instructions.
@@ -277,8 +304,8 @@ The following command launches gbd, attaches it to the running eumulator and set
     * Will need to break (ctrl-c) and execute command "set {int}0x40010008 = 0" to get simulation past waiting for 16-bit counter/timer 1.
         * User can tell this needs to happen when instructions 0x61a, 0x61c, 0x61e repeat non-stop.
     * Simulation will end with 0xa6e as last valid instruction.
-        * Next instruction is Wait for Interrupt (WFI), which simulator reports as Unsupported Instruction.
-    * The following commands can be used to save the state of memory if say the user wants to reload state for attempting simulation of interrupts.
+        * Next instruction is Wait for Interrupt (WFI), which pinkySim simulator reports as Unsupported Instruction.
+    * The following commands can be used to save the state of memory if say the user wants to reload state for attempting simulation of interrupts without having to re-run entire simulation.
         * 8 kB SRAM
              * dump binary memory sram.bin 0x10000000 0x10002000
         * 2 kB USB SRAM
