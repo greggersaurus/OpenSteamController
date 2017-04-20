@@ -87,7 +87,29 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
             * Can we use a multimeter to probe the state of the chip with batteries in and out of the system?
     * WIP note/thoughts (be clear if anything has been confirmed with quantified hardware behavior changes)
         * Boilerplate init code added to lpcxpresso project targeting llu37 processor
-            * Add details
+            * More details to be added here...
+        * Read from EEPROM Using IAP Command code 62
+            * See 20.14.12 in UM10462 datasheet for command details
+            * Excerpts from runLogFile_00000000001490067251:
+                * 54144, alignedMemWrite: 8 kB SRAM0 (0x10001bc0 = 0x0000003e) -> Command Code 62 (decimal) Read EEPROM
+                * 54145, alignedMemWrite: 8 kB SRAM0 (0x10001bc4 = 0x00000000) -> EEPROM Address
+                * 54146, alignedMemWrite: 8 kB SRAM0 (0x10001bc8 = 0x10000254) -> RAM Address
+                * 54147, alignedMemWrite: 8 kB SRAM0 (0x10001bcc = 0x00000008) -> Number of bytes to be read
+                * 54141, alignedMemWrite: 8 kB SRAM0 (0x10001bd0 = 0x0000b71b) -> System Clock Frequency (CCLK) in kHz. (46.875 MHz)
+        * Check 8 bytes of EEPROM data written to 0x10000254 by IAP
+             * Check if word 0 is 0xa55a
+             * Exceprts from runLogFile_00000000001490067251:
+                * 56007, alignedMemRead: 8 kB SRAM0 (0x10000254 --> 0x00000000)
+                * 56008, ldrhImmediate
+                * 56009, cmpRegisterT1: Subtract Reg 2 (0x00000000) minus Reg 1 (0x0000a55a)
+                * 56010, conditionalBranch: Not branching to 0x00000d26
+        * Write to EEPROM Using IAP Command code 61 (only if magic word 0xa55a was not read from EEPROM)
+            * See 20.14.11 in UM10462 datasheet for command details
+                * 56054, alignedMemWrite: 8 kB SRAM0 (0x10001bb8 = 0x0000003d) -> Command Code 61 (decimal) Write EEPROM
+                * 56055, alignedMemWrite: 8 kB SRAM0 (0x10001bbc = 0x00000000) -> EEPROM Address
+                * 56056, alignedMemWrite: 8 kB SRAM0 (0x10001bc0 = 0x10000254) -> RAM Address
+                * 56057, alignedMemWrite: 8 kB SRAM0 (0x10001bc4 = 0x00000008) -> Number of bytes to be written
+                * 56051, alignedMemWrite: 8 kB SRAM0 (0x10001bc8 = 0x0000b71b) -> System Clock Frequency (CCLK) in kHz. (46.875 MHz)
         * More to be added here...
         * USB
             * In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
@@ -127,7 +149,12 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
     * should focus be to simulate different startup paths and try to mod behavior there?
         * Simulate from beginning but change value read from EEPROM 
             * Have it read back magic word that seems to cause subsequent write and see if simulation is different
-            * gdb -> stepi {num_steps} to step to instruction where it is safe to modify memory that EEPROM should be dumping to
+                * gbd command to step to instruction where it is safe to change memory that EEPROM controller was setup to write to
+                    * stepi 42750 
+                * gdb command to change memory EEPROM controller was setup to write to
+                    * set {int}0x10000254 = 0xa55a
+            * Preliminary results show this might just skip over writing magic word 0xa55a back to EEPROM
+                * Run full sim and compare to make sure nothing else has changed due to not writing to EEPROM
         * Simulate from beginning but change values of 0x50000003 (GPIOs P0_3 - P0_6?)
             * Look into which pin values are actually being checked
         * Simulate from beginning but change value of 0x40038004 (PMU GPREG0)
