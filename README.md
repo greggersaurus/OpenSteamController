@@ -147,19 +147,20 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
         * try to simulate modified code to make sure firmware changes simulate as expected
         * Are discrepencies with what 16-bit and 32-bit timer seem to be doing versus what changes to firmware affects due to changes I am making being on a different code path than what controller is executing?
     * should focus be to simulate different startup paths and try to mod behavior there?
-        * Simulate from beginning but change value read from EEPROM 
+        * Complete: Simulate from beginning but change value read from EEPROM 
             * Have it read back magic word that seems to cause subsequent write and see if simulation is different
                 * gbd command to step to instruction where it is safe to change memory that EEPROM controller was setup to write to
                     * stepi 42750 
                 * gdb command to change memory EEPROM controller was setup to write to
                     * set {int}0x10000254 = 0xa55a
-            * Preliminary results show this might just skip over writing magic word 0xa55a back to EEPROM
-                * Run full sim and compare to make sure nothing else has changed due to not writing to EEPROM
-        * Simulate from beginning but change values of 0x50000003 (GPIOs P0_3 - P0_6?)
+            * Diff of simulation runs show this just skips over writing magic word 0xa55a back to EEPROM.
+                * Could not see change to memory that would effect other code paths (i.e. interrupt handlers)
+            * Need to put results somewhere for future reference and remove from here?
+        * TODO: Simulate from beginning but change values of 0x50000003 (GPIOs P0_3 - P0_6?)
             * Look into which pin values are actually being checked
-        * Simulate from beginning but change value of 0x40038004 (PMU GPREG0)
+        * TODO: Simulate from beginning but change value of 0x40038004 (PMU GPREG0)
             * Look into how this is being checked and what possible values it could be
-        * Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
+        * TODO: Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
             * Need to be careful that simulation paths for some reason do not match controller paths due to EEPROM config read...
 
 * Start trying to simulate interrupt handlers
