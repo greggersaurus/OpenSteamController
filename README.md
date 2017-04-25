@@ -69,7 +69,7 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 #### Status
 
 * Using pinkySim I am currently able to simulate until firmware makes call to Wait For Interrupt (WFI) instruction
-    * Details:
+    * Details (to be used as basis for [custom firmware](https://github.com/greggersaurus/SteamControllerCustomFirmware)?):
         * TODO
     * Unclear if this is enough setup for jingle to be played or not.
         * Adding breakpoint instruction to isolate key code has had mixed results thus far.
@@ -147,8 +147,9 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 
 * Make mods to firmware that are controlled and can be observed concretely via controller behavior changing
     * Mods to 16-bit and 32-bit counter setup does not seem to change anything
-        * try to simulate modified code to make sure firmware changes simulate as expected
+        * TODO: Try to simulate modified code to make sure firmware changes simulate as expected
         * Are discrepencies with what 16-bit and 32-bit timer seem to be doing versus what changes to firmware affects due to changes I am making being on a different code path than what controller is executing?
+        * Everything else seems to add up in the sim being legit, so why aren't changes showing expeced reaction in hardware?
     * should focus be to simulate different startup paths and try to mod behavior there?
         * Complete: Simulate from beginning but change value read from EEPROM 
             * Have it read back magic word that seems to cause subsequent write and see if simulation is different
@@ -189,10 +190,14 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
             * Look deeply into how values read are used (maybe even later down the line by saving in RAM or being pushed on the stack?)
         * Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
             * Need to be careful that simulation paths for some reason do not match controller paths due to EEPROM config read...
+            * Could also be affected by interrupt handlers triggering...
         * TODO: Need to put results of completed tests somewhere for future reference and remove from here?
             * Maybe in history/outline of simulation above?
+            * Take a fresh look at this, clean up and clear out
 
 * Start trying to simulate interrupt handlers
+    * TODO: This should be next top priority
+        * Simulation thus far could be somewhat inaccurate if interrupt handler code changes states and such... which might explain why certain mods don't seem to have any effect...
     * Assumption is that jingle is played when some interrupt handler is called
     * Need instructions for loading .bin files saved after sim dump
         * Need better organization of .bin files? 
