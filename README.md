@@ -110,7 +110,10 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
                 * 56056, alignedMemWrite: 8 kB SRAM0 (0x10001bc0 = 0x10000254) -> RAM Address
                 * 56057, alignedMemWrite: 8 kB SRAM0 (0x10001bc4 = 0x00000008) -> Number of bytes to be written
                 * 56051, alignedMemWrite: 8 kB SRAM0 (0x10001bc8 = 0x0000b71b) -> System Clock Frequency (CCLK) in kHz. (46.875 MHz)
-        * More to be added here...
+        * TODO: More to be added here...
+        * PMU
+            * 58065,   alignedMemWrite: PMU (*0x40038008 = 0x00000000), 44577 -> Clear GPREG1
+            * 60091,  alignedMemRead: PMU (*0x40038004 --> 0x00000000), 46391 -> Read GPREG0 (to later check if it is set to 0xecaabac0)
         * USB
             * In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
                 * Understanding how USB is setup may be key to understanding how jingle is transmitted.
@@ -155,13 +158,39 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
                     * set {int}0x10000254 = 0xa55a
             * Diff of simulation runs show this just skips over writing magic word 0xa55a back to EEPROM.
                 * Could not see change to memory that would effect other code paths (i.e. interrupt handlers)
-            * Need to put results somewhere for future reference and remove from here?
-        * TODO: Simulate from beginning but change values of 0x50000003 (GPIOs P0_3 - P0_6?)
-            * Look into which pin values are actually being checked
-        * TODO: Simulate from beginning but change value of 0x40038004 (PMU GPREG0)
-            * Look into how this is being checked and what possible values it could be
-        * TODO: Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
+        * Complete: Simulate from beginning but change values of 0x50000003 GPIOs PIO0_3
+            * One byte is read from 0x50000003 and checked against 0x00000000
+                * stepi 44525, 44650, 50353
+                * set {int}0x50000003 = 1
+            * Removes addtional check of 0x40048030 (System reset status register) if set
+                * Some sort of reset or power supply indicator?
+            * Changes what value is written to 0x50000028 
+                * If PIO0_3 is 0 then PIO1_8 is set to 0
+                * If PIO0_3 is 1 then PIO1_8 is set to 1
+            * Changes whether long manual countdown occurs or not
+                * Instructions 0x12c8 - 0x12c3
+            * TODO: Check where these GPIOs are routed via ohming out the trace
+                * PIO0_3 as input 
+                * PIO1_8 as output
+                    * Is this setup to be an output?
+                * Actually, I think looking through documentation shows this is monitoring presence of USB bus power...
+        * Complete: Simulate from beginning but change value of 0x40038004 (PMU GPREG0)
+            * Is looking for register to be set to specific value 0xecaabac0
+                * set {int}0x40038004 = 0xecaabac0
+            * If this is already set some instructions are not executed and PMU GPREG0 is cleared
+                * Some RAM addresses are read, but nothing else really seems to change...
+        * TODO: look into possible branches after long delay before Steam Controller Button LED is setup to start flashing
+            * What if connection happens? How is this handled?
+            * Is this what happens if PIO0_3 is set to 1 and instructions 0x12c8 - 0x12c3 do not execute?
+            * Could this be a connectivity line for USB?
+                * PIO0_3 can function as USB_VBUS which monitors the presence of USB bus power.
+        * TODO: Verify that there aren't other possible branches I am overlooking
+            * Double check all hardware peripheral reads
+            * Look deeply into how values read are used (maybe even later down the line by saving in RAM or being pushed on the stack?)
+        * Insert breakpoint instruction (0xbebe) at various points in firmware to verfiry we are disassembling correctly.
             * Need to be careful that simulation paths for some reason do not match controller paths due to EEPROM config read...
+        * TODO: Need to put results of completed tests somewhere for future reference and remove from here?
+            * Maybe in history/outline of simulation above?
 
 * Start trying to simulate interrupt handlers
     * Assumption is that jingle is played when some interrupt handler is called
