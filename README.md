@@ -144,6 +144,22 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
             * 719853, alignedMemWrite: 32-bit counter/timer 1 (0x40018014 = 0x00000003) -> Also, Interrupt on MR0: an interrupt is generated when MR0 matches the value in the TC.
             * 719856, alignedMemWrite: 32-bit counter/timer 1 (0x40018018 = 0x0000000b) -> Timer counter match value MR0 is set to 0xb
             * 719960, alignedMemWrite: 32-bit counter/timer 1 (0x40018004 = 0x00000001) -> The Timer Counter and Prescale Counter are enabled for counting.
+        * private peripheral bus
+            *  65079,   alignedMemRead: private peripheral bus (0xe000e414 --> 0x00000000),  50194 -> Read Interrupt Priority Register 5
+            *  65083,    alignedMemWrite: private peripheral bus (0xe000e414 = 0x00000000),  50197 -> Make sure IP_USB_IRQ is set to highest priority (see previous instructions for details)
+            *  65090,    alignedMemWrite: private peripheral bus (0xe000e100 = 0x00400000),  50202 -> Enable interrupt 22 (0-based) -> USB_IRQ -> USB IRQ Interrupt
+            *  65109,   alignedMemRead: private peripheral bus (0xe000e414 --> 0x00000000),  50219 -> Read Interrupt Priority Register 5
+            *  65113,    alignedMemWrite: private peripheral bus (0xe000e414 = 0x00400000),  50222 -> Set IP_USB_IRQ to one below highest priority
+            *  65231,    alignedMemWrite: private peripheral bus (0xe000e100 = 0x00200000),  50298 -> Enable itnerrupt 21 (0-based) -> USART -> USART interrupt (and disable USB IRQ interrupt?)
+                * Is the expectation that the USB IRQ fires before this and changes some state?
+                * TODO: Look for branches or some countdown between these two instructions?
+            *  65256,   alignedMemRead: private peripheral bus (0xe000e414 --> 0x00400000),  50319,
+            *  65260,    alignedMemWrite: private peripheral bus (0xe000e414 = 0x00400000),  50322,
+            *  65283,   alignedMemRead: private peripheral bus (0xe000ed20 --> 0x00000000),  50343,
+            *  65287,    alignedMemWrite: private peripheral bus (0xe000ed20 = 0x00400000),  50346,
+            * 307241,    alignedMemWrite: private peripheral bus (0xe000e280 = 0x00080000), 281832,
+            * 307245,    alignedMemWrite: private peripheral bus (0xe000e100 = 0x00080000), 281834 -> Enable interrupt 19 (0-based) -> CT32B1 -> CT32B1 interrupt
+               * TODO: This is interrupt handler for when the 32-bit counter counts down and the controller powers off because nothing connected?
 
 * Make mods to firmware that are controlled and can be observed concretely via controller behavior changing
     * Mods to 16-bit and 32-bit counter setup does not seem to change anything
