@@ -214,6 +214,38 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 * Start trying to simulate interrupt handlers
     * TODO: This should be next top priority
         * Simulation thus far could be somewhat inaccurate if interrupt handler code changes states and such... which might explain why certain mods don't seem to have any effect...
+    * Interrupts to simulate
+        * Interrupt 22 - IP_USB_IRQ
+            * Called for multiple reasons (i.e. EP1-4 IN/OUT or FRAME_INT or DEV_INT(
+                * DEV_INT - Device status
+                    * set {int}0x40080020 = 0x80000000
+                * FRAME_INT - Set every millisecond when the VbusDebounced bit and the DCON bit are se
+                    * set {int}0x40080020 = 0x40000000
+            * PC Start Address for IRQ can be found at code offset 0x98
+                * For vcf_wired_controller_d0g_57bf5c10.bin this is 0x000001e9
+                    * set $pc = 0x000001e8
+        * Interrupt 19 - CT32B1
+            * Called when 32-bit Counter 1 times out because no connection has been achieved
+            * Simulate until interrupt is setup and ready to be "triggered"
+                * Simulate until undefined instruction (WFI)
+            * PC Start Address for IRQ can be found at code offset 0x8C
+                * For vcf_wired_controller_d0g_57bf5c10.bin this is 0x000001b9
+                    * set $pc = 0x000001b8
+            * Simulate interrupt on MR0
+                * set {int}0x40018000 = 1
+            * Make sure GPREG1 is not clear to show setup has occurred
+                * set {int}0x40038008 = 1
+                * TODO: It is an assumption this is set by USB IRQ. Not sure what value is right, other than not 0 at this point.
+            * Clearing of MR0 interrupt?
+                * set {int}0x40018000 = 0 at instruction 0x6180
+                    * This just causes IRQ to exit and WFI
+            * IRQ checks 0x10000848, is this set by USB IRQ firing?
+                * TODO: Maybe correct step is to simulate USB IRQ first?
+        * Interrupt 21 - USART
+            * Probably don't care about this so much
+            * PC Start Address for IRQ can be found at code offset 0x94
+                * For vcf_wired_controller_d0g_57bf5c10.bin this is 0x000001d5
+                    * set $pc = 0x000001d4
     * Assumption is that jingle is played when some interrupt handler is called
     * Need instructions for loading .bin files saved after sim dump
         * Need better organization of .bin files? 
