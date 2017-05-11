@@ -117,9 +117,25 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
         * USB
             * In LCP11U37 datasheet look at Fig 24 in 11.7.3 and other charts to understand how USB transmission works.
                 * Understanding how USB is setup may be key to understanding how jingle is transmitted.
-            *  58103, alignedMemWrite: IOCON (0x40044018 = 0x00000001) -> PIO0_6 Set pin function to USB CONNECT
-            *  58122, alignedMemWrite: IOCON (0x400440a4 = 0x00000002) -> PIO1_17 Set pin function to RXD
-            *  58141, alignedMemWrite: IOCON (0x400440a8 = 0x00000002) -> PIO1_18 Set pin function to TXD
+            *  58103,   alignedMemWrite: IOCON (0x40044018 = 0x00000001),    44609 -> PIO0_6 Set pin function to USB CONNECT
+            *  58122,   alignedMemWrite: IOCON (0x400440a4 = 0x00000002),    44626 -> PIO1_17 Set pin function to RXD
+            *  58141,   alignedMemWrite: IOCON (0x400440a8 = 0x00000002),    44643 -> PIO1_18 Set pin function to TXD
+            *  63368,   alignedMemWrite: USB (0x40080000 = 0x00000000),      48920 -> 
+            *  63401,   alignedMemWrite: USB (0x40080008 = 0x20004000),      48938 -> 
+            *  63407,   alignedMemWrite: USB (0x4008000c = 0x20004240),      48941 -> 
+            *  64106,   alignedMemWrite: USB (0x40080018 = 0x00000000),      49486 -> 
+            *  64110,   alignedMemWrite: USB (0x40080014 = 0x00000000),      49488 -> 
+            *  64116,   alignedMemWrite: USB (0x4008001c = 0x000003ff),      49491 -> Double buffer setup for EP1-4 IN and OUT
+            *  64122,   alignedMemWrite: USB (0x40080020 = 0xc00003ff),      49494 -> Clear EP0-4 IN and OUT interrupts
+            *  64128,   alignedMemWrite: USB (0x40080024 = 0x800003ff),      49497 -> Enable DEV_INT_EN and EP_INT_EN for EP0-4 IN and OUT
+            *  64132,  alignedMemRead: USB (0x40080000 --> 0x00000000),      49499 -> 
+            *  64136,   alignedMemWrite: USB (0x40080000 = 0x00000080),      49502 -> 
+            *  64155,  alignedMemRead: USB (0x40080000 --> 0x00000080),      49511 -> 
+            *  64159,   alignedMemWrite: USB (0x40080000 = 0x00000080),      49514 -> 
+            *  64163,  alignedMemRead: USB (0x40080000 --> 0x00000080),      49516 -> 
+            *  64168,   alignedMemWrite: USB (0x40080000 = 0x00000080),      49520 -> 
+            *  65135,  alignedMemRead: USB (0x40080000 --> 0x00000080),      50237 -> 
+            *  65140,   alignedMemWrite: USB (0x40080000 = 0x00010080),      50241 -> 
         * IOCON
             *  58085, alignedMemWrite: IOCON (0x4004400c = 0x00000008) -> PIO0_3 Pull-down resistor enabled
                 *  what is this for? USB?
@@ -153,11 +169,12 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
             *  65231,    alignedMemWrite: private peripheral bus (0xe000e100 = 0x00200000),  50298 -> Enable itnerrupt 21 (0-based) -> USART -> USART interrupt (and disable USB IRQ interrupt?)
                 * Is the expectation that the USB IRQ fires before this and changes some state?
                 * TODO: Look for branches or some countdown between these two instructions?
-            *  65256,   alignedMemRead: private peripheral bus (0xe000e414 --> 0x00400000),  50319,
-            *  65260,    alignedMemWrite: private peripheral bus (0xe000e414 = 0x00400000),  50322,
-            *  65283,   alignedMemRead: private peripheral bus (0xe000ed20 --> 0x00000000),  50343,
-            *  65287,    alignedMemWrite: private peripheral bus (0xe000ed20 = 0x00400000),  50346,
-            * 307241,    alignedMemWrite: private peripheral bus (0xe000e280 = 0x00080000), 281832,
+            *  65256,   alignedMemRead: private peripheral bus (0xe000e414 --> 0x00400000),  50319 -> Read Interrupt Priority Register 5
+            *  65260,    alignedMemWrite: private peripheral bus (0xe000e414 = 0x00400000),  50322 -> Set IP_USB_IRQ to one below highest priority
+            *  65283,   alignedMemRead: private peripheral bus (0xe000ed20 --> 0x00000000),  50343 -> Read System Handler Priority Register 3 
+            *  65287,    alignedMemWrite: private peripheral bus (0xe000ed20 = 0x00400000),  50346 -> Set Priority of system handler 14, PendSV to one below highest priority?
+                * TODO: find section where we know what priorities mean
+            * 307241,    alignedMemWrite: private peripheral bus (0xe000e280 = 0x00080000), 281832 -> ICPR: Clear interrupt pend of interrupt 19 (0-based) -> CT32B1 -> CT32B1 interrupt
             * 307245,    alignedMemWrite: private peripheral bus (0xe000e100 = 0x00080000), 281834 -> Enable interrupt 19 (0-based) -> CT32B1 -> CT32B1 interrupt
                * TODO: This is interrupt handler for when the 32-bit counter counts down and the controller powers off because nothing connected?
 
@@ -215,12 +232,18 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
     * TODO: This should be next top priority
         * Simulation thus far could be somewhat inaccurate if interrupt handler code changes states and such... which might explain why certain mods don't seem to have any effect...
     * Interrupts to simulate
+        * PendSV?
+            * TODO: When would this occur?
+            * TODO: What address would this jump to?
+            * TODO: does simulating this even make sense?
         * Interrupt 22 - IP_USB_IRQ
-            * Called for multiple reasons (i.e. EP1-4 IN/OUT or FRAME_INT or DEV_INT(
-                * DEV_INT - Device status
+            * Setup
+                * Step until interrupt is enabled and setup (code is in counting loop waiting for interrupt to occur?)
+                    * stepi 50700
+            * Called for multiple reasons (i.e. EP1-4 IN/OUT or FRAME_INT or DEV_INT)
+                * DEV_INT - Device status 
                     * set {int}0x40080020 = 0x80000000
-                * FRAME_INT - Set every millisecond when the VbusDebounced bit and the DCON bit are se
-                    * set {int}0x40080020 = 0x40000000
+                    * This does some checking of memory, but the proceeds to wait for connection and times out and sleeps (same code as if no interrupt fires)
             * PC Start Address for IRQ can be found at code offset 0x98
                 * For vcf_wired_controller_d0g_57bf5c10.bin this is 0x000001e9
                     * set $pc = 0x000001e8
