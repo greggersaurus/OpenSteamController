@@ -70,7 +70,209 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 
 * Using pinkySim I am currently able to simulate until firmware makes call to Wait For Interrupt (WFI) instruction
     * Details (to be used as basis for [custom firmware](https://github.com/greggersaurus/SteamControllerCustomFirmware)?):
-        * TODO
+        * Execution breakdown
+            * Init
+                * Set Power Configuration Register to make sure crystal oscillator is set
+```
+                    // Power Configuration Register                                                 
+                    reg = 0x40048238;                                                               
+                    // Read current value                                                           
+                    val = *reg;                                                                     
+                    // Clear reserved bit that must stay cleared                                    
+                    val &= 0x000005ff;                                                              
+                    // Make sure crystal oscillator is powered                                      
+                    val &= ~(0x00000020);                                                           
+                    // Reserved bits that must always be set                                        
+                    val |= 0xe800;                                                                  
+                    *reg = val;  
+```
+                * Delay (after Power Configuration Register change I think...)
+```
+                    // Some sort of delay required after last system control register mod?          
+                    for (uint32_t cnt = 0; cnt < 0x1600; cnt++)                                     
+                    {                                                                               
+                            nop;                                                                    
+                    }  
+```
+                * Select Crystal Oscillator
+```
+                    // Select Crystal Oscillator (SYSOSC)                                           
+                    reg = 0x40048040;                                                               
+                    *reg = 1;                                                                       
+```
+                * Enable system PLL clock source update
+```
+                    // Enable system PLL clock source update                                        
+                    reg = 0x40048044;                                                               
+                    *reg = 0;                                                                       
+                    *reg = 1;
+```
+                * Set PLL divider
+```
+                    // Power Configuration Register                                                 
+                    reg = 0x40048238;                                                               
+                    // Read current value                                                           
+                    val = *reg;                                                                     
+                    // Clear reserved bit that must stay cleared                                    
+                    val &= 0x5ff;                                                                   
+                    // Make sure system PLL is powered down                                         
+                    val |= 0x80;                                                                    
+                    // Reserved bits that must always be set                                        
+                    val |= 0xe800;                                                                  
+                    *reg = val;                    
+
+                    // System PLL control register                                                  
+                    reg = 0x40048008;                                                               
+                    // Division ratio = 2 x 4. Feedback divider value = 3 + 1.                      
+                    *reg = 0x23;
+
+                    // Power configuration register                                                 
+                    reg = 0x40048238;                                                               
+                    val = *reg;                                                                     
+                    // Clear reserved bit that must stay cleared                                    
+                    val &= 0x5ff;                                                                   
+                    // Make sure system PLL powered                                                 
+                    val &= ~0x80;                                                                   
+                    // Reserved bits that must always be set                                        
+                    val |= 0xe800;                                                                  
+                    *reg = val;
+```
+                * Wait until PLL is locked
+```
+                    // System PLL status register                                                   
+                    reg = 0x4004800c;                                                               
+                    // Wait until PLL is locked                                                     
+                    while(((*reg) & 1) == 0);
+```
+                * Set System clock divider
+```
+                    // System clock divider register                                                
+                    reg = 0x40048078;                                                               
+                    // Set system AHB clock divider to 1.                                           
+                    *reg = 1;
+```
+                * EEPROM flash access configuration
+```
+                    // Flash configuration register                                                 
+                    reg = 0x4003c010;                                                               
+                    val = *reg;                                                                     
+                    // Bits 31:2 must be written back exactly as read                               
+                    val &= 0xFFFFFFC0;                                                              
+                    // Set flash access time to 3 system clocks (for system clock up to 50 MHz)     
+                    val |=  2;                                                                      
+                    *reg = val;
+```
+                * Main clock config 
+```
+                    // Main clock source select register                                            
+                    reg = 0x40048070;                                                               
+                    // Select PLL output                                                            
+                    *reg = 3;                                                                       
+                                                                                                
+                    // Main clock source update enable register                                     
+                    reg = 0x40048074;                                                               
+                    // No change                                                                    
+                    *reg = 0;                                                                       
+                    // Update clock source                                                          
+                    *reg = 1; 
+```
+                *  USB configuration
+```
+                    // USB PLL clock source select register                                         
+                    reg = 0x40048048;                                                               
+                    // Select system oscillator                                                     
+                    *reg = 1;                                                                       
+                                                                                                    
+                    // USB PLL clock source update enable register                                  
+                    reg = 0x4004804c;                                                               
+                    // No change                                                                    
+                    *reg = 0;                                                                       
+                    // Update clock source.                                                         
+                    *reg = 1; 
+
+                    // USB PLL control register                                                     
+                    reg = 0x40048010;                                                               
+                    // Division ration is 2 x 4. Feedback divider value is 3 + 1.                   
+                    *reg = 0x23;
+
+                    // Power Configuration Register                                                 
+                    reg = 0x40048238;                                                               
+                    val = *reg;                                                                     
+                    // Clear reserved bit that must stay cleared                                    
+                    val &= 0x5ff;                                                                   
+                    // Set USB PLL and USB transceiver to powered                                   
+                    val &= ~0x500;                                                                  
+                    // Reserved bits that must always be set                                        
+                    val |= 0xe800;                                                                  
+                    *reg = val;
+
+                    // USB PLL status register                                                      
+                    reg = 0x40048014;                                                               
+                    // Wait for PLL locked                                                          
+                    while (((*reg) & 1) == 0);
+```
+                * Enable I/O Configuration Block
+```
+                    // System clock control register                                                
+                    reg = 0x40048080;                                                               
+                    val = *reg;                                                                     
+                    // Enable I/O configuration block                                               
+                    val |= 0x10000;                                                                 
+                    *reg = val;
+```
+                * Set SRAM0 0x10000200 to 0x10001c1c with specific values
+                * TODO: stopping at CSV entry 53708 step 40672
+                * TODO: Pay attention to branches system does and does not take.
+            * IRQs
+                * Interrupt 19 - CT32B1
+                    * TODO
+                * Interrupt 22 - IP_USB_IRQ
+                    * Read PMU 0x40038008 (GPREG1) and check if register is 0
+                        * If GPREGP1 register is 0
+                            * Read 0x40080000 and check if bit 8 SETUP is set
+                                * If SETUP is set 
+                                    * To Sim: set {int}0x40080000 = 0x00010180
+                                    * Clear bit 29 of 0x20004000 and 0x20004008
+                                * Check if an enabled interrupt has triggered
+                                    * Enabled interrupt has triggered
+                                        * Check if 0x40080000 Bit 26 DRES_C (device received bus reset)
+                                            * It is set
+                                                * TODO
+                                            * It is not set
+                                                * Check if 0x40080000 Bit 24 DCON_C (device status connect change)
+                                                    * It is set
+                                                        * TODO
+                                                    * It is not set
+                                                        * Check if 0x40080000 Bit 25 DSUS_C (device status suspend change)
+                                                            * It is set
+                                                                * TODO
+                                                            * It is not set
+                                                                * Check if enabled interrupt 9 EP4IN triggered 
+                                                                    * It triggered
+                                                                        * TODO
+                                                                    * It did not trigger 
+                                                                        * Check if enabled interrupt 30 FRAME_INT triggered 
+                                                                            * It triggered
+                                                                                * TODO
+                                                                            * It did not trigger 
+                                                                                *  Check if 0x200040f4 is 0
+                                                                                    * It is 0
+                                                                                        * Exit ISR?
+                                                                                    * It is not 0
+                                                                                        * TODO
+                                    * Enabled interrupt has not triggered
+                                        * TODO
+                        * If GPREG1 register is not 0
+                            * TODO
+            * TODO: NMIs?
+        * RAM layout
+            * TODO: Starting stack pointer. Pay attention to how this changes through execution.
+            * TODO: Details on memory setup in init and called from IRQs?
+            * 0x10000200 - Initialized to specific values starting at step 33912
+            * ...
+            * 0x10001c1c - Initialized to specific values starting at step 33912
+            * 0x10001c20 - Initial Stack Pointer 
+            * 0x200040f4 may be checked by IP_USB_IRQ to see if it is 0 or not
     * Unclear if this is enough setup for jingle to be played or not.
         * Adding breakpoint instruction to isolate key code has had mixed results thus far.
     * Unclear if this is particular path of code that for some reason bypasses playing jingle (i.e some error path of the code due to some bad assumption on my part)
@@ -231,6 +433,12 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 * Start trying to simulate interrupt handlers
     * TODO: This should be next top priority
         * Simulation thus far could be somewhat inaccurate if interrupt handler code changes states and such... which might explain why certain mods don't seem to have any effect...
+        * Continue down path of simulating interrupts?
+            * Results thus far seem to be lacking something? Could be PenSV or something else happening I am not thinking of? Read up on this?
+        * Try forcing down other paths in IRQs (32-bit counter and USB)?
+        * Create memory map so when system tries to access memory and doesn't go down path because it's zero, we know what it might be looking for?
+        * Create better execution overview so we understand what we might be missing and what system is doing?
+            * It seems like we are missing some key setup or configurations somewhere...
     * Interrupts to simulate
         * PendSV?
             * TODO: When would this occur?
