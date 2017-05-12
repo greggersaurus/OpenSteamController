@@ -73,7 +73,7 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
         * Execution breakdown
             * Init
                 * Set Power Configuration Register to make sure crystal oscillator is set
-```
+
                     // Power Configuration Register                                                 
                     reg = 0x40048238;                                                               
                     // Read current value                                                           
@@ -85,30 +85,30 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
                     // Reserved bits that must always be set                                        
                     val |= 0xe800;                                                                  
                     *reg = val;  
-```
+
                 * Delay (after Power Configuration Register change I think...)
-```
+
                     // Some sort of delay required after last system control register mod?          
                     for (uint32_t cnt = 0; cnt < 0x1600; cnt++)                                     
                     {                                                                               
                             nop;                                                                    
                     }  
-```
+
                 * Select Crystal Oscillator
-```
+
                     // Select Crystal Oscillator (SYSOSC)                                           
                     reg = 0x40048040;                                                               
                     *reg = 1;                                                                       
-```
+
                 * Enable system PLL clock source update
-```
+
                     // Enable system PLL clock source update                                        
                     reg = 0x40048044;                                                               
                     *reg = 0;                                                                       
                     *reg = 1;
-```
+
                 * Set PLL divider
-```
+
                     // Power Configuration Register                                                 
                     reg = 0x40048238;                                                               
                     // Read current value                                                           
@@ -136,23 +136,23 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
                     // Reserved bits that must always be set                                        
                     val |= 0xe800;                                                                  
                     *reg = val;
-```
+
                 * Wait until PLL is locked
-```
+
                     // System PLL status register                                                   
                     reg = 0x4004800c;                                                               
                     // Wait until PLL is locked                                                     
                     while(((*reg) & 1) == 0);
-```
+
                 * Set System clock divider
-```
+
                     // System clock divider register                                                
                     reg = 0x40048078;                                                               
                     // Set system AHB clock divider to 1.                                           
                     *reg = 1;
-```
+
                 * EEPROM flash access configuration
-```
+
                     // Flash configuration register                                                 
                     reg = 0x4003c010;                                                               
                     val = *reg;                                                                     
@@ -161,9 +161,9 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
                     // Set flash access time to 3 system clocks (for system clock up to 50 MHz)     
                     val |=  2;                                                                      
                     *reg = val;
-```
+
                 * Main clock config 
-```
+
                     // Main clock source select register                                            
                     reg = 0x40048070;                                                               
                     // Select PLL output                                                            
@@ -175,9 +175,9 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
                     *reg = 0;                                                                       
                     // Update clock source                                                          
                     *reg = 1; 
-```
+
                 *  USB configuration
-```
+
                     // USB PLL clock source select register                                         
                     reg = 0x40048048;                                                               
                     // Select system oscillator                                                     
@@ -210,16 +210,16 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
                     reg = 0x40048014;                                                               
                     // Wait for PLL locked                                                          
                     while (((*reg) & 1) == 0);
-```
+
                 * Enable I/O Configuration Block
-```
+
                     // System clock control register                                                
                     reg = 0x40048080;                                                               
                     val = *reg;                                                                     
                     // Enable I/O configuration block                                               
                     val |= 0x10000;                                                                 
                     *reg = val;
-```
+
                 * Set SRAM0 0x10000200 to 0x10001c1c with specific values
                 * TODO: stopping at CSV entry 53708 step 40672
                 * TODO: Pay attention to branches system does and does not take.
