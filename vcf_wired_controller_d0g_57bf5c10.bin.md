@@ -17,9 +17,13 @@ Below are details for particular simulated paths through the firmware.
 
 In this simulation run the system is run from init with no external input
  (except steps necessary to simulate expected hardware unit reactions). Possible
- triggering of IRQs are ignored. 
+ triggering of IRQs are ignored. Parsed from runLogFile_00000000001494552728.csv
+ (not revisioned due to log size, but noted for now to track progress).
 
 * Set Power Configuration Register to make sure crystal oscillator is set
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // Power Configuration Register                                                 
     reg = 0x40048238;                                                               
@@ -34,6 +38,9 @@ In this simulation run the system is run from init with no external input
     *reg = val;  
 
 * Delay (after Power Configuration Register change I think...)
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // Some sort of delay required after last system control register mod?          
     for (uint32_t cnt = 0; cnt < 0x1600; cnt++)                                     
@@ -42,12 +49,18 @@ In this simulation run the system is run from init with no external input
     }  
 
 * Select Crystal Oscillator
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // Select Crystal Oscillator (SYSOSC)                                           
     reg = 0x40048040;                                                               
     *reg = 1;                                                                       
 
 * Enable system PLL clock source update
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // Enable system PLL clock source update                                        
     reg = 0x40048044;                                                               
@@ -55,6 +68,9 @@ In this simulation run the system is run from init with no external input
     *reg = 1;
 
 * Set PLL divider
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // Power Configuration Register                                                 
     reg = 0x40048238;                                                               
@@ -85,6 +101,9 @@ In this simulation run the system is run from init with no external input
     *reg = val;
 
 * Wait until PLL is locked
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // System PLL status register                                                   
     reg = 0x4004800c;                                                               
@@ -92,6 +111,9 @@ In this simulation run the system is run from init with no external input
     while(((*reg) & 1) == 0);
 
 * Set System clock divider
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // System clock divider register                                                
     reg = 0x40048078;                                                               
@@ -99,6 +121,9 @@ In this simulation run the system is run from init with no external input
     *reg = 1;
 
 * EEPROM flash access configuration
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // Flash configuration register                                                 
     reg = 0x4003c010;                                                               
@@ -110,6 +135,9 @@ In this simulation run the system is run from init with no external input
     *reg = val;
 
 * Main clock config 
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // Main clock source select register                                            
     reg = 0x40048070;                                                               
@@ -124,6 +152,9 @@ In this simulation run the system is run from init with no external input
     *reg = 1; 
 
 *  USB configuration
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // USB PLL clock source select register                                         
     reg = 0x40048048;                                                               
@@ -159,6 +190,9 @@ In this simulation run the system is run from init with no external input
     while (((*reg) & 1) == 0);
 
 * Enable I/O Configuration Block
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
     // System clock control register                                                
     reg = 0x40048080;                                                               
@@ -168,8 +202,23 @@ In this simulation run the system is run from init with no external input
     *reg = val;
 
 * Set SRAM0 0x10000200 to 0x10001c1c with specific values
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: TODO
+        * Step Num: TODO
 
-* TODO: stopping at CSV entry 53708 step 40672 of runLogFile_00000000001494552728.csv
+* Check main clock source select register and verify is set to PLL output
+    * runLogFile_00000000001494552728.csv
+        * Entry Num: 53708 - 53722
+        * Step Num: 40672 - 40684
+
+    reg = 0x40048070;
+    val = *reg;
+    if (val != 0x3)
+    {
+        // Not sure what this path does... TODO?
+    }
+
+* TODO: stopping at CSV entry 53723 step 40685 of runLogFile_00000000001494552728.csv
 * TODO: Pay attention to branches system does and does not take.
 
 ## IRQs
