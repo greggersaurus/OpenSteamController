@@ -191,11 +191,11 @@ Free book on how to reverse engineer code.
 
 ### [pinkySim](https://github.com/greggersaurus/pinkySim)
 
-* Note: Need to use "make -i" as building unit tests fails...
+* Note: Need to use "make pinkySim" as building unit tests fails...
     * TODO: get to bottom of this.
 * ARMv6-M Thumb instruction simulator.
 * Forked and working on custom functionality.
-    * Logging (--log)
+    * Logging (--logExe chipType)
         * Creates csv log of all instructions and memory accesses executed during simulation.
         * Added memory table specific to LPC11U37, which would be confusing if logging for a different chip.
             * TODO: Think of how to do this better? chip specified as command line arg?
@@ -211,9 +211,9 @@ Free book on how to reverse engineer code.
 The following command launches the emulator with the proper memory map for the 
  LPC11U37F501, has the emulator halt on the first instruction to execute after
  reset and instructs pinkySim to log all instructions executed to a file named
- runLogFile{datetimestmap}.csv.
+ exeLog{datetimestmap}.csv.
 
-* ./pinkySim --breakOnStart --log LPC11U37 --flash 0 131072 --ram 268435456 8192 --ram 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
+* ./pinkySim --breakOnStart --logExe LPC11U37 --flash 0 131072 --ram 268435456 8192 --ram 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
     * Note: --ram 536805376 16384 --flash, but since we need to fill this ROM with the boot ROM code via gdb, this needs to be writable
 
 ##### Set Memory Defaults 
