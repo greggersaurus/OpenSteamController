@@ -198,4 +198,8 @@ void init()
 
 	//TODO: stopping at CSV entry 53723 step 40685 of runLogFile_00000000001494552728.csv
 	//TODO: Remember to pay attention to branches system does and does not take.
+	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
+	//		I think what happens is that WFI is called for interrupt to run that sets particular registers. 
+	//		Maybe 32 bit timer interrupting before other things happening causes variables to get set in a way such that power off occurs
+	//		Otherwise controller might stay in this "idle" loop, or go into other "idle" loop, waiting for shutdown signal?
 }

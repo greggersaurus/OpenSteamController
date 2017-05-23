@@ -20,7 +20,16 @@ In this simulation run the system is run from reset with no external input
  triggering of IRQs are ignored. Parsed from runLogFile_00000000001494552728.csv
  (not revisioned due to log size, but noted for now to track progress).
 
-See init() in vcf_wired_controller_d0g_57bf5c10.c for parsing results.
+#### To Simulate
+
+* Run from reset until WFI
+    * See README for details on how to have gdb get past situations where hardware responses are expected.
+* TODO: what about after WFI?
+    * Initial force through this seems that 0x1000025d, 0x1000025c and 0x10000200 were checked to be 0 or 1 (booleans) and eventually led down what looks like possible shutdown path
+
+#### Simulation Result Details
+
+See init() in vcf_wired_controller_d0g_57bf5c10.c.
 
 ## IRQs
 
@@ -45,14 +54,29 @@ This is 32-bit counter that is setup before the system system goes with sleep
  with WFI (Wait for Interrupt) command. The working theory is that the controller
  has completed all setup and it waiting for a connection via USB or wireless.
  If this timer expires and interrupts the system before a connection is established
- the controller powers down.
+ the controller powers down. Part of power down is to send out a shutdown jingle 
+ to the haptics.
 
 #### To Simulate
 
-* Run from beginning until WFI
-* Set PC to TODO
-* Set ISPR to TODO
-* Set LR to TODO
+* Run from reset until WFI
+    * See README for details on how 
+* Set PC to IRQ 19 entry point
+    * set $pc = 0x000001b8
+
+* Set ISPR to 19?
+    * TODO
+* Set LR to WFI instruction?
+    * set $lr = 0x00000f52
+
+* Simulate interrupt on MR0?
+    * set {int}0x40018000 = 1
+* Make sure GPREG1 is not clear to show setup has occurred??
+    * set {int}0x40038008 = 1
+* Clearing of MR0 interrupt?
+    * set {int}0x40018000 = 0 at instruction 0x6180
+        * This just causes IRQ to exit and WFI
+* IRQ checks 0x10000848, is this set by USB IRQ firing?
 
 #### Simulation Result Details
 
@@ -134,7 +158,13 @@ This section exists to track RAM usage. The hope is to gain an understanding
 * 0x10000200 
     * Initialized to specific values starting at step 33912
     * Possibly checked by CT32B1 IRQ
+    * Checked by main path after WFI - Used to signal shutdown?
 * ...
+* 0x1000025c 
+    * Checked by main path after WFI - Used to signal shutdown?
+* 0x1000025d 
+    * Checked by main path after WFI - Used to signal shutdown?
+    * Presumably some interrupt handler sets this to something after some setup has occurred?
 * 0x10001c1c - Initialized to specific values starting at step 33912
 * 0x10001c20 - Initial Stack Pointer? (counts down?)
 * 0x200040f4 may be checked by IP_USB_IRQ to see if it is 0 or not
@@ -329,24 +359,6 @@ This section encapsulates thoughts and ideas based on current progress. It is
             * PC Start Address for IRQ can be found at code offset 0x98
                 * For vcf_wired_controller_d0g_57bf5c10.bin this is 0x000001e9
                     * set $pc = 0x000001e8
-        * Interrupt 19 - CT32B1
-            * Called when 32-bit Counter 1 times out because no connection has been achieved
-            * Simulate until interrupt is setup and ready to be "triggered"
-                * Simulate until undefined instruction (WFI)
-            * PC Start Address for IRQ can be found at code offset 0x8C
-                * For vcf_wired_controller_d0g_57bf5c10.bin this is 0x000001b9
-                    * set $pc = 0x000001b8
-            * Simulate interrupt on MR0
-                * set {int}0x40018000 = 1
-            * Make sure GPREG1 is not clear to show setup has occurred??
-                * set {int}0x40038008 = 1
-                * TODO: It is an assumption this is set by USB IRQ. Not sure what value is right, other than not 0 at this point.
-            * Clearing of MR0 interrupt?
-                * set {int}0x40018000 = 0 at instruction 0x6180
-                    * This just causes IRQ to exit and WFI
-            * IRQ checks 0x10000848, is this set by USB IRQ firing?
-                * TODO: Maybe correct step is to simulate USB IRQ first?
-
         * Interrupt 21 - USART
             * Probably don't care about this so much
             * PC Start Address for IRQ can be found at code offset 0x94
