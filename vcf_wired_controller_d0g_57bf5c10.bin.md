@@ -15,211 +15,12 @@ Below are details for particular simulated paths through the firmware.
 
 ## Init
 
-In this simulation run the system is run from init with no external input
+In this simulation run the system is run from reset with no external input
  (except steps necessary to simulate expected hardware unit reactions). Possible
  triggering of IRQs are ignored. Parsed from runLogFile_00000000001494552728.csv
  (not revisioned due to log size, but noted for now to track progress).
 
-* Set Power Configuration Register to make sure crystal oscillator is set
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // Power Configuration Register                                                 
-    reg = 0x40048238;                                                               
-    // Read current value                                                           
-    val = *reg;                                                                     
-    // Clear reserved bit that must stay cleared                                    
-    val &= 0x000005ff;                                                              
-    // Make sure crystal oscillator is powered                                      
-    val &= ~(0x00000020);                                                           
-    // Reserved bits that must always be set                                        
-    val |= 0xe800;                                                                  
-    *reg = val;  
-
-* Delay (after Power Configuration Register change I think...)
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // Some sort of delay required after last system control register mod?          
-    for (uint32_t cnt = 0; cnt < 0x1600; cnt++)                                     
-    {                                                                               
-        nop;                                                                    
-    }  
-
-* Select Crystal Oscillator
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // Select Crystal Oscillator (SYSOSC)                                           
-    reg = 0x40048040;                                                               
-    *reg = 1;                                                                       
-
-* Enable system PLL clock source update
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // Enable system PLL clock source update                                        
-    reg = 0x40048044;                                                               
-    *reg = 0;                                                                       
-    *reg = 1;
-
-* Set PLL divider
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // Power Configuration Register                                                 
-    reg = 0x40048238;                                                               
-    // Read current value                                                           
-    val = *reg;                                                                     
-    // Clear reserved bit that must stay cleared                                    
-    val &= 0x5ff;                                                                   
-    // Make sure system PLL is powered down                                         
-    val |= 0x80;                                                                    
-    // Reserved bits that must always be set                                        
-    val |= 0xe800;                                                                  
-    *reg = val;                    
-
-    // System PLL control register                                                  
-    reg = 0x40048008;                                                               
-    // Division ratio = 2 x 4. Feedback divider value = 3 + 1.                      
-    *reg = 0x23;
-
-    // Power configuration register                                                 
-    reg = 0x40048238;                                                               
-    val = *reg;                                                                     
-    // Clear reserved bit that must stay cleared                                    
-    val &= 0x5ff;                                                                   
-    // Make sure system PLL powered                                                 
-    val &= ~0x80;                                                                   
-    // Reserved bits that must always be set                                        
-    val |= 0xe800;                                                                  
-    *reg = val;
-
-* Wait until PLL is locked
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // System PLL status register                                                   
-    reg = 0x4004800c;                                                               
-    // Wait until PLL is locked                                                     
-    while(((*reg) & 1) == 0);
-
-* Set System clock divider
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // System clock divider register                                                
-    reg = 0x40048078;                                                               
-    // Set system AHB clock divider to 1.                                           
-    *reg = 1;
-
-* EEPROM flash access configuration
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // Flash configuration register                                                 
-    reg = 0x4003c010;                                                               
-    val = *reg;                                                                     
-    // Bits 31:2 must be written back exactly as read                               
-    val &= 0xFFFFFFC0;                                                              
-    // Set flash access time to 3 system clocks (for system clock up to 50 MHz)     
-    val |=  2;                                                                      
-    *reg = val;
-
-* Main clock config 
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // Main clock source select register                                            
-    reg = 0x40048070;                                                               
-    // Select PLL output                                                            
-    *reg = 3;                                                                       
-                                                                                
-    // Main clock source update enable register                                     
-    reg = 0x40048074;                                                               
-    // No change                                                                    
-    *reg = 0;                                                                       
-    // Update clock source                                                          
-    *reg = 1; 
-
-*  USB configuration
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // USB PLL clock source select register                                         
-    reg = 0x40048048;                                                               
-    // Select system oscillator                                                     
-    *reg = 1;                                                                       
-                                                                                    
-    // USB PLL clock source update enable register                                  
-    reg = 0x4004804c;                                                               
-    // No change                                                                    
-    *reg = 0;                                                                       
-    // Update clock source.                                                         
-    *reg = 1; 
-
-    // USB PLL control register                                                     
-    reg = 0x40048010;                                                               
-    // Division ration is 2 x 4. Feedback divider value is 3 + 1.                   
-    *reg = 0x23;
-
-    // Power Configuration Register                                                 
-    reg = 0x40048238;                                                               
-    val = *reg;                                                                     
-    // Clear reserved bit that must stay cleared                                    
-    val &= 0x5ff;                                                                   
-    // Set USB PLL and USB transceiver to powered                                   
-    val &= ~0x500;                                                                  
-    // Reserved bits that must always be set                                        
-    val |= 0xe800;                                                                  
-    *reg = val;
-
-    // USB PLL status register                                                      
-    reg = 0x40048014;                                                               
-    // Wait for PLL locked                                                          
-    while (((*reg) & 1) == 0);
-
-* Enable I/O Configuration Block
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-    // System clock control register                                                
-    reg = 0x40048080;                                                               
-    val = *reg;                                                                     
-    // Enable I/O configuration block                                               
-    val |= 0x10000;                                                                 
-    *reg = val;
-
-* Set SRAM0 0x10000200 to 0x10001c1c with specific values
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: TODO
-        * Step Num: TODO
-
-* Check main clock source select register and verify is set to PLL output
-    * runLogFile_00000000001494552728.csv
-        * Entry Num: 53708 - 53722
-        * Step Num: 40672 - 40684
-
-    reg = 0x40048070;
-    val = *reg;
-    if (val != 0x3)
-    {
-        // Not sure what this path does... TODO?
-    }
-
-* TODO: stopping at CSV entry 53723 step 40685 of runLogFile_00000000001494552728.csv
-* TODO: Pay attention to branches system does and does not take.
+See init() in vcf_wired_controller_d0g_57bf5c10.c for parsing results.
 
 ## IRQs
 
@@ -228,7 +29,15 @@ This section details attempts to simulate certain IRQ paths. This is being
  that would be more interesting (i.e. playing jingle via haptics).
 
 TODO: Need to read up more on IRQs to make sure I am simulating them correctly
- (if that is possible with pinkySim).
+ (if that is possible with pinkySim). Add bulleted list of steps to simulate:
+* Enterting an exception
+    * When an exception other that reset preempts an instruction stream, the processor automatically saves key context information onto the stack, and execution branches to the code pointed to by the corresponding exception vector.
+        * When pushing context to the stack, the hardware saves eight 32-bit words, comprising xPSR, ReturnAddress, LR (R14), R12, R3, R2, R1, and R0
+        * How is xPSR changed
+            * IPSR is changed to number of exception being processed
+* Returning from an exception
+    * The Exception Return Link, a value stored in the link register on exception entry, determines the target of the exception return.
+    * TODO: See B1.5.8 Exception return behavior
 
 ### Interrupt 19 - CT32B1
 
@@ -237,6 +46,15 @@ This is 32-bit counter that is setup before the system system goes with sleep
  has completed all setup and it waiting for a connection via USB or wireless.
  If this timer expires and interrupts the system before a connection is established
  the controller powers down.
+
+#### To Simulate
+
+* Run from beginning until WFI
+* Set PC to TODO
+* Set ISPR to TODO
+* Set LR to TODO
+
+#### Simulation Result Details
 
 * Read PMU 0x40038008 (GPREG1) and check if register is 0
     * If GPREGP1 register is 0
@@ -255,6 +73,12 @@ This is the interrupt generated for the USB controller. It is assumed this
  handles a lot of possibilities, but may handle some initial USB configuration
  as well as sending of the jingle to the haptics once USB coniguration is
  fully complete.
+
+#### To Simulate
+
+TODO
+
+#### Simulation Result Details
 
 * Read PMU 0x40038008 (GPREG1) and check if register is 0
     * If GPREGP1 register is 0
