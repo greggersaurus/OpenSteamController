@@ -268,11 +268,39 @@ void init()
 		// 	Branching to 0x000004be, not executing 0x000004b6
 	//  }
 
-        // Entry Num: 53741 - 
-        // Step Num: 40697 - 
+        // Entry Num: 53741 - 54149
+        // Step Num: 40697 - 41067
+	// Firmware Offset(s): 
+	//	0x000004d6 - 0x000004dc
+	//	0x00000488 - 0x00000492
+	//	0x000004e0 - 0x000004e0
+	//	0x0000046e - 0x0000046e
+	//	0x0000049a - 0x0000049e
+	//	0x00000300 - 0x0000030c
+	//	0x0000030e - 0x0000032a
+	//	0x000004a2 - 0x000004a2
+	//	0x00000fd6 - 0x00000fda
+	//	0x00001552 - 0x00001552
+	//	0x00000d04 - 0x00000d0c
+	//	0x00000bdc - 0x00000bf0
+	//	0x00000bb4 - 0x00000bc0
+
+	// System PLL control register
+	// reg = 0x40048008;
+	// val = *reg;
+	// Perform calculations based on value of system PLL control register
+	// Save results to 0x10000260
+	// I believe this is all setup for EEPROM read via IAP command (i.e. calculation of system clock frequency)
+	//	Command code : 62 (0x3e)
+	//	Param0: EEPROM Address = 0
+	//	Param1: RAM Address = 0x10000254
+	//	Param2: Number of bytes to be read = 8
+	//	Param3: System Clock Frequency = 0x0000b71b
+
+        // Entry Num: 54150 - 
+        // Step Num: 41068 - 
 	// Firmware Offset(s): 
 	//	
-
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
