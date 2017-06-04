@@ -297,10 +297,318 @@ void init()
 	//	Param2: Number of bytes to be read = 8
 	//	Param3: System Clock Frequency = 0x0000b71b
 
-        // Entry Num: 54150 - 
-        // Step Num: 41068 - 
+        // Entry Num: 54150 - 54163
+        // Step Num: 41068 - 41077
+	// Firmware Offset(s): 
+	//	0x000007bc - 0x000007ba
+	//	0x00000bc4 - 0x00000bca
+
+	// Increment value in 0x10000250
+	//	Has to do with cps command (i.e. disabling/enabling interrupts)
+	// Call into IAB command function
+
+        // Entry Num: 54164 - 55980
+        // Step Num: 41078  - 42737
+	// Firmware Offset(s): 
+	//	0x1fff1ff0 - 0x1fff1ff2
+	//	0x1fff171c - 0x1fff171c
+	//	... TODO: do we care aboutd decomposing boot ROM code?
+
+	// boot ROM code for executing IAB command
+
+        // Entry Num: 55981 - 55991
+        // Step Num: 42738 - 42745
+	// Firmware Offset(s): 
+	//	0x00000bcc - 0x00000bcc
+	//	0x000007c0 - 0x000007cc
+
+	// Decrement value in 0x10000250
+	//	Has to do with cps command (i.e. disabling/enabling interrupts)
+
+        // Entry Num: 55992 - 56018
+        // Step Num: 42746 - 42759
+	// Firmware Offset(s): 
+	//	0x00000bd0 - 0x00000bd4
+	//	0x00000bf4 - 0x00000bf4
+	//	0x00000d10 - 0x00000d22
+
+	// Check is 0x10000254 has value 0x0000a55a stored in it
+	//	This is where EEPROM read data ends up
+	// If it had been we would skip writing to EEPROM
+	//	Not branching to 0x00000d26
+
+        // Entry Num: 56019 - 56073
+        // Step Num: 42760 - 42792
+	// Firmware Offset(s): 
+	//	0x00000f5c - 0x00000f64
+	//	0x00000bfc - 0x00000c10
+	//	0x00000bb4 - 0x00000bc0
+	//	0x000007b0 - 0x000007ba
+	//	0x00000bc4 - 0x00000bca
+
+	// Filling in EEPROM with expected value (magic word to show EEPROM has been used by Steam Controller before?)	
+	// 	*0x10000254 = 0x0000a55a
+	// AIP command Write EEPROM
+	//	Command code : 61 (0x3d)
+	//	Param0: EEPROM Address = 0
+	//	Param1: RAM Address = 0x10000254
+	//	Param2: Number of bytes to be read = 8
+	//	Param3: System Clock Frequency = 0x0000b71b
+
+        // Entry Num: 56074 - 57950
+        // Step Num: 42793 - 44499
+	// Firmware Offset(s): 
+	//	0x1fff1ff0 - 0x1fff1ff2
+	//	0x1fff171c - 0x1fff171c
+	//	... TODO: do we care aboutd decomposing boot ROM code?
+
+	// boot ROM code for executing IAB command
+
+        // Entry Num: 57951 - 57961
+        // Step Num: 44500 - 44507
+	// Firmware Offset(s): 
+	//	0x00000bcc - 0x00000bcc
+	//	0x000007c0 - 0x000007cc
+
+	// Decrement value in 0x10000250
+	//	Has to do with cps command (i.e. disabling/enabling interrupts)
+
+        // Entry Num: 57962 - 57990
+        // Step Num: 44508 - 44522
+	// Firmware Offset(s): 
+	//	0x00000bd0 - 0x00000bd4
+	//	0x00000c14 - 0x00000c14
+	//	0x00000f68 - 0x00000f68
+	//	0x00000d26 - 0x00000d26
+	//	0x00001556 - 0x00001558
+	//	0x00000428 - 0x00000434
+
+	// Enables clock for GPIO port registers via system clock control register
+	reg = 0x40048080;
+	val = *reg;
+	val |= 0x40;
+	*reg = val;
+
+        // Entry Num: 57991 - 57998
+        // Step Num: 44523 - 44529
+	// Firmware Offset(s): 
+	//	0x0000155c - 0x0000155c
+	//	0x00000ce8 - 0x00000cf2
+	//	0x00000cf4 - 0x00000cf4
+
+	// val = *((uint8_t*)0x50000003);
+	// Check state of P0_3 and make sure it is 0
+		// TODO: UKNOWN PATHS
+		//	if P0_3 is not 0 instruction at 0x00000cf2 is executed
+	// TODO: what does P0_3 indicate?
+	//	Can we ohm this out?
+
+        // Entry Num: 57999 - 58008
+        // Step Num: 44530 - 44537
+	// Firmware Offset(s): 
+	//	0x00001560 - 0x0000157c
+
+	// Again check that P0_3 is zero
+	// If it is check states of bits 0 and/or 1 in 0x40048030 (System reset status register)
+
+        // Entry Num: 58009 - 58027
+        // Step Num: 44538 - 44548
+	// Firmware Offset(s): 
+	//	0x00000f90 - 0x00000f94
+	//	0x00000cf8 - 0x00000cfc
+	//	0x00000f98 - 0x00000fa0
+	//	0x00000fae - 0x00000fae
+
+	// Reading 0x10000258
+	//	Previously set via read from EEPROM, but defaulted to 0 on EEPROM magic word missing
+	// Check if 0x10000258 is set to value 8
+	//	TODO: UNKOWN PATHS
+	//		If value from EEPROM (written to 0x10000258) is 8, execute instruction at 0x00000fa2
+
+        // Entry Num: 58028 - 58035
+        // Step Num: 44549 - 44555
+	// Firmware Offset(s): 
+	//	0x00000cf8 - 0x00000cfc
+	//	0x00000fb2 - 0x00000fb6
+
+	// Read value fo 0x10000258 and check if it's 5
+	//	TODO: UNKNOWN PATHS
+	//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
+
+        // Entry Num: 58036 - 58040
+        // Step Num: 44556 - 44559
+	// Firmware Offset(s): 
+	//	0x00000fbe - 0x00000fc4
+
+	// Set P1_8 to output bit to high
+	*((uint8_t*)0x50000028) = 1;
+
+        // Entry Num: 58041 - 58053
+        // Step Num: 44560 - 44570
+	// Firmware Offset(s): 
+	//	0x0000055c - 0x00000570
+
+	// Set P1_8 to output via GPIO direction port 1 register
+	reg = 0x50002004;
+	val = *reg;
+	val |= 0x00000100;
+
+        // Entry Num: 58054 - 58067
+        // Step Num: 44571 - 44578
+	// Firmware Offset(s): 
+	//	0x00000fc8 - 0x00000fc8
+	//	0x00001580 - 0x00001582
+	//	0x000007a0 - 0x000007a8
+
+	// Set GPREG3 to 0
+	reg = 0x40038008;
+	*reg = 0;
+
+        // Entry Num: 58068 - 58087
+        // Step Num: 44579 - 44594
+	// Firmware Offset(s): 
+	//	0x00001586 - 0x0000159a
+	//	0x00000572 - 0x00000580
+
+	// Enable pull down resistor on PIO0_3 register
+	reg = 0x4004400c;
+	*reg = 0x00000008;
+
+        // Entry Num: 58088 - 58105
+        // Step Num: 44595 - 44610
+	// Firmware Offset(s): 
+	//	0x0000159e - 0x000015a2
+	//	0x0000158c - 0x0000159a
+	//	0x00000572 - 0x00000576
+	//	0x0000057e - 0x00000580
+
+	// Note there are two conditional paths in here, but they are impossible to reach given setup, so they are being ignored
+
+	// Set PIO0_6 to function as ~USB_CONNECT
+	reg = 0x40044018;
+	*reg = 0x00000001; 
+	
+        // Entry Num: 58106 - 58127
+        // Step Num: 44611 - 44630
+	// Firmware Offset(s): 
+	//	0x0000159e - 0x000015a2
+	//	0x0000158c - 0x0000159a
+	//	0x00000572 - 0x000015a2
+
+	// Note there are two conditional paths in here, but they are impossible to reach given setup, so they are being ignored
+
+	// Set PIO1_17a to function as RXD
+	reg = 0x400440a4;
+	*reg = 0x00000002;
+
+        // Entry Num: 58128 - 58143
+        // Step Num: 44631 - 44644
+	// Firmware Offset(s): 
+	//	0x0000158c - 0x0000159a
+	//	0x00000572 - 0x0000057c
+
+	// Note there are two conditional paths in here, but they are impossible to reach given setup, so they are being ignored
+
+	// Set PIO1_18 to function as TXD
+	reg = 0x400440a8;
+	*reg = 0x00000002;
+
+        // Entry Num: 58144 - 58154
+        // Step Num: 44645 - 44654
+	// Firmware Offset(s): 
+	//	0x0000159e - 0x000015a4
+	//	0x00000ce8 - 0x00000cf2
+	//	0x00000cf4 - 0x00000cf4
+
+	// val = *((uint8_t*)0x50000003);
+	// Check state of P0_3 and make sure it is 0
+		// TODO: UKNOWN PATHS
+		//	if P0_3 is not 0 instruction at 0x00000cf2 is executed
+	// TODO: what does P0_3 indicate?
+	//	Can we ohm this out?
+
+        // Entry Num: 58155 - 58164
+        // Step Num: 44655 - 44660
+	// Firmware Offset(s): 
+	//	0x000015a8 - 0x000015ac
+	//	0x00000f90 - 0x00000f94
+
+	// Again check that P0_3 is zero
+
+        // Entry Num: 58165 - 58181
+        // Step Num: 44661 - 44672
+	// Firmware Offset(s): 
+	//	0x00000cf8 - 0x00000cfc
+	//	0x00000f98 - 0x00000fa0
+	//	0x00000fae - 0x00000fae
+	//	0x00000cf8 - 0x00000cfc
+
+	// reading value in RAM at 0x10000258 and see if is set to 8
+	//	TODO: UNKOWN PATHS
+	//		If value from EEPROM (written to 0x10000258) is 8, execute instruction at 0x00000fa2
+
+        // Entry Num: 58182 - 58184
+        // Step Num: 44673 - 44675
+	// Firmware Offset(s): 
+	//	0x00000fb2 - 0x00000fb6
+
+	// Read value fo 0x10000258 and check if it's 5
+	//	TODO: UNKNOWN PATHS
+	//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
+
+        // Entry Num: 58185 - 58189
+        // Step Num: 44676 - 44679
+	// Firmware Offset(s): 
+	//	0x00000fbe - 0x00000fc4
+	
+	// Set P1_8 output bit to 1
+	*((uint8_t*)0x50000028) = 0x01
+
+	//TODO: it looks like P1_8 being set to high might drive a different input back...? Look through paths of setting this output based on input values
+
+        // Entry Num: 58190 - 58202
+        // Step Num: 44680 - 44690
+	// Firmware Offset(s): 
+	//	0x0000055c - 0x00000570
+
+	// Set P1_8 to output via GPIO direction port 1 register
+	reg = 0x50002004;
+	val = *reg;
+	val |= 0x00000100;
+
+	//TODO: again with double setting P1_8 as output... simulation might not be reaction correctly due to unanticipated hardware input response...
+
+        // Entry Num: 58203 - 58260
+        // Step Num: 44691 - 44725
+	// Firmware Offset(s): 
+	//	0x00000fc8 - 0x00000fc8
+	//	0x000015b0 - 0x000015ba
+	//	0x00000bdc - 0x00000bf0
+	//	0x00000bb4 - 0x00000bc0
+	//	0x000007b0 - 0x000007ba
+	//	0x00000bc4 - 0x00000bca
+
+	// I believe this is all setup for EEPROM read via IAP command (i.e. calculation of system clock frequency)
+	//	Command code : 62 (0x3e)
+	//	Param0: EEPROM Address = 0x00000500
+	//	Param1: RAM Address = 0x10001c08
+	//	Param2: Number of bytes to be read = 4
+	//	Param3: System Clock Frequency = 0x0000b71b
+
+        // Entry Num: 58261 - 60061
+        // Step Num: 44726 - 46373
+	// Firmware Offset(s): 
+	//	0x1fff1ff0 - 0x1fff1ff2
+	//	0x1fff171c - 0x1fff171c
+	//	... TODO: do we care aboutd decomposing boot ROM code?
+
+	// boot ROM code for executing IAB command
+	
+        // Entry Num: 60062 - 
+        // Step Num: 46374 - 
 	// Firmware Offset(s): 
 	//	
+
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
