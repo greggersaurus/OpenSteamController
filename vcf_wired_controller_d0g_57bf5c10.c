@@ -604,11 +604,84 @@ void init()
 
 	// boot ROM code for executing IAB command
 	
-        // Entry Num: 60062 - 
-        // Step Num: 46374 - 
+        // Entry Num: 60062 - 60072
+        // Step Num: 46374 - 46381
+	// Firmware Offset(s): 
+	//	0x00000bcc - 0x00000bcc
+	//	0x000007c0 - 0x000007cc
+
+	// Decrement 0x10000250 and cps (change processor state (to reenable interrupts after IAP command?)
+
+        // Entry Num: 60073 - 60096
+        // Step Num: 46382 - 46394
+	// Firmware Offset(s): 
+	//	0x00000bd0 - 0x00000bd4
+	//	0x00000bf4 - 0x00000bf4
+	//	0x000015be - 0x000015e6 
+
+	// Check if GPREG0 is set to 0xecaabac0
+	// reg = 0x40038004;
+	// val = *reg;
+	// if (val == 0xecaabac0)
+	// {
+		// TODO: UNKOWN PATHS
+		//	If GPREG0 is 0xecaabac0 execute instruction 0x000015e6 instead of branching to 0x000015ec
+	// }
+
+        // Entry Num: 60097 - 60109
+        // Step Num: 46395 - 46402
+	// Firmware Offset(s): 
+	//	0x000015ec - 0x000015fa
+
+	// Call into some function that checks if Reg 0 is set to 0xecaabac0. Could be UNKNOWN PATH, but in this case Reg 0 is set from firmware read 
+
+        // Entry Num: 60110 - 60117
+        // Step Num: 46403 - 46408
+	// Firmware Offset(s): 
+	//	0x000015fc - 0x000015fc
+	//	0x00000cf8 - 0x00000cf8
+	//	0x00001600 - 0x00001602	
+
+	// Check if 0x10000258 == 0
+	//	TODO: UNKNOWN PATH what if 0x10000258 is not 0?
+
+        // Entry Num: 60118 - 60140
+        // Step Num: 46409 - 46423
+	// Firmware Offset(s): 
+	//	0x00001618 - 0x00001618
+	//	0x00000f28 - 0x00000f28
+	//	0x00000a78 - 0x00000a80
+	//	0x00000534 - 0x00000542
+
+	// Select USB PLL out via USB clock source select register
+	reg = 0x400480c0;
+	*reg = 0;
+	// Clear USB clock source update enable register
+	reg = 0x400480c4;
+	*reg = 0;
+	// Update clock source via USB clock source update enable register
+	reg = 0x400480c4;
+	*reg = 1;
+	// Set divide by 1 for USB clock divider registe
+	reg = 0x400480c8;
+	*reg = 1;
+
+        // Entry Num: 60141 - 60152
+        // Step Num: 46424 - 46432
+	// Firmware Offset(s): 
+	//	0x00000a84 - 0x00000a86
+	//	0x0000043c - 0x00000448
+
+	// Enables clock to the USB register interface via System clock control register
+	reg = 0x40048080;
+	val = *reg;
+	val |= 0x00004000;
+	*reg = val;
+
+        // Entry Num: 60153 - 
+        // Step Num: 46433 - 
 	// Firmware Offset(s): 
 	//	
-
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
