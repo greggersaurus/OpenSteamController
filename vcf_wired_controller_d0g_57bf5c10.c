@@ -678,10 +678,61 @@ void init()
 	val |= 0x00004000;
 	*reg = val;
 
-        // Entry Num: 60153 - 
-        // Step Num: 46433 - 
+        // Entry Num: 60153 - 60164
+        // Step Num: 46433 - 46441
+	// Firmware Offset(s): 
+	//	0x00000a8a - 0x00000a8c
+	//	0x0000043c - 0x00000448
+
+	// Enables USB SRAM block at address 0x2000 4000 via System clock control register 
+	reg = 0x40048080;
+	val = *reg;
+	val |= 0x08000000;
+	*reg = val;
+
+        // Entry Num: 60165 - 60177
+        // Step Num: 46442 - 46449
+	// Firmware Offset(s): 
+	//	0x00000a90 - 0x00000a9e
+
+	// Write 0x1fff1f24 to RAM address 0x10000230, which was read from boot ROM
+
+        // Entry Num: 60178 - 60524
+        // Step Num: 46450 - 46728
+	// Firmware Offset(s): 
+	//	0x0000035e - 0x00000360
+	//	0x00000350 - 0x00000352
+	//	0x00000354 - 0x0000035c
+
+	// Write 0's (byte by byte) SRAM0 for range 0x10001ba0 - 0x10001be3
+
+        // Entry Num: 60525 - 60564
+        // Step Num: 46729 - 46752
+	// Firmware Offset(s): 
+	//	0x00000aa2 - 0x00000ad0
+
+	// Setup for calling function to setup USB?
+	//  *0x10001ba0 = 0x40080000;
+	//  *0x10001ba4 = 0x20004000;
+	//  *0x10001ba8 = 0x00000800;
+	// 
+	//  *0x10001bac = 0x00000003;
+	// 
+	//  *0x10001be4 = 0x00001670;
+	//  *0x10001be8 = 0x00001682;
+	//  *0x10001bec = 0x10000208;
+	// 
+	//  *0x10001bf0 = 0x10000208;
+	//  *0x10001bf4 = 0x00000000;
+	
+        // Entry Num: 60565 - 
+        // Step Num: 46753 - 
 	// Firmware Offset(s): 
 	//	
+
+	// USB via boot ROM code
+	// TODO: map out what registers are being set etc. so we know where and what memory USB is accessing
+	//	This may be the key for where jingle data ends up for USB transmission
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
