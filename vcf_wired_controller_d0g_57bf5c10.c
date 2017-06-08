@@ -297,6 +297,22 @@ void init()
 	//	Param2: Number of bytes to be read = 8
 	//	Param3: System Clock Frequency = 0x0000b71b
 
+	unsigned int command_param[5];
+	unsigned int status_result[4];
+
+	uint32_t eeprom_data[2];
+
+	// Command 62 for EEPROM Read
+	command_param[0] = 62;
+	// EEPROM address (4 kB available)
+	command_param[1] = 0;
+	// RAM address where to read data to write to EEPROM
+	command_param[2] = eeprom_data;
+	// Number of bytes to write
+	command_param[3] = sizeof(eeprom_data);
+	// System clock frequency in kHz
+	command_param[4] = 46875;
+
         // Entry Num: 54150 - 54163
         // Step Num: 41068 - 41077
 	// Firmware Offset(s): 
@@ -315,6 +331,9 @@ void init()
 	//	... TODO: do we care aboutd decomposing boot ROM code?
 
 	// boot ROM code for executing IAB command
+	iap_entry(command_param, status_result);	
+
+	//TODO: should probbaly check status_result for CMD_SUCCESS
 
         // Entry Num: 55981 - 55991
         // Step Num: 42738 - 42745
@@ -337,41 +356,63 @@ void init()
 	// If it had been we would skip writing to EEPROM
 	//	Not branching to 0x00000d26
 
-        // Entry Num: 56019 - 56073
-        // Step Num: 42760 - 42792
-	// Firmware Offset(s): 
-	//	0x00000f5c - 0x00000f64
-	//	0x00000bfc - 0x00000c10
-	//	0x00000bb4 - 0x00000bc0
-	//	0x000007b0 - 0x000007ba
-	//	0x00000bc4 - 0x00000bca
+	if (eeprom_data[0] != 0x0000a55a)
+	{
+		// Entry Num: 56019 - 56073
+		// Step Num: 42760 - 42792
+		// Firmware Offset(s): 
+		//	0x00000f5c - 0x00000f64
+		//	0x00000bfc - 0x00000c10
+		//	0x00000bb4 - 0x00000bc0
+		//	0x000007b0 - 0x000007ba
+		//	0x00000bc4 - 0x00000bca
 
-	// Filling in EEPROM with expected value (magic word to show EEPROM has been used by Steam Controller before?)	
-	// 	*0x10000254 = 0x0000a55a
-	// AIP command Write EEPROM
-	//	Command code : 61 (0x3d)
-	//	Param0: EEPROM Address = 0
-	//	Param1: RAM Address = 0x10000254
-	//	Param2: Number of bytes to be read = 8
-	//	Param3: System Clock Frequency = 0x0000b71b
+		// Filling in EEPROM with expected value (magic word to show EEPROM has been used by Steam Controller before?)	
+		// 	*0x10000254 = 0x0000a55a
+		// IAP command Write EEPROM
+		//	Command code : 61 (0x3d)
+		//	Param0: EEPROM Address = 0
+		//	Param1: RAM Address = 0x10000254
+		//	Param2: Number of bytes to be read = 8
+		//	Param3: System Clock Frequency = 0x0000b71b
 
-        // Entry Num: 56074 - 57950
-        // Step Num: 42793 - 44499
-	// Firmware Offset(s): 
-	//	0x1fff1ff0 - 0x1fff1ff2
-	//	0x1fff171c - 0x1fff171c
-	//	... TODO: do we care aboutd decomposing boot ROM code?
+		// Data to write to EEPROM
+		eeprom_data[0] = 0x0000a55a;
+		eeprom_data[1] = 0;
 
-	// boot ROM code for executing IAB command
+		// Command 61 for EEPROM Write
+		command_param[0] = 61;
+		// EEPROM address (4 kB available)
+		command_param[1] = 0;
+		// RAM address where to read data to write to EEPROM
+		command_param[2] = eeprom_data;
+		// Number of bytes to write
+		command_param[3] = sizeof(eeprom_data);
+		// System clock frequency in kHz
+		command_param[4] = 46875;
 
-        // Entry Num: 57951 - 57961
-        // Step Num: 44500 - 44507
-	// Firmware Offset(s): 
-	//	0x00000bcc - 0x00000bcc
-	//	0x000007c0 - 0x000007cc
+		// Entry Num: 56074 - 57950
+		// Step Num: 42793 - 44499
+		// Firmware Offset(s): 
+		//	0x1fff1ff0 - 0x1fff1ff2
+		//	0x1fff171c - 0x1fff171c
+		//	... TODO: do we care aboutd decomposing boot ROM code?
 
-	// Decrement value in 0x10000250
-	//	Has to do with cps command (i.e. disabling/enabling interrupts)
+		// boot ROM code for executing IAB command
+
+		iap_entry(command_param, status_result);	
+
+		//TODO: should probbaly check status_result for CMD_SUCCESS
+
+		// Entry Num: 57951 - 57961
+		// Step Num: 44500 - 44507
+		// Firmware Offset(s): 
+		//	0x00000bcc - 0x00000bcc
+		//	0x000007c0 - 0x000007cc
+
+		// Decrement value in 0x10000250
+		//	Has to do with cps command (i.e. disabling/enabling interrupts)
+	}
 
         // Entry Num: 57962 - 57990
         // Step Num: 44508 - 44522
@@ -595,6 +636,20 @@ void init()
 	//	Param2: Number of bytes to be read = 4
 	//	Param3: System Clock Frequency = 0x0000b71b
 
+	// Data to write to EEPROM
+	uint32_t eeprom_data2;
+
+	// Command 62 for EEPROM Read
+	command_param[0] = 62;
+	// EEPROM address (4 kB available)
+	command_param[1] = 0x500;
+	// RAM address where to read data to write to EEPROM
+	command_param[2] = eeprom_data2;
+	// Number of bytes to write
+	command_param[3] = sizeof(eeprom_data2);
+	// System clock frequency in kHz
+	command_param[4] = 46875;
+
         // Entry Num: 58261 - 60061
         // Step Num: 44726 - 46373
 	// Firmware Offset(s): 
@@ -602,8 +657,12 @@ void init()
 	//	0x1fff171c - 0x1fff171c
 	//	... TODO: do we care aboutd decomposing boot ROM code?
 
-	// boot ROM code for executing IAB command
+	// boot ROM code for executing IAP command
 	
+	iap_entry(command_param, status_result);	
+
+	//TODO: should probbaly check status_result for CMD_SUCCESS
+
         // Entry Num: 60062 - 60072
         // Step Num: 46374 - 46381
 	// Firmware Offset(s): 
@@ -617,7 +676,15 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00000bd0 - 0x00000bd4
 	//	0x00000bf4 - 0x00000bf4
-	//	0x000015be - 0x000015e6 
+	//	0x000015be - 0x000015c4 
+	//	0x000015de - 0x000015e6 
+
+	// Check if 0x10001c08 (Value read from EEPROM) is 0
+	// if (eeprom_data2 != 0)
+	// {
+	// 	TODO: UNKONWN PATHS
+	//	if value read from EEPROM offset 0x500 is not 0 execute instruction at 0x000015c6
+	// }
 
 	// Check if GPREG0 is set to 0xecaabac0
 	// reg = 0x40038004;
