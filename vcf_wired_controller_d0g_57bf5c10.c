@@ -778,24 +778,100 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00000aa2 - 0x00000ad0
 
-	// Setup for calling function to setup USB?
-	//  *0x10001ba0 = 0x40080000;
-	//  *0x10001ba4 = 0x20004000;
-	//  *0x10001ba8 = 0x00000800;
-	// 
-	//  *0x10001bac = 0x00000003;
-	// 
-	//  *0x10001be4 = 0x00001670;
-	//  *0x10001be8 = 0x00001682;
-	//  *0x10001bec = 0x10000208;
-	// 
-	//  *0x10001bf0 = 0x10000208;
-	//  *0x10001bf4 = 0x00000000;
+	// Setup USBD_API_INIT_PARAM??
+	//  *0x10001ba0 = 0x40080000; // usb_reg_base??
+	//  *0x10001ba4 = 0x20004000; // mem_base??
+	//  *0x10001ba8 = 0x00000800; // mem_size??
+	//  *0x10001bac = 0x00000003; // max_num_ep??
+
+	//  *0x10001bb0 = 0x00000000; // USB_Reset_Event??
+	//  *0x10001bb4 = 0x00000000; // USB_Suspend_Event??
+	//  *0x10001bb8 = 0x00000000; // USB_Resume_Event??
+	//  *0x10001bbc = 0x00000000; // reserved_sbz??
+
+	//  *0x10001bc0 = 0x00000000; // USB_SOF_Event??
+	//  *0x10001bc4 = 0x00000000; // USB_WakeUpCfg??
+	//  *0x10001bc8 = 0x00000000; // USB_Power_Event??
+	//  *0x10001bcc = 0x00000000; // USB_Error_Event??
+
+	//  *0x10001bd0 = 0x00000000; // USB_Configure_Event??
+	//  *0x10001bd4 = 0x00000000; // USB_Interface_Event??
+	//  *0x10001bd8 = 0x00000000; // USB_Feature_Event??
+	//  *0x10001bdc = 0x00000000; //
+
+	//  *0x10001be0 = 0x00000000; // 
+	//  *0x10001be4 = 0x00001670; // 
+	//  *0x10001be8 = 0x00001682; // 
+	//  *0x10001bec = 0x10000208; // 
+
+	//  *0x10001bf0 = 0x10000208; // 
+	//  *0x10001bf4 = 0x00000000; // 
 	
-        // Entry Num: 60565 - 
-        // Step Num: 46753 - 
+        // Entry Num: 60565 - 64185 
+        // Step Num: 46753 - 49528
 	// Firmware Offset(s): 
-	//	
+	//	0x1fff351c - 0x1fff3562
+	//	... TODO: do we care about decomposing boot ROM code?
+
+// TODO: what do setting each of these register actually mean?
+
+	// Call into boot ROM code for USB setup?
+
+	// USB Device Command/Status register (DEVCMDSTAT)
+	reg = 0x40080000;
+	*reg = 0;
+
+	// USB EP Command/Status List start address
+	reg = 0x40080008;
+	*reg = 0x20004000;
+	// TODO: See how 0x20004000 has been filled out to build this
+
+	// USB Data buffer start address (DATABUFSTART)
+	reg = 0x4008000c;
+	*reg = 0x20004240;
+
+	// USB Endpoint Buffer in use (EPINUSE)
+	reg = 0x40080018;
+	*reg = 0x00000000;
+
+	// USB Endpoint skip (EPSKIP)
+	reg = 0x40080014;
+	*reg = 0x00000000;
+
+	// USB Endpoint Buffer Configuration (EPBUFCFG)
+	reg = 0x4008001c;
+	*reg = 0x000003ff;
+
+	// USB interrupt status register (INTSTAT)
+	reg = 0x40080020;
+	*reg = 0xc00003ff;
+	
+	// USB interrupt enable register (INTEN)
+	reg = 0x40080024;
+	*reg = 0x800003ff;
+
+	//TODO These are reading back register looking for hardware to set bits?
+	// USB Device Command/Status register (DEVCMDSTAT)
+	reg = 0x40080000;
+	*reg = 0x00000000;
+	
+	// USB Device Command/Status register (DEVCMDSTAT)
+	reg = 0x40080000;
+	*reg = 0x00000080;
+	// USB Device Command/Status register (DEVCMDSTAT)
+	reg = 0x40080000;
+	*reg = 0x00000080;
+	// USB Device Command/Status register (DEVCMDSTAT)
+	reg = 0x40080000;
+	*reg = 0x00000080;
+	// USB Device Command/Status register (DEVCMDSTAT)
+	reg = 0x40080000;
+	*reg = 0x00000080;
+	// USB Device Command/Status register (DEVCMDSTAT)
+	reg = 0x40080000;
+	*reg = 0x00000080;
+
+
 
 	// USB via boot ROM code
 	// TODO: map out what registers are being set etc. so we know where and what memory USB is accessing
