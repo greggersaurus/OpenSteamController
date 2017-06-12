@@ -817,6 +817,88 @@ void init()
 
 	// Call into boot ROM code for USB setup?
 
+	// Clear 0x20004000 - 0x2000405f (byte-wise zero write)
+	// Clear 0x200040b8 - 0x20004223 (byte-wise zero write)
+	// Clear 0x20004090 - 0x200040b7 (byte-wise zero write)
+
+	// USB EP Command/Status List:
+	*0x20004000 = 0x00400109 // EP0 OUT Buffer NBytes | EP0 OUT Buffer Address Offset
+	*0x20004004 = 0x0040010a // Reserved | SETUP bytes Buffer Address Offset
+	*0x20004008 = 0x00400109 // EP0 IN Buffer NBytes | EP0 IN Buffer Address Offset
+	*0x2000400c = 0x40000000 // Reserved | Reserved
+	*0x20004010 = 0x40000000 // EP 1 OUT Buffer 0
+	*0x20004014 = 0x40000000 // EP 1 OUT Buffer 1
+	*0x20004018 = 0x40000000 // EP 1 IN Buffer 0
+	*0x2000401c = 0x40000000 // EP 1 IN Buffer 1
+	*0x20004020 = 0x40000000 // EP 2 OUT Buffer 0
+	*0x20004024 = 0x40000000 // EP 2 OUT Buffer 1
+	*0x20004028 = 0x40000000 // EP 2 IN Buffer 0
+	*0x2000402C = 0x00000000 // EP 2 IN Buffer 1
+	*0x20004030 = 0x20004240 // EP 3 OUT Buffer 0
+	*0x20004034 = 0x00000040 // EP 3 OUT Buffer 1
+	*0x20004038 = 0x20004280 // EP 3 IN Buffer 0
+	*0x2000403c = 0x00000008 // EP 3 IN Buffer 1
+	*0x20004040 = 0x20004240 // EP 4 OUT Buffer 0
+	*0x20004044 = 0x00000000 // EP 4 OUT Buffer 1
+	*0x20004048 = 0x00000000 // EP 4 IN Buffer 0
+	*0x2000404c = 0x00000000 // EP 4 IN Buffer 1
+
+	*0x20004090 = 0x20004000
+	*0x20004094 = 0x20004030
+	*0x20004098 = 0x00000000
+	*0x2000409c = 0x00000000
+	*0x200040a0 = 0x200042c0
+	*0x200040a4 = 0x00000000
+	*0x200040a8 = 0x00000000
+	*0x200040aC = 0x00000000
+	*0x200040b0 = 0x40080000
+	*0x200040b4 = 0x200040b8
+	*0x200040b8 = 0x1fff27bf
+	*0x200040bc = 0x1fff28d1
+	*0x200040c0 = 0x00000000
+	*0x200040c4 = 0x1fff22ab
+	*0x200040c8 = 0x1fff23f3
+	*0x200040cc = 0x1fff2491
+	*0x200040d0 = 0x1fff24ad
+	*0x200040d4 = 0x1fff2651
+	*0x200040d8 = 0x1fff268d
+	*0x200040dc = 0x1fff2329
+	*0x200040e0 = 0x00000000
+	*0x200040e4 = 0x00000000
+	*0x200040e8 = 0x00000000
+	*0x200040ec = 0x00000000
+	*0x200040f0 = 0x00000000
+	*0x200040f4 = 0x00000000
+	*0x200040f8 = 0x00000000
+	*0x200040fc = 0x00000000
+	*0x20004100 = 0x00000000
+	*0x20004104 = 0x00000000
+	*0x20004108 = 0x1fff29d3
+	*0x2000410c = 0x1fff29d5
+	*0x20004110 = 0x1fff293d
+	*0x20004114 = 0x1fff293d
+	*0x20004118 = 0x1fff2e55
+	*0x2000411c = 0x1fff2e55
+	*0x20004120 = 0x1fff2e55
+	*0x20004124 = 0x1fff2e55
+	*0x20004128 = 0x1fff2e55
+	*0x2000412c = 0x1fff2e55
+	*0x20004130 = 0x1fff2e55	
+	*0x20004134 = 0x1fff2e55
+	*0x20004138 = 0x200040b8
+	*0x2000413c = 0x200040b8
+	*0x200041a0 = 0x00000000
+	*0x200041a4 = 0x00000000
+	*0x200041a8 = 0x00001670
+	*0x200041ac = 0x00001682
+	*0x200041b0 = 0x10000208
+	*0x200041b4 = 0x10000208
+	*0x200041b8 = 0x00000000
+	*0x200041bc = 0x00000000
+
+	*0x200041d0 = 0x20004090
+
+
 	// USB Device Command/Status register (DEVCMDSTAT)
 	reg = 0x40080000;
 	*reg = 0;
@@ -871,11 +953,15 @@ void init()
 	reg = 0x40080000;
 	*reg = 0x00000080;
 
-
-
 	// USB via boot ROM code
 	// TODO: map out what registers are being set etc. so we know where and what memory USB is accessing
 	//	This may be the key for where jingle data ends up for USB transmission
+
+        // Entry Num: 64186 - 
+        // Step Num: 49529 - 
+	// Firmware Offset(s): 
+	//	
+
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
