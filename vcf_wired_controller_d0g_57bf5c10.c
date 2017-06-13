@@ -957,10 +957,69 @@ void init()
 	// TODO: map out what registers are being set etc. so we know where and what memory USB is accessing
 	//	This may be the key for where jingle data ends up for USB transmission
 
-        // Entry Num: 64186 - 
-        // Step Num: 49529 - 
+        // Entry Num: 64186 - 64203
+        // Step Num: 49529 - 49540
 	// Firmware Offset(s): 
-	//	
+	//	0x00000ad2 - 0x00000ae8
+
+	// Check return value (Reg 0) of Boot ROM code call
+
+	// TODO: UNKNOWN PATHS Branc to 0x00000b14 if return value from Boot ROM function call is non-zero
+
+        // Entry Num: 64204 - 64504
+        // Step Num: 49541 - 49780
+	// Firmware Offset(s): 
+	//	0x00000b40 - 0x00000b50
+	//	0x0000035e - 0x00000360
+	//	0x00000350 - 0x0000035c
+
+	// Clear RAM (byte-wise) 0x10001b50 - 0x10001b87
+
+        // Entry Num: 64505 - 64529
+        // Step Num: 49781 - 49796
+	// Firmware Offset(s): 
+	//	0x00000b54 - 0x00000b72
+
+	*(uint8_t*)0x10001b58 = 0x01
+	*(uint16_t*)0x10000234 = 0x0021
+	*(uint8_t*)0x10000236 = 0x00
+	*0x10000238 = 0x0000164c
+
+	// Check if Reg 4 is 0
+	// TODO: UNKNOWN PATHS Branch to 0x00000b74 if Reg 4 is 0
+
+	// Check if byte at RAM address 0x10000216 is 3
+	// Thisis set during some init code when initially setting up RAM (instruction 0x00001532)... Not sure what this byte represents... Maybe number of USB EPs?
+	// TODO: UNKOWN PATHS do not branch and instead execute 0x00000b72 if this is false
+
+        // Entry Num: 64530 - 64557
+        // Step Num: 49797 - 49812
+	// Firmware Offset(s): 
+	//	0x00000b7c - 0x00000b9a
+
+	// Looks like setup for Boot ROM function (USB related? guessing by value looking like USB RAM address)
+
+	*0x10001b50 = 0x20004340
+	*0x10001b54 = 0x000004c0
+	*0x10001b5c = 0x10000211
+	*0x10001b60 = 0x10000234
+	*0x10001b64 = 0x00000961
+	*0x10001b68 = 0x0000098d
+
+        // Entry Num: 64558 - 65052
+        // Step Num: 49813 - 50173
+	// Firmware Offset(s): 
+	//	0x1fff2cfc - 0x1fff2d0e
+	//	...
+
+	// TODO: figure out what this Boot ROM code is doing
+
+        // Entry Num: 65053 -
+        // Step Num: 50174 - 
+	// Firmware Offset(s): 
+	//	0x00000b9c - 0x00000b9c
+	//	0x00000b78 - 0x00000b7a
+	//	0x00000aec - 
 
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
