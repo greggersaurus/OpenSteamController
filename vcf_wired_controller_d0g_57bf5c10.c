@@ -1006,21 +1006,157 @@ void init()
 	*0x10001b64 = 0x00000961
 	*0x10001b68 = 0x0000098d
 
-        // Entry Num: 64558 - 65052
-        // Step Num: 49813 - 50173
+        // Entry Num: 64558 - 65051
+        // Step Num: 49813 - 50172
 	// Firmware Offset(s): 
 	//	0x1fff2cfc - 0x1fff2d0e
 	//	...
 
 	// TODO: figure out what this Boot ROM code is doing
 
-        // Entry Num: 65053 -
-        // Step Num: 50174 - 
+        // Entry Num: 65052 - 65064
+        // Step Num: 50173 - 50180
 	// Firmware Offset(s): 
 	//	0x00000b9c - 0x00000b9c
 	//	0x00000b78 - 0x00000b7a
-	//	0x00000aec - 
+	//	0x00000aec - 0x00000af4
 
+	// Check that return value of Boot ROM code is 0
+	// TODO: UNKOWN PATHS branching to 0x00000b14 if Boot ROM code return 0
+
+        // Entry Num: 65065 - 65085
+        // Step Num: 50181 - 50198
+	// Firmware Offset(s): 
+	//	0x00000d40 - 0x00000d50
+	//	0x00000d6a - 0x00000d7a
+
+	// Input argument is checked to be >= 0, however, is set by call into function, so no path to dig down here, yet
+
+	// Set IP_USB_IRQ priority to highest via Interrupt Priority Register 5
+	reg = 0xe000e414;
+	val = *reg;
+	val &= ~0x00ff0000;
+	*reg = val;
+
+        // Entry Num: 65086 - 65094
+        // Step Num: 50199 - 50205
+	// Firmware Offset(s): 
+	//	0x00000af8 - 0x00000b04
+
+	// Enable interrupt 22 (USB_IRQ USB IRQ interrupt) via ISER register of NVIC
+	reg = 0xe000e100;
+	*reg = 0x00400000;
+
+        // Entry Num: 65095 - 65115
+        // Step Num: 50206 - 50223
+	// Firmware Offset(s): 
+	//	0x00000d40 - 0x00000d50
+	//	0x00000d6a - 0x00000d7a
+
+	// Set IP_USB_IRQ priority to 1 (one below highest) via Interrupt Priority Register 5
+	reg = 0xe000e414;
+	val = *reg;
+	val &= ~0x00ff0000;
+	val |= 0x00400000;
+	*reg = val;
+
+        // Entry Num: 65116 - 65125
+        // Step Num: 50224 - 50229
+	// Firmware Offset(s): 
+	//	0x00000b08 - 0x00000b12
+
+	// Prep for Boot ROM code
+	// Reg 0 = 0x200040b8
+
+        // Entry Num: 65126 - 65142
+        // Step Num: 50230 - 50242
+	// Firmware Offset(s): 
+	//	0x1fff2e92 - 0x1fff2ea6
+	//	0x1fff2eaa - 0x1fff2eac
+
+	//TODO: Understand what Boot ROM code is doing...
+	//	Pay attention to possible UNKOWN PATHS here. what is this function trying to do...?
+	// Maybe just setting up register to say that device must signal a connect?
+
+// Quickest path for Boot ROM code may be to track down offsets code is jumping to:
+
+//	lpc_chip_11uxx_lib/inc/chip.h:#define LPC_ROM_API_BASE_LOC      0x1FFF1FF8
+
+//	lpc_chip_11uxx_lib/inc/chip.h:#define LPC_ROM_API               
+
+//	lpc_chip_11uxx_lib/inc/romapi_11xx.h:} LPC_ROM_API_T
+
+//TODO: Make sure you understand the layer of pointer casting and dereference here...
+//	nxp_lpcxpresso_11u37_usbd_rom_libusb/example/src/libusbdev.c:	g_pUsbApi = (const USBD_API_T *) (*((LPC_ROM_API_T * *) 0x1FFF1FF8))->usbdApiBase;
+
+// TODO: Read values starting at 0x1FFF1FF8 to get the following addresses?
+
+// /**                                                                             
+//  * @brief LPC11XX High level ROM API structure                                  
+//  */ 
+// typedef struct {                                                                
+//         const uint32_t usbdApiBase;                             /*!< USBD API function table base address */ 
+//         const uint32_t reserved0;                               /*!< Reserved */
+//         const uint32_t candApiBase;                             /*!< CAN API function table base address */
+//         const uint32_t pwrApiBase;                              /*!< Power API function table base address */
+//         const uint32_t reserved1;                               /*!< Reserved */
+//         const uint32_t reserved2;                               /*!< Reserved */
+//         const uint32_t reserved3;                               /*!< Reserved */
+//         const uint32_t reserved4;                               /*!< Reserved */
+// } LPC_ROM_API_T;
+
+// nxp_lpcxpresso_11u37_usbd_rom_libusb/example/src/libusbdev.c:	g_pUsbApi = (const USBD_API_T *) LPC_ROM_API->usbdApiBase;
+
+// /** \brief Main USBD API functions structure.                                   
+//  *  \ingroup Group_USBD                                                         
+//  *                                                                              
+//  *  This structure contains pointer to various USB Device stack's sub-module    
+//  *  function tables. This structure is used as main entry point to access       
+//  *  various methods (grouped in sub-modules) exposed by ROM based USB device    
+//  *  stack.                                                                      
+//  *                                                                              
+//  */                                                                             
+// typedef struct USBD_API                                                         
+// {                                                                               
+//   const USBD_HW_API_T* hw; /**< Pointer to function table which exposes functions 
+//                            which interact directly with USB device stack's core 
+//                            layer.*/                                             
+//   const USBD_CORE_API_T* core; /**< Pointer to function table which exposes functions 
+//                            which interact directly with USB device controller   
+//                            hardware.*/                                          
+//   const USBD_MSC_API_T* msc; /**< Pointer to function table which exposes functions 
+//                            provided by MSC function driver module.              
+//                            */                                                   
+//   const USBD_DFU_API_T* dfu; /**< Pointer to function table which exposes functions 
+//                            provided by DFU function driver module.              
+//                            */                                                   
+//   const USBD_HID_API_T* hid; /**< Pointer to function table which exposes functions 
+//                            provided by HID function driver module.              
+//                            */                                                   
+//   const USBD_CDC_API_T* cdc; /**< Pointer to function table which exposes functions 
+//                            provided by CDC-ACM function driver module.          
+//                            */                                                   
+//   const uint32_t* reserved6; /**< Reserved for future function driver module.   
+//                            */                                                   
+//   const uint32_t version; /**< Version identifier of USB ROM stack. The version is
+//                           defined as 0x0CHDMhCC where each nibble represents version
+//                           number of the corresponding component.                
+//                           CC -  7:0  - 8bit core version number                 
+//                            h - 11:8  - 4bit hardware interface version number   
+//                            M - 15:12 - 4bit MSC class module version number     
+//                            D - 19:16 - 4bit DFU class module version number     
+//                            H - 23:20 - 4bit HID class module version number     
+//                            C - 27:24 - 4bit CDC class module version number     
+//                            H - 31:28 - 4bit reserved                            
+//                            */                                                   
+//                                                                                 
+// } USBD_API_T; 
+
+        // Entry Num: 65143 - 
+        // Step Num: 50243 - 
+	// Firmware Offset(s): 
+	//	
+	
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
