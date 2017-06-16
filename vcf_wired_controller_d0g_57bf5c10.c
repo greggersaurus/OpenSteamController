@@ -1,8 +1,14 @@
+/**
+ * All captured data from simulation vcf_wired_controller_d0g_57bf5c10.bin using
+ *  pinkySim.
+ */
 
 /**
  * In this simulation run the system was run from reset with no external input
  *  (except steps necessary to simulate expected hardware unit reactions). Possible
  *  triggering of IRQs were ignored. Parsed from exeLog_00000000001496459595.csv.
+ *
+ * ENTRY POINT 0x000000d4, as defined in Vector Table entry for RESET
  *
  * \return None.
  */
@@ -30,6 +36,7 @@ void init()
 	val |= 0xe800;                                                                  
 	*reg = val;  
 
+
         // Entry Num: 25 - 45087
         // Step Num: 17 - 33814
 	// Firmware Offset(s): 
@@ -38,6 +45,7 @@ void init()
 	// Some sort of delay required after last system control register mod?          
 	for (uint32_t cnt = 0; cnt < 0x1600; cnt++)                                     
 	{}  
+
 
         // Entry Num: 45088 - 45098
         // Step Num: 33815 - 33821
@@ -52,6 +60,7 @@ void init()
 	reg = 0x40048044;                                                               
 	*reg = 0;                                                                       
 	*reg = 1;
+
 
         // Entry Num: 45099 - 45115
         // Step Num: 33822 - 33834
@@ -71,6 +80,7 @@ void init()
 	val |= 0xe800;                                                                  
 	*reg = val;                    
 
+
         // Entry Num: 45116 - 45122
         // Step Num: 33835 - 33839
 	// Firmware Offset(s): 
@@ -80,6 +90,7 @@ void init()
 	reg = 0x40048008;                                                               
 	// Division ratio = 2 x 4. Feedback divider value = 3 + 1.                      
 	*reg = 0x23;
+
 
         // Entry Num: 45123 - 45137
         // Step Num: 33840 - 33850
@@ -97,6 +108,7 @@ void init()
 	val |= 0xe800;                                                                  
 	*reg = val;
 
+
         // Entry Num: 45138 - 45143
         // Step Num: 33851 - 33855
 	// Firmware Offset(s): 
@@ -106,6 +118,7 @@ void init()
 	reg = 0x4004800c;                                                               
 	// Wait until PLL is locked                                                     
 	while(((*reg) & 1) == 0);
+
 
         // Entry Num: 45144 - 45161
         // Step Num: 33856 - 33868
@@ -126,6 +139,7 @@ void init()
 	val |=  2;                                                                      
 	*reg = val;
 
+
         // Entry Num: 45162 - 45171
         // Step Num: 33869 - 33874
 	// Firmware Offset(s): 
@@ -142,6 +156,7 @@ void init()
 	*reg = 0;                                                                       
 	// Update clock source                                                          
 	*reg = 1; 
+
 
         // Entry Num: 45172 - 45185
         // Step Num: 33875 - 33884
@@ -161,6 +176,7 @@ void init()
 	// Update clock source.                                                         
 	*reg = 1; 
 
+
         // Entry Num: 45186 - 45190
         // Step Num: 33885 - 33888
 	// Firmware Offset(s): 
@@ -170,6 +186,7 @@ void init()
 	reg = 0x40048010;                                                               
 	// Division ration is 2 x 4. Feedback divider value is 3 + 1.                   
 	*reg = 0x23;
+
 
         // Entry Num: 45191 - 45205
         // Step Num: 33889 - 33899
@@ -187,6 +204,7 @@ void init()
 	val |= 0xe800;                                                                  
 	*reg = val;
 
+
         // Entry Num: 45206 - 45211
         // Step Num: 33900 - 33904
 	// Firmware Offset(s): 
@@ -197,6 +215,7 @@ void init()
 	reg = 0x40048014;                                                               
 	// Wait for PLL locked                                                          
 	while (((*reg) & 1) == 0);
+
 
         // Entry Num: 45212 - 45226
         // Step Num: 33905 - 33912
@@ -209,6 +228,7 @@ void init()
 	// Enable I/O configuration block                                               
 	val |= 0x10000;                                                                 
 	*reg = val;
+
 
         // Entry Num: 45227 - 53704
         // Step Num: 33913 - 40670 
@@ -232,6 +252,7 @@ void init()
 	// Set SRAM0 0x10000200 to 0x10001c1c with specific values
 	// TODO: details on exact values set here and data word size accesses
 
+
         // Entry Num: 53705 - 53722
         // Step Num: 40671 - 40684
 	// Firmware Offset(s): 
@@ -250,6 +271,7 @@ void init()
 		// 	Not branching to 0x0000046e 
 	//  }
 
+
         // Entry Num: 53723 - 53740
         // Step Num: 40685 - 40696
 	// Firmware Offset(s): 
@@ -267,6 +289,7 @@ void init()
 		// 	Not branching to 0x000004ba
 		// 	Branching to 0x000004be, not executing 0x000004b6
 	//  }
+
 
         // Entry Num: 53741 - 54149
         // Step Num: 40697 - 41067
@@ -313,6 +336,7 @@ void init()
 	// System clock frequency in kHz
 	command_param[4] = 46875;
 
+
         // Entry Num: 54150 - 54163
         // Step Num: 41068 - 41077
 	// Firmware Offset(s): 
@@ -322,6 +346,7 @@ void init()
 	// Increment value in 0x10000250
 	//	Has to do with cps command (i.e. disabling/enabling interrupts)
 	// Call into IAB command function
+
 
         // Entry Num: 54164 - 55980
         // Step Num: 41078  - 42737
@@ -335,6 +360,7 @@ void init()
 
 	//TODO: should probbaly check status_result for CMD_SUCCESS
 
+
         // Entry Num: 55981 - 55991
         // Step Num: 42738 - 42745
 	// Firmware Offset(s): 
@@ -343,6 +369,7 @@ void init()
 
 	// Decrement value in 0x10000250
 	//	Has to do with cps command (i.e. disabling/enabling interrupts)
+
 
         // Entry Num: 55992 - 56018
         // Step Num: 42746 - 42759
@@ -391,6 +418,7 @@ void init()
 		// System clock frequency in kHz
 		command_param[4] = 46875;
 
+
 		// Entry Num: 56074 - 57950
 		// Step Num: 42793 - 44499
 		// Firmware Offset(s): 
@@ -404,6 +432,7 @@ void init()
 
 		//TODO: should probbaly check status_result for CMD_SUCCESS
 
+
 		// Entry Num: 57951 - 57961
 		// Step Num: 44500 - 44507
 		// Firmware Offset(s): 
@@ -413,6 +442,7 @@ void init()
 		// Decrement value in 0x10000250
 		//	Has to do with cps command (i.e. disabling/enabling interrupts)
 	}
+
 
         // Entry Num: 57962 - 57990
         // Step Num: 44508 - 44522
@@ -430,6 +460,7 @@ void init()
 	val |= 0x40;
 	*reg = val;
 
+
         // Entry Num: 57991 - 57998
         // Step Num: 44523 - 44529
 	// Firmware Offset(s): 
@@ -444,6 +475,7 @@ void init()
 	// TODO: what does P0_3 indicate?
 	//	Can we ohm this out?
 
+
         // Entry Num: 57999 - 58008
         // Step Num: 44530 - 44537
 	// Firmware Offset(s): 
@@ -451,6 +483,7 @@ void init()
 
 	// Again check that P0_3 is zero
 	// If it is check states of bits 0 and/or 1 in 0x40048030 (System reset status register)
+
 
         // Entry Num: 58009 - 58027
         // Step Num: 44538 - 44548
@@ -466,6 +499,7 @@ void init()
 	//	TODO: UNKOWN PATHS
 	//		If value from EEPROM (written to 0x10000258) is 8, execute instruction at 0x00000fa2
 
+
         // Entry Num: 58028 - 58035
         // Step Num: 44549 - 44555
 	// Firmware Offset(s): 
@@ -476,6 +510,7 @@ void init()
 	//	TODO: UNKNOWN PATHS
 	//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
 
+
         // Entry Num: 58036 - 58040
         // Step Num: 44556 - 44559
 	// Firmware Offset(s): 
@@ -483,6 +518,7 @@ void init()
 
 	// Set P1_8 to output bit to high
 	*((uint8_t*)0x50000028) = 1;
+
 
         // Entry Num: 58041 - 58053
         // Step Num: 44560 - 44570
@@ -493,6 +529,7 @@ void init()
 	reg = 0x50002004;
 	val = *reg;
 	val |= 0x00000100;
+
 
         // Entry Num: 58054 - 58067
         // Step Num: 44571 - 44578
@@ -505,6 +542,7 @@ void init()
 	reg = 0x40038008;
 	*reg = 0;
 
+
         // Entry Num: 58068 - 58087
         // Step Num: 44579 - 44594
 	// Firmware Offset(s): 
@@ -514,6 +552,7 @@ void init()
 	// Enable pull down resistor on PIO0_3 register
 	reg = 0x4004400c;
 	*reg = 0x00000008;
+
 
         // Entry Num: 58088 - 58105
         // Step Num: 44595 - 44610
@@ -529,6 +568,7 @@ void init()
 	reg = 0x40044018;
 	*reg = 0x00000001; 
 	
+
         // Entry Num: 58106 - 58127
         // Step Num: 44611 - 44630
 	// Firmware Offset(s): 
@@ -542,6 +582,7 @@ void init()
 	reg = 0x400440a4;
 	*reg = 0x00000002;
 
+
         // Entry Num: 58128 - 58143
         // Step Num: 44631 - 44644
 	// Firmware Offset(s): 
@@ -553,6 +594,7 @@ void init()
 	// Set PIO1_18 to function as TXD
 	reg = 0x400440a8;
 	*reg = 0x00000002;
+
 
         // Entry Num: 58144 - 58154
         // Step Num: 44645 - 44654
@@ -568,6 +610,7 @@ void init()
 	// TODO: what does P0_3 indicate?
 	//	Can we ohm this out?
 
+
         // Entry Num: 58155 - 58164
         // Step Num: 44655 - 44660
 	// Firmware Offset(s): 
@@ -575,6 +618,7 @@ void init()
 	//	0x00000f90 - 0x00000f94
 
 	// Again check that P0_3 is zero
+
 
         // Entry Num: 58165 - 58181
         // Step Num: 44661 - 44672
@@ -588,6 +632,7 @@ void init()
 	//	TODO: UNKOWN PATHS
 	//		If value from EEPROM (written to 0x10000258) is 8, execute instruction at 0x00000fa2
 
+
         // Entry Num: 58182 - 58184
         // Step Num: 44673 - 44675
 	// Firmware Offset(s): 
@@ -596,6 +641,7 @@ void init()
 	// Read value fo 0x10000258 and check if it's 5
 	//	TODO: UNKNOWN PATHS
 	//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
+
 
         // Entry Num: 58185 - 58189
         // Step Num: 44676 - 44679
@@ -606,6 +652,7 @@ void init()
 	*((uint8_t*)0x50000028) = 0x01
 
 	//TODO: it looks like P1_8 being set to high might drive a different input back...? Look through paths of setting this output based on input values
+
 
         // Entry Num: 58190 - 58202
         // Step Num: 44680 - 44690
@@ -618,6 +665,7 @@ void init()
 	val |= 0x00000100;
 
 	//TODO: again with double setting P1_8 as output... simulation might not be reaction correctly due to unanticipated hardware input response...
+
 
         // Entry Num: 58203 - 58260
         // Step Num: 44691 - 44725
@@ -650,6 +698,7 @@ void init()
 	// System clock frequency in kHz
 	command_param[4] = 46875;
 
+
         // Entry Num: 58261 - 60061
         // Step Num: 44726 - 46373
 	// Firmware Offset(s): 
@@ -663,6 +712,7 @@ void init()
 
 	//TODO: should probbaly check status_result for CMD_SUCCESS
 
+
         // Entry Num: 60062 - 60072
         // Step Num: 46374 - 46381
 	// Firmware Offset(s): 
@@ -670,6 +720,7 @@ void init()
 	//	0x000007c0 - 0x000007cc
 
 	// Decrement 0x10000250 and cps (change processor state (to reenable interrupts after IAP command?)
+
 
         // Entry Num: 60073 - 60096
         // Step Num: 46382 - 46394
@@ -695,12 +746,14 @@ void init()
 		//	If GPREG0 is 0xecaabac0 execute instruction 0x000015e6 instead of branching to 0x000015ec
 	// }
 
+
         // Entry Num: 60097 - 60109
         // Step Num: 46395 - 46402
 	// Firmware Offset(s): 
 	//	0x000015ec - 0x000015fa
 
 	// Call into some function that checks if Reg 0 is set to 0xecaabac0. Could be UNKNOWN PATH, but in this case Reg 0 is set from firmware read 
+
 
         // Entry Num: 60110 - 60117
         // Step Num: 46403 - 46408
@@ -711,6 +764,7 @@ void init()
 
 	// Check if 0x10000258 == 0
 	//	TODO: UNKNOWN PATH what if 0x10000258 is not 0?
+
 
         // Entry Num: 60118 - 60140
         // Step Num: 46409 - 46423
@@ -733,6 +787,7 @@ void init()
 	reg = 0x400480c8;
 	*reg = 1;
 
+
         // Entry Num: 60141 - 60152
         // Step Num: 46424 - 46432
 	// Firmware Offset(s): 
@@ -744,6 +799,7 @@ void init()
 	val = *reg;
 	val |= 0x00004000;
 	*reg = val;
+
 
         // Entry Num: 60153 - 60164
         // Step Num: 46433 - 46441
@@ -757,12 +813,14 @@ void init()
 	val |= 0x08000000;
 	*reg = val;
 
+
         // Entry Num: 60165 - 60177
         // Step Num: 46442 - 46449
 	// Firmware Offset(s): 
 	//	0x00000a90 - 0x00000a9e
 
 	// Write 0x1fff1f24 to RAM address 0x10000230, which was read from boot ROM
+
 
         // Entry Num: 60178 - 60524
         // Step Num: 46450 - 46728
@@ -772,6 +830,7 @@ void init()
 	//	0x00000354 - 0x0000035c
 
 	// Write 0's (byte by byte) SRAM0 for range 0x10001ba0 - 0x10001be3
+
 
         // Entry Num: 60525 - 60564
         // Step Num: 46729 - 46752
@@ -807,15 +866,27 @@ void init()
 	//  *0x10001bf0 = 0x10000208; // 
 	//  *0x10001bf4 = 0x00000000; // 
 	
+
         // Entry Num: 60565 - 64185 
         // Step Num: 46753 - 49528
 	// Firmware Offset(s): 
 	//	0x1fff351c - 0x1fff3562
 	//	... 
 
-	// Call into boot ROM code for USB setup?
-	USBD_HW_API->Init()
-//TODO: What does calling this function do?
+
+//TODO: map pointer usage in memory info section
+	USBD_HW_API->Init(USBD_HANDLE_T* phUsb = 0x1000022c, USB_CORE_DESCS_T* pDesc = 0x10001be4, USBD_API_INIT_PARAM_T* param = 0x10001ba0)
+	// \param[in,out] phUsb Pointer to the USB device stack handle of type USBD_HANDLE_T.
+	// \param[in]  pDesc Structure containing pointers to various descriptor arrays needed by the stack.
+	// 		  These descriptors are reported to USB host as part of enumerations process.
+	// \param[in]  param Structure containing USB device stack initialization parameters.
+	// \return Returns \ref ErrorCode_t type to indicate success or error condition.
+	// 	\retval LPC_OK(0) On success                                      
+	// 	\retval ERR_USBD_BAD_MEM_BUF(0x0004000b) When insufficient memory buffer is passed or memory
+        //                                    is not aligned on 2048 boundary.
+
+	// Reg 0 = 0 -> Return code LPC_OK
+	// *0x1000022c = 0x200040b8 --> USB_HANDLE_T USB device stack handle
 
 //TODO: Check sanity of input parameters
 //  This may also help define certain portions of RAM (i.e. USBD_HANDLE_T).
@@ -960,14 +1031,15 @@ void init()
 	// TODO: map out what registers are being set etc. so we know where and what memory USB is accessing
 	//	This may be the key for where jingle data ends up for USB transmission
 
+
         // Entry Num: 64186 - 64203
         // Step Num: 49529 - 49540
 	// Firmware Offset(s): 
 	//	0x00000ad2 - 0x00000ae8
 
-	// Check return value (Reg 0) of Boot ROM code call
+	// Check return value of Boot ROM code (Reg 0) is 0 (LPC_OK)
+	// 	TODO: UNKNOWN PATHS Branch to 0x00000b14 if Boot ROM code does not return 0 (i.e. failure of USBD_HW_API->Init())
 
-	// TODO: UNKNOWN PATHS Branc to 0x00000b14 if return value from Boot ROM function call is non-zero
 
         // Entry Num: 64204 - 64504
         // Step Num: 49541 - 49780
@@ -977,6 +1049,7 @@ void init()
 	//	0x00000350 - 0x0000035c
 
 	// Clear RAM (byte-wise) 0x10001b50 - 0x10001b87
+
 
         // Entry Num: 64505 - 64529
         // Step Num: 49781 - 49796
@@ -989,25 +1062,40 @@ void init()
 	*0x10000238 = 0x0000164c
 
 	// Check if Reg 4 is 0
-	// TODO: UNKNOWN PATHS Branch to 0x00000b74 if Reg 4 is 0
+	// 	TODO: UNKNOWN PATHS Branch to 0x00000b74 if Reg 4 is 0
 
 	// Check if byte at RAM address 0x10000216 is 3
 	// Thisis set during some init code when initially setting up RAM (instruction 0x00001532)... Not sure what this byte represents... Maybe number of USB EPs?
-	// TODO: UNKOWN PATHS do not branch and instead execute 0x00000b72 if this is false
+	// 	TODO: UNKOWN PATHS do not branch and instead execute 0x00000b72 if this is false
+
 
         // Entry Num: 64530 - 64557
         // Step Num: 49797 - 49812
 	// Firmware Offset(s): 
 	//	0x00000b7c - 0x00000b9a
 
-	// Looks like setup for Boot ROM function (USB related? guessing by value looking like USB RAM address)
+	// Fill in USBD_HID_INIT_PARAM_T
+	*0x10001b50 = 0x20004340 // mem_base - Base memory location from where the stack can allocate
+                      // data and buffers. \note The memory address set in this field
+                      // should be accessible by USB DMA controller. Also this value
+                      // should be aligned on 4 byte boundary
+	*0x10001b54 = 0x000004c0 // mem_size - The size of memory buffer which stack can use.       
+                      // \note The \em mem_size should be greater than the size    
+                      // returned by USBD_HID_API::GetMemSize() routine.
+	*0x10001b58 = 0x00000001 // max_reports - Number of HID reports supported by this instance    
+                      // of HID class driver
+	*0x10001b5c = 0x10000211 // intf_desc - Pointer to the HID interface descriptor within the   
+                      // descriptor array (\em high_speed_desc) passed to Init()   
+                      // through \ref USB_CORE_DESCS_T structure.
+	*0x10001b60 = 0x10000234 // report_dataa - Pointer to an array of HID report descriptor
+                      // data structure (\ref USB_HID_REPORT_T). The number
+                      // of elements in the array should be same a \em max_reports
+                      // value. The stack uses this array to respond to 
+                      // requests received for various HID report descriptor
+                      // information. \note This array should be of global scope
+	*0x10001b64 = 0x00000961 // HID_GetReport
+	*0x10001b68 = 0x0000098d // HID_SetReport
 
-	*0x10001b50 = 0x20004340
-	*0x10001b54 = 0x000004c0
-	*0x10001b5c = 0x10000211
-	*0x10001b60 = 0x10000234
-	*0x10001b64 = 0x00000961
-	*0x10001b68 = 0x0000098d
 
         // Entry Num: 64558 - 65051
         // Step Num: 49813 - 50172
@@ -1015,9 +1103,23 @@ void init()
 	//	0x1fff2cfc - 0x1fff2d0e
 	//	...
 
-// TODO: figure out what this Boot ROM code is doing
-	USBD_HID_API_T->init()
-// TODO: check input parameters for sanity and RAM definitions
+	USBD_HID_API_T->init(USBD_HANDLE_T hUsb = 0x200040b8, USBD_HID_INIT_PARAM_T* param = 0x10001b50)
+	// \param[in] hUsb Handle to the USB device stack.                           
+	// \param[in, out] param Structure containing HID function driver module     
+	//     initialization parameters.                                            
+	// \return Returns \ref ErrorCode_t type to indicate success or error condition.
+	// 	\retval LPC_OK On success                                         
+	// 	\retval ERR_USBD_BAD_MEM_BUF  Memory buffer passed is not 4-byte  
+	// 	    aligned or smaller than required.                             
+	// 	\retval ERR_API_INVALID_PARAM2 Either HID_GetReport() or HID_SetReport()
+	// 	    callback are not defined.                                     
+	// 	\retval ERR_USBD_BAD_DESC  HID_HID_DESCRIPTOR_TYPE is not defined 
+	// 	    immediately after interface descriptor.                       
+	// 	\retval ERR_USBD_BAD_INTF_DESC  Wrong interface descriptor is passed. 
+	// 	\retval ERR_USBD_BAD_EP_DESC  Wrong endpoint descriptor is passed. 
+
+	// Reg 0 = 0 -> Return code LPC_OK
+
 
         // Entry Num: 65052 - 65064
         // Step Num: 50173 - 50180
@@ -1026,8 +1128,9 @@ void init()
 	//	0x00000b78 - 0x00000b7a
 	//	0x00000aec - 0x00000af4
 
-	// Check that return value of Boot ROM code is 0
-	// TODO: UNKOWN PATHS branching to 0x00000b14 if Boot ROM code return 0
+	// Check that return value of Boot ROM code (Reg 0) is 0 (LPC_OK)
+	// 	TODO: UNKOWN PATHS branching to 0x00000b14 if Boot ROM code does not return 0 (i.e. failure of USBD_HID_API_T->init())
+
 
         // Entry Num: 65065 - 65085
         // Step Num: 50181 - 50198
@@ -1043,6 +1146,7 @@ void init()
 	val &= ~0x00ff0000;
 	*reg = val;
 
+
         // Entry Num: 65086 - 65094
         // Step Num: 50199 - 50205
 	// Firmware Offset(s): 
@@ -1051,6 +1155,7 @@ void init()
 	// Enable interrupt 22 (USB_IRQ USB IRQ interrupt) via ISER register of NVIC
 	reg = 0xe000e100;
 	*reg = 0x00400000;
+
 
         // Entry Num: 65095 - 65115
         // Step Num: 50206 - 50223
@@ -1065,6 +1170,7 @@ void init()
 	val |= 0x00400000;
 	*reg = val;
 
+
         // Entry Num: 65116 - 65125
         // Step Num: 50224 - 50229
 	// Firmware Offset(s): 
@@ -1072,6 +1178,8 @@ void init()
 
 	// Prep for Boot ROM code
 	// Reg 0 = 0x200040b8
+	// Reg 1 = 1
+
 
         // Entry Num: 65126 - 65142
         // Step Num: 50230 - 50242
@@ -1079,9 +1187,11 @@ void init()
 	//	0x1fff2e92 - 0x1fff2ea6
 	//	0x1fff2eaa - 0x1fff2eac
 
-//TODO: Understand what Boot ROM code is doing...
-	USBD_HW_API->Connect()
-//TODO: understand input parameters and maybe use to classify RAM?
+	USBD_HW_API->Connect(USBD_HANDLE_T hUsb = 0x200040b8, uint32_t con = 1);
+	// \param[in] hUsb Handle to the USB device stack.                           
+	// \param[in] con  States whether to connect (1) or to disconnect (0).       
+	// \return Nothing.
+
 
         // Entry Num: 65143 - 
         // Step Num: 50243 - 
@@ -1095,3 +1205,101 @@ void init()
 	//		Maybe 32 bit timer interrupting before other things happening causes variables to get set in a way such that power off occurs
 	//		Otherwise controller might stay in this "idle" loop, or go into other "idle" loop, waiting for shutdown signal?
 }
+
+/**                                                                           
+  *  HID get report callback function.                                          
+  *                                                                             
+  *  This function is provided by the application software. This function gets called 
+  *  when host sends a HID_REQUEST_GET_REPORT request. The setup packet data (\em pSetup)
+  *  is passed to the callback so that application can extract the report ID, report
+  *  type and other information need to generate the report. \note HID reports are sent
+  *  via interrupt IN endpoint also. This function is called only when report request
+  *  is received on control endpoint. Application should implement \em HID_EpIn_Hdlr to
+  *  send reports to host via interrupt IN endpoint.                            
+  *                                                                             
+  *                                                                             
+  *  \param[in] hHid Handle to HID function driver.                             
+  *  \param[in] pSetup Pointer to setup packet received from host.              
+  *  \param[in, out] pBuffer  Pointer to a pointer of data buffer containing report data. 
+  *                       Pointer-to-pointer is used to implement zero-copy buffers. 
+  *                       See \ref USBD_ZeroCopy for more details on zero-copy concept.
+  *  \param[in] length  Amount of data copied to destination buffer.            
+  *  \return The call back should returns \ref ErrorCode_t type to indicate success or error condition.
+  *          \retval LPC_OK On success.                                         
+  *          \retval ERR_USBD_UNHANDLED  Event is not handled hence pass the event to next in line. 
+  *          \retval ERR_USBD_xxx  For other error conditions.                  
+  *                                                                             
+  * ENTRY POINT 0x00000961, as defined in USBD_HID_INIT_PARAM_T passed into USBD_HID_API_T->init().
+  */                                                                            
+ErrorCode_t HID_GetReport( USBD_HANDLE_T hHid, USB_SETUP_PACKET* pSetup, uint8_t** pBuffer, uint16_t* length)
+{
+        // Entry Num: 
+        // Step Num: 
+	// Firmware Offset(s): 
+	//	0x00000961 - 
+
+	//TODO: Simulate this?
+
+}
+
+  /**                                                                           
+  *  HID set report callback function.                                          
+  *                                                                             
+  *  This function is provided by the application software. This function gets called 
+  *  when host sends a HID_REQUEST_SET_REPORT request. The setup packet data (\em pSetup)
+  *  is passed to the callback so that application can extract the report ID, report
+  *  type and other information need to modify the report. An application might choose 
+  *  to ignore input Set_Report requests as meaningless. Alternatively these reports 
+  *  could be used to reset the origin of a control (that is, current position should 
+  *  report zero).                                                              
+  *                                                                             
+  *  \param[in] hHid Handle to HID function driver.                             
+  *  \param[in] pSetup Pointer to setup packet received from host.              
+  *  \param[in, out] pBuffer  Pointer to a pointer of data buffer containing report data. 
+  *                       Pointer-to-pointer is used to implement zero-copy buffers. 
+  *                       See \ref USBD_ZeroCopy for more details on zero-copy concept.
+  *  \param[in] length  Amount of data copied to destination buffer.            
+  *  \return The call back should returns \ref ErrorCode_t type to indicate success or error condition.
+  *          \retval LPC_OK On success.                                         
+  *          \retval ERR_USBD_UNHANDLED  Event is not handled hence pass the event to next in line. 
+  *          \retval ERR_USBD_xxx  For other error conditions.                  
+  *                                                                             
+  * ENTRY POINT 0x0000098d, as defined in USBD_HID_INIT_PARAM_T passed into USBD_HID_API_T->init().
+  */                                                                            
+ErrorCode_t HID_SetReport( USBD_HANDLE_T hHid, USB_SETUP_PACKET* pSetup, uint8_t** pBuffer, uint16_t length)
+{
+        // Entry Num: 
+        // Step Num: 
+	// Firmware Offset(s): 
+	//	0x0000098d - 
+
+	//TODO: Simulate this?
+
+}
+
+/**
+ * This sectionis set aside to track and define different parts of RAM, etc.
+
+(Possible) Stack memory:
+
+USBD_HID_INIT_PARAM_T
+0x10001b50
+...
+0x10001b68
+
+//TODO: need range to know what is stack and what is heap
+
+0x10000211 Pointer to the HID interface descriptor within the descriptor array (\em high_speed_desc) passed to Init() through \ref USB_CORE_DESCS_T structure.
+
+0x10000234 USB_HID_REPORT_T*
+//TODO: size and contents of USB_HID_REPORT_T
+
+0x200040b8 - USBD_HANDLE_T - Handle to the USB device stack
+//TODO: size and content of USBD_HANDLE_T
+
+0x20004340 -  USB HID Base memory location from where the stack can allocate data and buffers
+...
+0x20004800
+
+ *
+ */
