@@ -940,7 +940,9 @@ void init()
 		*0x200040aC = 0x00000000
 		*0x200040b0 = 0x40080000
 		*0x200040b4 = 0x200040b8
-		*0x200040b8 = 0x1fff27bf //TODO: what are these...? Boot ROM function calls?
+
+		// This is the USB device stack handle (USBD_HANDLE_T), but not sure what this means exactly...
+		*0x200040b8 = 0x1fff27bf 
 		*0x200040bc = 0x1fff28d1
 		*0x200040c0 = 0x00000000
 		*0x200040c4 = 0x1fff22ab
@@ -1201,11 +1203,161 @@ void init()
 	// \return Nothing.
 
 
-        // Entry Num: 65143 - 
-        // Step Num: 50243 - 
+        // Entry Num: 65143 - 65164
+        // Step Num: 50243 - 50256
 	// Firmware Offset(s): 
-	//	
+	//	0x00000b14 - 0x00000b18
+	//	0x00000f2c - 0x00000f2c
+	//	0x00001100 - 0x00001112
+
+	*(uint8_t*)0x10000249 = 0x00;
+
+        // Entry Num: 65165 - 65177
+        // Step Num: 50257 - 50264
+	// Firmware Offset(s): 
+	//	0x00000e40 - 0x00000e4e
+
+	*0x100006cc = 0x100005cc
+	*0x100006d0 = 0x00000100
+	*0x100006d4 = 0x00000001
+	*0x100006d8 = 0x00000000
+	*0x100006dc = 0x00000000
+
+	int fnc(Reg0 = 0x100006cc, Reg1 = 0x100005cc, Reg2 = 0x00000001, Reg3 = 0x00000100)
+	{
+		uint32_t* ptr = Reg0;
+		ptr[0] = Reg1;
+		ptr[1] = Reg3;
+		ptr[2] = Reg2;
+		ptr[3] = 0;
+		ptr[4] = 0;
+
+		return 1;
+	}
+
+        // Entry Num: 65178 - 65207
+        // Step Num: 50265 - 50282
+	// Firmware Offset(s): 
+	//	0x00001116 - 0x0000111a
+	//	0x00000624 - 0x00000640
+
+	// Enables clock for UART via System clock control register
+	reg = 0x40048080;
+	val = *reg;
+	val |= 0x00001000;
+	*reg = val;
+
+	// Set USART clock divider register to divide by 1.
+	reg = 0x40048098;
+	*reg = 0x00000001;
+
+	// TX FIFO Reset, RX FIFO Reset and FIFO enable via USART FIFO Control Register Write only
+	reg = 0x40008008;
+	*reg = 0x00000007;
+
+	// Set Word Length Select to 8-bit character length via USART Line Control Register
+	reg = 0x4000800c;
+	*reg = 0x00000003;
+
+	// Set Baud rate generation pre-scaler divisor value to 0 and Baud rate pre-scaler multiplier value to 1 via USART Fractional Divider Register
+	reg = 0x40008028;
+	*reg = 0x00000010;
+
+        // Entry Num: 65208 - 65241
+        // Step Num: 50283 - 50305
+	// Firmware Offset(s): 
+	//	0x0000111e - 0x0000114a
+
+	// Set RX Trigger level to 3 (14 characters or 0x0E) and FIFO enable via USART FIFO Control Register Write only
+	reg = 0x40008008;
+	*reg = 0x00000081;
+
+	// Enable access to Divisor Latches via USART Line Control Register
+	reg = 0x4000800c;
+	val = *reg;
+	val |= 0x00000080;
+	*reg = val;
+
+	// Set the Divisor Latch LSB register to set the baud rate of the USART via the USART Divisor Latch LSB Register when DLAB = 1
+	reg = 0x40008000;
+	*reg = 0x00000003;
+
+	// Set the Baud rate generation pre-scaler divisor value to 1 and Baud rate pre-scaler multiplier value to 0xb via the USART Fractional Divider Register
+	reg = 0x40008028;
+	*reg = 0x000000b1;
+
+	// Disable access to Divisor Latches via USART Line Control Register
+	reg = 0x4000800c;
+	val = *reg;
+	val &= ~0x00000080;
+	*reg = val;
 	
+	// Enable interrupt 21 (USART interrupt) via Interrupt Set-enable Register
+	reg = 0xe000e100;
+	*reg = 0x00200000;
+
+	// Enables the Receive Data Available 0 interrupt and Enables the Receive Line Status interrupt via USART Interrupt Enable Register when DLAB = 0
+	reg = 0x40008004;
+	val = *reg;
+	val |= 0x00000005;
+	*reg = val;
+
+        // Entry Num: 65242 - 65262
+        // Step Num: 50306 - 50323
+	// Firmware Offset(s): 
+	//	0x00000d84 - 0x00000d94
+	//	0x00000dae - 0x00000dbe
+
+	// I think this function is for changing interrupt priority
+
+	// Check if Reg 0 is greater than or equal to 0
+	//	TODO: UNKOWN PATHS continue to execute 0x00000d96, if not
+	//	However, this is impossible as Reg 0 is set to 15 before this function is called
+
+	// Set IP_USART0 to highest interrupt priority
+	reg = 0xe000e414;
+	val = *reg;
+	val &= ~0x0000ff00;
+	val |= 0;
+	*reg = val;
+
+        // Entry Num: 65263 - 65289
+        // Step Num: 50324 - 50347
+	// Firmware Offset(s): 
+	//	0x0000114e - 0x00001152
+	//	0x00000d84 - 0x00000dac
+
+	// Set Priority of system handler 14, PendSV to 0x40 (TODO: what does this translate to?)
+	reg = 0xe000ed20;
+	val = *reg;
+	val &= ~0x00ff0000;
+	val |= 0x00400000;
+	*reg = val;
+
+        // Entry Num: 65290 - 65304
+        // Step Num: 50348 - 50357
+	// Firmware Offset(s): 
+	//	0x00001156 - 0x00001156
+	//	0x00000f30 - 0x00000f30
+	//	0x000012bc - 0x000012be
+	//	0x00000ce8 - 0x00000cf0
+	//	0x00000cf4 - 0x00000cf4
+
+	// val = *((uint8_t*)0x50000003);
+	// Check state of P0_3 and make sure it is 0
+		// TODO: UKNOWN PATHS
+
+        // Entry Num: 65305 - 265309
+        // Step Num: 50358 - 250361
+	// Firmware Offset(s): 
+	//	0x000012c2 - 0x000012d0
+
+	// TODO: what might we be waiting for? And is this only is P0_3 reads 0? What if it doesn't?
+	for (int cnt = 0; cnt < 0x0000c350; cnt++){}
+
+        // Entry Num: 265310 - 
+        // Step Num: 250362 - 
+	// Firmware Offset(s): 
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
