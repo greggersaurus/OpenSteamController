@@ -308,17 +308,19 @@ void init()
 	//	0x00000bdc - 0x00000bf0
 	//	0x00000bb4 - 0x00000bc0
 
+	// Setup for EEPROM read via IAP command (i.e. calculation of system clock frequency):
+	//
 	// System PLL control register
 	// reg = 0x40048008;
 	// val = *reg;
 	// Perform calculations based on value of system PLL control register
 	// Save results to 0x10000260
-	// I believe this is all setup for EEPROM read via IAP command (i.e. calculation of system clock frequency)
-	//	Command code : 62 (0x3e)
-	//	Param0: EEPROM Address = 0
-	//	Param1: RAM Address = 0x10000254
-	//	Param2: Number of bytes to be read = 8
-	//	Param3: System Clock Frequency = 0x0000b71b
+	//
+	//	*0x10001bc0 = 0x0000003e Command code : 62
+	//	*0x10001bc4 = 0x00000000 Param0: EEPROM Address = 0
+	//	*0x10001bc8 = 0x10000254 Param1: RAM Address = 0x10000254
+	//	*0x10001bc8 = 0x10000254 Param2: Number of bytes to be read = 8
+	//	*0x10001bd0 = 0x0000b71b Param3: System Clock Frequency = 0x0000b71b
 
 	unsigned int command_param[5];
 	unsigned int status_result[4];
@@ -356,9 +358,9 @@ void init()
 	//	... 
 
 	// boot ROM code for executing IAB command
-	iap_entry(command_param, status_result);	
+	iap_entry(command_param = 0x10001bc0, status_result = 0x10001bd4);
 
-	//TODO: should probbaly check status_result for CMD_SUCCESS
+	// Surprisingly no check of status_result...
 
 
         // Entry Num: 55981 - 55991
@@ -397,11 +399,11 @@ void init()
 		// Filling in EEPROM with expected value (magic word to show EEPROM has been used by Steam Controller before?)	
 		// 	*0x10000254 = 0x0000a55a
 		// IAP command Write EEPROM
-		//	Command code : 61 (0x3d)
-		//	Param0: EEPROM Address = 0
-		//	Param1: RAM Address = 0x10000254
-		//	Param2: Number of bytes to be read = 8
-		//	Param3: System Clock Frequency = 0x0000b71b
+		//	*0x10001bb8 = 0x0000003d Command code : 61 (0x3d)
+		//	*0x10001bbc = 0x00000000 Param0: EEPROM Address = 0
+		//	*0x10001bc0 = 0x10000254 Param1: RAM Address = 0x10000254
+		//	*0x10001bc4 = 0x00000008 Param2: Number of bytes to be read = 8
+		//	*0x10001bc8 = 0x0000b71b Param3: System Clock Frequency = 0x0000b71b
 
 		// Data to write to EEPROM
 		eeprom_data[0] = 0x0000a55a;
@@ -428,9 +430,9 @@ void init()
 
 		// boot ROM code for executing IAB command
 
-		iap_entry(command_param, status_result);	
+		iap_entry(command_param = 0x10001bb8, status_result = 0x10001bcc);	
 
-		//TODO: should probbaly check status_result for CMD_SUCCESS
+		// Surprisingly no check of status_result...
 
 
 		// Entry Num: 57951 - 57961
@@ -677,12 +679,12 @@ void init()
 	//	0x000007b0 - 0x000007ba
 	//	0x00000bc4 - 0x00000bca
 
-	// I believe this is all setup for EEPROM read via IAP command (i.e. calculation of system clock frequency)
-	//	Command code : 62 (0x3e)
-	//	Param0: EEPROM Address = 0x00000500
-	//	Param1: RAM Address = 0x10001c08
-	//	Param2: Number of bytes to be read = 4
-	//	Param3: System Clock Frequency = 0x0000b71b
+	// Setup for EEPROM read via IAP command (i.e. calculation of system clock frequency)
+	//	*0x10001bc8 = 0x0000003e Command code : 62 (0x3e)
+	//	*0x10001bcc = 0x00000500 Param0: EEPROM Address = 0x00000500
+	//	*0x10001bd0 = 0x10001c08 Param1: RAM Address = 0x10001c08
+	//	*0x10001bd4 = 0x00000004 Param2: Number of bytes to be read = 4
+	//	*0x10001bd8 = 0x0000b71b Param3: System Clock Frequency = 0x0000b71b
 
 	// Data to write to EEPROM
 	uint32_t eeprom_data2;
@@ -708,9 +710,9 @@ void init()
 
 	// boot ROM code for executing IAP command
 	
-	iap_entry(command_param, status_result);	
+	iap_entry(command_param = 0x10001bc8, status_result = 0x10001bdc);	
 
-	//TODO: should probbaly check status_result for CMD_SUCCESS
+	// Surprisingly no check of status_result...
 
 
         // Entry Num: 60062 - 60072
@@ -837,34 +839,48 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00000aa2 - 0x00000ad0
 
-	// Setup USBD_API_INIT_PARAM??
-	//  *0x10001ba0 = 0x40080000; // usb_reg_base??
-	//  *0x10001ba4 = 0x20004000; // mem_base??
-	//  *0x10001ba8 = 0x00000800; // mem_size??
-	//  *0x10001bac = 0x00000003; // max_num_ep??
+	// Fill in USBD_API_INIT_PARAM_T
+	*0x10001ba0 = 0x40080000; // usb_reg_base - USB device controller's base register address
+	*0x10001ba4 = 0x20004000; // mem_base - Base memory location from where the stack can allocate
+                      // data and buffers. \note The memory address set in this field
+                      // should be accessible by USB DMA controller. Also this value
+                      // should be aligned on 2048 byte boundary
+	*0x10001ba8 = 0x00000800; // mem_size - The size of memory buffer which stack can use.       
+                      // \note The \em mem_size should be greater than the size    
+                      // returned by USBD_HW_API::GetMemSize() routine
+	*0x10001bac = 0x00000003; // max_num_ep - max number of endpoints supported by the USB device  
+                      // controller instance (specified by \em usb_reg_base field) 
+                      // to which this instance of stack is attached.
 
-	//  *0x10001bb0 = 0x00000000; // USB_Reset_Event??
-	//  *0x10001bb4 = 0x00000000; // USB_Suspend_Event??
-	//  *0x10001bb8 = 0x00000000; // USB_Resume_Event??
-	//  *0x10001bbc = 0x00000000; // reserved_sbz??
+	*0x10001bb0 = 0x00000000; // USB_Reset_Event - USB Device Events Callback Function
+	*0x10001bb4 = 0x00000000; // USB_Suspend_Event - USB Device Events Callback Function
+	*0x10001bb8 = 0x00000000; // USB_Resume_Event - USB Device Events Callback Function
+	*0x10001bbc = 0x00000000; // reserved_sbz 
 
-	//  *0x10001bc0 = 0x00000000; // USB_SOF_Event??
-	//  *0x10001bc4 = 0x00000000; // USB_WakeUpCfg??
-	//  *0x10001bc8 = 0x00000000; // USB_Power_Event??
-	//  *0x10001bcc = 0x00000000; // USB_Error_Event??
+	*0x10001bc0 = 0x00000000; // USB_SOF_Event - USB Device Events Callback Function
+	*0x10001bc4 = 0x00000000; // USB_WakeUpCfg 
+	*0x10001bc8 = 0x00000000; // USB_Power_Event
+	*0x10001bcc = 0x00000000; // USB_Error_Event
 
-	//  *0x10001bd0 = 0x00000000; // USB_Configure_Event??
-	//  *0x10001bd4 = 0x00000000; // USB_Interface_Event??
-	//  *0x10001bd8 = 0x00000000; // USB_Feature_Event??
-	//  *0x10001bdc = 0x00000000; //
+	*0x10001bd0 = 0x00000000; // USB_Configure_Event
+	*0x10001bd4 = 0x00000000; // USB_Interface_Event
+	*0x10001bd8 = 0x00000000; // USB_Feature_Event
+	*0x10001bdc = 0x00000000; // Reserved for future use, should be set to 0
 
-	//  *0x10001be0 = 0x00000000; // 
-	//  *0x10001be4 = 0x00001670; // 
-	//  *0x10001be8 = 0x00001682; // 
-	//  *0x10001bec = 0x10000208; // 
+	*0x10001be0 = 0x00000000; // Reserved for future use, should be set to 0
 
-	//  *0x10001bf0 = 0x10000208; // 
-	//  *0x10001bf4 = 0x00000000; // 
+	// Fill in USB_CORE_DESCS_T
+	*0x10001be4 = 0x00001670; // device_desc - Pointer to USB device descriptor
+	*0x10001be8 = 0x00001682; // string_desc - Pointer to array of USB string descriptors
+	*0x10001bec = 0x10000208; // full_speed_desc - Pointer to USB device configuration descriptor 
+                            // when device is operating in full speed mode
+	*0x10001bf0 = 0x10000208; // high_speed_desc - Pointer to USB device configuration descriptor 
+                            // when device is operating in high speed mode. For  
+                            // full-speed only implementation this pointer should
+                            // be same as full_speed_desc.
+	*0x10001bf4 = 0x00000000; // device_qualifier; /**< Pointer to USB device qualifier descriptor. For
+                            // full-speed only implementation this pointer should
+                            // be set to null (0).
 	
 
         // Entry Num: 60565 - 64185 
@@ -873,8 +889,6 @@ void init()
 	//	0x1fff351c - 0x1fff3562
 	//	... 
 
-
-//TODO: map pointer usage in memory info section
 	USBD_HW_API->Init(USBD_HANDLE_T* phUsb = 0x1000022c, USB_CORE_DESCS_T* pDesc = 0x10001be4, USBD_API_INIT_PARAM_T* param = 0x10001ba0)
 	// \param[in,out] phUsb Pointer to the USB device stack handle of type USBD_HANDLE_T.
 	// \param[in]  pDesc Structure containing pointers to various descriptor arrays needed by the stack.
@@ -888,148 +902,142 @@ void init()
 	// Reg 0 = 0 -> Return code LPC_OK
 	// *0x1000022c = 0x200040b8 --> USB_HANDLE_T USB device stack handle
 
-//TODO: Check sanity of input parameters
-//  This may also help define certain portions of RAM (i.e. USBD_HANDLE_T).
+//TODO: Worth looking at decomp of Boot ROM call below or just rely on function description and input parameter values?
 
-	// Clear 0x20004000 - 0x2000405f (byte-wise zero write)
-	// Clear 0x200040b8 - 0x20004223 (byte-wise zero write)
-	// Clear 0x20004090 - 0x200040b7 (byte-wise zero write)
+		// Clear 0x20004000 - 0x2000405f (byte-wise zero write)
+		// Clear 0x200040b8 - 0x20004223 (byte-wise zero write)
+		// Clear 0x20004090 - 0x200040b7 (byte-wise zero write)
 
-	// USB EP Command/Status List:
-	*0x20004000 = 0x00400109 // EP0 OUT Buffer NBytes | EP0 OUT Buffer Address Offset
-	*0x20004004 = 0x0040010a // Reserved | SETUP bytes Buffer Address Offset
-	*0x20004008 = 0x00400109 // EP0 IN Buffer NBytes | EP0 IN Buffer Address Offset
-	*0x2000400c = 0x40000000 // Reserved | Reserved
-	*0x20004010 = 0x40000000 // EP 1 OUT Buffer 0
-	*0x20004014 = 0x40000000 // EP 1 OUT Buffer 1
-	*0x20004018 = 0x40000000 // EP 1 IN Buffer 0
-	*0x2000401c = 0x40000000 // EP 1 IN Buffer 1
-	*0x20004020 = 0x40000000 // EP 2 OUT Buffer 0
-	*0x20004024 = 0x40000000 // EP 2 OUT Buffer 1
-	*0x20004028 = 0x40000000 // EP 2 IN Buffer 0
-	*0x2000402C = 0x00000000 // EP 2 IN Buffer 1
-	*0x20004030 = 0x20004240 // EP 3 OUT Buffer 0
-	*0x20004034 = 0x00000040 // EP 3 OUT Buffer 1
-	*0x20004038 = 0x20004280 // EP 3 IN Buffer 0
-	*0x2000403c = 0x00000008 // EP 3 IN Buffer 1
-	*0x20004040 = 0x20004240 // EP 4 OUT Buffer 0
-	*0x20004044 = 0x00000000 // EP 4 OUT Buffer 1
-	*0x20004048 = 0x00000000 // EP 4 IN Buffer 0
-	*0x2000404c = 0x00000000 // EP 4 IN Buffer 1
+		// USB EP Command/Status List:
+		*0x20004000 = 0x00400109 // EP0 OUT Buffer NBytes | EP0 OUT Buffer Address Offset
+		*0x20004004 = 0x0040010a // Reserved | SETUP bytes Buffer Address Offset
+		*0x20004008 = 0x00400109 // EP0 IN Buffer NBytes | EP0 IN Buffer Address Offset
+		*0x2000400c = 0x40000000 // Reserved | Reserved
+		*0x20004010 = 0x40000000 // EP 1 OUT Buffer 0
+		*0x20004014 = 0x40000000 // EP 1 OUT Buffer 1
+		*0x20004018 = 0x40000000 // EP 1 IN Buffer 0
+		*0x2000401c = 0x40000000 // EP 1 IN Buffer 1
+		*0x20004020 = 0x40000000 // EP 2 OUT Buffer 0
+		*0x20004024 = 0x40000000 // EP 2 OUT Buffer 1
+		*0x20004028 = 0x40000000 // EP 2 IN Buffer 0
+		*0x2000402C = 0x00000000 // EP 2 IN Buffer 1
+		*0x20004030 = 0x20004240 // EP 3 OUT Buffer 0
+		*0x20004034 = 0x00000040 // EP 3 OUT Buffer 1
+		*0x20004038 = 0x20004280 // EP 3 IN Buffer 0
+		*0x2000403c = 0x00000008 // EP 3 IN Buffer 1
+		*0x20004040 = 0x20004240 // EP 4 OUT Buffer 0
+		*0x20004044 = 0x00000000 // EP 4 OUT Buffer 1
+		*0x20004048 = 0x00000000 // EP 4 IN Buffer 0
+		*0x2000404c = 0x00000000 // EP 4 IN Buffer 1
 
-	*0x20004090 = 0x20004000
-	*0x20004094 = 0x20004030
-	*0x20004098 = 0x00000000
-	*0x2000409c = 0x00000000
-	*0x200040a0 = 0x200042c0
-	*0x200040a4 = 0x00000000
-	*0x200040a8 = 0x00000000
-	*0x200040aC = 0x00000000
-	*0x200040b0 = 0x40080000
-	*0x200040b4 = 0x200040b8
-	*0x200040b8 = 0x1fff27bf //TODO: what are these...? Boot ROM function calls?
-	*0x200040bc = 0x1fff28d1
-	*0x200040c0 = 0x00000000
-	*0x200040c4 = 0x1fff22ab
-	*0x200040c8 = 0x1fff23f3
-	*0x200040cc = 0x1fff2491
-	*0x200040d0 = 0x1fff24ad
-	*0x200040d4 = 0x1fff2651
-	*0x200040d8 = 0x1fff268d
-	*0x200040dc = 0x1fff2329
-	*0x200040e0 = 0x00000000
-	*0x200040e4 = 0x00000000
-	*0x200040e8 = 0x00000000
-	*0x200040ec = 0x00000000
-	*0x200040f0 = 0x00000000
-	*0x200040f4 = 0x00000000
-	*0x200040f8 = 0x00000000
-	*0x200040fc = 0x00000000
-	*0x20004100 = 0x00000000
-	*0x20004104 = 0x00000000
-	*0x20004108 = 0x1fff29d3
-	*0x2000410c = 0x1fff29d5
-	*0x20004110 = 0x1fff293d
-	*0x20004114 = 0x1fff293d
-	*0x20004118 = 0x1fff2e55
-	*0x2000411c = 0x1fff2e55
-	*0x20004120 = 0x1fff2e55
-	*0x20004124 = 0x1fff2e55
-	*0x20004128 = 0x1fff2e55
-	*0x2000412c = 0x1fff2e55
-	*0x20004130 = 0x1fff2e55	
-	*0x20004134 = 0x1fff2e55
-	*0x20004138 = 0x200040b8
-	*0x2000413c = 0x200040b8
-	*0x200041a0 = 0x00000000
-	*0x200041a4 = 0x00000000
-	*0x200041a8 = 0x00001670
-	*0x200041ac = 0x00001682
-	*0x200041b0 = 0x10000208
-	*0x200041b4 = 0x10000208
-	*0x200041b8 = 0x00000000
-	*0x200041bc = 0x00000000
+		*0x20004090 = 0x20004000
+		*0x20004094 = 0x20004030
+		*0x20004098 = 0x00000000
+		*0x2000409c = 0x00000000
+		*0x200040a0 = 0x200042c0
+		*0x200040a4 = 0x00000000
+		*0x200040a8 = 0x00000000
+		*0x200040aC = 0x00000000
+		*0x200040b0 = 0x40080000
+		*0x200040b4 = 0x200040b8
+		*0x200040b8 = 0x1fff27bf //TODO: what are these...? Boot ROM function calls?
+		*0x200040bc = 0x1fff28d1
+		*0x200040c0 = 0x00000000
+		*0x200040c4 = 0x1fff22ab
+		*0x200040c8 = 0x1fff23f3
+		*0x200040cc = 0x1fff2491
+		*0x200040d0 = 0x1fff24ad
+		*0x200040d4 = 0x1fff2651
+		*0x200040d8 = 0x1fff268d
+		*0x200040dc = 0x1fff2329
+		*0x200040e0 = 0x00000000
+		*0x200040e4 = 0x00000000
+		*0x200040e8 = 0x00000000
+		*0x200040ec = 0x00000000
+		*0x200040f0 = 0x00000000
+		*0x200040f4 = 0x00000000
+		*0x200040f8 = 0x00000000
+		*0x200040fc = 0x00000000
+		*0x20004100 = 0x00000000
+		*0x20004104 = 0x00000000
+		*0x20004108 = 0x1fff29d3
+		*0x2000410c = 0x1fff29d5
+		*0x20004110 = 0x1fff293d
+		*0x20004114 = 0x1fff293d
+		*0x20004118 = 0x1fff2e55
+		*0x2000411c = 0x1fff2e55
+		*0x20004120 = 0x1fff2e55
+		*0x20004124 = 0x1fff2e55
+		*0x20004128 = 0x1fff2e55
+		*0x2000412c = 0x1fff2e55
+		*0x20004130 = 0x1fff2e55	
+		*0x20004134 = 0x1fff2e55
+		*0x20004138 = 0x200040b8
+		*0x2000413c = 0x200040b8
+		*0x200041a0 = 0x00000000
+		*0x200041a4 = 0x00000000
+		*0x200041a8 = 0x00001670
+		*0x200041ac = 0x00001682
+		*0x200041b0 = 0x10000208
+		*0x200041b4 = 0x10000208
+		*0x200041b8 = 0x00000000
+		*0x200041bc = 0x00000000
 
-	*0x200041d0 = 0x20004090
+		*0x200041d0 = 0x20004090
 
+		// USB Device Command/Status register (DEVCMDSTAT)
+		reg = 0x40080000;
+		*reg = 0;
 
-	// USB Device Command/Status register (DEVCMDSTAT)
-	reg = 0x40080000;
-	*reg = 0;
+		// USB EP Command/Status List start address
+		reg = 0x40080008;
+		*reg = 0x20004000;
+		// TODO: See how 0x20004000 has been filled out to build this
 
-	// USB EP Command/Status List start address
-	reg = 0x40080008;
-	*reg = 0x20004000;
-	// TODO: See how 0x20004000 has been filled out to build this
+		// USB Data buffer start address (DATABUFSTART)
+		reg = 0x4008000c;
+		*reg = 0x20004240;
 
-	// USB Data buffer start address (DATABUFSTART)
-	reg = 0x4008000c;
-	*reg = 0x20004240;
+		// USB Endpoint Buffer in use (EPINUSE)
+		reg = 0x40080018;
+		*reg = 0x00000000;
 
-	// USB Endpoint Buffer in use (EPINUSE)
-	reg = 0x40080018;
-	*reg = 0x00000000;
+		// USB Endpoint skip (EPSKIP)
+		reg = 0x40080014;
+		*reg = 0x00000000;
 
-	// USB Endpoint skip (EPSKIP)
-	reg = 0x40080014;
-	*reg = 0x00000000;
+		// USB Endpoint Buffer Configuration (EPBUFCFG)
+		reg = 0x4008001c;
+		*reg = 0x000003ff;
 
-	// USB Endpoint Buffer Configuration (EPBUFCFG)
-	reg = 0x4008001c;
-	*reg = 0x000003ff;
+		// USB interrupt status register (INTSTAT)
+		reg = 0x40080020;
+		*reg = 0xc00003ff;
+		
+		// USB interrupt enable register (INTEN)
+		reg = 0x40080024;
+		*reg = 0x800003ff;
 
-	// USB interrupt status register (INTSTAT)
-	reg = 0x40080020;
-	*reg = 0xc00003ff;
-	
-	// USB interrupt enable register (INTEN)
-	reg = 0x40080024;
-	*reg = 0x800003ff;
-
-	//TODO These are reading back register looking for hardware to set bits?
-	// USB Device Command/Status register (DEVCMDSTAT)
-	reg = 0x40080000;
-	*reg = 0x00000000;
-	
-	// USB Device Command/Status register (DEVCMDSTAT)
-	reg = 0x40080000;
-	*reg = 0x00000080;
-	// USB Device Command/Status register (DEVCMDSTAT)
-	reg = 0x40080000;
-	*reg = 0x00000080;
-	// USB Device Command/Status register (DEVCMDSTAT)
-	reg = 0x40080000;
-	*reg = 0x00000080;
-	// USB Device Command/Status register (DEVCMDSTAT)
-	reg = 0x40080000;
-	*reg = 0x00000080;
-	// USB Device Command/Status register (DEVCMDSTAT)
-	reg = 0x40080000;
-	*reg = 0x00000080;
-
-	// USB via boot ROM code
-	// TODO: map out what registers are being set etc. so we know where and what memory USB is accessing
-	//	This may be the key for where jingle data ends up for USB transmission
+		//TODO These are reading back register looking for hardware to set bits?
+		// USB Device Command/Status register (DEVCMDSTAT)
+		reg = 0x40080000;
+		*reg = 0x00000000;
+		
+		// USB Device Command/Status register (DEVCMDSTAT)
+		reg = 0x40080000;
+		*reg = 0x00000080;
+		// USB Device Command/Status register (DEVCMDSTAT)
+		reg = 0x40080000;
+		*reg = 0x00000080;
+		// USB Device Command/Status register (DEVCMDSTAT)
+		reg = 0x40080000;
+		*reg = 0x00000080;
+		// USB Device Command/Status register (DEVCMDSTAT)
+		reg = 0x40080000;
+		*reg = 0x00000080;
+		// USB Device Command/Status register (DEVCMDSTAT)
+		reg = 0x40080000;
+		*reg = 0x00000080;
 
 
         // Entry Num: 64186 - 64203
@@ -1287,7 +1295,14 @@ USBD_HID_INIT_PARAM_T
 ...
 0x10001b68
 
+0x10001bc8
+
+0x10001bdc
+
 //TODO: need range to know what is stack and what is heap
+//	Stack counts down from 0x10000200 and heap counts up?
+
+0x10000208 Pointer to USB device configuration descriptor when device is operating in full and high speed modes.
 
 0x10000211 Pointer to the HID interface descriptor within the descriptor array (\em high_speed_desc) passed to Init() through \ref USB_CORE_DESCS_T structure.
 
