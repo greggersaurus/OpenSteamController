@@ -1345,7 +1345,7 @@ void init()
 
 	// val = *((uint8_t*)0x50000003);
 	// Check state of P0_3 and make sure it is 0
-		// TODO: UKNOWN PATHS
+		// TODO: UKNOWN PATHS (quick check shows this eliminates long while loop coming up...)
 
         // Entry Num: 65305 - 265309
         // Step Num: 50358 - 250361
@@ -1355,9 +1355,34 @@ void init()
 	// TODO: what might we be waiting for? And is this only is P0_3 reads 0? What if it doesn't?
 	for (int cnt = 0; cnt < 0x0000c350; cnt++){}
 
-        // Entry Num: 265310 - 
-        // Step Num: 250362 - 
+        // Entry Num: 265310 - 265334
+        // Step Num: 250362 - 250376
 	// Firmware Offset(s): 
+	//	0x000012ac - 0x000012b2
+	//	0x00001210 - 0x00001216
+	//	0x000007b0 - 0x000007ba
+	//	0x0000121a - 0x0000121a
+
+	// For marking cps state of disabling interrupts (I think)
+	*0x10000250 += 1;
+
+        // Entry Num: 265335 - 265376
+        // Step Num: 250377 - 250399
+	// Firmware Offset(s): 
+	//	0x0000129c - 0x000012a2
+	//	0x000011f8 - 0x00001202
+	//	0x00000648 - 0x00000660
+
+	// Make sure THRE is disabled via USART Interrupt Enable Register when DLAB = 0
+	reg = 0x40008004;
+	val = *reg;
+	val &= ~0x00000002;
+	*reg = val;
+
+        // Entry Num: 265377 - 
+        // Step Num: 250400 - 
+	// Firmware Offset(s): 
+	//	0x00000e50 - 
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
@@ -1460,6 +1485,8 @@ USBD_HID_INIT_PARAM_T
 
 0x10000234 USB_HID_REPORT_T*
 //TODO: size and contents of USB_HID_REPORT_T
+
+0x10000250 incremented/decrement before/after cps. Has to do with disabling interrupts (I think)
 
 0x200040b8 - USBD_HANDLE_T - Handle to the USB device stack
 //TODO: size and content of USBD_HANDLE_T
