@@ -3,6 +3,36 @@
  *  pinkySim.
  */
 
+
+/**
+ * Function to enable power to a specified analog block.
+ *
+ * firmware offsets: 0x000005a4 - 0x000005b8
+ * 
+ * \param reg0 Set bit(s) specify which blocks to power. See 3.5.41 
+ *	Power configuration register in UM10462 for details.
+ * 
+ * \return None.
+ */
+void pwrAnalogBlock(uint32_t reg0)
+{
+	// Power Configuration Register                                                 
+	uint32_t* reg = 0x40048238;
+	uint32_t val = 0;
+
+	// Read current register value                                                           
+	val = *reg;                                                                     
+	// Clear reserved bit that must stay cleared                                    
+	val &= 0x000005ff;                                                              
+	// Clear desired bit (clearing enables desired block(s))
+	val &= ~(reg0 & 0x000005ff);                                                           
+	// Reserved bits that must always be set                                        
+	val |= 0xe800;                                                                  
+
+	// Write result to register
+	*reg = val;  
+}
+
 /**
  * In this simulation run the system was run from reset with no external input
  *  (except steps necessary to simulate expected hardware unit reactions). Possible
@@ -24,17 +54,8 @@ void init()
 	//	0x00000fe0 - 0x00000fe4 
 	//	0x000005a4 - 0x000005b8
 
-	// Power Configuration Register                                                 
-	reg = 0x40048238;                                                               
-	// Read current value                                                           
-	val = *reg;                                                                     
-	// Clear reserved bit that must stay cleared                                    
-	val &= 0x000005ff;                                                              
 	// Make sure crystal oscillator is powered                                      
-	val &= ~(0x00000020);                                                           
-	// Reserved bits that must always be set                                        
-	val |= 0xe800;                                                                  
-	*reg = val;  
+	pwrAnalogBlock(reg0 = 0x00000020);
 
 
         // Entry Num: 25 - 45087
@@ -97,16 +118,8 @@ void init()
 	// Firmware Offset(s): 
 	//	0x000005a4 - 0x000005b8
 
-	// Power configuration register                                                 
-	reg = 0x40048238;                                                               
-	val = *reg;                                                                     
-	// Clear reserved bit that must stay cleared                                    
-	val &= 0x5ff;                                                                   
 	// Make sure system PLL powered                                                 
-	val &= ~0x80;                                                                   
-	// Reserved bits that must always be set                                        
-	val |= 0xe800;                                                                  
-	*reg = val;
+	pwrAnalogBlock(reg0 = 0x00000080);
 
 
         // Entry Num: 45138 - 45143
@@ -193,16 +206,8 @@ void init()
 	// Firmware Offset(s): 
 	//	0x000005a4 - 0x000005b8
 
-	// Power Configuration Register                                                 
-	reg = 0x40048238;                                                               
-	val = *reg;                                                                     
-	// Clear reserved bit that must stay cleared                                    
-	val &= 0x5ff;                                                                   
 	// Set USB PLL and USB transceiver to powered                                   
-	val &= ~0x500;                                                                  
-	// Reserved bits that must always be set                                        
-	val |= 0xe800;                                                                  
-	*reg = val;
+	pwrAnalogBlock(reg0 = 0x00000500);
 
 
         // Entry Num: 45206 - 45211
@@ -245,12 +250,11 @@ void init()
 	//	0x00001540 - 0x00001548
 	//	0x000003c6 - 0x000003cc
 	//	0x000000cc - 0x000000ca
-	//	0x0000154c - 0x0000154e
-	//	0x00000fd0 - 0x00000fd2
 	//	0x00000494 - 0x00000496
 
-	// Set SRAM0 0x10000200 to 0x10001c1c with specific values
-	// TODO: details on exact values set here and data word size accesses
+	// Clear our heap?
+	Clear 0x10000200 - 0x10000260 (inclusive 4 byte writes)
+	Clear 0x10000264 - 0x10001c1c (inclusive 4 byte writes)
 
 
         // Entry Num: 53705 - 53722
@@ -1476,8 +1480,7 @@ USBD_HID_INIT_PARAM_T
 
 0x10001bdc
 
-//TODO: need range to know what is stack and what is heap
-//	Stack counts down from 0x10000200 and heap counts up?
+// Stack counts down from 0x10000200 and heap counts up
 
 0x10000208 Pointer to USB device configuration descriptor when device is operating in full and high speed modes.
 
