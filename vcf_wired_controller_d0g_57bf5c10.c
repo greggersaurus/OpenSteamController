@@ -1383,10 +1383,82 @@ void init()
 	val &= ~0x00000002;
 	*reg = val;
 
-        // Entry Num: 265377 - 
-        // Step Num: 250400 - 
+        // Entry Num: 265377 - 265394
+        // Step Num: 250400 - 250407
 	// Firmware Offset(s): 
-	//	0x00000e50 - 
+	//	0x00000e50 - 0x00000e5e
+
+	// Copy a RAM value
+	*0x10001b88 = *0x100006cc
+
+        // Entry Num: 265395 - 265403
+        // Step Num: 250408 - 250413
+	// Firmware Offset(s): 
+	//	0x00000ee2 - 0x00000eec
+
+	if (*0x100006d0 <= *0x100006d8 - *0x100006dc)
+	{
+		// TODO: UNKOWN PATHS execute instruction at 0x00000eee
+	}
+
+        // Entry Num: 265404 - 265407
+        // Step Num: 250414 - 250417
+	// Firmware Offset(s): 
+	//	0x00000ef2 - 0x00000ef4
+	//	0x00000e62 - 0x00000e64
+
+	// 	TODO: UNKOWN PATHS execute instructiont 0x00000e64 if Reg 0 is not sure, but this never happens here as we before prev branch Reg 0 is set to 0
+
+        // Entry Num: 265408 - 265442
+        // Step Num: 250418 - 250445
+	// Firmware Offset(s): 
+	//	0x00000e6c - 0x00000ea2
+
+	// TODO: try to understand what this is doing...
+	Reg0 = *0x100006d8	
+	Reg1 = *0x100006dc
+	Reg1 = Reg0 - Reg1
+
+	Reg0 = *0x100006d0	
+	Reg2 = Reg0 - Reg1
+
+	Reg1 = *0x100006d8
+
+	Reg3 = Reg0 - 1
+
+	Reg5 = Reg2
+
+	if ((Reg3 - Reg0) => Does Not Produce Carry Out)
+	{
+		Reg5 = Reg0 - Reg1
+	}
+
+	Reg6 = Reg2 - Reg5
+
+	if (Reg5 >= Reg6)
+	{
+		Reg5 = Reg7
+	}
+
+	Reg0 = Reg7 - Reg5
+
+	if (Reg6 >= Reg0)
+	{
+		Reg6 = Reg0
+	}
+
+	Reg2 = *0x100006d4	
+	Reg0 = *0x10001b88
+	Reg1 = Reg2 * Reg1
+
+	Reg2 = Reg5 * Reg2
+
+	Reg1 = *0x10001b94
+
+        // Entry Num: 265443 - 
+        // Step Num: 250446 - 
+	// Firmware Offset(s): 
+	//	0x0000032c - 
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
