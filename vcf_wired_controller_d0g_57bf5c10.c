@@ -252,8 +252,32 @@ void init()
 	//	0x000000cc - 0x000000ca
 	//	0x00000494 - 0x00000496
 
-	// Clear our heap?
-	Clear 0x10000200 - 0x10000260 (inclusive 4 byte writes)
+	// Initialize heap
+	*0x10000200 = 0x00000000
+	*0x10000204 = 0x00002000	
+	*0x10000208 = 0x00220209 // Passed as full_speed_desc later...
+	*0x1000020c = 0x80000101
+	*0x10000210 = 0x00040932
+	*0x10000214 = 0x00030100
+	*0x10000218 = 0x21090000
+	*0x1000021c = 0x01000111	
+	*0x10000220 = 0x07002122	
+	*0x10000224 = 0x40038105	
+	*0x10000228 = 0x00000600
+	*0x1000022c = 0x00000000
+	*0x10000230 = 0x00000000
+	*0x10000234 = 0x00000000
+	*0x10000238 = 0x00000000
+	*0x1000023c = 0x00000000
+	*0x10000240 = 0x00000000
+	*0x10000244 = 0x00000000	
+	*0x10000248 = 0x00000000	
+	*0x1000024c = 0x00000000	
+	*0x10000250 = 0x00000000	
+	*0x10000254 = 0x00000000	
+	*0x10000258 = 0x00000000	
+	*0x1000025c = 0x00000000
+	*0x10000260 = 0x00000000
 	Clear 0x10000264 - 0x10001c1c (inclusive 4 byte writes)
 
 
@@ -1216,6 +1240,7 @@ void init()
 
 	*(uint8_t*)0x10000249 = 0x00;
 
+
         // Entry Num: 65165 - 65177
         // Step Num: 50257 - 50264
 	// Firmware Offset(s): 
@@ -1238,6 +1263,7 @@ void init()
 
 		return 1;
 	}
+
 
         // Entry Num: 65178 - 65207
         // Step Num: 50265 - 50282
@@ -1266,6 +1292,7 @@ void init()
 	// Set Baud rate generation pre-scaler divisor value to 0 and Baud rate pre-scaler multiplier value to 1 via USART Fractional Divider Register
 	reg = 0x40008028;
 	*reg = 0x00000010;
+
 
         // Entry Num: 65208 - 65241
         // Step Num: 50283 - 50305
@@ -1306,6 +1333,7 @@ void init()
 	val |= 0x00000005;
 	*reg = val;
 
+
         // Entry Num: 65242 - 65262
         // Step Num: 50306 - 50323
 	// Firmware Offset(s): 
@@ -1325,6 +1353,7 @@ void init()
 	val |= 0;
 	*reg = val;
 
+
         // Entry Num: 65263 - 65289
         // Step Num: 50324 - 50347
 	// Firmware Offset(s): 
@@ -1337,6 +1366,7 @@ void init()
 	val &= ~0x00ff0000;
 	val |= 0x00400000;
 	*reg = val;
+
 
         // Entry Num: 65290 - 65304
         // Step Num: 50348 - 50357
@@ -1351,6 +1381,7 @@ void init()
 	// Check state of P0_3 and make sure it is 0
 		// TODO: UKNOWN PATHS (quick check shows this eliminates long while loop coming up...)
 
+
         // Entry Num: 65305 - 265309
         // Step Num: 50358 - 250361
 	// Firmware Offset(s): 
@@ -1358,6 +1389,7 @@ void init()
 
 	// TODO: what might we be waiting for? And is this only is P0_3 reads 0? What if it doesn't?
 	for (int cnt = 0; cnt < 0x0000c350; cnt++){}
+
 
         // Entry Num: 265310 - 265334
         // Step Num: 250362 - 250376
@@ -1369,6 +1401,7 @@ void init()
 
 	// For marking cps state of disabling interrupts (I think)
 	*0x10000250 += 1;
+
 
         // Entry Num: 265335 - 265376
         // Step Num: 250377 - 250399
@@ -1383,6 +1416,7 @@ void init()
 	val &= ~0x00000002;
 	*reg = val;
 
+
         // Entry Num: 265377 - 265394
         // Step Num: 250400 - 250407
 	// Firmware Offset(s): 
@@ -1390,6 +1424,7 @@ void init()
 
 	// Copy a RAM value
 	*0x10001b88 = *0x100006cc
+
 
         // Entry Num: 265395 - 265403
         // Step Num: 250408 - 250413
@@ -1401,6 +1436,7 @@ void init()
 		// TODO: UNKOWN PATHS execute instruction at 0x00000eee
 	}
 
+
         // Entry Num: 265404 - 265407
         // Step Num: 250414 - 250417
 	// Firmware Offset(s): 
@@ -1408,6 +1444,7 @@ void init()
 	//	0x00000e62 - 0x00000e64
 
 	// 	TODO: UNKOWN PATHS execute instructiont 0x00000e64 if Reg 0 is not sure, but this never happens here as we before prev branch Reg 0 is set to 0
+
 
         // Entry Num: 265408 - 265442
         // Step Num: 250418 - 250445
@@ -1455,10 +1492,75 @@ void init()
 
 	Reg1 = *0x10001b94
 
-        // Entry Num: 265443 - 
-        // Step Num: 250446 - 
+
+        // Entry Num: 265443 - 265446
+        // Step Num: 250446 - 250449
 	// Firmware Offset(s): 
-	//	0x0000032c - 
+	//	0x0000032c - 0x00000332
+
+	Reg3 = Reg0
+	Reg3 |= Reg1
+	Reg3 <<= 30;	
+
+	if (Reg3 != 0)
+	{
+		Branch to 0x0000034a (i.e. skip 0x0000033c - 0x00000340)
+	}
+
+
+        // Entry Num: 265447 - 265482
+        // Step Num: 250450 - 250477
+	// Firmware Offset(s): 
+	//	0x0000033c - 0x00000340
+	//	0x0000034a - 0x0000034c
+	//	0x00000342 - 0x0000034e
+	//	0x00000ea6 - 0x00000ec4
+
+	//TODO: bunch more RAM math and paths to check here...
+	*0x100005cc = 0x00000002
+	*0x100006d8 = 0x00000001
+
+
+        // Entry Num: 265483 - 265487
+        // Step Num: 250478 - 250482
+	// Firmware Offset(s): 
+	//	0x0000032c - 0x00000334
+
+	//TODO: see previous call, but take Reg3 != 0 path
+
+
+        // Entry Num: 265488 - 265497
+        // Step Num: 250483 - 250490
+	// Firmware Offset(s): 
+	//	0x0000034a - 0x0000034e
+	//	0x00000ec8 - 0x00000ed0
+
+	*0x100006d8 = 0x00000001
+
+
+        // Entry Num: 265498 - 265524
+        // Step Num: 250491 - 250506
+	// Firmware Offset(s): 
+	//	0x00000e68 - 0x0000066a
+	//	0x00000688 - 0x0000068e
+	//	0x00000696 - 0x000006a0
+
+	// USART Line Status Register Read only
+	reg = 0x40008014;
+	val = *reg;
+
+	// Check USART related status receiver data ready, and other statuts bit
+	// TODO: care about this?
+	//	UNKOWN PATHS branch to 0x000006a8 if condition met
+
+
+        // Entry Num: 265525 - 
+        // Step Num: 250507 - 
+	// Firmware Offset(s): 
+	//	0x00000ef6 - 0x00000efe
+	//	
+
+//TODO: think this area is mostly USART related, should we skip over this for now?
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
@@ -1541,7 +1643,7 @@ ErrorCode_t HID_SetReport( USBD_HANDLE_T hHid, USB_SETUP_PACKET* pSetup, uint8_t
 /**
  * This sectionis set aside to track and define different parts of RAM, etc.
 
-(Possible) Stack memory:
+// Stack counts down from 0x10002000 
 
 USBD_HID_INIT_PARAM_T
 0x10001b50
@@ -1552,7 +1654,8 @@ USBD_HID_INIT_PARAM_T
 
 0x10001bdc
 
-// Stack counts down from 0x10000200 and heap counts up
+
+// Heap counts up from 0x10000000
 
 0x10000208 Pointer to USB device configuration descriptor when device is operating in full and high speed modes.
 
