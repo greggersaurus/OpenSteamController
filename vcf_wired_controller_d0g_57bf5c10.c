@@ -1554,13 +1554,58 @@ void init()
 	//	UNKOWN PATHS branch to 0x000006a8 if condition met
 
 
-        // Entry Num: 265525 - 
-        // Step Num: 250507 - 
+        // Entry Num: 265525 - 266718
+        // Step Num: 250507 - 251315
 	// Firmware Offset(s): 
 	//	0x00000ef6 - 0x00000efe
-	//	
+	//	...
 
-//TODO: think this area is mostly USART related, should we skip over this for now?
+//TODO: think this area is mostly USART related, skipping over for now. Come back and disect this later
+
+	*0x100006dc = 0x00000001
+
+	// USART Transmitter Holding Register
+	*0x40008000 = 0x00000002
+
+	// USART Line Status Register (Read-Only)
+	reg = 0x40008014;
+	val = *reg;
+	// TODO: UNKOWN PATHS check status (i.e. that transmit occurred?)
+
+	*0x100006d8 = 0x00000001
+	*0x100006d8 = 0x00000001
+	
+	// Enable the THRE interrupt.
+	reg = 0x40008004;
+	val = *reg;
+	val |= 2;
+	*reg = val;
+
+	// Disable the THRE interrupt.
+	reg = 0x40008004;
+	val = *reg;
+	val |= ~0x00000002;
+	*reg = val;
+
+	// USART Line Status Register (Read-Only)
+	reg = 0x40008014;
+	val = *reg;
+	// TODO: UNKOWN PATHS check status (i.e. that transmit occurred?)
+
+//TODO: are we looping here looking for USART to react?
+//	Maybe at least map out instruction calls to see if we are looping before giving up on USART?
+//	Pay attention to RAM addresses and see if one is counting up to a timeout or something...
+
+//TODO: check was USART is connected to on board!
+
+
+        // Entry Num: 266719 
+        // Step Num: 251316 - 
+	// Firmware Offset(s): 
+	//	0x00000dd4 - 
+
+//TODO: This is where I believe pulsing Steam Controller Button is setup to occur... Confirm this with custom firmware
+
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
