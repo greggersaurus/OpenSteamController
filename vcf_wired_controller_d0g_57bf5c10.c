@@ -47,6 +47,8 @@ void init()
 	uint32_t* reg = NULL;
 	uint32_t val = 0;
 
+//TODO: some section of this is default init provided by lpcexpresso. Verify and identify.
+
         // Entry Num: 1 - 24
         // Step Num: 1 - 16
 	// Firmware Offset(s): 
@@ -1686,7 +1688,7 @@ ErrorCode_t HID_SetReport( USBD_HANDLE_T hHid, USB_SETUP_PACKET* pSetup, uint8_t
 }
 
 /**
- * This sectionis set aside to track and define different parts of RAM, etc.
+ * RAM LAYOUT: This sectionis set aside to track and define different parts of RAM, etc.
 
 // Stack counts down from 0x10002000 
 
