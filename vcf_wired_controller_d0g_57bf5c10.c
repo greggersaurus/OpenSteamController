@@ -570,7 +570,7 @@ void init()
 	//	0x00001580 - 0x00001582
 	//	0x000007a0 - 0x000007a8
 
-	// Set GPREG3 to 0
+	// Set GPREG1 to 0
 	reg = 0x40038008;
 	*reg = 0;
 
@@ -1686,6 +1686,136 @@ ErrorCode_t HID_SetReport( USBD_HANDLE_T hHid, USB_SETUP_PACKET* pSetup, uint8_t
 	//TODO: Simulate this?
 
 }
+
+/**
+ * This is interrupt handler called when IRQ 19 triggers for 32-bit counter 1. 
+ *  This was simulated multiple times to plot out several different paths. 
+ */
+void Interrupt_19_CT32B1()
+{
+	uint32_t* reg = NULL;
+	uint32_t val = 0;
+
+	// Entry point as defined by Vector Table
+	// Firmware Offset(s): 
+	// 	0x000001b8 - 0x000001c2
+
+	// GPREG1
+	reg = 0x40038008;
+	val = *reg;
+
+	// Must be some state changes later and GPREG1 indicates this somehow...
+	if (val != 0)
+	{
+		// Firmware Offset(s): 
+		//	0x000001c4 - 0x000001c8
+		//	0x00009d3c - 0x00009d40	
+		//	0x00006130 - 0x00006136
+
+		do {
+			// Firmware Offset(s): 
+			//	0x0000618c - 0x00006192
+
+			// Interrupt Register (IR, address 0x4001 8000 (CT32B1)) bit description
+			reg = 0x40018000;
+			val = *reg;
+
+			// Isolate MR0INT, MR1INT, MR2INT and MR3INT
+			val &= 0xF;
+
+			// Check if MR0INT and MR1INT and MR2INT and MR3INT are not set
+			if (0 == val)
+			{
+				//TODO: UNKOWN PATHS execute 0x00006194 if 
+				// Firmware Offset(s): 
+				//	0x00006194 - 0x00006194
+				//	0x00009d44 - 0x00009d44
+				return;
+			}
+
+			// Firmware Offset(s): 
+			//	0x00006138 - 0x0000613c
+			if (0xFFFF0000 & val)
+			{
+				//TODO: UNKOWN PATHS execute 0x0000613e if 
+			}
+
+			// Firmware Offset(s): 
+			//	0x00006142 - 0x00006144
+			if (0xFFFFFF00 & val)
+			{
+				//TODO: UNKOWN PATHS execute 0x00006146 if 
+			}
+
+			// Firmware Offset(s): 
+			//	0x0000614a - 0x0000614c
+			if (0xFFFFFFF0 & val)
+			{
+				//TODO: UNKOWN PATHS execute 0x0000614e if 
+			}
+
+			// Firmware Offset(s): 
+			//	0x00006152 - 0x00006154
+			if (0xFFFFFFFC & val)
+			{
+				//TODO: UNKOWN PATHS execute 0x00006156 if 
+			}
+
+			// Firmware Offset(s): 
+			//	0x0000615a - 0x0000615c
+			if (0xFFFFFFFE & val)
+			{
+				//TODO: UNKOWN PATHS execute 0x0000615e if 
+			}
+
+			// Firmware Offset(s): 
+			//	0x00006162 - 0x00006172
+
+			// Reset MR0INT - Interrupt flag for match channel 0.
+			reg = 0x40018000;
+			*reg = 0x00000001;
+
+			// Firmware Offset(s): 
+			//	0x000056fc - 0x00005700
+			if (reg0 == 0x4000c000)
+			{
+				//TODO: UNKOWN PATHS execute 0x00005702 if 
+			}
+			
+			// Firmware Offset(s): 
+			//	0x00005706 - 0x0000570a
+			if (reg0 == 0x40010000)
+			{
+				//TODO: UNKOWN PATHS execute 0x0000570c if 
+			}
+
+			// Firmware Offset(s): 
+			//	0x00005710 - 0x00005714
+			if (reg0 == 0x40014000)
+			{
+				//TODO: UNKOWN PATHS execute 0x00005718 if 
+			}
+
+			// Firmware Offset(s): 
+			//	0x0000571a - 0x0000571c
+			//	0x00006176 - 0x00006180
+		} while (*0x10000848 == 0);
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x0000148c - 0x00001496
+
+	// Reset MR0INT - Interrupt flag for match channel 0.
+	reg = 0x40018000;
+	*reg = 0x00000001;
+
+	// Set RAM address to indicate interrupt occurred.
+	//	I think this is used by init as means of counting down before
+	//	 giving up on connection occurring.
+	*(uint8_t*)0x1000025c = 0x01;
+}
+
 
 /**
  * RAM LAYOUT: This sectionis set aside to track and define different parts of RAM, etc.

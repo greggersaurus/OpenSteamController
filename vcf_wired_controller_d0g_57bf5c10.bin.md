@@ -45,54 +45,43 @@ See init() in vcf_wired_controller_d0g_57bf5c10.c.
 ## IRQs
 
 This section details attempts to simulate certain IRQ paths. This is being 
- pursued as Init path is mostly simple setup and does seem to touch some code paths
- that would be more interesting (i.e. playing jingle via haptics).
+ pursued as Reset/Init path eventually called WFI instruction. This implies
+ interrupts occurring is a necessary part of system boot (i.e. either successful
+ connection or shutdown due to connectin timeout).
 
-TODO: Need to read up more on IRQs to make sure I am simulating them correctly
- (if that is possible with pinkySim). Add bulleted list of steps to simulate:
-* Enterting an exception
-    * When an exception other that reset preempts an instruction stream, the processor automatically saves key context information onto the stack, and execution branches to the code pointed to by the corresponding exception vector.
-        * When pushing context to the stack, the hardware saves eight 32-bit words, comprising xPSR, ReturnAddress, LR (R14), R12, R3, R2, R1, and R0
-        * How is xPSR changed
-            * IPSR is changed to number of exception being processed
-* Returning from an exception
-    * The Exception Return Link, a value stored in the link register on exception entry, determines the target of the exception return.
-    * TODO: See B1.5.8 Exception return behavior
+Simulating an exception can be achieved by setting the PC register to the 
+ instruction specified in the Vector Table. However, keep in mind the nuances
+ of how IRQ actually work and that simply setting the PC will allow you to 
+ simulate the interrupt accurately, but may be desctructive in terms of picking 
+ back up where the main thread code was interrupted. 
+
+According to 24.3.3.6.1 xPSR, PC, LR, R12, R3, R2, R1 and R0 are saved upon
+ interrupt and restored upon exit. Save and restore these values if you want to
+ pick up the main thread after simulating an interrupt.
+
+Also, according 24.3.3.6.1 LR is set to EXC_RETURN upon interrupt entry. Thus a
+ bx to LR (assuming no further stack pushes (without matching pops) to change 
+ LR), will indicate an interrupt exit. In short, set LR to a know instruction 
+ (maybe a WFI instruction or something that will cause an emulator break) before
+ changing the PC to the interrupt handler so that you know when the interrupt 
+ handler is exiting.
 
 ### Interrupt 19 - CT32B1
 
-This is 32-bit counter that is setup before the system system goes with sleep
- with WFI (Wait for Interrupt) command. The working theory is that the controller
- has completed all setup and it waiting for a connection via USB or wireless.
- If this timer expires and interrupts the system before a connection is established
- the controller powers down. Part of power down is to send out a shutdown jingle 
- to the haptics.
+This is 32-bit counter that is setup before the system system goes to sleep
+ with WFI (Wait for Interrupt) command. In this state the interrupt controller
+ simply clears MR0INT and sets RAM address 0x1000025c. I believe setting of
+ 0x1000025c is used to communicate to main thread that irq occurred to increment
+ countdown before giving up on connection. 
 
-#### To Simulate
-
-* Run from reset until WFI
-    * See README for details on how 
-* Set PC to IRQ 19 entry point
-    * set $pc = 0x000001b8
-
-* Set ISPR to 19?
-    * TODO
-* Set LR to WFI instruction?
-    * set $lr = 0x00000f52
-
-* Simulate interrupt on MR0?
-    * set {int}0x40018000 = 1
-* Make sure GPREG1 is not clear to show setup has occurred??
-    * set {int}0x40038008 = 1
-* Clearing of MR0 interrupt?
-    * set {int}0x40018000 = 0 at instruction 0x6180
-        * This just causes IRQ to exit and WFI
-
-* IRQ checks 0x10000848, is this set by USB IRQ firing?
+Note there is also a different path based on GPREG1 being non-zero. Since there
+ does not seem to be a path in the main thread before the WFI mentioned above,
+ I believe this is code for using CT32B1 once controller has been connected to
+ or something like that.
 
 #### Simulation Result Details
 
-TODO
+See Interrupt_19_CT32B1() in vcf_wired_controller_d0g_57bf5c10.c.
 
 ###  Interrupt 22 - IP_USB_IRQ
 
