@@ -7,7 +7,8 @@
 /**
  * Function to enable power to a specified analog block.
  *
- * firmware offsets: 0x000005a4 - 0x000005b8
+ * Firmware Offset(s): 
+ *	0x000005a4 - 0x000005b8
  * 
  * \param reg0 Set bit(s) specify which blocks to power. See 3.5.41 
  *	Power configuration register in UM10462 for details.
@@ -31,6 +32,37 @@ void pwrAnalogBlock(uint32_t reg0)
 
 	// Write result to register
 	*reg = val;  
+}
+
+/**
+ * Function for setting a 32-bit register to a particular value.
+ * 
+ * Firmware Offset(s): 
+ * 	0x00000572 - 0x00000576
+ *	0x00000578 - 0x0000057c
+ * 	0x0000057e - 0x00000580
+ *
+ * \param baseReg Base register value
+ * \param additionalOffset Add additional 0x60 byte offset to baseReg
+ * \param regWordOffset Word sized offset from baseReg indicates which register to change
+ * \param regVal Value to write to register
+ * 
+ * \return None.
+ */
+void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOffset, uint32_t regVal)
+{
+	regWordOffset <<= 2;
+
+	if (additionalOffset != 0)
+	{
+		// Execture instruction 0x00000578
+		uint32_t* reg = baseReg + regWordOffset + 0x60;
+		*reg = regVal;
+		return;
+	}
+
+	uint32_t* reg = baseReg + regWordOffset;
+	*reg = regVal;
 }
 
 /**
@@ -579,11 +611,12 @@ void init()
         // Step Num: 44579 - 44594
 	// Firmware Offset(s): 
 	//	0x00001586 - 0x0000159a
-	//	0x00000572 - 0x00000580
+	//	0x00000572 - 0x00000576
+	//	0x0000057e - 0x00000580
 
 	// Enable pull down resistor on PIO0_3 register
-	reg = 0x4004400c;
-	*reg = 0x00000008;
+	// *(uint32_t*)0x4004400c = 0x00000008
+	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000003, regVal = 0x00000008);
 
 
         // Entry Num: 58088 - 58105
@@ -597,8 +630,8 @@ void init()
 	// Note there are two conditional paths in here, but they are impossible to reach given setup, so they are being ignored
 
 	// Set PIO0_6 to function as ~USB_CONNECT
-	reg = 0x40044018;
-	*reg = 0x00000001; 
+	// *(uint32_t*)0x40044018 = 0x00000001
+	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000006, regVal = 0x00000001);
 	
 
         // Entry Num: 58106 - 58127
@@ -606,13 +639,13 @@ void init()
 	// Firmware Offset(s): 
 	//	0x0000159e - 0x000015a2
 	//	0x0000158c - 0x0000159a
-	//	0x00000572 - 0x000015a2
+	//	0x00000572 - 0x0000057c
 
-	// Note there are two conditional paths in here, but they are impossible to reach given setup, so they are being ignored
+	// Note there in one unknown conditional paths in here, but it is impossible to reach given setup, so it is being ignored
 
 	// Set PIO1_17a to function as RXD
-	reg = 0x400440a4;
-	*reg = 0x00000002;
+	// *(uint32_t*)0x400440a4 = 0x00000002
+	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 1, regWordOffset = 0x00000011, regVal = 0x00000002);
 
 
         // Entry Num: 58128 - 58143
@@ -621,11 +654,9 @@ void init()
 	//	0x0000158c - 0x0000159a
 	//	0x00000572 - 0x0000057c
 
-	// Note there are two conditional paths in here, but they are impossible to reach given setup, so they are being ignored
-
 	// Set PIO1_18 to function as TXD
-	reg = 0x400440a8;
-	*reg = 0x00000002;
+	// *(uint32_t*)0x400440a8 = 0x00000002
+	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 1, regWordOffset = 0x00000012, regVal = 0x00000002);
 
 
         // Entry Num: 58144 - 58154
@@ -1598,15 +1629,31 @@ void init()
 //	Maybe at least map out instruction calls to see if we are looping before giving up on USART?
 //	Pay attention to RAM addresses and see if one is counting up to a timeout or something...
 
-//TODO: check was USART is connected to on board!
+//TODO: check what USART is connected to on board!
 
 
-        // Entry Num: 266719 
-        // Step Num: 251316 - 
+        // Entry Num: 266719 - 266735
+        // Step Num: 251316 - 251326
 	// Firmware Offset(s): 
-	//	0x00000dd4 - 
+	//	0x00000dd4 - 0x00000dde
+	//	0x00000572 - 0x00000576
+	//	0x0000057e - 0x00000580
 
-//TODO: This is where I believe pulsing Steam Controller Button is setup to occur... Confirm this with custom firmware
+	// Set pin function to CT16B1_MAT0 via PIO0_21 register
+	// *(uint32_t*)0x40044054 = 0x00000081
+	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000015, regVal = 0x00000008);
+
+
+        // Entry Num: 266736 - 
+        // Step Num: 251327 - 
+	// Firmware Offset(s): 
+	//	0x00000de2 - 0x00000de6
+	//	0x000005f4 - 0x000005f6
+	//	0x000005c4 - 
+
+
+//TODO: This is where I believe pulsing Steam Controller Button is setup to occur via 32-bit counter 1... 
+//	Confirm this with custom firmware (keeping in mind that it now seems that timeout counter is incremented by setting of 0x1000025c via 32bit counter0 irq!
 
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
