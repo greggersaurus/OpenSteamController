@@ -18,7 +18,7 @@
 void pwrAnalogBlock(uint32_t reg0)
 {
 	// Power Configuration Register                                                 
-	uint32_t* reg = 0x40048238;
+	volatile uint32_t* reg = 0x40048238;
 	uint32_t val = 0;
 
 	// Read current register value                                                           
@@ -76,7 +76,7 @@ void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOff
  */
 void init()
 {
-	uint32_t* reg = NULL;
+	volatile uint32_t* reg = NULL;
 	uint32_t val = 0;
 
 //TODO: some section of this is default init provided by lpcexpresso. Verify and identify.
@@ -1644,12 +1644,94 @@ void init()
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000015, regVal = 0x00000008);
 
 
-        // Entry Num: 266736 - 
-        // Step Num: 251327 - 
+        // Entry Num: 266736 - 266757
+        // Step Num: 251327 - 251342
 	// Firmware Offset(s): 
 	//	0x00000de2 - 0x00000de6
 	//	0x000005f4 - 0x000005f6
-	//	0x000005c4 - 
+	//	0x000005c4 - 0x000005c8
+	//	0x000005ce - 0x000005d2
+	//	0x000005d8 - 0x000005e0
+
+	// Reg0 = 0x40010000 
+
+	// If Reg0 == 0x40018000
+	// UNKOWN PATHS 0x000005ca
+	
+	// If Reg0 == 0x4000c000
+	// UNKOWN PATHS 0x000005d4
+
+	// If Reg0 != 0x40010000
+	// UNKOWN PATHS 0x000005e2
+
+
+        // Entry Num: 266758 - 266796
+        // Step Num: 251343 - 251367
+	// Firmware Offset(s): 
+	//	0x000005fa - 0x00000606
+	//	0x00000dea - 0x00000e0c
+
+	// Set prescale value to 0 via Prescale Register for CT16B1
+	reg = 0x4001000c;
+	*reg = 0x00000000;
+
+//TODO: Is this the pin connected to the Steam Button LED? Ohm it out!
+	// PWM mode is enabled for CT16Bn_MAT0 via PWM Control Register for CT16B1
+	reg = 0x40010074;
+	val = *reg;
+	val |= 0x00000001;
+	*reg = val;
+
+	// Match Register 3 (MR3) is set to 0xfff via Match registers for CT16B1
+	reg = 0x40010024;
+	*reg = 0x00000fff;
+
+	// Match Register 0 (MR0) is set to 0x1000 via Match registers for CT16B1
+	reg = 0x40010018;
+	*reg = 0x00001000;
+
+	// Reset on MR3: the TC will be reset if MR3 matches it via Match Control Register for CT16B1
+	reg = 0x40010014;
+	val = *reg;
+	val |= 0x00000400;
+	*reg = val;
+
+
+        // Entry Num: 266797 - 357026
+        // Step Num: 251368 - 319038
+	// Firmware Offset(s): 
+	//	0x0000060c - 0x00000622
+
+	// Store the Timer Control Register for CT17B1
+	reg = 0x40010004;
+	val = *reg;
+
+	// Disable the counters via the Timer Control Register for CT16B1
+	reg = 0x40010004;
+	*reg = 0x00000000;
+
+	// Set the timer counter value for via the Timer Counter register for CT16B1
+	reg = 0x40010008;
+	*reg = 0x00000001;
+
+	// The Timer Counter and the Prescale Counter are synchronously reset on 
+	//	the next positive edge of PCLK. The counters remain reset until 
+	//	TCR[1] is returned to zero via the Timer Counter register for CT16B1
+	reg = 0x40010004;
+	*reg = 0x00000002;
+
+	// Wait for the Timer Counter to read zero, meaning the affect of the 
+	//	right to CRST in the previous register access succeeded
+	reg = 0x40010008;
+	while (0 != *reg){}
+
+	// Write back value previously read from Timer Control Register
+	*0x40010004 = val; 
+
+        // Entry Num: 357027 - 
+        // Step Num: 319039 - 
+	// Firmware Offset(s): 
+	//	0x00000e10 - 
 
 
 //TODO: This is where I believe pulsing Steam Controller Button is setup to occur via 32-bit counter 1... 
@@ -1740,7 +1822,7 @@ ErrorCode_t HID_SetReport( USBD_HANDLE_T hHid, USB_SETUP_PACKET* pSetup, uint8_t
  */
 void Interrupt_19_CT32B1()
 {
-	uint32_t* reg = NULL;
+	volatile uint32_t* reg = NULL;
 	uint32_t val = 0;
 
 	// Entry point as defined by Vector Table
