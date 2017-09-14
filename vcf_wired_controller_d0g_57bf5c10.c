@@ -362,6 +362,7 @@ void init()
 	//	0x0000046e - 0x0000046e
 	//	0x0000049a - 0x0000049e
 	//	0x00000300 - 0x0000030c
+	//	0x00000322 - 0x00000328
 	//	0x0000030e - 0x0000032a
 	//	0x000004a2 - 0x000004a2
 	//	0x00000fd6 - 0x00000fda
@@ -1656,7 +1657,7 @@ void init()
 	// Reg0 = 0x40010000 
 
 	// If Reg0 == 0x40018000
-	// UNKOWN PATHS 0x000005ca
+	// UNKOWN PATHS 0x000005ca -- See below where Reg0 is loaded with 0x40018000
 	
 	// If Reg0 == 0x4000c000
 	// UNKOWN PATHS 0x000005d4
@@ -1728,12 +1729,119 @@ void init()
 	// Write back value previously read from Timer Control Register
 	*0x40010004 = val; 
 
-        // Entry Num: 357027 - 
-        // Step Num: 319039 - 
+        // Entry Num: 357027 - 357036
+        // Step Num: 319039 - 319042
 	// Firmware Offset(s): 
-	//	0x00000e10 - 
+	//	0x00000e10 - 0x00000e16
+
+	// Reset timer counter and prescalar counter on next positive edge of PCLK for CT16B1
+	//  The counters remain reset until TCR[1] is returned to zero
+	reg = 0x40010004;
+	val = *reg;
+	val |= 1;
+	*reg = val;
+
+        // Entry Num: 357037 - 357053
+        // Step Num: 319043 - 319053
+	// Firmware Offset(s): 
+	//	0x00000f38 - 0x00000f3a
+	//	0x00000e24 - 0x00000e32
+	//	0x00000f3e - 0x00000f3e
+
+	// Write some RAM address
+	*0x1000025e = 0x000000ff
+
+	// Set Match Register for CT16B1 MR0 to 0xFFFF
+	*0x40010018 = 0x0000ffff
+
+        // Entry Num: 357054 - 357086
+        // Step Num: 319054 - 319071
+	// Firmware Offset(s): 
+	//	0x000009b4 - 0x000009ba
+	//	0x000005f4 - 0x000005f6
+	//	0x000005c4 - 0x000005cc
+	//	0x000005fa - 0x00000606
+
+	// Reg 0 = 0x40018000
+
+	// Enables clock for 32-bit counter/timer 1. CT32B1
+	reg = 0x40048080;
+	val = *reg;
+	val |= 0x00000400;
+	*reg = val;
+
+        // Entry Num: 357087 - 357091
+        // Step Num: 319072 - 319074
+	// Firmware Offset(s): 
+	//	0x000009be - 0x000009be
+	//	0x00000494 - 0x00000496	
+
+	// Some branches and pushes to stack
+
+        // Entry Num: 357092 - 357109 
+        // Step Num: 319074 - 319088
+	// Firmware Offset(s): 
+	//	0x00000450 - 0x0000046a
+
+	// Check main clock source select register and verify is set to PLL output
+	//  reg = 0x40048070;
+	//  val = *reg;
+	//  if (val != 0x3)
+	//  {
+		// There are multiple paths for checking other values set here... Have not work through them
+		// TODO: UKNOWN PATHS
+		// 	Not branching to 0x00000470 
+		// 	Not branching to 0x00000474 
+		// 	Not branching to 0x0000047a 
+		// 	Not branching to 0x0000046e 
+	//  }
 
 
+        // Entry Num: 357109 - 357127
+        // Step Num: 319088 - 319100
+	// Firmware Offset(s): 
+	//	0x000004d0 - 0x000004d2
+	//	0x000004a8 - 0x000004b4
+	//	0x000004be - 0x000004c2
+
+//TODO:repeated code from above. Combine into function.
+	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+	//  reg = 0x40048040;
+	//  val = *reg;
+	//  if (val != 1)
+	//  {
+		// There are multiple paths for checking other values set here... Have not work through them
+		// TODO: UKNOWN PATHS
+		// 	Not branching to 0x000004ba
+		// 	Branching to 0x000004be, not executing 0x000004b6
+	//  }
+
+        // Entry Num: 357128 - 357806
+        // Step Num: 319101 - 319757
+	// Firmware Offset(s): 
+//TODO: this is similar to above
+	//	0x000004d6 - 0x000004dc
+	//	0x00000488 - 0x00000492
+	//	0x000004e0 - 0x000004e0
+	//	0x0000046e - 0x0000046e
+	//	0x0000049a - 0x0000049e
+	//	0x00000300 - 0x0000030c
+	//	0x00000322 - 0x00000328
+	//	0x0000030e - 0x0000032a
+	//	0x000004a2 - 0x000004a2
+//TODO: this is different than above
+ 	//	0x000009c2 - 0x000009c6
+
+	// System PLL control register
+	// reg = 0x40048008;
+	// val = *reg;
+	// Perform calculations based on value of system PLL control register
+
+        // Entry Num: 357807 - 
+        // Step Num: 319758 - 
+	//	0x000009ca - 0x00000a02
+//TODO: settings Prescale counter register based on value calcualted from PLL control reg?
+ 
 //TODO: This is where I believe pulsing Steam Controller Button is setup to occur via 32-bit counter 1... 
 //	Confirm this with custom firmware (keeping in mind that it now seems that timeout counter is incremented by setting of 0x1000025c via 32bit counter0 irq!
 
