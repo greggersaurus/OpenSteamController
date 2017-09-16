@@ -1837,11 +1837,50 @@ void init()
 	// val = *reg;
 	// Perform calculations based on value of system PLL control register
 
-        // Entry Num: 357807 - 
-        // Step Num: 319758 - 
+        // Entry Num: 357807 - 357850
+        // Step Num: 319758 - 319786
 	//	0x000009ca - 0x00000a02
-//TODO: settings Prescale counter register based on value calcualted from PLL control reg?
- 
+
+	// Set Prescale Register for CT32B1 with value calulcated based on system PLL control register
+	reg = 0x4001800c;
+	*reg = 0x0000bb7f;
+
+	// Read Match Control Register for CT32B1
+	reg = 0x40018014;
+	val = *reg;
+	// Enable Reset on MR0: the TC will be reset if MR0 matches it.
+	val |= 2;
+	*reg = val;
+
+	// Read Match Control Register for CT32B1
+	reg = 0x40018014;
+	val = *reg;
+	// Enable Interrupt on MR0: an interrupt is generated when MR0 matches the value in the TC.
+	val |= 1;
+	*reg = val;
+
+	// Set MR0 (Time counter match value) for CT32B1
+	reg = 0x40018018;
+	*reg = 0x0000000b;
+
+	// Clear interrupt pending on for CT32B1
+	reg = 0xe000e280;
+	*reg = 0x00080000;
+
+	// Enable interrupt for CT32B1
+	reg = 0xe000e100;
+	*reg = 0x00080000;
+		
+	// Write some values to heap space
+	*0x100007e0 = 0x01
+	*0x100007e1 = 0x00
+	*0x100007e2 = 0x04
+	*0x100007e3 = 0x0c
+
+        // Entry Num: 357851 - 
+        // Step Num: 319787 - 
+	//	0x000003a2 - 0x000003b2
+
 //TODO: This is where I believe pulsing Steam Controller Button is setup to occur via 32-bit counter 1... 
 //	Confirm this with custom firmware (keeping in mind that it now seems that timeout counter is incremented by setting of 0x1000025c via 32bit counter0 irq!
 
