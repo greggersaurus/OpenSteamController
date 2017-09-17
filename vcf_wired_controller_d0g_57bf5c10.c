@@ -310,7 +310,7 @@ void init()
 	*0x10000250 = 0x00000000	
 	*0x10000254 = 0x00000000	
 	*0x10000258 = 0x00000000	
-	*0x1000025c = 0x00000000
+	*0x1000025c = 0x00000000 // Bytes seem to be used for marked CT32B1 as enabled, and whether CT32B1 interrupt occurred
 	*0x10000260 = 0x00000000
 	Clear 0x10000264 - 0x10001c1c (inclusive 4 byte writes)
 
@@ -1907,9 +1907,54 @@ void init()
 	*0x100007ee = 0x00
 	*0x100007ee = 0x00
 
-        // Entry Num: 357921 - 
-        // Step Num: 319845 - 
-	//	0x00000a1c - 
+        // Entry Num: 357921 - 357936
+        // Step Num: 319845 - 319850
+	//	0x00000a1c - 0x00000a26
+
+	// Set a heap value (related to CT32B1 enable maybe...)
+	*0x1000025d = 0x01
+
+	// Enable CT32B1 Timer Counter and Prescale Counter for counting
+	reg = 0x40018004;
+	val = *reg;
+	val |= 1;
+	*reg = val;
+
+        // Entry Num: 357937 - 357943
+        // Step Num: 319851 - 319855
+	//	0x00000f42 - 0x00000f48
+	//	0x00000f4e - 0x00000f4e
+
+//TODO: who else would set heap address 0x10000200??
+	uint8_t reg0 = *0x10000200;
+	if (reg0 != 0){
+		// TODO: UNKNOWN PATH execute instruction 0x00000f4a
+	}
+
+        // Entry Num: 357944 - 357956
+        // Step Num: 319856 - 319863
+	//	0x00000a3c - 0x00000a4a
+
+	uint8_t Reg1 = *0x1000025d;
+
+	if (Reg1 == 0){
+		// TODO: UNOWN PATH skip ahead to 0x00000a6e
+	}
+
+	uint8_t Reg1 = *0x1000025c;
+
+	if (Reg1 != 0){
+		// TODO: UNOWN PATH execute instruction 0x00000a4c
+	}
+
+        // Entry Num: 357957 - 
+        // Step Num: 319864 - 
+	//	0x00000a6e - 
+	
+//TODO: simulate more for what happens after wfi
+//		What happens if interrupt occurs that is not CT32B1
+//		What happens if 0x1000025c is set to 1 by CT32B1 interrupt handler
+	
 
 //TODO: This is where I believe pulsing Steam Controller Button is setup to occur via 32-bit counter 1... 
 //	Confirm this with custom firmware (keeping in mind that it now seems that timeout counter is incremented by setting of 0x1000025c via 32bit counter0 irq!
