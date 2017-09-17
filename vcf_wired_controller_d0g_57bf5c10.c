@@ -1877,9 +1877,39 @@ void init()
 	*0x100007e2 = 0x04
 	*0x100007e3 = 0x0c
 
-        // Entry Num: 357851 - 
-        // Step Num: 319787 - 
+        // Entry Num: 357851 - 357878
+        // Step Num: 319787 - 319810
 	//	0x000003a2 - 0x000003b2
+
+	// Clear out some heap space
+	*0x100007e4 = 0x00
+	*0x100007e5 = 0x00
+	*0x100007e6 = 0x00
+	*0x100007e7 = 0x00
+
+        // Entry Num: 357879 - 357892
+        // Step Num: 319811 - 319820
+	//	0x00000a06 - 0x00000a18
+
+	// Clear out some heap space
+	*0x100007e8 = 0x00
+	*0x100007e9 = 0x00
+	*0x100007ea = 0x00
+	*0x100007eb = 0x00
+
+        // Entry Num: 357893 - 357920
+        // Step Num: 319821 - 319844
+	//	0x000003a2 - 0x000003b2
+
+	// Clear out more heap space (TODO: this is same code as above, but with different start address)
+	*0x100007ec = 0x00
+	*0x100007ed = 0x00
+	*0x100007ee = 0x00
+	*0x100007ee = 0x00
+
+        // Entry Num: 357921 - 
+        // Step Num: 319845 - 
+	//	0x00000a1c - 
 
 //TODO: This is where I believe pulsing Steam Controller Button is setup to occur via 32-bit counter 1... 
 //	Confirm this with custom firmware (keeping in mind that it now seems that timeout counter is incremented by setting of 0x1000025c via 32bit counter0 irq!
