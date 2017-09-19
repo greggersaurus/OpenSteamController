@@ -1920,45 +1920,92 @@ void init()
 	val |= 1;
 	*reg = val;
 
-        // Entry Num: 357937 - 357943
-        // Step Num: 319851 - 319855
-	//	0x00000f42 - 0x00000f48
-	//	0x00000f4e - 0x00000f4e
+	while (??){
+		// Entry Num: 357937 - 357943
+		// Step Num: 319851 - 319855
+		//	0x00000f42 - 0x00000f48
+		//	0x00000f4e - 0x00000f4e
 
-//TODO: who else would set heap address 0x10000200??
-	uint8_t reg0 = *0x10000200;
-	if (reg0 != 0){
-		// TODO: UNKNOWN PATH execute instruction 0x00000f4a
+	//TODO: who else would set heap address 0x10000200??
+		uint8_t reg0 = *0x10000200;
+		if (reg0 != 0){
+			// TODO: UNKNOWN PATH execute instruction 0x00000f4a
+		}
+
+		// Entry Num: 357944 - 357956
+		// Step Num: 319856 - 319863
+		//	0x00000a3c - 0x00000a4a
+
+		uint8_t Reg1 = *0x1000025d;
+
+		if (Reg1 == 0){
+			// TODO: UNOWN PATH skip ahead to 0x00000a6e
+		}
+
+		// Check if CT32B1 interrupt has fired
+		uint8_t Reg1 = *0x1000025c;
+
+		if (Reg1 != 0){
+			//	0x00000a4c - 0x00000a54
+			*0x1000025c = 0x00000000
+
+			//	0x0000038e - 0x000003a0
+			uint8_t Reg3 = *0x100007e7
+			uint32_t val = Reg3;
+			val <<= 8;
+			uint8_t Reg3 = *0x100007e6
+			val |= Reg3;
+			val <<= 8;
+			uint8_t Reg3 = *0x100007e5
+			val |= Reg3;
+			val <<= 8;
+			uint8_t Reg3 = *0x100007e4
+			val |= Reg3;
+
+			Reg0 = val;
+
+			// 	0x00000a58 - 0x00000a5c
+			//	0x000003a2 - 0x000003b2
+	//TODO: this needs to be generalized into a function call (both what is being set to addresses and and what the addresses are)
+	// Filling 4 bytes ...
+			*0x100007e4 = 0x00
+			*0x100007e5 = 0x00
+			*0x100007e6 = 0x00
+			*0x100007e7 = 0x00
+			
+			//	0x00000a60 - 0x00000a60
+			//	0x000012e4 - 0x000012e0
+			uint8_t Reg0 = *0x10000244	
+
+			//	0x00000a64 - 0x00000a66
+			if (Reg0 != 0){
+				// TODO: UNKNOWN PATH Execute instruction 0x00000a6a
+			}
+		}
+
+		// Entry Num: 357957 - 357959
+		// Step Num: 319864 - 319864
+		//	0x00000a6e - 0x00000a6e
+		
+		// wait for interrupt
+
+		//simulate more for what happens after wfi
+		// What happens if interrupt occurs that is not CT32B1 --> Nothing really. Keeps waiting (but also checking other RAM locations...)
+		// What happens if 0x1000025c is set to 1 by CT32B1 interrupt handler --> count stored in 0x100007e4 - 0x100007e7 is incremented
+
+
+		// From this point on Entry Num and Step Num are not applicable due to
+		//  the fact that TODO
+		// 	0x00000f52 - 0x00000f54
+
+//TODO: need to organize this loop. Below is my understanding of what is going on:
+//	wfi is called
+//	if CT32B1 interrupt occurs this causes a heap space variable (0x100007e4 - 0x100007e7) to be incremented
+//	However, this variable can be incremented (seemingly) forever with no affect
+//	My thought is that clues lies in simulating other interrupts (i.e. USB and PendSV or whatever else may have been enabled)
+//	FOCUS: Where are the following heap addresses modified? 0x10000200, 0x10000244, 0x1000025d
+//	ALSO: Keep an eye out for where 0x100007e4 - 0x100007e7 is read and may cause system to shutdown if it gets greater than some value or something
 	}
-
-        // Entry Num: 357944 - 357956
-        // Step Num: 319856 - 319863
-	//	0x00000a3c - 0x00000a4a
-
-	uint8_t Reg1 = *0x1000025d;
-
-	if (Reg1 == 0){
-		// TODO: UNOWN PATH skip ahead to 0x00000a6e
-	}
-
-	uint8_t Reg1 = *0x1000025c;
-
-	if (Reg1 != 0){
-		// TODO: UNOWN PATH execute instruction 0x00000a4c
-	}
-
-        // Entry Num: 357957 - 
-        // Step Num: 319864 - 
-	//	0x00000a6e - 
-	
-//TODO: simulate more for what happens after wfi
-//		What happens if interrupt occurs that is not CT32B1
-//		What happens if 0x1000025c is set to 1 by CT32B1 interrupt handler
-	
-
-//TODO: This is where I believe pulsing Steam Controller Button is setup to occur via 32-bit counter 1... 
-//	Confirm this with custom firmware (keeping in mind that it now seems that timeout counter is incremented by setting of 0x1000025c via 32bit counter0 irq!
-
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
 	//TODO: Keep in mind that system will continue after WFI. Need to walk through this simulation and see about options (how does controller shutdown...?)
