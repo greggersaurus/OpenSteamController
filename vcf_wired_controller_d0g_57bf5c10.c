@@ -561,7 +561,7 @@ void init()
 	// Reading 0x10000258
 	//	Previously set via read from EEPROM, but defaulted to 0 on EEPROM magic word missing
 	// Check if 0x10000258 is set to value 8
-	//	TODO: UNKOWN PATHS
+	//	TODO: UNKNOWN PATHS
 	//		If value from EEPROM (written to 0x10000258) is 8, execute instruction at 0x00000fa2
 
 
@@ -693,7 +693,7 @@ void init()
 	//	0x00000cf8 - 0x00000cfc
 
 	// reading value in RAM at 0x10000258 and see if is set to 8
-	//	TODO: UNKOWN PATHS
+	//	TODO: UNKNOWN PATHS
 	//		If value from EEPROM (written to 0x10000258) is 8, execute instruction at 0x00000fa2
 
 
@@ -797,7 +797,7 @@ void init()
 	// Check if 0x10001c08 (Value read from EEPROM) is 0
 	// if (eeprom_data2 != 0)
 	// {
-	// 	TODO: UNKONWN PATHS
+	// 	TODO: UNKNOWN PATHS
 	//	if value read from EEPROM offset 0x500 is not 0 execute instruction at 0x000015c6
 	// }
 
@@ -806,7 +806,7 @@ void init()
 	// val = *reg;
 	// if (val == 0xecaabac0)
 	// {
-		// TODO: UNKOWN PATHS
+		// TODO: UNKNOWN PATHS
 		//	If GPREG0 is 0xecaabac0 execute instruction 0x000015e6 instead of branching to 0x000015ec
 	// }
 
@@ -1138,7 +1138,7 @@ void init()
 
 	// Check if byte at RAM address 0x10000216 is 3
 	// Thisis set during some init code when initially setting up RAM (instruction 0x00001532)... Not sure what this byte represents... Maybe number of USB EPs?
-	// 	TODO: UNKOWN PATHS do not branch and instead execute 0x00000b72 if this is false
+	// 	TODO: UNKNOWN PATHS do not branch and instead execute 0x00000b72 if this is false
 
 
         // Entry Num: 64530 - 64557
@@ -1201,7 +1201,7 @@ void init()
 	//	0x00000aec - 0x00000af4
 
 	// Check that return value of Boot ROM code (Reg 0) is 0 (LPC_OK)
-	// 	TODO: UNKOWN PATHS branching to 0x00000b14 if Boot ROM code does not return 0 (i.e. failure of USBD_HID_API_T->init())
+	// 	TODO: UNKNOWN PATHS branching to 0x00000b14 if Boot ROM code does not return 0 (i.e. failure of USBD_HID_API_T->init())
 
 
         // Entry Num: 65065 - 65085
@@ -1377,7 +1377,7 @@ void init()
 	// I think this function is for changing interrupt priority
 
 	// Check if Reg 0 is greater than or equal to 0
-	//	TODO: UNKOWN PATHS continue to execute 0x00000d96, if not
+	//	TODO: UNKNOWN PATHS continue to execute 0x00000d96, if not
 	//	However, this is impossible as Reg 0 is set to 15 before this function is called
 
 	// Set IP_USART0 to highest interrupt priority
@@ -1467,7 +1467,7 @@ void init()
 
 	if (*0x100006d0 <= *0x100006d8 - *0x100006dc)
 	{
-		// TODO: UNKOWN PATHS execute instruction at 0x00000eee
+		// TODO: UNKNOWN PATHS execute instruction at 0x00000eee
 	}
 
 
@@ -1477,7 +1477,7 @@ void init()
 	//	0x00000ef2 - 0x00000ef4
 	//	0x00000e62 - 0x00000e64
 
-	// 	TODO: UNKOWN PATHS execute instructiont 0x00000e64 if Reg 0 is not sure, but this never happens here as we before prev branch Reg 0 is set to 0
+	// 	TODO: UNKNOWN PATHS execute instructiont 0x00000e64 if Reg 0 is not sure, but this never happens here as we before prev branch Reg 0 is set to 0
 
 
         // Entry Num: 265408 - 265442
@@ -1585,7 +1585,7 @@ void init()
 
 	// Check USART related status receiver data ready, and other statuts bit
 	// TODO: care about this?
-	//	UNKOWN PATHS branch to 0x000006a8 if condition met
+	//	UNKNOWN PATHS branch to 0x000006a8 if condition met
 
 
         // Entry Num: 265525 - 266718
@@ -1604,7 +1604,7 @@ void init()
 	// USART Line Status Register (Read-Only)
 	reg = 0x40008014;
 	val = *reg;
-	// TODO: UNKOWN PATHS check status (i.e. that transmit occurred?)
+	// TODO: UNKNOWN PATHS check status (i.e. that transmit occurred?)
 
 	*0x100006d8 = 0x00000001
 	*0x100006d8 = 0x00000001
@@ -1624,7 +1624,7 @@ void init()
 	// USART Line Status Register (Read-Only)
 	reg = 0x40008014;
 	val = *reg;
-	// TODO: UNKOWN PATHS check status (i.e. that transmit occurred?)
+	// TODO: UNKNOWN PATHS check status (i.e. that transmit occurred?)
 
 //TODO: are we looping here looking for USART to react?
 //	Maybe at least map out instruction calls to see if we are looping before giving up on USART?
@@ -1657,13 +1657,13 @@ void init()
 	// Reg0 = 0x40010000 
 
 	// If Reg0 == 0x40018000
-	// UNKOWN PATHS 0x000005ca -- See below where Reg0 is loaded with 0x40018000
+	// UNKNOWN PATHS 0x000005ca -- See below where Reg0 is loaded with 0x40018000
 	
 	// If Reg0 == 0x4000c000
-	// UNKOWN PATHS 0x000005d4
+	// UNKNOWN PATHS 0x000005d4
 
 	// If Reg0 != 0x40010000
-	// UNKOWN PATHS 0x000005e2
+	// UNKNOWN PATHS 0x000005e2
 
 
         // Entry Num: 266758 - 266796
@@ -1939,7 +1939,7 @@ void init()
 		uint8_t Reg1 = *0x1000025d;
 
 		if (Reg1 == 0){
-			// TODO: UNOWN PATH skip ahead to 0x00000a6e
+			// TODO: UNKNOWN PATH skip ahead to 0x00000a6e
 		}
 
 		// Check if CT32B1 interrupt has fired
@@ -2002,7 +2002,7 @@ void init()
 //	wfi is called
 //	if CT32B1 interrupt occurs this causes a heap space variable (0x100007e4 - 0x100007e7) to be incremented
 //	However, this variable can be incremented (seemingly) forever with no affect
-//	My thought is that clues lies in simulating other interrupts (i.e. USB and PendSV or whatever else may have been enabled)
+//	My thought is that clues lies in simulating other exceptions (i.e. USB IRQ, PendSV, SysTick, SVCall)
 //	FOCUS: Where are the following heap addresses modified? 0x10000200, 0x10000244, 0x1000025d
 //	ALSO: Keep an eye out for where 0x100007e4 - 0x100007e7 is read and may cause system to shutdown if it gets greater than some value or something
 	}
@@ -2086,6 +2086,36 @@ ErrorCode_t HID_SetReport( USBD_HANDLE_T hHid, USB_SETUP_PACKET* pSetup, uint8_t
 }
 
 /**
+ * TODO: simulate this
+ */
+void SVCall(){
+	// Entry point as defined by Vector Table
+	// Firmware Offset(s): 
+	// 	0x000000fc - 
+
+}
+
+/**
+ * TODO: simulate this
+ */
+void PendSV(){
+	// Entry point as defined by Vector Table
+	// Firmware Offset(s): 
+	// 	0x00000104 - 
+
+}
+
+/**
+ * TODO: simulate this
+ */
+void SysTick(){
+	// Entry point as defined by Vector Table
+	// Firmware Offset(s): 
+	// 	0x00000119 - 
+
+}
+
+/**
  * This is interrupt handler called when IRQ 19 triggers for 32-bit counter 1. 
  *  This was simulated multiple times to plot out several different paths. 
  */
@@ -2124,7 +2154,7 @@ void Interrupt_19_CT32B1()
 			// Check if MR0INT and MR1INT and MR2INT and MR3INT are not set
 			if (0 == val)
 			{
-				//TODO: UNKOWN PATHS execute 0x00006194 if 
+				//TODO: UNKNOWN PATHS execute 0x00006194 if 
 				// Firmware Offset(s): 
 				//	0x00006194 - 0x00006194
 				//	0x00009d44 - 0x00009d44
@@ -2135,35 +2165,35 @@ void Interrupt_19_CT32B1()
 			//	0x00006138 - 0x0000613c
 			if (0xFFFF0000 & val)
 			{
-				//TODO: UNKOWN PATHS execute 0x0000613e if 
+				//TODO: UNKNOWN PATHS execute 0x0000613e if 
 			}
 
 			// Firmware Offset(s): 
 			//	0x00006142 - 0x00006144
 			if (0xFFFFFF00 & val)
 			{
-				//TODO: UNKOWN PATHS execute 0x00006146 if 
+				//TODO: UNKNOWN PATHS execute 0x00006146 if 
 			}
 
 			// Firmware Offset(s): 
 			//	0x0000614a - 0x0000614c
 			if (0xFFFFFFF0 & val)
 			{
-				//TODO: UNKOWN PATHS execute 0x0000614e if 
+				//TODO: UNKNOWN PATHS execute 0x0000614e if 
 			}
 
 			// Firmware Offset(s): 
 			//	0x00006152 - 0x00006154
 			if (0xFFFFFFFC & val)
 			{
-				//TODO: UNKOWN PATHS execute 0x00006156 if 
+				//TODO: UNKNOWN PATHS execute 0x00006156 if 
 			}
 
 			// Firmware Offset(s): 
 			//	0x0000615a - 0x0000615c
 			if (0xFFFFFFFE & val)
 			{
-				//TODO: UNKOWN PATHS execute 0x0000615e if 
+				//TODO: UNKNOWN PATHS execute 0x0000615e if 
 			}
 
 			// Firmware Offset(s): 
@@ -2177,21 +2207,21 @@ void Interrupt_19_CT32B1()
 			//	0x000056fc - 0x00005700
 			if (reg0 == 0x4000c000)
 			{
-				//TODO: UNKOWN PATHS execute 0x00005702 if 
+				//TODO: UNKNOWN PATHS execute 0x00005702 if 
 			}
 			
 			// Firmware Offset(s): 
 			//	0x00005706 - 0x0000570a
 			if (reg0 == 0x40010000)
 			{
-				//TODO: UNKOWN PATHS execute 0x0000570c if 
+				//TODO: UNKNOWN PATHS execute 0x0000570c if 
 			}
 
 			// Firmware Offset(s): 
 			//	0x00005710 - 0x00005714
 			if (reg0 == 0x40014000)
 			{
-				//TODO: UNKOWN PATHS execute 0x00005718 if 
+				//TODO: UNKNOWN PATHS execute 0x00005718 if 
 			}
 
 			// Firmware Offset(s): 
@@ -2213,6 +2243,98 @@ void Interrupt_19_CT32B1()
 	//	 giving up on connection occurring.
 	*(uint8_t*)0x1000025c = 0x01;
 }
+
+/**
+ * TODO: Simulate this?
+ */
+void Interrupt_21_USART(){
+
+	// Entry point as defined by Vector Table
+	// Firmware Offset(s): 
+	// 	0x000001d4 - 
+
+}
+
+/**
+ * TODO: Simulate this!
+ */
+void Interrupt_22_USB_IRQ(){
+
+	volatile uint32_t* reg = NULL;
+	uint32_t val = 0;
+
+	// Entry point as defined by Vector Table
+	// Firmware Offset(s): 
+	// 	0x000001e8 - 0x000001f2
+
+	// Read GPREG1
+	reg = 0x40038008;
+	val = *reg;
+
+	if (val != 0){
+		// TODO: UNKNOWN PATH execute instruction at 0x000001f4
+	}
+
+	// Firmware Offset(s): 
+	// 	0x000014fc - 0x00001504
+	
+	// Read USB EP Command/Status List start address
+	reg = 0x40080008;
+	Reg0 = *reg;
+	
+	// Read USB Device Command/Status register
+	reg = 0x40080000;
+	Reg1 = *reg;
+
+	// Check if SETUP token has been received 
+	if (Reg1 & 0x00000100){
+//TODO: high priority to simulate this path
+		// TODO: UNKNOWN PATH execute instructino at 0x00001506
+	}
+
+	// Firmware Offset(s): 
+	// 	0x00001516 - 0x00001520
+
+}
+
+
+/**
+
+TODO: save this info in some useful way to reference later?
+
+See IRQ section in vcf_wired_controller_d0g_57bf5c10.bin.md for details on simulating exceptions
+
+000040:  0000 0121     Vector Table     IRQ0
+000044:  0000 0129     Vector Table     IRQ1
+000048:  0000 0131     Vector Table     IRQ2
+00004c:  0000 0139     Vector Table     IRQ3
+000050:  0000 0141     Vector Table     IRQ4
+000054:  0000 0149     Vector Table     IRQ5
+000058:  0000 0151     Vector Table     IRQ6
+00005c:  0000 0159     Vector Table     IRQ7
+000060:  0000 0161     Vector Table     IRQ8
+000064:  0000 0169     Vector Table     IRQ9
+000068:  0000 0171     Vector Table     IRQ10
+00006c:  0000 0179     Vector Table     IRQ11
+000070:  0000 0179     Vector Table     IRQ12
+000074:  0000 0189     Vector Table     IRQ13
+000078:  0000 0191     Vector Table     IRQ14
+00007c:  0000 0199     Vector Table     IRQ15
+000080:  0000 01a1     Vector Table     IRQ16
+000084:  0000 01a9     Vector Table     IRQ17
+000088:  0000 01b1     Vector Table     IRQ18
+000090:  0000 01cd     Vector Table     IRQ20
+00009c:  0000 01fd     Vector Table     IRQ23
+0000a0:  0000 0205     Vector Table     IRQ24
+0000a4:  0000 020d     Vector Table     IRQ25
+0000a8:  0000 0215     Vector Table     IRQ26
+0000ac:  0000 021d     Vector Table     IRQ27
+0000b0:  0000 0225     Vector Table     IRQ28
+0000b4:  0000 022d     Vector Table     IRQ29
+0000b8:  0000 0235     Vector Table     IRQ30
+0000bc:  0000 023d     Vector Table     IRQ31
+
+*/
 
 
 /**
