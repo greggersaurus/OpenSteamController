@@ -884,6 +884,8 @@ void init()
 	//	0x00000a90 - 0x00000a9e
 
 	// Write 0x1fff1f24 to RAM address 0x10000230, which was read from boot ROM
+	// 0x1fff1f24 is pointer to USBD_HW_API_T
+	*0x10000230 = 0x1fff1f24;
 
 
         // Entry Num: 60178 - 60524
@@ -2295,6 +2297,34 @@ void Interrupt_22_USB_IRQ(){
 	// Firmware Offset(s): 
 	// 	0x00001516 - 0x00001520
 
+	// Setup for calling some USB related function from Boot ROM
+
+	// Read USBD_HW_API_T* saved earlier
+	Reg1 = *0x10000230; // = 0x1fff1f24
+
+	// USB_HANDLE_T USB device stack handle	pointer
+	Reg0 = *0x1000022c; // = 0x200040b8
+
+	Reg1 = *Reg1(0x1fff1f24); // = 0x1fff1f80
+	Reg1 = *Reg1(0x1fff1f80); // = 0x1fff3655
+
+	// Execute function at 0x1fff3655
+	
+	// Firmware Offset(s): 
+	//	0x1fff3654 - 0x1fff367a
+
+	/** \fn void ISR(USBD_HANDLE_T hUsb)                                          
+	 *  Function to USB device controller interrupt events.                       
+	 *                                                                            
+	 *  When the user application is active the interrupt handlers are mapped in the user flash
+	 *  space. The user application must provide an interrupt handler for the USB interrupt and
+	 *  call this function in the interrupt handler routine. The driver interrupt handler takes
+	 *  appropriate action according to the data received on the USB bus.         
+	 *                                                                            
+	 *  \param[in]  hUsb Handle to the USB device stack.                          
+	 *  \return Nothing.                                                          
+	 */                                                                           
+	USBD_HW_API->ISR(USBD_HANDLE_T hUsb = 0x200040b8);
 }
 
 
