@@ -2258,7 +2258,7 @@ void Interrupt_21_USART(){
 }
 
 /**
- * TODO: Simulate this!
+ * This interrupt is called in relation to USB interrupts.
  */
 void Interrupt_22_USB_IRQ(){
 
@@ -2281,7 +2281,7 @@ void Interrupt_22_USB_IRQ(){
 	// 	0x000014fc - 0x00001504
 	
 	// Read USB EP Command/Status List start address
-	reg = 0x40080008;
+	reg = 0x40080008; // 0x20004000
 	Reg0 = *reg;
 	
 	// Read USB Device Command/Status register
@@ -2290,8 +2290,24 @@ void Interrupt_22_USB_IRQ(){
 
 	// Check if SETUP token has been received 
 	if (Reg1 & 0x00000100){
-//TODO: high priority to simulate this path
-		// TODO: UNKNOWN PATH execute instructino at 0x00001506
+
+		// Firmware Offset(s): 
+		// 	0x00001506 - 0x00001514
+
+		Reg1 = 1;
+		Reg2 = *0x20004000; // 0x00400109
+
+		// Clear Bit 29 (Stall Bit) for EP0 OUT
+		Reg2 &= ~0x20000000;
+
+		*0x20004000 = Reg2
+
+		Reg2 = *0x20004008; // 0x00400109	
+
+		// Clear Bit 29 (Stall Bit) for EP0 IN
+		Reg2 &= ~0x20000000;
+
+		*0x20004008 = Reg2
 	}
 
 	// Firmware Offset(s): 
@@ -2305,8 +2321,8 @@ void Interrupt_22_USB_IRQ(){
 	// USB_HANDLE_T USB device stack handle	pointer
 	Reg0 = *0x1000022c; // = 0x200040b8
 
-	Reg1 = *Reg1(0x1fff1f24); // = 0x1fff1f80
-	Reg1 = *Reg1(0x1fff1f80); // = 0x1fff3655
+	Reg1 = *Reg1; // = 0x1fff1f80
+	Reg1 = *Reg1; // = 0x1fff3655
 
 	// Execute function at 0x1fff3655
 	
@@ -2325,6 +2341,7 @@ void Interrupt_22_USB_IRQ(){
 	 *  \return Nothing.                                                          
 	 */                                                                           
 	USBD_HW_API->ISR(USBD_HANDLE_T hUsb = 0x200040b8);
+//TODO: dig more into ISR function call? Could this be calling some other handler function potentially?
 }
 
 
