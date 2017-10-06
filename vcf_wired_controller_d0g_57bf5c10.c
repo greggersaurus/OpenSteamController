@@ -534,11 +534,9 @@ void init()
 	//	0x00000cf4 - 0x00000cf4
 
 	// val = *((uint8_t*)0x50000003);
-	// Check state of P0_3 and make sure it is 0
+	// Check state of PIO0_3 (USB voltage detected) and make sure it is 0
 		// TODO: UKNOWN PATHS
-		//	if P0_3 is not 0 instruction at 0x00000cf2 is executed
-	// TODO: what does P0_3 indicate?
-	//	Can we ohm this out?
+		//	if PIO0_3 is not 0 (USB cable is conecteD) instruction at 0x00000cf2 is executed
 
 
         // Entry Num: 57999 - 58008
@@ -546,7 +544,8 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00001560 - 0x0000157c
 
-	// Again check that P0_3 is zero
+	// Again check that PIO0_3 is zero
+//TODO: revisit this part of sim
 	// If it is check states of bits 0 and/or 1 in 0x40048030 (System reset status register)
 
 
@@ -644,7 +643,8 @@ void init()
 
 	// Note there in one unknown conditional paths in here, but it is impossible to reach given setup, so it is being ignored
 
-	// Set PIO1_17a to function as RXD
+//TODO: watch this line to see comms between LPC11U37F and Radio Chip
+	// Set PIO1_17 to function as RXD - Receiver input for USART
 	// *(uint32_t*)0x400440a4 = 0x00000002
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 1, regWordOffset = 0x00000011, regVal = 0x00000002);
 
@@ -655,7 +655,7 @@ void init()
 	//	0x0000158c - 0x0000159a
 	//	0x00000572 - 0x0000057c
 
-	// Set PIO1_18 to function as TXD
+	// Set PIO1_18 to function as TXD - Transmitter output for USART
 	// *(uint32_t*)0x400440a8 = 0x00000002
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 1, regWordOffset = 0x00000012, regVal = 0x00000002);
 
@@ -668,11 +668,9 @@ void init()
 	//	0x00000cf4 - 0x00000cf4
 
 	// val = *((uint8_t*)0x50000003);
-	// Check state of P0_3 and make sure it is 0
+	// Check state of PIO0_3 (USB voltage detected) and make sure it is 0
 		// TODO: UKNOWN PATHS
-		//	if P0_3 is not 0 instruction at 0x00000cf2 is executed
-	// TODO: what does P0_3 indicate?
-	//	Can we ohm this out?
+		//	if PIO0_3 is not 0 (USB cable is conecteD) instruction at 0x00000cf2 is executed
 
 
         // Entry Num: 58155 - 58164
@@ -681,7 +679,7 @@ void init()
 	//	0x000015a8 - 0x000015ac
 	//	0x00000f90 - 0x00000f94
 
-	// Again check that P0_3 is zero
+	// Again check that PIO0_3 is zero
 
 
         // Entry Num: 58165 - 58181
@@ -1414,7 +1412,7 @@ void init()
 	//	0x00000cf4 - 0x00000cf4
 
 	// val = *((uint8_t*)0x50000003);
-	// Check state of P0_3 and make sure it is 0
+	// Check state of PIO0_3 and make sure it is 0
 		// TODO: UKNOWN PATHS (quick check shows this eliminates long while loop coming up...)
 
 
@@ -1423,7 +1421,6 @@ void init()
 	// Firmware Offset(s): 
 	//	0x000012c2 - 0x000012d0
 
-	// TODO: what might we be waiting for? And is this only is P0_3 reads 0? What if it doesn't?
 	for (int cnt = 0; cnt < 0x0000c350; cnt++){}
 
 
@@ -1597,6 +1594,7 @@ void init()
 	//	...
 
 //TODO: think this area is mostly USART related, skipping over for now. Come back and disect this later
+//TODO: bumping priority as this is communicating with Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC (which will tell us if we connect with USB dongle, right?)
 
 	*0x100006dc = 0x00000001
 
@@ -1643,6 +1641,8 @@ void init()
 	//	0x0000057e - 0x00000580
 
 	// Set pin function to CT16B1_MAT0 via PIO0_21 register
+	// PIO0_21 is connected to button LED
+//TODO: Use scope to get timing for on and off pattern and make sure it matches settings
 	// *(uint32_t*)0x40044054 = 0x00000081
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000015, regVal = 0x00000008);
 
