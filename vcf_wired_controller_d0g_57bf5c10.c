@@ -18,11 +18,11 @@
 void pwrAnalogBlock(uint32_t reg0)
 {
 	// Power Configuration Register                                                 
-	volatile uint32_t* reg = 0x40048238;
+	volatile uint32_t* reg32 = (volatile uint32_t*)0x40048238;
 	uint32_t val = 0;
 
 	// Read current register value                                                           
-	val = *reg;                                                                     
+	val = *reg32;                                                                     
 	// Clear reserved bit that must stay cleared                                    
 	val &= 0x000005ff;                                                              
 	// Clear desired bit (clearing enables desired block(s))
@@ -31,7 +31,7 @@ void pwrAnalogBlock(uint32_t reg0)
 	val |= 0xe800;                                                                  
 
 	// Write result to register
-	*reg = val;  
+	*reg32 = val;  
 }
 
 /**
@@ -56,13 +56,13 @@ void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOff
 	if (additionalOffset != 0)
 	{
 		// Execture instruction 0x00000578
-		uint32_t* reg = baseReg + regWordOffset + 0x60;
-		*reg = regVal;
+		volatile uint32_t* reg32 = (volatile uint32_t*)(baseReg + regWordOffset + 0x60);
+		*reg32 = regVal;
 		return;
 	}
 
-	uint32_t* reg = baseReg + regWordOffset;
-	*reg = regVal;
+	volatile uint32_t* reg32 = (volatile uint32_t*)baseReg + regWordOffset;
+	*reg32 = regVal;
 }
 
 /**
@@ -76,7 +76,7 @@ void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOff
  */
 void init()
 {
-	volatile uint32_t* reg = NULL;
+	volatile uint32_t* reg32 = NULL;
 	uint32_t val = 0;
 
 //TODO: some section of this is default init provided by lpcexpresso. Verify and identify.
@@ -98,8 +98,7 @@ void init()
 	//	0x00000fe8 - 0x00000ffe
 
 	// Some sort of delay required after last system control register mod?          
-	for (uint32_t cnt = 0; cnt < 0x1600; cnt++)                                     
-	{}  
+	for (uint32_t cnt = 0; cnt < 0x1600; cnt++);
 
 
         // Entry Num: 45088 - 45098
@@ -108,13 +107,13 @@ void init()
 	//	0x00000520 - 0x0000052c
 
 	// Select Crystal Oscillator (SYSOSC)                                           
-	reg = 0x40048040;                                                               
-	*reg = 1;                                                                       
+	reg32 = (volatile uint32_t*)0x40048040;                                                               
+	*reg32 = 1;                                                                       
 
 	// Enable system PLL clock source update                                        
-	reg = 0x40048044;                                                               
-	*reg = 0;                                                                       
-	*reg = 1;
+	reg32 = (volatile uint32_t*)0x40048044;                                                               
+	*reg32 = 0;                                                                       
+	*reg32 = 1;
 
 
         // Entry Num: 45099 - 45115
@@ -124,16 +123,16 @@ void init()
 	//	0x00000584 - 0x00000598
 
 	// Power Configuration Register                                                 
-	reg = 0x40048238;                                                               
+	reg32 = (volatile uint32_t*)0x40048238;                                                               
 	// Read current value                                                           
-	val = *reg;                                                                     
+	val = *reg32;                                                                     
 	// Clear reserved bit that must stay cleared                                    
 	val &= 0x5ff;                                                                   
 	// Make sure system PLL is powered down                                         
 	val |= 0x80;                                                                    
 	// Reserved bits that must always be set                                        
 	val |= 0xe800;                                                                  
-	*reg = val;                    
+	*reg32 = val;                    
 
 
         // Entry Num: 45116 - 45122
@@ -142,9 +141,9 @@ void init()
 	//	0x00001008 - 0x00001010
 
 	// System PLL control register                                                  
-	reg = 0x40048008;                                                               
+	reg32 = (volatile uint32_t*)0x40048008;                                                               
 	// Division ratio = 2 x 4. Feedback divider value = 3 + 1.                      
-	*reg = 0x23;
+	*reg32 = 0x23;
 
 
         // Entry Num: 45123 - 45137
@@ -152,7 +151,7 @@ void init()
 	// Firmware Offset(s): 
 	//	0x000005a4 - 0x000005b8
 
-	// Make sure system PLL powered                                                 
+	// Make sure system PLL is powered                                                 
 	pwrAnalogBlock(reg0 = 0x00000080);
 
 
@@ -161,10 +160,11 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00001014 - 0x0000101e
 
-	// System PLL status register                                                   
-	reg = 0x4004800c;                                                               
 	// Wait until PLL is locked                                                     
-	while(((*reg) & 1) == 0);
+	do{
+		// System PLL status register                                                   
+		reg32 = (volatile uint32_t*)0x4004800c;                                                               
+	} while(((*reg32) & 1) == 0);
 
 
         // Entry Num: 45144 - 45161
@@ -173,18 +173,18 @@ void init()
 	//	0x00001020 - 0x00001038
 
 	// System clock divider register                                                
-	reg = 0x40048078;                                                               
+	reg32 = (volatile uint32_t*)0x40048078;                                                               
 	// Set system AHB clock divider to 1.                                           
-	*reg = 1;
+	*reg32 = 1;
 
 	// Flash configuration register                                                 
-	reg = 0x4003c010;                                                               
-	val = *reg;                                                                     
+	reg32 = (volatile uint32_t*)0x4003c010;                                                               
+	val = *reg32;                                                                     
 	// Bits 31:2 must be written back exactly as read                               
 	val &= 0xFFFFFFC0;                                                              
 	// Set flash access time to 3 system clocks (for system clock up to 50 MHz)     
 	val |=  2;                                                                      
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 45162 - 45171
@@ -193,16 +193,16 @@ void init()
 	//	0x0000050c - 0x00000518
 
 	// Main clock source select register                                            
-	reg = 0x40048070;                                                               
+	reg32 = (volatile uint32_t*)0x40048070;                                                               
 	// Select PLL output                                                            
-	*reg = 3;                                                                       
+	*reg32 = 3;                                                                       
 
 	// Main clock source update enable register                                     
-	reg = 0x40048074;                                                               
+	reg32 = (volatile uint32_t*)0x40048074;                                                               
 	// No change                                                                    
-	*reg = 0;                                                                       
+	*reg32 = 0;                                                                       
 	// Update clock source                                                          
-	*reg = 1; 
+	*reg32 = 1; 
 
 
         // Entry Num: 45172 - 45185
@@ -212,16 +212,16 @@ void init()
 	//	0x00000548 - 0x00000554
 
 	// USB PLL clock source select register                                         
-	reg = 0x40048048;                                                               
+	reg32 = (volatile uint32_t*)0x40048048;                                                               
 	// Select system oscillator                                                     
-	*reg = 1;                                                                       
+	*reg32 = 1;                                                                       
 
 	// USB PLL clock source update enable register                                  
-	reg = 0x4004804c;                                                               
+	reg32 = (volatile uint32_t*)0x4004804c;                                                               
 	// No change                                                                    
-	*reg = 0;                                                                       
+	*reg32 = 0;                                                                       
 	// Update clock source.                                                         
-	*reg = 1; 
+	*reg32 = 1; 
 
 
         // Entry Num: 45186 - 45190
@@ -230,9 +230,9 @@ void init()
 	//	0x00001042 - 0x00001048
 
 	// USB PLL control register                                                     
-	reg = 0x40048010;                                                               
+	reg32 = (volatile uint32_t*)0x40048010;                                                               
 	// Division ration is 2 x 4. Feedback divider value is 3 + 1.                   
-	*reg = 0x23;
+	*reg32 = 0x23;
 
 
         // Entry Num: 45191 - 45205
@@ -250,10 +250,11 @@ void init()
 	//	0x0000104c - 0x0000104c
 	//	0x00001050 - 0x00001056
 
-	// USB PLL status register                                                      
-	reg = 0x40048014;                                                               
 	// Wait for PLL locked                                                          
-	while (((*reg) & 1) == 0);
+	do{
+		// USB PLL status register                                                      
+		reg32 = (volatile uint32_t*)0x40048014;                                                               
+	} while (((*reg32) & 1) == 0);
 
 
         // Entry Num: 45212 - 45226
@@ -262,11 +263,11 @@ void init()
 	//	0x00001058 - 0x00001066
 
 	// System clock control register                                                
-	reg = 0x40048080;                                                               
-	val = *reg;                                                                     
+	reg32 = (volatile uint32_t*)0x40048080;                                                               
+	val = *reg32;                                                                     
 	// Enable I/O configuration block                                               
 	val |= 0x10000;                                                                 
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 45227 - 53704
@@ -321,8 +322,8 @@ void init()
 	//	0x00000450 - 0x0000046a
 
 	// Check main clock source select register and verify is set to PLL output
-	//  reg = 0x40048070;
-	//  val = *reg;
+	//  reg32 = (volatile uint32_t*)0x40048070;
+	//  val = *reg32;
 	//  if (val != 0x3)
 	//  {
 		// There are multiple paths for checking other values set here... Have not work through them
@@ -342,8 +343,8 @@ void init()
 	//	0x000004be - 0x000004c2
 
 	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
-	//  reg = 0x40048040;
-	//  val = *reg;
+	//  reg32 = (volatile uint32_t*)0x40048040;
+	//  val = *reg32;
 	//  if (val != 1)
 	//  {
 		// There are multiple paths for checking other values set here... Have not work through them
@@ -374,8 +375,8 @@ void init()
 	// Setup for EEPROM read via IAP command (i.e. calculation of system clock frequency):
 	//
 	// System PLL control register
-	// reg = 0x40048008;
-	// val = *reg;
+	// reg32 = (volatile uint32_t*)0x40048008;
+	// val = *reg32;
 	// Perform calculations based on value of system PLL control register
 	// Save results to 0x10000260
 	//
@@ -520,10 +521,10 @@ void init()
 	//	0x00000428 - 0x00000434
 
 	// Enables clock for GPIO port registers via system clock control register
-	reg = 0x40048080;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40048080;
+	val = *reg32;
 	val |= 0x40;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 57991 - 57998
@@ -580,7 +581,7 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00000fbe - 0x00000fc4
 
-	// Set P1_8 to output bit to high
+	// Set PIO1_8 to output bit to high
 	*((uint8_t*)0x50000028) = 1;
 
 
@@ -589,9 +590,9 @@ void init()
 	// Firmware Offset(s): 
 	//	0x0000055c - 0x00000570
 
-	// Set P1_8 to output via GPIO direction port 1 register
-	reg = 0x50002004;
-	val = *reg;
+	// Set PIO1_8 to output via GPIO direction port 1 register
+	reg32 = (volatile uint32_t*)0x50002004;
+	val = *reg32;
 	val |= 0x00000100;
 
 
@@ -603,8 +604,8 @@ void init()
 	//	0x000007a0 - 0x000007a8
 
 	// Set GPREG1 to 0
-	reg = 0x40038008;
-	*reg = 0;
+	reg32 = (volatile uint32_t*)0x40038008;
+	*reg32 = 0;
 
 
         // Entry Num: 58068 - 58087
@@ -615,7 +616,7 @@ void init()
 	//	0x0000057e - 0x00000580
 
 	// Enable pull down resistor on PIO0_3 register
-	// *(uint32_t*)0x4004400c = 0x00000008
+	// *(uint32_t*)0x4004400c = 0x00000008;
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000003, regVal = 0x00000008);
 
 
@@ -630,7 +631,7 @@ void init()
 	// Note there are two conditional paths in here, but they are impossible to reach given setup, so they are being ignored
 
 	// Set PIO0_6 to function as ~USB_CONNECT
-	// *(uint32_t*)0x40044018 = 0x00000001
+	// *(uint32_t*)0x40044018 = 0x00000001;
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000006, regVal = 0x00000001);
 	
 
@@ -645,7 +646,7 @@ void init()
 
 //TODO: watch this line to see comms between LPC11U37F and Radio Chip
 	// Set PIO1_17 to function as RXD - Receiver input for USART
-	// *(uint32_t*)0x400440a4 = 0x00000002
+	// *(uint32_t*)0x400440a4 = 0x00000002;
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 1, regWordOffset = 0x00000011, regVal = 0x00000002);
 
 
@@ -710,10 +711,10 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00000fbe - 0x00000fc4
 	
-	// Set P1_8 output bit to 1
-	*((uint8_t*)0x50000028) = 0x01
+	// Set PIO1_8 output bit to 1
+	*((uint8_t*)0x50000028) = 0x01;
 
-	//TODO: it looks like P1_8 being set to high might drive a different input back...? Look through paths of setting this output based on input values
+	//TODO: it looks like PIO1_8 being set to high might drive a different input back...? Look through paths of setting this output based on input values
 
 
         // Entry Num: 58190 - 58202
@@ -721,12 +722,12 @@ void init()
 	// Firmware Offset(s): 
 	//	0x0000055c - 0x00000570
 
-	// Set P1_8 to output via GPIO direction port 1 register
-	reg = 0x50002004;
-	val = *reg;
+	// Set PIO1_8 to output via GPIO direction port 1 register
+	reg32 = (volatile uint32_t*)0x50002004;
+	val = *reg32;
 	val |= 0x00000100;
 
-	//TODO: again with double setting P1_8 as output... simulation might not be reaction correctly due to unanticipated hardware input response...
+	//TODO: again with double setting PIO1_8 as output... simulation might not be reaction correctly due to unanticipated hardware input response...
 
 
         // Entry Num: 58203 - 58260
@@ -800,8 +801,8 @@ void init()
 	// }
 
 	// Check if GPREG0 is set to 0xecaabac0
-	// reg = 0x40038004;
-	// val = *reg;
+	// reg32 = 0x40038004;
+	// val = *reg32;
 	// if (val == 0xecaabac0)
 	// {
 		// TODO: UNKNOWN PATHS
@@ -814,7 +815,7 @@ void init()
 	// Firmware Offset(s): 
 	//	0x000015ec - 0x000015fa
 
-	// Call into some function that checks if Reg 0 is set to 0xecaabac0. Could be UNKNOWN PATH, but in this case Reg 0 is set from firmware read 
+	// Call into some function that checks if reg32 0 is set to 0xecaabac0. Could be UNKNOWN PATH, but in this case reg32 0 is set from firmware read 
 
 
         // Entry Num: 60110 - 60117
@@ -837,17 +838,17 @@ void init()
 	//	0x00000534 - 0x00000542
 
 	// Select USB PLL out via USB clock source select register
-	reg = 0x400480c0;
-	*reg = 0;
+	reg32 = (volatile uint32_t*)0x400480c0;
+	*reg32 = 0;
 	// Clear USB clock source update enable register
-	reg = 0x400480c4;
-	*reg = 0;
+	reg32 = (volatile uint32_t*)0x400480c4;
+	*reg32 = 0;
 	// Update clock source via USB clock source update enable register
-	reg = 0x400480c4;
-	*reg = 1;
-	// Set divide by 1 for USB clock divider registe
-	reg = 0x400480c8;
-	*reg = 1;
+	reg32 = (volatile uint32_t*)0x400480c4;
+	*reg32 = 1;
+	// Set divide by 1 for USB clock divider register
+	reg32 = (volatile uint32_t*)0x400480c8;
+	*reg32 = 1;
 
 
         // Entry Num: 60141 - 60152
@@ -857,10 +858,10 @@ void init()
 	//	0x0000043c - 0x00000448
 
 	// Enables clock to the USB register interface via System clock control register
-	reg = 0x40048080;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40048080;
+	val = *reg32;
 	val |= 0x00004000;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 60153 - 60164
@@ -870,10 +871,10 @@ void init()
 	//	0x0000043c - 0x00000448
 
 	// Enables USB SRAM block at address 0x2000 4000 via System clock control register 
-	reg = 0x40048080;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40048080;
+	val = *reg32;
 	val |= 0x08000000;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 60165 - 60177
@@ -961,7 +962,7 @@ void init()
 	// 	\retval ERR_USBD_BAD_MEM_BUF(0x0004000b) When insufficient memory buffer is passed or memory
         //                                    is not aligned on 2048 boundary.
 
-	// Reg 0 = 0 -> Return code LPC_OK
+	// reg32 0 = 0 -> Return code LPC_OK
 	// *0x1000022c = 0x200040b8 --> USB_HANDLE_T USB device stack handle
 
 //TODO: Worth looking at decomp of Boot ROM call below or just rely on function description and input parameter values?
@@ -1050,58 +1051,58 @@ void init()
 		*0x200041d0 = 0x20004090
 
 		// USB Device Command/Status register (DEVCMDSTAT)
-		reg = 0x40080000;
-		*reg = 0;
+		reg32 = (volatile uint32_t*)0x40080000;
+		*reg32 = 0;
 
 		// USB EP Command/Status List start address
-		reg = 0x40080008;
-		*reg = 0x20004000;
+		reg32 = (volatile uint32_t*)0x40080008;
+		*reg32 = 0x20004000;
 		// TODO: See how 0x20004000 has been filled out to build this
 
 		// USB Data buffer start address (DATABUFSTART)
-		reg = 0x4008000c;
-		*reg = 0x20004240;
+		reg32 = (volatile uint32_t*)0x4008000c;
+		*reg32 = 0x20004240;
 
 		// USB Endpoint Buffer in use (EPINUSE)
-		reg = 0x40080018;
-		*reg = 0x00000000;
+		reg32 = (volatile uint32_t*)0x40080018;
+		*reg32 = 0x00000000;
 
 		// USB Endpoint skip (EPSKIP)
-		reg = 0x40080014;
-		*reg = 0x00000000;
+		reg32 = (volatile uint32_t*)0x40080014;
+		*reg32 = 0x00000000;
 
 		// USB Endpoint Buffer Configuration (EPBUFCFG)
-		reg = 0x4008001c;
-		*reg = 0x000003ff;
+		reg32 = (volatile uint32_t*)0x4008001c;
+		*reg32 = 0x000003ff;
 
 		// USB interrupt status register (INTSTAT)
-		reg = 0x40080020;
-		*reg = 0xc00003ff;
+		reg32 = (volatile uint32_t*)0x40080020;
+		*reg32 = 0xc00003ff;
 		
 		// USB interrupt enable register (INTEN)
-		reg = 0x40080024;
-		*reg = 0x800003ff;
+		reg32 = (volatile uint32_t*)0x40080024;
+		*reg32 = 0x800003ff;
 
 		//TODO These are reading back register looking for hardware to set bits?
 		// USB Device Command/Status register (DEVCMDSTAT)
-		reg = 0x40080000;
-		*reg = 0x00000000;
+		reg32 = (volatile uint32_t*)0x40080000;
+		*reg32 = 0x00000000;
 		
 		// USB Device Command/Status register (DEVCMDSTAT)
-		reg = 0x40080000;
-		*reg = 0x00000080;
+		reg32 = (volatile uint32_t*)0x40080000;
+		*reg32 = 0x00000080;
 		// USB Device Command/Status register (DEVCMDSTAT)
-		reg = 0x40080000;
-		*reg = 0x00000080;
+		reg32 = (volatile uint32_t*)0x40080000;
+		*reg32 = 0x00000080;
 		// USB Device Command/Status register (DEVCMDSTAT)
-		reg = 0x40080000;
-		*reg = 0x00000080;
+		reg32 = (volatile uint32_t*)0x40080000;
+		*reg32 = 0x00000080;
 		// USB Device Command/Status register (DEVCMDSTAT)
-		reg = 0x40080000;
-		*reg = 0x00000080;
+		reg32 = (volatile uint32_t*)0x40080000;
+		*reg32 = 0x00000080;
 		// USB Device Command/Status register (DEVCMDSTAT)
-		reg = 0x40080000;
-		*reg = 0x00000080;
+		reg32 = (volatile uint32_t*)0x40080000;
+		*reg32 = 0x00000080;
 
 
         // Entry Num: 64186 - 64203
@@ -1109,7 +1110,7 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00000ad2 - 0x00000ae8
 
-	// Check return value of Boot ROM code (Reg 0) is 0 (LPC_OK)
+	// Check return value of Boot ROM code (reg32 0) is 0 (LPC_OK)
 	// 	TODO: UNKNOWN PATHS Branch to 0x00000b14 if Boot ROM code does not return 0 (i.e. failure of USBD_HW_API->Init())
 
 
@@ -1133,8 +1134,8 @@ void init()
 	*(uint8_t*)0x10000236 = 0x00
 	*0x10000238 = 0x0000164c
 
-	// Check if Reg 4 is 0
-	// 	TODO: UNKNOWN PATHS Branch to 0x00000b74 if Reg 4 is 0
+	// Check if reg32 4 is 0
+	// 	TODO: UNKNOWN PATHS Branch to 0x00000b74 if reg32 4 is 0
 
 	// Check if byte at RAM address 0x10000216 is 3
 	// Thisis set during some init code when initially setting up RAM (instruction 0x00001532)... Not sure what this byte represents... Maybe number of USB EPs?
@@ -1190,7 +1191,7 @@ void init()
 	// 	\retval ERR_USBD_BAD_INTF_DESC  Wrong interface descriptor is passed. 
 	// 	\retval ERR_USBD_BAD_EP_DESC  Wrong endpoint descriptor is passed. 
 
-	// Reg 0 = 0 -> Return code LPC_OK
+	// reg32 0 = 0 -> Return code LPC_OK
 
 
         // Entry Num: 65052 - 65064
@@ -1200,7 +1201,7 @@ void init()
 	//	0x00000b78 - 0x00000b7a
 	//	0x00000aec - 0x00000af4
 
-	// Check that return value of Boot ROM code (Reg 0) is 0 (LPC_OK)
+	// Check that return value of Boot ROM code (reg32 0) is 0 (LPC_OK)
 	// 	TODO: UNKNOWN PATHS branching to 0x00000b14 if Boot ROM code does not return 0 (i.e. failure of USBD_HID_API_T->init())
 
 
@@ -1213,10 +1214,10 @@ void init()
 	// Input argument is checked to be >= 0, however, is set by call into function, so no path to dig down here, yet
 
 	// Set IP_USB_IRQ priority to highest via Interrupt Priority Register 5
-	reg = 0xe000e414;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0xe000e414;
+	val = *reg32;
 	val &= ~0x00ff0000;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 65086 - 65094
@@ -1225,8 +1226,8 @@ void init()
 	//	0x00000af8 - 0x00000b04
 
 	// Enable interrupt 22 (USB_IRQ USB IRQ interrupt) via ISER register of NVIC
-	reg = 0xe000e100;
-	*reg = 0x00400000;
+	reg32 = (volatile uint32_t*)0xe000e100;
+	*reg32 = 0x00400000;
 
 
         // Entry Num: 65095 - 65115
@@ -1236,11 +1237,11 @@ void init()
 	//	0x00000d6a - 0x00000d7a
 
 	// Set IP_USB_IRQ priority to 1 (one below highest) via Interrupt Priority Register 5
-	reg = 0xe000e414;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0xe000e414;
+	val = *reg32;
 	val &= ~0x00ff0000;
 	val |= 0x00400000;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 65116 - 65125
@@ -1249,8 +1250,8 @@ void init()
 	//	0x00000b08 - 0x00000b12
 
 	// Prep for Boot ROM code
-	// Reg 0 = 0x200040b8
-	// Reg 1 = 1
+	// reg32 0 = 0x200040b8
+	// reg32 1 = 1
 
 
         // Entry Num: 65126 - 65142
@@ -1306,26 +1307,26 @@ void init()
 	//	0x00000624 - 0x00000640
 
 	// Enables clock for UART via System clock control register
-	reg = 0x40048080;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40048080;
+	val = *reg32;
 	val |= 0x00001000;
-	*reg = val;
+	*reg32 = val;
 
 	// Set USART clock divider register to divide by 1.
-	reg = 0x40048098;
-	*reg = 0x00000001;
+	reg32 = (volatile uint32_t*)0x40048098;
+	*reg32 = 0x00000001;
 
 	// TX FIFO Reset, RX FIFO Reset and FIFO enable via USART FIFO Control Register Write only
-	reg = 0x40008008;
-	*reg = 0x00000007;
+	reg32 = (volatile uint32_t*)0x40008008;
+	*reg32 = 0x00000007;
 
 	// Set Word Length Select to 8-bit character length via USART Line Control Register
-	reg = 0x4000800c;
-	*reg = 0x00000003;
+	reg32 = (volatile uint32_t*)0x4000800c;
+	*reg32 = 0x00000003;
 
 	// Set Baud rate generation pre-scaler divisor value to 0 and Baud rate pre-scaler multiplier value to 1 via USART Fractional Divider Register
-	reg = 0x40008028;
-	*reg = 0x00000010;
+	reg32 = (volatile uint32_t*)0x40008028;
+	*reg32 = 0x00000010;
 
 
         // Entry Num: 65208 - 65241
@@ -1334,38 +1335,38 @@ void init()
 	//	0x0000111e - 0x0000114a
 
 	// Set RX Trigger level to 3 (14 characters or 0x0E) and FIFO enable via USART FIFO Control Register Write only
-	reg = 0x40008008;
-	*reg = 0x00000081;
+	reg32 = (volatile uint32_t*)0x40008008;
+	*reg32 = 0x00000081;
 
 	// Enable access to Divisor Latches via USART Line Control Register
-	reg = 0x4000800c;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x4000800c;
+	val = *reg32;
 	val |= 0x00000080;
-	*reg = val;
+	*reg32 = val;
 
 	// Set the Divisor Latch LSB register to set the baud rate of the USART via the USART Divisor Latch LSB Register when DLAB = 1
-	reg = 0x40008000;
-	*reg = 0x00000003;
+	reg32 = (volatile uint32_t*)0x40008000;
+	*reg32 = 0x00000003;
 
 	// Set the Baud rate generation pre-scaler divisor value to 1 and Baud rate pre-scaler multiplier value to 0xb via the USART Fractional Divider Register
-	reg = 0x40008028;
-	*reg = 0x000000b1;
+	reg32 = (volatile uint32_t*)0x40008028;
+	*reg32 = 0x000000b1;
 
 	// Disable access to Divisor Latches via USART Line Control Register
-	reg = 0x4000800c;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x4000800c;
+	val = *reg32;
 	val &= ~0x00000080;
-	*reg = val;
+	*reg32 = val;
 	
 	// Enable interrupt 21 (USART interrupt) via Interrupt Set-enable Register
-	reg = 0xe000e100;
-	*reg = 0x00200000;
+	reg32 = (volatile uint32_t*)0xe000e100;
+	*reg32 = 0x00200000;
 
 	// Enables the Receive Data Available 0 interrupt and Enables the Receive Line Status interrupt via USART Interrupt Enable Register when DLAB = 0
-	reg = 0x40008004;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40008004;
+	val = *reg32;
 	val |= 0x00000005;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 65242 - 65262
@@ -1376,16 +1377,16 @@ void init()
 
 	// I think this function is for changing interrupt priority
 
-	// Check if Reg 0 is greater than or equal to 0
+	// Check if reg32 0 is greater than or equal to 0
 	//	TODO: UNKNOWN PATHS continue to execute 0x00000d96, if not
-	//	However, this is impossible as Reg 0 is set to 15 before this function is called
+	//	However, this is impossible as reg32 0 is set to 15 before this function is called
 
 	// Set IP_USART0 to highest interrupt priority
-	reg = 0xe000e414;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0xe000e414;
+	val = *reg32;
 	val &= ~0x0000ff00;
 	val |= 0;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 65263 - 65289
@@ -1395,11 +1396,11 @@ void init()
 	//	0x00000d84 - 0x00000dac
 
 	// Set Priority of system handler 14, PendSV to 0x40 (TODO: what does this translate to?)
-	reg = 0xe000ed20;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0xe000ed20;
+	val = *reg32;
 	val &= ~0x00ff0000;
 	val |= 0x00400000;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 65290 - 65304
@@ -1444,10 +1445,10 @@ void init()
 	//	0x00000648 - 0x00000660
 
 	// Make sure THRE is disabled via USART Interrupt Enable Register when DLAB = 0
-	reg = 0x40008004;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40008004;
+	val = *reg32;
 	val &= ~0x00000002;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 265377 - 265394
@@ -1476,7 +1477,7 @@ void init()
 	//	0x00000ef2 - 0x00000ef4
 	//	0x00000e62 - 0x00000e64
 
-	// 	TODO: UNKNOWN PATHS execute instructiont 0x00000e64 if Reg 0 is not sure, but this never happens here as we before prev branch Reg 0 is set to 0
+	// 	TODO: UNKNOWN PATHS execute instructiont 0x00000e64 if reg32 0 is not sure, but this never happens here as we before prev branch reg32 0 is set to 0
 
 
         // Entry Num: 265408 - 265442
@@ -1579,8 +1580,8 @@ void init()
 	//	0x00000696 - 0x000006a0
 
 	// USART Line Status Register Read only
-	reg = 0x40008014;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40008014;
+	val = *reg32;
 
 	// Check USART related status receiver data ready, and other statuts bit
 	// TODO: care about this?
@@ -1602,28 +1603,28 @@ void init()
 	*0x40008000 = 0x00000002
 
 	// USART Line Status Register (Read-Only)
-	reg = 0x40008014;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40008014;
+	val = *reg32;
 	// TODO: UNKNOWN PATHS check status (i.e. that transmit occurred?)
 
 	*0x100006d8 = 0x00000001
 	*0x100006d8 = 0x00000001
 	
 	// Enable the THRE interrupt.
-	reg = 0x40008004;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40008004;
+	val = *reg32;
 	val |= 2;
-	*reg = val;
+	*reg32 = val;
 
 	// Disable the THRE interrupt.
-	reg = 0x40008004;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40008004;
+	val = *reg32;
 	val |= ~0x00000002;
-	*reg = val;
+	*reg32 = val;
 
 	// USART Line Status Register (Read-Only)
-	reg = 0x40008014;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40008014;
+	val = *reg32;
 	// TODO: UNKNOWN PATHS check status (i.e. that transmit occurred?)
 
 //TODO: are we looping here looking for USART to react?
@@ -1675,29 +1676,29 @@ void init()
 	//	0x00000dea - 0x00000e0c
 
 	// Set prescale value to 0 via Prescale Register for CT16B1
-	reg = 0x4001000c;
-	*reg = 0x00000000;
+	reg32 = (volatile uint32_t*)0x4001000c;
+	*reg32 = 0x00000000;
 
 //TODO: Is this the pin connected to the Steam Button LED? Ohm it out!
 	// PWM mode is enabled for CT16Bn_MAT0 via PWM Control Register for CT16B1
-	reg = 0x40010074;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40010074;
+	val = *reg32;
 	val |= 0x00000001;
-	*reg = val;
+	*reg32 = val;
 
 	// Match Register 3 (MR3) is set to 0xfff via Match registers for CT16B1
-	reg = 0x40010024;
-	*reg = 0x00000fff;
+	reg32 = (volatile uint32_t*)0x40010024;
+	*reg32 = 0x00000fff;
 
 	// Match Register 0 (MR0) is set to 0x1000 via Match registers for CT16B1
-	reg = 0x40010018;
-	*reg = 0x00001000;
+	reg32 = (volatile uint32_t*)0x40010018;
+	*reg32 = 0x00001000;
 
 	// Reset on MR3: the TC will be reset if MR3 matches it via Match Control Register for CT16B1
-	reg = 0x40010014;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40010014;
+	val = *reg32;
 	val |= 0x00000400;
-	*reg = val;
+	*reg32 = val;
 
 
         // Entry Num: 266797 - 357026
@@ -1706,27 +1707,28 @@ void init()
 	//	0x0000060c - 0x00000622
 
 	// Store the Timer Control Register for CT17B1
-	reg = 0x40010004;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40010004;
+	val = *reg32;
 
 	// Disable the counters via the Timer Control Register for CT16B1
-	reg = 0x40010004;
-	*reg = 0x00000000;
+	reg32 = (volatile uint32_t*)0x40010004;
+	*reg32 = 0x00000000;
 
 	// Set the timer counter value for via the Timer Counter register for CT16B1
-	reg = 0x40010008;
-	*reg = 0x00000001;
+	reg32 = (volatile uint32_t*)0x40010008;
+	*reg32 = 0x00000001;
 
 	// The Timer Counter and the Prescale Counter are synchronously reset on 
 	//	the next positive edge of PCLK. The counters remain reset until 
 	//	TCR[1] is returned to zero via the Timer Counter register for CT16B1
-	reg = 0x40010004;
-	*reg = 0x00000002;
+	reg32 = (volatile uint32_t*)0x40010004;
+	*reg32 = 0x00000002;
 
 	// Wait for the Timer Counter to read zero, meaning the affect of the 
 	//	right to CRST in the previous register access succeeded
-	reg = 0x40010008;
-	while (0 != *reg){}
+	do{
+		reg32 = (volatile uint32_t*)0x40010008;
+	} while (0 != *reg32);
 
 	// Write back value previously read from Timer Control Register
 	*0x40010004 = val; 
@@ -1738,10 +1740,10 @@ void init()
 
 	// Reset timer counter and prescalar counter on next positive edge of PCLK for CT16B1
 	//  The counters remain reset until TCR[1] is returned to zero
-	reg = 0x40010004;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40010004;
+	val = *reg32;
 	val |= 1;
-	*reg = val;
+	*reg32 = val;
 
         // Entry Num: 357037 - 357053
         // Step Num: 319043 - 319053
@@ -1764,13 +1766,13 @@ void init()
 	//	0x000005c4 - 0x000005cc
 	//	0x000005fa - 0x00000606
 
-	// Reg 0 = 0x40018000
+	// reg32 0 = 0x40018000
 
 	// Enables clock for 32-bit counter/timer 1. CT32B1
-	reg = 0x40048080;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40048080;
+	val = *reg32;
 	val |= 0x00000400;
-	*reg = val;
+	*reg32 = val;
 
         // Entry Num: 357087 - 357091
         // Step Num: 319072 - 319074
@@ -1786,8 +1788,8 @@ void init()
 	//	0x00000450 - 0x0000046a
 
 	// Check main clock source select register and verify is set to PLL output
-	//  reg = 0x40048070;
-	//  val = *reg;
+	//  reg32 = (volatile uint32_t*)0x40048070;
+	//  val = *reg32;
 	//  if (val != 0x3)
 	//  {
 		// There are multiple paths for checking other values set here... Have not work through them
@@ -1808,8 +1810,8 @@ void init()
 
 //TODO:repeated code from above. Combine into function.
 	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
-	//  reg = 0x40048040;
-	//  val = *reg;
+	//  reg32 = (volatile uint32_t*)0x40048040;
+	//  val = *reg32;
 	//  if (val != 1)
 	//  {
 		// There are multiple paths for checking other values set here... Have not work through them
@@ -1835,8 +1837,8 @@ void init()
  	//	0x000009c2 - 0x000009c6
 
 	// System PLL control register
-	// reg = 0x40048008;
-	// val = *reg;
+	// reg32 = (volatile uint32_t*)0x40048008;
+	// val = *reg32;
 	// Perform calculations based on value of system PLL control register
 
         // Entry Num: 357807 - 357850
@@ -1844,34 +1846,34 @@ void init()
 	//	0x000009ca - 0x00000a02
 
 	// Set Prescale Register for CT32B1 with value calulcated based on system PLL control register
-	reg = 0x4001800c;
-	*reg = 0x0000bb7f;
+	reg32 = (volatile uint32_t*)0x4001800c;
+	*reg32 = 0x0000bb7f;
 
 	// Read Match Control Register for CT32B1
-	reg = 0x40018014;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40018014;
+	val = *reg32;
 	// Enable Reset on MR0: the TC will be reset if MR0 matches it.
 	val |= 2;
-	*reg = val;
+	*reg32 = val;
 
 	// Read Match Control Register for CT32B1
-	reg = 0x40018014;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40018014;
+	val = *reg32;
 	// Enable Interrupt on MR0: an interrupt is generated when MR0 matches the value in the TC.
 	val |= 1;
-	*reg = val;
+	*reg32 = val;
 
 	// Set MR0 (Time counter match value) for CT32B1
-	reg = 0x40018018;
-	*reg = 0x0000000b;
+	reg32 = (volatile uint32_t*)0x40018018;
+	*reg32 = 0x0000000b;
 
 	// Clear interrupt pending on for CT32B1
-	reg = 0xe000e280;
-	*reg = 0x00080000;
+	reg32 = (volatile uint32_t*)0xe000e280;
+	*reg32 = 0x00080000;
 
 	// Enable interrupt for CT32B1
-	reg = 0xe000e100;
-	*reg = 0x00080000;
+	reg32 = (volatile uint32_t*)0xe000e100;
+	*reg32 = 0x00080000;
 		
 	// Write some values to heap space
 	*0x100007e0 = 0x01
@@ -1917,10 +1919,10 @@ void init()
 	*0x1000025d = 0x01
 
 	// Enable CT32B1 Timer Counter and Prescale Counter for counting
-	reg = 0x40018004;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40018004;
+	val = *reg32;
 	val |= 1;
-	*reg = val;
+	*reg32 = val;
 
 	while (??){
 		// Entry Num: 357937 - 357943
@@ -2105,7 +2107,7 @@ void SVCall(){
  *  environment, use PendSV for context switching when no other exception is active.
  */
 void PendSV(){
-	volatile uint32_t* reg = NULL;
+	volatile uint32_t* reg32 = NULL;
 	uint32_t val = 0;
 
 	// Entry point as defined by Vector Table
@@ -2113,8 +2115,8 @@ void PendSV(){
 	// 	0x00000104 - 0x0000010a
 
 	// Check value of GPREG1 
-	reg = 0x40038008; 
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40038008; 
+	val = *reg32;
 
 	if (0 != val){
 		//TODO: UNKNOWN PATHS branch to 0x00000110
@@ -2128,8 +2130,8 @@ void PendSV(){
 	// PENDSVCLR
 	*0xe000ed04 = 0x08000000;
 
-	reg = 0x100006e0;
-	val = *reg
+	reg32 = (volatile uint32_t*)0x100006e0;
+	val = *reg32
 	if (val == 0x50){
 		//TODO: UNKNOWN PATHS branch to 0x00001312
 	}
@@ -2228,7 +2230,7 @@ void SysTick(){
  */
 void Interrupt_19_CT32B1()
 {
-	volatile uint32_t* reg = NULL;
+	volatile uint32_t* reg32 = NULL;
 	uint32_t val = 0;
 
 	// Entry point as defined by Vector Table
@@ -2236,8 +2238,8 @@ void Interrupt_19_CT32B1()
 	// 	0x000001b8 - 0x000001c2
 
 	// GPREG1
-	reg = 0x40038008;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40038008;
+	val = *reg32;
 
 	// Must be some state changes later and GPREG1 indicates this somehow...
 	if (val != 0)
@@ -2252,8 +2254,8 @@ void Interrupt_19_CT32B1()
 			//	0x0000618c - 0x00006192
 
 			// Interrupt Register (IR, address 0x4001 8000 (CT32B1)) bit description
-			reg = 0x40018000;
-			val = *reg;
+			reg32 = (volatile uint32_t*)0x40018000;
+			val = *reg32;
 
 			// Isolate MR0INT, MR1INT, MR2INT and MR3INT
 			val &= 0xF;
@@ -2307,8 +2309,8 @@ void Interrupt_19_CT32B1()
 			//	0x00006162 - 0x00006172
 
 			// Reset MR0INT - Interrupt flag for match channel 0.
-			reg = 0x40018000;
-			*reg = 0x00000001;
+			reg32 = (volatile uint32_t*)0x40018000;
+			*reg32 = 0x00000001;
 
 			// Firmware Offset(s): 
 			//	0x000056fc - 0x00005700
@@ -2342,8 +2344,8 @@ void Interrupt_19_CT32B1()
 	//	0x0000148c - 0x00001496
 
 	// Reset MR0INT - Interrupt flag for match channel 0.
-	reg = 0x40018000;
-	*reg = 0x00000001;
+	reg32 = (volatile uint32_t*)0x40018000;
+	*reg32 = 0x00000001;
 
 	// Set RAM address to indicate interrupt occurred.
 	//	I think this is used by init as means of counting down before
@@ -2367,7 +2369,7 @@ void Interrupt_21_USART(){
  */
 void Interrupt_22_USB_IRQ(){
 
-	volatile uint32_t* reg = NULL;
+	volatile uint32_t* reg32 = NULL;
 	uint32_t val = 0;
 
 	// Entry point as defined by Vector Table
@@ -2375,8 +2377,8 @@ void Interrupt_22_USB_IRQ(){
 	// 	0x000001e8 - 0x000001f2
 
 	// Read GPREG1
-	reg = 0x40038008;
-	val = *reg;
+	reg32 = (volatile uint32_t*)0x40038008;
+	val = *reg32;
 
 	if (val != 0){
 		// TODO: UNKNOWN PATH execute instruction at 0x000001f4
@@ -2386,12 +2388,12 @@ void Interrupt_22_USB_IRQ(){
 	// 	0x000014fc - 0x00001504
 	
 	// Read USB EP Command/Status List start address
-	reg = 0x40080008; // 0x20004000
-	Reg0 = *reg;
+	reg32 = (volatile uint32_t*)0x40080008; // 0x20004000
+	Reg0 = *reg32;
 	
 	// Read USB Device Command/Status register
-	reg = 0x40080000;
-	Reg1 = *reg;
+	reg32 = (volatile uint32_t*)0x40080000;
+	Reg1 = *reg32;
 
 	// Check if SETUP token has been received 
 	if (Reg1 & 0x00000100){
