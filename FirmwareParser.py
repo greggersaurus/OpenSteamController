@@ -205,12 +205,12 @@ class FirmwareParser:
 		comment Appended to decodeString (i.e. tell which instruction called this as instruction)
 		"""
 
+		dataWord = self.__getDataWord(addr)
+
 		if (addr == 0):
 			# It is valid for vector table to pointer to NULL. Ignore it
 			dataWord.decodeString += comment
 			return
-
-		dataWord = self.__getDataWord(addr)
 
 		# Checkif it was already decoded
 		if (dataWord.dataType == DataWord.TYPE_INSTRUCTION):
