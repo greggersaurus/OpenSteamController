@@ -287,7 +287,7 @@ void init()
 	//	0x000000cc - 0x000000ca
 	//	0x00000494 - 0x00000496
 
-	// Initialize heap
+	// Initialize heap (bss and/or data segment?)
 	*0x10000200 = 0x00000000
 	*0x10000204 = 0x00002000	
 	*0x10000208 = 0x00220209 // Passed as full_speed_desc later...
@@ -2090,6 +2090,39 @@ ErrorCode_t HID_SetReport( USBD_HANDLE_T hHid, USB_SETUP_PACKET* pSetup, uint8_t
 }
 
 /**
+ * A NonMaskable Interrupt (NMI) can be signalled by a peripheral or triggered 
+ *  by software. This is the highest priority exception other than reset. It is
+ *  permanently enabled and has a fixed priority of  2. NMIs cannot be:
+ *  • masked or prevented from activation by any other exception
+ *  • preempted by any exception other than Reset.
+ */
+void NMI(){
+	// Entry point as defined by Vector Table
+	// Firmware Offset(s): 
+	// 	0x000000ec - 0x000000f0
+	//	0x000020e2 - 0x000020e2
+
+	// Enter infinite loop unconditionally branching to 0x000020e2
+}
+
+/**
+ * A HardFault is an exception that occurs because of an error during normal or 
+ *  exception processing. HardFaults have a fixed priority of -1, meaning they 
+ *  have higher priority than any exception with configurable priority.
+ */
+void HardFault(){
+	// Entry point as defined by Vector Table
+	// Firmware Offset(s): 
+	// 	0x000000f4 - 0x000000f8
+	//	0x00005c64 - 0x00005c64
+	//	0x00009b68 - 0x00009b6e
+
+	// Call cps to change processor state (and disable interrupts?)
+
+	// Enter infinite loop unconditionally branch back to nop at 0x00009b6c
+}
+
+/**
  * A supervisor call (SVC) is an exception that is triggered by the SVC instruction. 
  *  In an OS environment, applications can use SVC instructions to access OS kernel functions and device drivers.
  */
@@ -2441,9 +2474,6 @@ void Interrupt_22_USB_IRQ(){
 TODO: save this info in some useful way to reference later?
 
 See IRQ section in vcf_wired_controller_d0g_57bf5c10.bin.md for details on simulating exceptions
-
-000008:  0000 00ed     Vector Table     NMI
-00000c:  0000 00f5     Vector Table     Hard Fault
 
 000040:  0000 0121     Vector Table     IRQ0
 000044:  0000 0129     Vector Table     IRQ1
