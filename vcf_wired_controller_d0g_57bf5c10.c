@@ -66,6 +66,47 @@ void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOff
 }
 
 /**
+ * Function for checking Main Clock Source Select Register.
+ * 
+ * Firmware Offset(s): 
+ *	0x00000494 - 0x00000496
+ *	0x00000450 - 0x0000046a
+ */
+void checkMainClockSourceSel(){
+	// Check main clock source select register and verify is set to PLL output
+	//  reg32 = (volatile uint32_t*)0x40048070;
+	//  val = *reg32;
+	//  if (val ...)
+	//  {
+		// TODO: UKNOWN PATHS
+		// 	Branch to 0x00000470 if 0x3&val is 0
+		// 	Branch to 0x00000474 if val is 1
+		// 	Branch to 0x0000047a if val is 2
+		// 	Branch to 0x0000046e if val != 3
+	//  }
+}
+
+/**
+ * Function for checking Main Clock Source Select Register.
+ * 
+ * Firmware Offset(s): 
+ * 	0x000004d0 - 0x000004d2
+ *	0x000004a8 - 0x000004b4
+ *	0x000004be - 0x000004c2
+ */
+void checkSysPllClockSrcSel(){
+	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+	//  reg32 = (volatile uint32_t*)0x40048040;
+	//  val = *reg32;
+	//  if (val ...)
+	//  {
+		// TODO: UKNOWN PATHS
+		// 	Branch to 0x000004ba if val is 0
+		// 	Execute instruction at 0x000004b6 if val != 1
+	//  }
+}
+
+/**
  * In this simulation run the system was run from reset with no external input
  *  (except steps necessary to simulate expected hardware unit reactions). Possible
  *  triggering of IRQs were ignored. Parsed from exeLog_00000000001496459595.csv.
@@ -285,7 +326,8 @@ void init()
 	//	0x00001540 - 0x00001548
 	//	0x000003c6 - 0x000003cc
 	//	0x000000cc - 0x000000ca
-	//	0x00000494 - 0x00000496
+ 	//	0x0000154c - 0x0000154e
+	//	0x00000fd0 - 0x00000fd2
 
 	// Initialize heap (bss and/or data segment?)
 	*0x10000200 = 0x00000000
@@ -309,8 +351,8 @@ void init()
 	*0x10000248 = 0x00000000	
 	*0x1000024c = 0x00000000	
 	*0x10000250 = 0x00000000	
-	*0x10000254 = 0x00000000	
-	*0x10000258 = 0x00000000	
+	*0x10000254 = 0x00000000 // To be filled with data read from EEPROM (upper 16-bits are magic word?)
+	*0x10000258 = 0x00000000 // To be filled with data read from EEPROM (upper byte indicates hardware version?)
 	*0x1000025c = 0x00000000 // Bytes seem to be used for marked CT32B1 as enabled, and whether CT32B1 interrupt occurred
 	*0x10000260 = 0x00000000
 	Clear 0x10000264 - 0x10001c1c (inclusive 4 byte writes)
@@ -319,20 +361,10 @@ void init()
         // Entry Num: 53705 - 53722
         // Step Num: 40671 - 40684
 	// Firmware Offset(s): 
+	//	0x00000494 - 0x00000496
 	//	0x00000450 - 0x0000046a
 
-	// Check main clock source select register and verify is set to PLL output
-	//  reg32 = (volatile uint32_t*)0x40048070;
-	//  val = *reg32;
-	//  if (val != 0x3)
-	//  {
-		// There are multiple paths for checking other values set here... Have not work through them
-		// TODO: UKNOWN PATHS
-		// 	Not branching to 0x00000470 
-		// 	Not branching to 0x00000474 
-		// 	Not branching to 0x0000047a 
-		// 	Not branching to 0x0000046e 
-	//  }
+	checkMainClockSourceSel();
 
 
         // Entry Num: 53723 - 53740
@@ -342,16 +374,7 @@ void init()
 	//	0x000004a8 - 0x000004b4
 	//	0x000004be - 0x000004c2
 
-	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
-	//  reg32 = (volatile uint32_t*)0x40048040;
-	//  val = *reg32;
-	//  if (val != 1)
-	//  {
-		// There are multiple paths for checking other values set here... Have not work through them
-		// TODO: UKNOWN PATHS
-		// 	Not branching to 0x000004ba
-		// 	Branching to 0x000004be, not executing 0x000004b6
-	//  }
+	checkSysPllClockSrcSel();
 
 
         // Entry Num: 53741 - 54149
@@ -383,7 +406,7 @@ void init()
 	//	*0x10001bc0 = 0x0000003e Command code : 62
 	//	*0x10001bc4 = 0x00000000 Param0: EEPROM Address = 0
 	//	*0x10001bc8 = 0x10000254 Param1: RAM Address = 0x10000254
-	//	*0x10001bc8 = 0x10000254 Param2: Number of bytes to be read = 8
+	//	*0x10001bcc = 0x00000008 Param2: Number of bytes to be read = 8
 	//	*0x10001bd0 = 0x0000b71b Param3: System Clock Frequency = 0x0000b71b
 
 	unsigned int command_param[5];
@@ -444,7 +467,7 @@ void init()
 	//	0x00000bf4 - 0x00000bf4
 	//	0x00000d10 - 0x00000d22
 
-	// Check is 0x10000254 has value 0x0000a55a stored in it
+	// Check if 0x10000254 has value 0x0000a55a stored in it
 	//	This is where EEPROM read data ends up
 	// If it had been we would skip writing to EEPROM
 	//	Not branching to 0x00000d26
@@ -531,24 +554,39 @@ void init()
         // Step Num: 44523 - 44529
 	// Firmware Offset(s): 
 	//	0x0000155c - 0x0000155c
-	//	0x00000ce8 - 0x00000cf2
+	//	0x00000ce8 - 0x00000cf0
 	//	0x00000cf4 - 0x00000cf4
 
 	// val = *((uint8_t*)0x50000003);
 	// Check state of PIO0_3 (USB voltage detected) and make sure it is 0
 		// TODO: UKNOWN PATHS
-		//	if PIO0_3 is not 0 (USB cable is conecteD) instruction at 0x00000cf2 is executed
+		//	if PIO0_3 is not 0 (USB cable is conected) instruction at 0x00000cf2 is executed
 
 
         // Entry Num: 57999 - 58008
         // Step Num: 44530 - 44537
 	// Firmware Offset(s): 
-	//	0x00001560 - 0x0000157c
+	//	0x00001560 - 0x0000156a
+	//	0x0000157a - 0x0000157c
 
-	// Again check that PIO0_3 is zero
-//TODO: revisit this part of sim
-	// If it is check states of bits 0 and/or 1 in 0x40048030 (System reset status register)
+	// val is still value fo PIO0_3 (USB voltage detected)
+	if (val == 0){
+		// To be used for setting upcoming GPIO value
+		gpio_val = 1;
 
+		// System reset status register
+		reg = (volatile uint32_t*)0x40048030;
+		val = *reg;
+
+		// Check for brown out detect reset
+		if ((0x8 & val) == 0x8){
+			//	0x0000156c - 0x00001572
+			// Clear brown out detect status
+			*reg = 0x8;
+			// To be used for setting upcoming GPIO value
+			gpio_val = 0;
+		}
+	}
 
         // Entry Num: 58009 - 58027
         // Step Num: 44538 - 44548
@@ -556,33 +594,43 @@ void init()
 	//	0x00000f90 - 0x00000f94
 	//	0x00000cf8 - 0x00000cfc
 	//	0x00000f98 - 0x00000fa0
-	//	0x00000fae - 0x00000fae
 
-	// Reading 0x10000258
-	//	Previously set via read from EEPROM, but defaulted to 0 on EEPROM magic word missing
-	// Check if 0x10000258 is set to value 8
-	//	TODO: UNKNOWN PATHS
-	//		If value from EEPROM (written to 0x10000258) is 8, execute instruction at 0x00000fa2
+	val = (uint32_t*)0x10000258;
+	if (val == 8){
+		// Firmware Offset(s): 
+		//	0x00000fa2 - 0x00000fac
 
+		// Set PIO1_10 output bit
+		*((uint8_t*)0x5000002a) = !gpio_val;
+		gpio_num = 10;
+	} else {
 
-        // Entry Num: 58028 - 58035
-        // Step Num: 44549 - 44555
+		// Firmware Offset(s): 
+		//	0x00000fae - 0x00000fae
+
+		// Entry Num: 58028 - 58035
+		// Step Num: 44549 - 44555
+		// Firmware Offset(s): 
+		//	0x00000cf8 - 0x00000cfc
+		//	0x00000fb2 - 0x00000fb6
+
+		// Read value of 0x10000258 and check if it's 5
+		//	TODO: UNKNOWN PATHS
+		//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
+
+		// Entry Num: 58036 - 58040
+		// Step Num: 44556 - 44559
+		// Firmware Offset(s): 
+		//	0x00000fbe - 0x00000fc0
+		// Set PIO1_8 output bit
+		*((uint8_t*)0x50000028) = gpio_val;
+		gpio_num = 8;
+	}
+
 	// Firmware Offset(s): 
-	//	0x00000cf8 - 0x00000cfc
-	//	0x00000fb2 - 0x00000fb6
+	//	0x00000fc2 - 0x00000fc4
 
-	// Read value fo 0x10000258 and check if it's 5
-	//	TODO: UNKNOWN PATHS
-	//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
-
-
-        // Entry Num: 58036 - 58040
-        // Step Num: 44556 - 44559
-	// Firmware Offset(s): 
-	//	0x00000fbe - 0x00000fc4
-
-	// Set PIO1_8 to output bit to high
-	*((uint8_t*)0x50000028) = 1;
+	// Branch to LR (0x0000055c)
 
 
         // Entry Num: 58041 - 58053
@@ -590,10 +638,10 @@ void init()
 	// Firmware Offset(s): 
 	//	0x0000055c - 0x00000570
 
-	// Set PIO1_8 to output via GPIO direction port 1 register
+	// Set PIO1_{gpio_num} to output via GPIO direction port 1 register
 	reg32 = (volatile uint32_t*)0x50002004;
 	val = *reg32;
-	val |= 0x00000100;
+	val |= (1 << gpio_num);
 
 
         // Entry Num: 58054 - 58067
@@ -665,13 +713,13 @@ void init()
         // Step Num: 44645 - 44654
 	// Firmware Offset(s): 
 	//	0x0000159e - 0x000015a4
-	//	0x00000ce8 - 0x00000cf2
+	//	0x00000ce8 - 0x00000cf0
 	//	0x00000cf4 - 0x00000cf4
 
 	// val = *((uint8_t*)0x50000003);
 	// Check state of PIO0_3 (USB voltage detected) and make sure it is 0
 		// TODO: UKNOWN PATHS
-		//	if PIO0_3 is not 0 (USB cable is conecteD) instruction at 0x00000cf2 is executed
+		//	if PIO0_3 is not 0 (USB cable is conected) instruction at 0x00000cf2 is executed
 
 
         // Entry Num: 58155 - 58164
@@ -1778,27 +1826,16 @@ void init()
         // Step Num: 319072 - 319074
 	// Firmware Offset(s): 
 	//	0x000009be - 0x000009be
-	//	0x00000494 - 0x00000496	
 
 	// Some branches and pushes to stack
 
         // Entry Num: 357092 - 357109 
         // Step Num: 319074 - 319088
 	// Firmware Offset(s): 
+	//	0x00000494 - 0x00000496	
 	//	0x00000450 - 0x0000046a
 
-	// Check main clock source select register and verify is set to PLL output
-	//  reg32 = (volatile uint32_t*)0x40048070;
-	//  val = *reg32;
-	//  if (val != 0x3)
-	//  {
-		// There are multiple paths for checking other values set here... Have not work through them
-		// TODO: UKNOWN PATHS
-		// 	Not branching to 0x00000470 
-		// 	Not branching to 0x00000474 
-		// 	Not branching to 0x0000047a 
-		// 	Not branching to 0x0000046e 
-	//  }
+	checkMainClockSourceSel();
 
 
         // Entry Num: 357109 - 357127
@@ -1808,17 +1845,7 @@ void init()
 	//	0x000004a8 - 0x000004b4
 	//	0x000004be - 0x000004c2
 
-//TODO:repeated code from above. Combine into function.
-	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
-	//  reg32 = (volatile uint32_t*)0x40048040;
-	//  val = *reg32;
-	//  if (val != 1)
-	//  {
-		// There are multiple paths for checking other values set here... Have not work through them
-		// TODO: UKNOWN PATHS
-		// 	Not branching to 0x000004ba
-		// 	Branching to 0x000004be, not executing 0x000004b6
-	//  }
+	checkSysPllClockSrcSel();
 
         // Entry Num: 357128 - 357806
         // Step Num: 319101 - 319757
