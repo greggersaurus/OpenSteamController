@@ -71,6 +71,8 @@ void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOff
  * Firmware Offset(s): 
  *	0x00000494 - 0x00000496
  *	0x00000450 - 0x0000046a
+ * 
+ * \return None.
  */
 void checkMainClockSourceSel(){
 	// Check main clock source select register and verify is set to PLL output
@@ -93,6 +95,8 @@ void checkMainClockSourceSel(){
  * 	0x000004d0 - 0x000004d2
  *	0x000004a8 - 0x000004b4
  *	0x000004be - 0x000004c2
+ * 
+ * \return None.
  */
 void checkSysPllClockSrcSel(){
 	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
@@ -104,6 +108,29 @@ void checkSysPllClockSrcSel(){
 		// 	Branch to 0x000004ba if val is 0
 		// 	Execute instruction at 0x000004b6 if val != 1
 	//  }
+}
+
+/**
+ * Check if a USB cable is plugged into the controller.
+ *
+ * Firmware Offset(s): 
+ *	0x00000ce8 - 0x00000cf0
+ *	0x00000cf4 - 0x00000cf4
+ *
+ * \return True if USB cable is plugged into controller. False otherwise.
+ */
+bool usbCablePresent(){
+	bool retval = false;
+
+	// Check state of PIO0_3 (USB voltage detected) 
+	uint8_t val = *((uint8_t*)0x50000003);
+
+	if (val) {
+		// TODO: UKNOWN PATHS
+		//	if PIO0_3 is not 0 (USB cable is conected) instruction at 0x00000cf2 is executed
+	}
+
+	return retval;
 }
 
 /**
@@ -352,7 +379,7 @@ void init()
 	*0x1000024c = 0x00000000	
 	*0x10000250 = 0x00000000	
 	*0x10000254 = 0x00000000 // To be filled with data read from EEPROM (upper 16-bits are magic word?)
-	*0x10000258 = 0x00000000 // To be filled with data read from EEPROM (upper byte indicates hardware version?)
+	*0x10000258 = 0x00000000 // To be filled with data read from EEPROM (indicates hardware version?)
 	*0x1000025c = 0x00000000 // Bytes seem to be used for marked CT32B1 as enabled, and whether CT32B1 interrupt occurred
 	*0x10000260 = 0x00000000
 	Clear 0x10000264 - 0x10001c1c (inclusive 4 byte writes)
@@ -557,35 +584,40 @@ void init()
 	//	0x00000ce8 - 0x00000cf0
 	//	0x00000cf4 - 0x00000cf4
 
-	// val = *((uint8_t*)0x50000003);
-	// Check state of PIO0_3 (USB voltage detected) and make sure it is 0
-		// TODO: UKNOWN PATHS
-		//	if PIO0_3 is not 0 (USB cable is conected) instruction at 0x00000cf2 is executed
+	bool usbConnected = usbCablePresent();
 
 
         // Entry Num: 57999 - 58008
         // Step Num: 44530 - 44537
 	// Firmware Offset(s): 
 	//	0x00001560 - 0x0000156a
-	//	0x0000157a - 0x0000157c
 
-	// val is still value fo PIO0_3 (USB voltage detected)
-	if (val == 0){
-		// To be used for setting upcoming GPIO value
-		gpio_val = 1;
+	// To be used for setting upcoming GPIO value
+	int gpio_val = 1;
 
+	if (!usbConnected){
 		// System reset status register
 		reg = (volatile uint32_t*)0x40048030;
 		val = *reg;
 
 		// Check for brown out detect reset
 		if ((0x8 & val) == 0x8){
+			// Firmware Offset(s): 
 			//	0x0000156c - 0x00001572
+
 			// Clear brown out detect status
 			*reg = 0x8;
 			// To be used for setting upcoming GPIO value
 			gpio_val = 0;
+		} else {
+			// Firmware Offset(s): 
+			//	0x0000157a - 0x0000157c
+			gpio_val = 0;
 		}
+	} else {
+		// Firmware Offset(s): 
+		//	0x0000157a - 0x0000157c
+		gpio_val = 1;
 	}
 
         // Entry Num: 58009 - 58027
@@ -676,8 +708,6 @@ void init()
 	//	0x00000572 - 0x00000576
 	//	0x0000057e - 0x00000580
 
-	// Note there are two conditional paths in here, but they are impossible to reach given setup, so they are being ignored
-
 	// Set PIO0_6 to function as ~USB_CONNECT
 	// *(uint32_t*)0x40044018 = 0x00000001;
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000006, regVal = 0x00000001);
@@ -689,8 +719,6 @@ void init()
 	//	0x0000159e - 0x000015a2
 	//	0x0000158c - 0x0000159a
 	//	0x00000572 - 0x0000057c
-
-	// Note there in one unknown conditional paths in here, but it is impossible to reach given setup, so it is being ignored
 
 //TODO: watch this line to see comms between LPC11U37F and Radio Chip
 	// Set PIO1_17 to function as RXD - Receiver input for USART
@@ -716,10 +744,7 @@ void init()
 	//	0x00000ce8 - 0x00000cf0
 	//	0x00000cf4 - 0x00000cf4
 
-	// val = *((uint8_t*)0x50000003);
-	// Check state of PIO0_3 (USB voltage detected) and make sure it is 0
-		// TODO: UKNOWN PATHS
-		//	if PIO0_3 is not 0 (USB cable is conected) instruction at 0x00000cf2 is executed
+	usbConnected = usbCablePresent();
 
 
         // Entry Num: 58155 - 58164
@@ -727,8 +752,6 @@ void init()
 	// Firmware Offset(s): 
 	//	0x000015a8 - 0x000015ac
 	//	0x00000f90 - 0x00000f94
-
-	// Again check that PIO0_3 is zero
 
 
         // Entry Num: 58165 - 58181
@@ -749,7 +772,7 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00000fb2 - 0x00000fb6
 
-	// Read value fo 0x10000258 and check if it's 5
+	// Read value of 0x10000258 and check if it's 5
 	//	TODO: UNKNOWN PATHS
 	//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
 
@@ -795,7 +818,7 @@ void init()
 	//	*0x10001bd4 = 0x00000004 Param2: Number of bytes to be read = 4
 	//	*0x10001bd8 = 0x0000b71b Param3: System Clock Frequency = 0x0000b71b
 
-	// Data to write to EEPROM
+	// To store data read from EEPROM
 	uint32_t eeprom_data2;
 
 	// Command 62 for EEPROM Read
@@ -1454,15 +1477,14 @@ void init()
         // Entry Num: 65290 - 65304
         // Step Num: 50348 - 50357
 	// Firmware Offset(s): 
+//TODO: what are these instructions doing?
 	//	0x00001156 - 0x00001156
 	//	0x00000f30 - 0x00000f30
 	//	0x000012bc - 0x000012be
 	//	0x00000ce8 - 0x00000cf0
 	//	0x00000cf4 - 0x00000cf4
 
-	// val = *((uint8_t*)0x50000003);
-	// Check state of PIO0_3 and make sure it is 0
-		// TODO: UKNOWN PATHS (quick check shows this eliminates long while loop coming up...)
+	usbConnected = usbCablePresent();
 
 
         // Entry Num: 65305 - 265309
