@@ -117,7 +117,7 @@ void checkSysPllClockSrcSel(){
  *	0x00000ce8 - 0x00000cf0
  *	0x00000cf4 - 0x00000cf4
  *
- * \return True if USB cable is plugged into controller. False otherwise.
+ * \return True if USB cable is plugged into controller. False otherwise. (Reg 0).
  */
 bool usbCablePresent(){
 	bool retval = false;
@@ -134,6 +134,82 @@ bool usbCablePresent(){
 }
 
 /**
+ * Set the specified GPIO direction to output via the GPIO port direcetion 
+ *  registers.
+ *
+ * Firmware Offset(s): 
+ *	0x0000055c - 0x00000570
+ *
+ * \param baseAddr Base address of GPIO registers (Reg 0).
+ * \param port Specify port 0 or port 1 banks of GPIOs (Reg 1).
+ * \param gpioNum 0-based GPIO number to set as an output (Reg 2).
+ *
+ * \return None.
+ */
+void setGpioOutDir(uint32_t baseAddr, uint32_t port, uint32_t gpioNum) {
+	volatile uint32_t* reg32 = (volatile uint32_t*)(baseAddr + 0x2000 + port * 4)
+	uint32_t val = *reg32;
+	val |= (1 << gpioNum);
+	*reg32 = val;
+}
+
+/**
+ * Set a GPIO's state as part of power up. GPIO driven differs based on hw
+ *  version.
+ *
+ * Firmware Offset(s): 
+ *	0x00000f90 - 0x00000f94
+ * 	0x00000cf8 - 0x00000cfc
+ * 	0x00000f98 - 0x00000fa0
+ *	0x00000fa2 - 0x00000fac
+ *	0x00000fae - 0x00000fae
+ *	0x00000cf8 - 0x00000cfc
+ *	0x00000fb2 - 0x00000fb6
+ *	0x00000fb8 - ??
+ *	0x00000fbe - 0x00000fc0
+ *
+ * \param hwVer Pointer to data read from EEPROM that stores hw version data.
+ * \param gpioVal Value to drive power up GPIO at (Reg 0).
+ *
+ * \return 0-based GPIO number that is being driven for proper power up.
+ */
+uint32_t drivePwrUpGpio(uint32_t* hwVer, uint8_t gpioVal) {
+	int gpio_num = 0;
+
+	if (*hwVer == 8) {
+		// Firmware Offset(s): 
+		//	0x00000fa2 - 0x00000fac
+
+		// Set PIO1_10 output bit
+		*((uint8_t*)0x5000002a) = !gpio_val;
+		gpio_num = 10;
+	} else {
+		// Firmware Offset(s): 
+		//	0x00000fae - 0x00000fae
+
+		// Entry Num: 58028 - 58035
+		// Step Num: 44549 - 44555
+		// Firmware Offset(s): 
+		//	0x00000cf8 - 0x00000cfc
+		//	0x00000fb2 - 0x00000fb6
+
+		// Read value of 0x10000258 and check if it's 5
+		//	TODO: UNKNOWN PATHS
+		//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
+
+		// Entry Num: 58036 - 58040
+		// Step Num: 44556 - 44559
+		// Firmware Offset(s): 
+		//	0x00000fbe - 0x00000fc0
+		// Set PIO1_8 output bit
+		*((uint8_t*)0x50000028) = gpio_val;
+		gpio_num = 8;
+	}
+
+	return gpio_num;
+}
+
+/**
  * In this simulation run the system was run from reset with no external input
  *  (except steps necessary to simulate expected hardware unit reactions). Possible
  *  triggering of IRQs were ignored. Parsed from exeLog_00000000001496459595.csv.
@@ -146,8 +222,6 @@ void init()
 {
 	volatile uint32_t* reg32 = NULL;
 	uint32_t val = 0;
-
-//TODO: some section of this is default init provided by lpcexpresso. Verify and identify.
 
         // Entry Num: 1 - 24
         // Step Num: 1 - 16
@@ -593,7 +667,7 @@ void init()
 	//	0x00001560 - 0x0000156a
 
 	// To be used for setting upcoming GPIO value
-	int gpio_val = 1;
+	int gpio_val = 1; 
 
 	if (!usbConnected){
 		// System reset status register
@@ -607,18 +681,18 @@ void init()
 
 			// Clear brown out detect status
 			*reg = 0x8;
-			// To be used for setting upcoming GPIO value
-			gpio_val = 0;
+			gpio_val = 0; // Reg 0
 		} else {
 			// Firmware Offset(s): 
 			//	0x0000157a - 0x0000157c
-			gpio_val = 0;
+			gpio_val = 1; // Reg 0
 		}
 	} else {
 		// Firmware Offset(s): 
 		//	0x0000157a - 0x0000157c
-		gpio_val = 1;
+		gpio_val = 1; // Reg 0
 	}
+
 
         // Entry Num: 58009 - 58027
         // Step Num: 44538 - 44548
@@ -626,38 +700,15 @@ void init()
 	//	0x00000f90 - 0x00000f94
 	//	0x00000cf8 - 0x00000cfc
 	//	0x00000f98 - 0x00000fa0
+	//	0x00000fa2 - 0x00000fac
+	//	0x00000fae - 0x00000fae
+	//	0x00000cf8 - 0x00000cfc
+	//	0x00000fb2 - 0x00000fb6
+ 	//	0x00000fb8 - ??
+	//	0x00000fbe - 0x00000fc0
 
-	val = (uint32_t*)0x10000258;
-	if (val == 8){
-		// Firmware Offset(s): 
-		//	0x00000fa2 - 0x00000fac
+	uint32_t gpio_num = drivePwrUpGpio(hwVer = 0x10000258, uint8_t gpioVal = gpio_val);
 
-		// Set PIO1_10 output bit
-		*((uint8_t*)0x5000002a) = !gpio_val;
-		gpio_num = 10;
-	} else {
-
-		// Firmware Offset(s): 
-		//	0x00000fae - 0x00000fae
-
-		// Entry Num: 58028 - 58035
-		// Step Num: 44549 - 44555
-		// Firmware Offset(s): 
-		//	0x00000cf8 - 0x00000cfc
-		//	0x00000fb2 - 0x00000fb6
-
-		// Read value of 0x10000258 and check if it's 5
-		//	TODO: UNKNOWN PATHS
-		//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
-
-		// Entry Num: 58036 - 58040
-		// Step Num: 44556 - 44559
-		// Firmware Offset(s): 
-		//	0x00000fbe - 0x00000fc0
-		// Set PIO1_8 output bit
-		*((uint8_t*)0x50000028) = gpio_val;
-		gpio_num = 8;
-	}
 
 	// Firmware Offset(s): 
 	//	0x00000fc2 - 0x00000fc4
@@ -671,9 +722,7 @@ void init()
 	//	0x0000055c - 0x00000570
 
 	// Set PIO1_{gpio_num} to output via GPIO direction port 1 register
-	reg32 = (volatile uint32_t*)0x50002004;
-	val = *reg32;
-	val |= (1 << gpio_num);
+	setGpioOutDir(baseAddr = 0x50000000, port = 1, gpioNum = gpio_num);
 
 
         // Entry Num: 58054 - 58067
@@ -752,40 +801,22 @@ void init()
 	// Firmware Offset(s): 
 	//	0x000015a8 - 0x000015ac
 	//	0x00000f90 - 0x00000f94
-
-
-        // Entry Num: 58165 - 58181
-        // Step Num: 44661 - 44672
-	// Firmware Offset(s): 
 	//	0x00000cf8 - 0x00000cfc
 	//	0x00000f98 - 0x00000fa0
+	//	0x00000fa2 - 0x00000fac
 	//	0x00000fae - 0x00000fae
 	//	0x00000cf8 - 0x00000cfc
-
-	// reading value in RAM at 0x10000258 and see if is set to 8
-	//	TODO: UNKNOWN PATHS
-	//		If value from EEPROM (written to 0x10000258) is 8, execute instruction at 0x00000fa2
-
-
-        // Entry Num: 58182 - 58184
-        // Step Num: 44673 - 44675
-	// Firmware Offset(s): 
 	//	0x00000fb2 - 0x00000fb6
+ 	//	0x00000fb8 - ??
+	//	0x00000fbe - 0x00000fc0
 
-	// Read value of 0x10000258 and check if it's 5
-	//	TODO: UNKNOWN PATHS
-	//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
+	gpio_num = drivePwrUpGpio(hwVer = 0x10000258, uint8_t gpioVal = !usbConnected);
 
 
-        // Entry Num: 58185 - 58189
-        // Step Num: 44676 - 44679
 	// Firmware Offset(s): 
-	//	0x00000fbe - 0x00000fc4
-	
-	// Set PIO1_8 output bit to 1
-	*((uint8_t*)0x50000028) = 0x01;
+	//	0x00000fc2 - 0x00000fc4
 
-	//TODO: it looks like PIO1_8 being set to high might drive a different input back...? Look through paths of setting this output based on input values
+	// Branch to LR (0x0000055c)
 
 
         // Entry Num: 58190 - 58202
@@ -793,12 +824,8 @@ void init()
 	// Firmware Offset(s): 
 	//	0x0000055c - 0x00000570
 
-	// Set PIO1_8 to output via GPIO direction port 1 register
-	reg32 = (volatile uint32_t*)0x50002004;
-	val = *reg32;
-	val |= 0x00000100;
-
-	//TODO: again with double setting PIO1_8 as output... simulation might not be reaction correctly due to unanticipated hardware input response...
+	// Set PIO1_{gpio_num} to output via GPIO direction port 1 register
+	setGpioOutDir(baseAddr = 0x50000000, port = 1, gpioNum = gpio_num);
 
 
         // Entry Num: 58203 - 58260
