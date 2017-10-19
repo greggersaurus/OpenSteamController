@@ -17,7 +17,7 @@ The work in this directory focuses on deconstructing the firmware and hardware
 
 ## [Teardown of Steam Controller](https://www.ifixit.com/Teardown/Steam+Controller+Teardown/52578)
 
-* Picture shows processor is LPC11U37F/501
+* Picture shows main processor is LPC11U37F/501
 
 ## [NXP LPC11U37FBD64/501 Specifics](http://www.nxp.com/products/microcontrollers-and-processors/arm-processors/lpc-cortex-m-mcus/lpc-cortex-m0-plus-m0/lpc1100-cortex-m0-plus-m0/128kb-flash-12kb-sram-lqfp64-package:LPC11U37FBD64?fpsp=1&tab=Documentation_Tab)
 
@@ -78,11 +78,9 @@ Various approaches, tools and information on disassembling compiled software.
 It may be necessary to disassemble the Steam Controller firmware to meet goals
  such as customizing jingles.
 
-## [Reverse Engineering for Beginners](https://github.com/dennis714/RE-for-beginners)
-
-Free book on how to reverse engineer code.
-
 ## [pinkySim](https://github.com/greggersaurus/pinkySim)
+
+This is main method used for simulating firmware. 
 
 * Note: Need to use "make pinkySim" as building unit tests fails...
     * TODO: get to bottom of this.
@@ -238,7 +236,27 @@ This section outlines oddities observed in simulation with possible explanations
 * According to UM10462 datahsset, flash module status register 0x4003cfe0 only has bit 2 as non-reserved, but boot ROM code is checking other bits for status.
     * Assumptionis that this must be some weird hardware issue with how reserved bits function. Upper bits should be non-use, but setting bit 2 does not add up to check being performed on register (lsl immediate).
 
+## FirmwareParser.py
+
+This is only being used to display Vector Table.
+
+Original idea was to create disassembler that can recreate assembly file, 
+distinguishing data versus instructions by evaulating code and all possible
+branches. 
+
+In the end this was a larger undertaking than expected. It would make more 
+sense to leverage pinkySim's ability to decode instructions and their 
+behavior to do this, as opposed to starting from scratch.
+
+## [Reverse Engineering for Beginners](https://github.com/dennis714/RE-for-beginners)
+
+Have not made much use of this yet. 
+
+Free book on how to reverse engineer code.
+
 ## [Radare](http://www.radare.org/r/)
+
+This proved to not be particularly useful for raw stripped binary.
 
 * [Steep learning curve](https://www.gitbook.com/book/radare/radare2book/details)
 * Has option to disassemble ARM, but how exactly does it handle ARMv6-M?
@@ -249,16 +267,22 @@ This section outlines oddities observed in simulation with possible explanations
 
 ## [Fracture](https://github.com/draperlaboratory/fracture)
 
+This proved to not be particularly useful for raw stripped binary.
+
 * Decompiles to LLVM intermediate representation
     * It looks like this does not work with binary file format with no code/data sections information.
     * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
 ## LPCXpresso
 
+This proved to not be particularly useful for raw stripped binary.
+
 * Disassemble axf https://community.nxp.com/thread/388997.
     * It looks like this does not work with binary file format with no code/data sections information.
 
 ## [Online Disassembler](https://onlinedisassembler.com/odaweb/)
+
+This proved to not be particularly useful for raw stripped binary.
 
 * Good source to punch individual instruction in quickly
 * Make minor mods to instructions to verify understanding of how they are being decoded and behaving (i.e. LDR)
@@ -267,17 +291,9 @@ This section outlines oddities observed in simulation with possible explanations
 * Without code/data section information tool tries to decode everything
     * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
 
-## FirmwareParser.py
-
-Original idea was to create disassembler that can recreate assembly file, 
-distinguishing data versus instructions by evaulating code and all possible
-branches. 
-
-In the end this was a larger undertaking than expected. It would make more 
-sense to leverage pinkySim's ability to decode instructions and their 
-behavior to do this, as opposed to starting from scratch.
-
 ## [objdump](https://sourceware.org/binutils/docs/binutils/objdump.html)
+
+This proved to not be particularly useful for raw stripped binary.
 
 * ./arm-none-eabi-objdump -b binary -D vcf_wired_controller_d0g_57bf5c10.bin -m arm attempts to disassemble binary file
 * With have firmware binary format (i.e. no code/data sections information) this only helps so much. 
@@ -285,9 +301,13 @@ behavior to do this, as opposed to starting from scratch.
 
 ## [ARMu](http://pel.hu/armu/)
 
+Have not need to look into this much yet.
+
 * For ARMv5TE, but might be worth understanding approach if this works from binary
 
 ## [Capstone](http://www.capstone-engine.org/)
+
+Have not need to look into this much yet.
 
 * Worth looking into?
 
