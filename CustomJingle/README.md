@@ -14,7 +14,7 @@ Goal is to find section of firmware where jingle data is, or prove jingle data i
 
 #### Status
 
-[vcf_wired_controller_d0g_57bf5c10.bin.md](../ReverseEngineering/vcf_wired_controller_d0g_57bf5c10.bin.md)
+[vcf_wired_controller_d0g_57bf5c10.c](../ReverseEngineering/vcf_wired_controller_d0g_57bf5c10.c)
  is tracking progress on attempts to simulate and understand this particular 
  version of firmware.
 

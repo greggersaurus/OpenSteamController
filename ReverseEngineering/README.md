@@ -46,12 +46,12 @@ Understanding the processor may be key for meeting some requirements.
 
 #### [Generating .bin file](https://community.nxp.com/thread/389005)
 
-* AXF file (ELF/DWARF) to binary
-    * arm-none-eabi-objcopy -v -O binary "FirstProject.axf" "FirstProject.bin"
-* From objcopy [man page](https://sourceware.org/binutils/docs/binutils/objcopy.html)
-    * "When objcopy generates a raw binary file, it will essentially produce a memory dump of the contents of the input object file. All symbols and relocation information will be discarded. The memory dump will start at the load address of the lowest section copied into the output file."
+Note that in a new project under Project Properties -> C/C++ Build -> Settings -> Build Steps -> Post-build steps, 
+ the commands necessary to generate a bin file exist, but are commented out by
+ default.
 
 #### .bin File Layout
+
 * Starts with vector table
     * From 20.7 of UM10462: The reserved ARM Cortex-M0 exception vector location 7 (offset 0x0000 001C in the vector table) should contain the 2’s complement of the check-sum of table entries 0 through 6. This causes the checksum of the first 8 table entries to be 0. The bootloader code checksums the first 8 locations in sector 0 of the flash. If the result is 0, then execution control is transferred to the user code.
 
@@ -62,9 +62,13 @@ Understanding the processor may be key for meeting some requirements.
 * Endianness
     * Certain sections default to little endian
     * Other sections are configurable
-    * TODO: Where is this stated in UM10462?
+    * TODO: Where is this stated in UM10462? And what are these sections?
 
 #### [LPC Image Checksums](https://community.nxp.com/thread/389046)
+
+Note that in a new project under Project Properties -> C/C++ Build -> Settings -> Build Steps -> Post-build steps, 
+ the commands necessary to generate a checksum for a bin file exist, but are commented out by
+ default.
 
 * Checksum is stored at 0x1C for Cortex-M based parts
     * checksum -p ${TargetChip} -d "${BuildArtifactFileBaseName}.bin"
@@ -72,15 +76,14 @@ Understanding the processor may be key for meeting some requirements.
     * For more details please see the user manual for the MCU that you are using.
 * [Creating checksum manually](https://community.nxp.com/thread/388993)
 
-# Disassembling the Firwmare
+# Disassembling the LPC11U37 Firwmare
 
-Various approaches, tools and information on disassembling compiled software. 
-It may be necessary to disassemble the Steam Controller firmware to meet goals
- such as customizing jingles.
+This section details the approaches attempted and used to disassemble the 
+ Steam Controller firmware. 
 
 ## [pinkySim](https://github.com/greggersaurus/pinkySim)
 
-This is main method used for simulating firmware. 
+This is main method used for simulating the firmware. 
 
 * Note: Need to use "make pinkySim" as building unit tests fails...
     * TODO: get to bottom of this.
@@ -92,10 +95,9 @@ This is main method used for simulating firmware.
             * TODO: Think of how to do this better? chip specified as command line arg?
     * Disassembly
         * TODO
-* Incentive of gaining more experience with gdb
-    * Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb)
+* Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb) to connect to simulator
 
-### Setup:
+### Simulation Steps
 
 #### Launch Simulator 
 
@@ -107,9 +109,9 @@ The following command launches the emulator with the proper memory map for the
 * ./pinkySim --breakOnStart --logExe LPC11U37 --flash 0 131072 --ram 268435456 8192 --ram 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
     * Note: --ram 536805376 16384 --flash, but since we need to fill this ROM with the boot ROM code via gdb, this needs to be writable
 
-#### Set Memory Defaults 
+#### Connect to Simulator
 
-The following command launches gbd, attaches it to the running eumulator and sets up register to values that allow system to proceed past initialization:
+The following command launches gbd (installed by LPCXpresso IDE on OSX at /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb), attaches it to the running emulator and sets up register to values to desired states:
 
 * ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40008004 = 0" -ex "set {int}0x4000800c = 0" -ex "set {int}0x40008014 = 0x0060" -ex "set {int}0x40010004 = 0" -ex "set {int}0x40010008 = 0" -ex "set {int}0x40010014 = 0" -ex "set {int}0x40010074 = 0" -ex "set {int}0x40018004 = 0" -ex "set {int}0x40018014 = 0" -ex "set {int}0x40038004 = 0" -ex "set {int}0x4003c010 = 2" -ex "set {int}0x4003cfe0 = 0xFFFFFFFF" -ex "set {int}0x40048000 = 2" -ex "set {int}0x40048008 = 0" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048070 = 0" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0" -ex "set {int}0x40080000 = 0x0800" -ex "set {int}0x50000003 = 0" -ex "set {int}0x50002004 = 0" -ex "set {int}0xe000e414 = 0" -ex "set {int}0xe000ed20 = 0"
     * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37H) 
@@ -135,7 +137,7 @@ The following command launches gbd, attaches it to the running eumulator and set
              * dump binary memory privperiph.bin 0xe0000000 0xe0100000 
 
 TODO: What about 0x40048030 and brown-out detect?
-TODO: What about 0x10000258 and setting to 8 to indicate proper hw?
+TODO: What about 0x10000258 and setting to 8 to indicate proper hw (after EEPROM "read")?
 
 ##### Breakdown of Input Arguments
 
@@ -220,7 +222,7 @@ The following outlines details on the input arguments of the previous section an
     * Set System Handler Priority Register 3 0xe000ed20 to 0x00000000 (reset value)
         * set {int}0xe000ed20 = 0
 
-##### Simulation Oddities
+#### Simulation Oddities
 
 This section outlines oddities observed in simulation with possible explanations.
 
@@ -236,9 +238,53 @@ This section outlines oddities observed in simulation with possible explanations
 * According to UM10462 datahsset, flash module status register 0x4003cfe0 only has bit 2 as non-reserved, but boot ROM code is checking other bits for status.
     * Assumptionis that this must be some weird hardware issue with how reserved bits function. Upper bits should be non-use, but setting bit 2 does not add up to check being performed on register (lsl immediate).
 
+### Simulation Details
+
+This section details different paths from which we may want to simulate the firmware.
+
+vcf_wired_controller_d0g_57bf5c10.c is an attempt to turn the simulation results
+ into C code with the same functionality for firmware vcf_wired_controller_d0g_57bf5c10.bin.
+
+#### Initialization
+
+By default, simulation starts at instruction specified via Vector Table RESET entry point.
+ 
+Simulation is allowed to run with minimal intervention (i.e. loops waiting for
+ PLLs to lock or other hardware reactions are simulated as needed, pauses are
+ made to adjust values "read" from EEPROM). 
+
+Uknown paths are identified to be revisisted lated with further stimuli to
+ simulation runs. These are being marked by TODO: UNKOWN PATHS.
+
+Attempts are made being made to identify SRAM0 memory usage.
+
+#### Exceptions 
+
+This section details attempts to simulate certain exception paths. This is being 
+ pursued as Reset/Init path eventually called WFI instruction. This implies
+ interrupts occurring is a necessary part of system boot (i.e. either successful
+ connection or shutdown due to connectin timeout).
+
+Simulating an exception can be achieved by setting the PC register to the 
+ instruction specified in the Vector Table. However, keep in mind the nuances
+ of how IRQ actually work and that simply setting the PC will allow you to 
+ simulate the interrupt accurately, but may be desctructive in terms of picking 
+ back up where the main thread code was interrupted. 
+
+According to 24.3.3.6.1 xPSR, PC, LR, R12, R3, R2, R1 and R0 are saved upon
+ interrupt and restored upon exit. Save and restore these values if you want to
+ pick up the main thread after simulating an interrupt.
+
+Also, according 24.3.3.6.1 LR is set to EXC_RETURN upon interrupt entry. Thus a
+ bx to LR (assuming no further stack pushes (without matching pops) to change 
+ LR), will indicate an interrupt exit. In short, set LR to a know instruction 
+ (maybe a WFI instruction or something that will cause an emulator break) before
+ changing the PC to the interrupt handler so that you know when the interrupt 
+ handler is exiting.
+
 ## FirmwareParser.py
 
-This is only being used to display Vector Table.
+This is only being used to display the Vector Table.
 
 Original idea was to create disassembler that can recreate assembly file, 
 distinguishing data versus instructions by evaulating code and all possible
