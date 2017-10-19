@@ -242,8 +242,8 @@ This section outlines oddities observed in simulation with possible explanations
 
 This section details different paths from which we may want to simulate the firmware.
 
-vcf_wired_controller_d0g_57bf5c10.c is an attempt to turn the simulation results
- into C code with the same functionality for firmware vcf_wired_controller_d0g_57bf5c10.bin.
+[vcf_wired_controller_d0g_57bf5c10.c](./vcf_wired_controller_d0g_57bf5c10.c) is an attempt to turn the simulation results
+ into C code with, at least some of, the same functionality as the vcf_wired_controller_d0g_57bf5c10.bin firmware.
 
 #### Initialization
 
