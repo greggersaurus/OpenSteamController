@@ -16,6 +16,18 @@
 
 #include <stdint.h>
 
+#define IAP_ENTRY_LOCATION        0X1FFF1FF1                                    
+
+/**                                                                             
+ * @brief LPC11XX IAP_ENTRY API function type                                   
+ */                                                                             
+typedef void (*IAP_ENTRY_T)(unsigned int[], unsigned int[]);                    
+                                                                                
+static inline void iap_entry(unsigned int cmd_param[], unsigned int status_result[])
+{                                                                               
+	((IAP_ENTRY_T) IAP_ENTRY_LOCATION)(cmd_param, status_result);           
+}
+
 /**
  * Function to enable power to a specified analog block.
  *
@@ -58,7 +70,7 @@ int main(void) {
 	// Make sure crystal oscillator is powered                                      
 	pwrAnalogBlock(0x00000020);
 
-	// Some sort of delay required after last system control register mod?          
+	// Delay required after last system control register mod?          
 	for (uint32_t cnt = 0; cnt < 0x1600; cnt++);
 
 	// Select Crystal Oscillator (SYSOSC)                                           
@@ -155,19 +167,61 @@ int main(void) {
 	val |= 0x10000;                                                                 
 	*reg32 = val;
 
+	// Read some data from EEPROM
+	unsigned int command_param[5];
+	unsigned int status_result[4];
+
+	uint32_t eeprom_data[2];
+
+	memset(eeprom_data, 0, sizeof(eeprom_data));
+
+	// Command 62 for EEPROM Read
+	command_param[0] = 62;
+	// EEPROM address (4 kB available)
+	command_param[1] = 0;
+	// RAM address where to read data to write to EEPROM
+	command_param[2] = (unsigned int)eeprom_data;
+	// Number of bytes to write
+	command_param[3] = sizeof(eeprom_data);
+	// System clock frequency in kHz
+	command_param[4] = 46875;
+
+	iap_entry(command_param, status_result);
+
+	// Do not proceed if version number does not match for tested hw
+	//  Note this (at least) changes which GPIO is used to enable battery power.
+	//  Only allowing this firmware to proceed on hardware I was able to test on.
+//TODO: get this working
+/*
+	if (eeprom_data[1] != 8) {
+		volatile int i;
+		while(1){
+			i++;
+		}
+	}
+*/
+
 	// Enables clock for GPIO port registers via system clock control register
 	reg32 = (volatile uint32_t*)0x40048080;
 	val = *reg32;
 	val |= 0x40;
 	*reg32 = val;
 
-	// Check for brown out detect
-	reg32 = (volatile uint32_t*)0x40048030;
-	if (*reg32 & 0x8) {
-		// Clear BOD
-		*reg32 = 0x8;
-		// Set PIO1_10 to output bit
-		*((uint8_t*)0x5000002a) = 1;
+	// Check state of PIO0_3 (USB voltage detected) 
+	uint8_t usb_volt_detect = *((uint8_t*)0x50000003);
+
+	if (!usb_volt_detect) {
+		// Check for brown out detect
+		reg32 = (volatile uint32_t*)0x40048030;
+		if (*reg32 & 0x8) {
+			// Clear BOD
+			*reg32 = 0x8;
+			// Set PIO1_10 to output bit
+			*((uint8_t*)0x5000002a) = 1;
+		} else {
+			// Set PIO1_10 to output bit
+			*((uint8_t*)0x5000002a) = 0;
+		}
 	} else {
 		// Set PIO1_10 to output bit
 		*((uint8_t*)0x5000002a) = 0;
@@ -195,8 +249,17 @@ int main(void) {
 	// Set PIO1_18 to function as TXD - Transmitter output for USART
 	*(uint32_t*)0x400440a8 = 0x00000002;
 
+	// Check state of PIO0_3 (USB voltage detected) 
+	usb_volt_detect = *((uint8_t*)0x50000003);
+
 	// Set PIO1_10 output bit
-	*((uint8_t*)0x5000002a) = 0;
+	if (!usb_volt_detect){
+		// Must keep using battery power if there is no USB power
+		*((uint8_t*)0x5000002a) = 0;
+	} else {
+		// Disable battery power(?) if USB voltage is present
+		*((uint8_t*)0x5000002a) = 1;
+	}
 
 	// Set PIO1_10 to output via GPIO direction port 1 register
 	reg32 = (volatile uint32_t*)0x50002004;
@@ -223,7 +286,7 @@ int main(void) {
 	val |= 0x00004000;
 	*reg32 = val;
 
-	// Enables USB SRAM block at address 0x2000 4000 via System clock control register 
+	// Enables USB SRAM block at address 0x20004000 via System clock control register 
 	reg32 = (volatile uint32_t*)0x40048080;
 	val = *reg32;
 	val |= 0x08000000;
