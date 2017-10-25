@@ -37,12 +37,14 @@
 #include <stdint.h>
 
 #include "init.h"
+#include "eeprom_access.h"
 
 /**
  * "Entry point" for Steam Controller dev kit. Keep in mind that you are most
  *  likely getting here after a call to ResetISR().
  */
 int main(void) {
+	int retval = 0;
 	volatile uint32_t* reg32 = (volatile uint32_t)0;
 	uint32_t val = 0;
 
@@ -50,41 +52,12 @@ int main(void) {
 	//	 Might matter if low power modes come into play or something?
 	stage1Init();
 
-/*
-//TODO
-	// Read some data from EEPROM
-	unsigned int command_param[5];
-	unsigned int status_result[4];
-
 	uint32_t eeprom_data[2];
 
-	memset(eeprom_data, 0, sizeof(eeprom_data));
+	// Read magic number and hw version from EEPROM
+	retval = eeprom_read(0, eeprom_data, sizeof(eeprom_data));
 
-	// Command 62 for EEPROM Read
-	command_param[0] = 62;
-	// EEPROM address (4 kB available)
-	command_param[1] = 0;
-	// RAM address where to read data to write to EEPROM
-	command_param[2] = (unsigned int)eeprom_data;
-	// Number of bytes to write
-	command_param[3] = sizeof(eeprom_data);
-	// System clock frequency in kHz
-	command_param[4] = 46875;
-
-	iap_entry(command_param, status_result);
-
-	// Do not proceed if version number does not match for tested hw
-	//  Note this (at least) changes which GPIO is used to enable battery power.
-	//  Only allowing this firmware to proceed on hardware I was able to test on.
-	if (eeprom_data[1] != 8) {
-		volatile int i;
-		while(1){
-			i++;
-		}
-	}
-*/
-
-//TODO: pass in hw version read from EEPROM
+//TODO: pass in hw version read from EEPROM (eeprom_data[1])
 	stage2Init(8);
 
 

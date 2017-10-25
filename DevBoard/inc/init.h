@@ -28,6 +28,10 @@
 
 #include <stdint.h>
 
+#ifndef _STEAM_CONTROLLER_INIT_
+#define _STEAM_CONTROLLER_INIT_
+
 void stage1Init(void);
 void stage2Init(uint32_t hwVersion);
 
+#endif /* _STEAM_CONTROLLER_INIT_ */
