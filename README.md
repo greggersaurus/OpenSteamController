@@ -6,6 +6,14 @@ The purpose of this project is to explore, deconstruct and, hopefully, expand
 This project is broken up into several subdirectories, each focusing on a
  different facet of the project.
 
+# Notice and Warning
+
+Please recognize that if you choose to modify the firmware on your Steam Controller
+ based on the work I have done here, you are doing so at your own risk. I have
+ done my best to test everything I push on my Steam Controller, and while 
+ I make every effort to not distribute anything that might brick or otherwise 
+ harm a Steam Controller, I cannot guarantee that will not happen to you. 
+
 # Subprojects
 
 ## [Reverse Engineering](./ReverseEngineering/)
