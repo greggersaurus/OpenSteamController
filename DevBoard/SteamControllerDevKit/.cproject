@@ -39,6 +39,7 @@
 								<option id="com.crt.advproject.c.misc.dialect.434253740" name="Language standard" superClass="com.crt.advproject.c.misc.dialect" value="com.crt.advproject.misc.dialect.gnu11" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.include.paths.484288899" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="../inc/"/>
+									<listOptionValue builtIn="false" value="../../lpc_chip_11uxx_lib/inc/"/>
 								</option>
 								<inputType id="com.crt.advproject.compiler.input.37767353" superClass="com.crt.advproject.compiler.input"/>
 							</tool>

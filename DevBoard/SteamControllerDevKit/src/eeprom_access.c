@@ -27,6 +27,10 @@
 
 #include "eeprom_access.h"
 
+#include "lpc_types.h"
+#include "chip.h"
+#include "romapi_11xx.h"
+
 /**
  * Wrapper around IAP command for EEPROM read.
  *
@@ -53,8 +57,7 @@ int eeprom_read(uint32_t offset, void* readData, uint32_t numBytes){
 	// System clock frequency in kHz
 	command_param[4] = 46875;
 
-//TODO:
-//	iap_entry(command_param, status_result);
+	iap_entry(command_param, status_result);
 
 	return status_result[0];
 }

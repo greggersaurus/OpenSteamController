@@ -1,3 +1,4 @@
 *.swp
-DevBoard/.settings/
-DevBoard/Debug/
+DevBoard/SteamControllerDevKit/.settings/
+DevBoard/SteamControllerDevKit/Debug/
+DevBoard/lpc_chip_11uxx_lib/Debug/

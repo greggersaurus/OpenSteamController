@@ -10,6 +10,10 @@ The goal of this subproject is to use the Steam Controller as a development boar
 
 # Resources, Utilities and Influences
 
+## [lpc_chip_11uxx_lib](./lpc_chip_11uxx_lib)
+
+NXP provided library for easy access to LPC11U37 processor peripherals, etc.
+
 ## [Reverse Engineering](../ReverseEngineering/)
 
 The custom firwmare in this subproject is based on the Steam Controller 
@@ -30,3 +34,12 @@ The custom firmware for the LPC11U37 has been developed in the LPCXpresso IDE
     * cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin
     * eject CRP DISABLD
 
+# Building
+
+Open LPCXpresso and import projects [SteamControllerDevKit](./SteamControllerDevKit) 
+ and [lpc_chip_11uxx_lib](./lpc_chip_11uxx_lib).
+
+A project can be imported into LPCXpresso by selecting: 
+ File -> Import -> Existing Project into Workspace -> Select root directory
+
+Run Project -> Build All to compile.
