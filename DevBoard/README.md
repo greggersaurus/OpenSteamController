@@ -29,10 +29,10 @@ The custom firmware for the LPC11U37 has been developed in the LPCXpresso IDE
 
 ## [How to Manually Load Firmware](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
 
-* Hold right trigger while connecting via USB
+* From powered down state, hold right trigger while connecting via USB
     * Mount "CRP DISABLD" will appear
-    * cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin
-    * eject CRP DISABLD
+    * Load new firmware binary with command "cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin"
+    * eject "CRP DISABLD"
 
 # Building
 
@@ -40,6 +40,6 @@ Open LPCXpresso and import projects [SteamControllerDevKit](./SteamControllerDev
  and [lpc_chip_11uxx_lib](./lpc_chip_11uxx_lib).
 
 A project can be imported into LPCXpresso by selecting: 
- File -> Import -> Existing Project into Workspace -> Select root directory
+ File -> Import -> General -> Existing Project into Workspace -> Select root directory
 
 Run Project -> Build All to compile.
