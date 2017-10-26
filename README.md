@@ -3,7 +3,7 @@
 The purpose of this project is to explore, deconstruct and, hopefully, expand 
  upon configuration options and usages for the Steam Controller. 
 
-This project is broken up into several subdirectories, each which focus on a
+This project is broken up into several subdirectories, each focusing on a
  different facet of the project.
 
 # Subprojects
