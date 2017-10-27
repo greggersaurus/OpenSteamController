@@ -38,12 +38,13 @@
 
 #include "init.h"
 #include "eeprom_access.h"
+#include "usb.h"
 
 /**
  * "Entry point" for Steam Controller dev kit. Keep in mind that you are most
  *  likely getting here after a call to ResetISR().
  */
-int main(void) {
+int main(void){
 	int retval = 0;
 	volatile uint32_t* reg32 = (volatile uint32_t)0;
 	uint32_t val = 0;
@@ -56,9 +57,13 @@ int main(void) {
 
 	// Read magic number and hw version from EEPROM
 	retval = eeprom_read(0, eeprom_data, sizeof(eeprom_data));
+//TODO: check retval
 
 //TODO: pass in hw version read from EEPROM (eeprom_data[1])
 	stage2Init(8);
+
+	// Configure USB to act as virtual UART
+	usbConfig();
 
 
 //TODO: the following is simple code to prove firmware is running. Replace this with something more interesting...

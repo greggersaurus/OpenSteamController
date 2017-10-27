@@ -69,12 +69,14 @@ void pwrAnalogBlock(uint32_t reg0){
  * First stage initialization. Mostly deals with proper clocking and power
  *  configurations that need to get set ASAP.
  * 
- * \return None. Though function will lock up and not return in case of failure.
+ * \return None. Though function will lock up and not return in case of failure
+ *	(as there is no way to communicate failure if this setup fails).
  */
 void stage1Init(void){
 	volatile uint32_t* reg32 = (volatile uint32_t)0;
 	uint32_t val = 0;
 
+//TODO: convert these all to lpc_chip_11uxx_lib calls?
 	// Make sure crystal oscillator is powered                                      
 	pwrAnalogBlock(0x00000020);
 
@@ -179,11 +181,12 @@ void stage1Init(void){
 /**
  * Second stage initialization. Here we get into Steam Controller hardware 
  *  specific operations (i.e. using some battery power to keep us booted if 
- *  necessary) and setting up USB.
+ *  necessary) and setting up clocking and power for USB.
  *
  * \param hwVersion Version number read from EEPROM.
  * 
- * \return None. Though function will lock up and not return in case of failure.
+ * \return None. Though function will lock up and not return in case of failure
+ *	(as there is no way to communicate failure if this setup fails).
  */
 void stage2Init(uint32_t hwVersion){
 	volatile uint32_t* reg32 = (volatile uint32_t)0;
@@ -287,7 +290,4 @@ void stage2Init(uint32_t hwVersion){
 	val = *reg32;
 	val |= 0x08000000;
 	*reg32 = val;
-
-//	USBD_HW_API->Init(USBD_HANDLE_T* phUsb = 0x1000022c, USB_CORE_DESCS_T* pDesc = 0x10001be4, USBD_API_INIT_PARAM_T* param = 0x10001ba0)
-
 }
