@@ -32,5 +32,8 @@
 
 void usbConfig(void);
 
+//TODO: temporary?
+void handleInput(void);
+
 #endif /* _STEAM_CONTROLLER_USB_ */
 

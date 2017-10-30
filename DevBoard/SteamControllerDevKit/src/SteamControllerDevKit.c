@@ -65,6 +65,7 @@ int main(void){
 	// Configure USB to act as virtual UART
 	usbConfig();
 
+//TODO: What next? handle UART input (or can we do that completely from interrupt context?)
 
 //TODO: the following is simple code to prove firmware is running. Replace this with something more interesting...
 	// PIO0_21 is connected to button LED
@@ -85,6 +86,8 @@ int main(void){
 		i++ ;
 		// When Y button is pressed Steam Button LED will light
 		*((uint8_t*)0x50000015) = !(*((uint8_t*)0x5000002B));
+//TODO: remove/clean this? 
+		handleInput();
 	}
 	return 0 ;
 }
