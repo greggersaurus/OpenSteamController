@@ -34,6 +34,7 @@
  */
 
 #include "usb.h"
+#include "eeprom_access.h"
 
 //TODO: straighten out weird circular includes? We cannot include usbd/usbd_core.h, even though that's what we want at this point...
 //#include "usbd/usbd_core.h"
@@ -562,6 +563,97 @@ void readCmd(const uint8_t* params, uint32_t len)
 	sendData(resp_msg, resp_msg_len);
 }
 
+void eepromCmd(const uint8_t* params, uint32_t len)
+{
+	uint8_t resp_msg[256];
+	int resp_msg_len = 0;
+
+	int word_size = 0;
+	uint32_t offset = 0;
+	int num_words = 0;	
+
+	int bytes_per_word = 0;
+
+	int num_params_rd = 0;
+
+	num_params_rd = sscanf(params, "%d %x %d", &word_size, &offset, &num_words);
+
+	if (num_params_rd != 3)
+	{
+		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
+			"\r\nUsage: e word_size hex_offset num_words\r\n");
+		sendData(resp_msg, resp_msg_len);
+		return;
+	}
+
+	if (word_size != 8 && word_size != 16 && word_size != 32)
+	{
+		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
+			"\r\nUnsuported word size %d\r\n", word_size);
+		sendData(resp_msg, resp_msg_len);
+		return;
+	}
+
+	bytes_per_word = word_size / 8;
+	uint32_t num_read_bytes = bytes_per_word * num_words;
+
+	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
+		"\r\nReading %d %d-bit words starting at 0x%X in EEPROM\r\n", num_words, word_size, offset);
+	sendData(resp_msg, resp_msg_len);
+
+
+	void* read_data = malloc(num_read_bytes);
+	if (!read_data){
+		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
+			"\r\nmalloc failed for read_data buffer\r\n");
+		sendData(resp_msg, resp_msg_len);
+		return;
+	}
+
+	int err_code = eeprom_read(offset, read_data, num_read_bytes);
+	if (CMD_SUCCESS != err_code){
+		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
+			"\r\nEEPROM Read failed with error code %d\r\n", err_code);
+		sendData(resp_msg, resp_msg_len);
+		free(read_data);
+		return;
+	}
+
+	for (int word_cnt = 0; word_cnt < num_words; word_cnt++)
+	{
+		if (!(word_cnt % 8))
+		{
+			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
+				"\r\n%08X: ", offset);
+			sendData(resp_msg, resp_msg_len);
+		}
+
+		if (word_size == 8)
+		{
+			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
+				"%02X ", *(uint8_t*)(read_data+offset));
+		}
+		else if (word_size == 16)
+		{
+			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
+				"%04X ", *(uint16_t*)(read_data+offset));
+		}
+		else if (word_size == 32)
+		{
+			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
+				"%08X ", *(uint32_t*)(read_data+offset));
+		}
+		sendData(resp_msg, resp_msg_len);
+
+		offset += bytes_per_word;
+	}
+
+	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), "\r\n");
+	sendData(resp_msg, resp_msg_len);
+
+	free(read_data);
+}
+
 /**
  * Process input command.
  *
@@ -596,6 +688,11 @@ void processCmd(const uint8_t* buffer, uint32_t len)
 	case 'w':
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nWrite Command not supported yet\r\n");
+		sendData(resp_msg, resp_msg_len);
+		break;
+
+	case 'e':
+		eepromCmd(&buffer[1], len-1);
 		sendData(resp_msg, resp_msg_len);
 		break;
 
