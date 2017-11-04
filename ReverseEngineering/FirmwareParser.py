@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 
+# Note: This is a defunct attempt as a class that will decode assembly instructions
+#	and data words from a stripped binary ARMv6 executable. This is effectively
+#	defunct, but the functionality of printing the vector table has been remained
+#	intact
+
 import sys 
 import getopt
 import struct
 
 class FirmwareParser:
-	"""
-	Takes Steam Controller firmware and decodes it as best as possible.
+	"""Takes Steam Controller firmware and decodes it as best as possible.
 	"""
 
 	RESET_VEC_ADDR = 0x04
@@ -62,8 +66,7 @@ class FirmwareParser:
 ##		# Program counter
 
 	def __init__(self, binFilename):
-		"""
-		Constructor
+		"""Constructor
 			
 		Params:
 		binFilename Path to binary firmware file
@@ -103,17 +106,16 @@ class FirmwareParser:
 
 
 		# Identify possible instructions
-#		for data in self.dataWords:
-#			try:
-#				data.instruction = Instruction(data)
-#			except ValueError:
-#				data.instruction = None
-
-#		self.__markRawData(0x244, 'Called by instruction at offset 0xbe')
+		#for data in self.dataWords:
+		#	try:
+		#		data.instruction = Instruction(data)
+		#	except ValueError:
+		#		data.instruction = None
+                
+		#self.__markRawData(0x244, 'Called by instruction at offset 0xbe')
 
 	def __read16(self, inFile):
-		"""
-		Read 16 bit word (little endian) from file
+		"""Read 16 bit word (little endian) from file
 
 		Params:
 		inFile File to read from
@@ -142,8 +144,7 @@ class FirmwareParser:
 		return retval
 
 	def __getDataWord(self, addr):
-		"""
-		Get the DataWord at the given address in firmware
+		"""Get the DataWord at the given address in firmware
 
 		Params:
 		addr Address of DataWord
@@ -152,8 +153,7 @@ class FirmwareParser:
 		return self.dataWords[addr/2]
 
 	def __identifyVectorTable(self):
-		"""
-		Identify DataWords that are part of Vector Table
+		"""Identify DataWords that are part of Vector Table
 		"""
 
 		self.__setVectorTableEntry(0x00, 'Initial SP Value')
@@ -176,8 +176,7 @@ class FirmwareParser:
 			self.__setVectorTableEntry(addr, 'IRQ' + str(i))
 
 	def __setVectorTableEntry(self, addr, desc):
-		"""
-		Set the DataWord to a Vector Table Entry
+		"""Set the DataWord to a Vector Table Entry
 
 		Params:
 		addr Address of Vector Table entry
@@ -197,8 +196,7 @@ class FirmwareParser:
 		dataWordLo.dataType = DataWord.TYPE_VECTOR_TABLE
 
 	def __markInstruction(self, addr, comment):
-		"""
-		Mark that DataWord at given address is a known instruction
+		"""Mark that DataWord at given address is a known instruction
 
 		Params:
 		addr The address of the known instruction
@@ -245,8 +243,7 @@ class FirmwareParser:
 				raise ValueError('nextDataWord at identified by instruction TODO')	
 
 	def __markRawData(self, addr, comment):
-		"""
-		Mark that DataWord at given address is a known raw data
+		"""Mark that DataWord at given address is a known raw data
 
 		Params:
 		addr The address of the known raw data 
@@ -275,8 +272,7 @@ class FirmwareParser:
 		dataWord.decodeString += comment
 		
 class DataWord(object):
-	"""
-	Class to encapsulate a 32 or 16-bit data word read from the firmware file.
+	"""Class to encapsulate a 32 or 16-bit data word read from the firmware file.
 	"""
 
 	# To be used for setting dataType
@@ -302,8 +298,7 @@ class DataWord(object):
 	instruction = None
 
 	def __init__(self, binData, offset):
-		"""
-		Constructor
+		"""Constructor
 
 		Params:
 		binData Raw binary data read from firmware file
@@ -381,8 +376,7 @@ class DataWord(object):
 		return retval
 
 	def combine(self, dataWord):
-		"""
-		Combine the given DataWord into this word. 
+		"""Combine the given DataWord into this word. 
 
 		Params:
 		dataWord DataWord higher in memory than self
@@ -398,8 +392,7 @@ class DataWord(object):
 			
 
 class Instruction:
-	"""
-	Represents an assembly instruction
+	"""Represents an assembly instruction
 	"""
 
 	description = ''
@@ -408,7 +401,9 @@ class Instruction:
 	identifiedDataWords = []
 
 	def __init__(self, dataWord):
-		"""
+		"""Constructor
+
+		Params:
 		dataWord
 		"""
 		self.args = []
@@ -423,7 +418,7 @@ class Instruction:
 			(binData & 0xE000) == 0x6000 or \
 			(binData & 0xE000) == 0x8000): 
 			self.__decodeLoadStoreSingle(dataWord)
-#TODO: commented out to see how things playout when we reach an instruction we do not yet know how to decode
+		#TODO: commented out to see how things playout when we reach an instruction we do not yet know how to decode
 		#else:
 			#raise ValueError('Not a valid instruction')	
 		
@@ -508,8 +503,7 @@ class Instruction:
 
 	@staticmethod
 	def is32bit(dataWord16):
-		"""
-		Check if 16-bit data word indicates it is part of 32-bit instruction
+		"""Check if 16-bit data word indicates it is part of 32-bit instruction
 
 		Params:
 		dataWord16 16-bit data word
@@ -531,20 +525,25 @@ class Instruction:
 		
 		return retval
 
-def main(argv):
-	print "Hello World"
+def printUsage():
+	print 'usage: FirmwareParser.py -i <inputFile>'
 
+def main(argv):
+	"""Entry point for command line interface for using FirmwareParser.py
+	"""
 	try:
 		opts, args = getopt.getopt(argv,"hi:",["inputfile="])
 	except getopt.GetoptError:
-		print 'FirmwareParser.py -i <inputFile>'
+		printUsage()
 	for opt, arg in opts:
 		if opt == '-h':
-			print 'FirmwareParser.py -i <inputFile>'
+			printUsage()
 		elif opt in ("-i", "--inputfile"):
 			parser = FirmwareParser(arg)
 			print parser
 
+	if len(opts) == 0:
+		printUsage()
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
