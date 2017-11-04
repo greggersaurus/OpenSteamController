@@ -1,0 +1,146 @@
+###############################################################################
+# Command file for simulating Stream Controller firmware using pinkySim.
+#
+# Execute in gdb using "source" command.
+#  For details refer to: https://sourceware.org/gdb/onlinedocs/gdb/Command-Files.html
+#
+# Note this was developed by simulating vcf_wired_controller_d0g_57bf5c10.bin,
+#  and may not work properly with other firmware.
+#
+#  MIT License
+# 
+#  Copyright (c) 2017 Gregory Gluszek
+# 
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included in all
+#  copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#  SOFTWARE.
+###############################################################################
+
+#TODO: Can we add local gdb variables for defining behavior (i.e. USB cable present, hw version, simulating interrupt)
+
+# Connect to remote simulator (i.e. pinkySim) being run on port 3333 of local machine
+target remote localhost:3333
+
+
+# USART/SMART CARD Register Settings (base offset 0x40008000):
+
+# Set USART Divisor Latch Register (when DLAB = 0) 0x40008004 to 0 (reset value)
+set {int}0x40008004 = 0
+# Set USART Line Control Register 0x4000800c to 0x00000000 (reset value)
+set {int}0x4000800c = 0
+# Set Line Status Register (Read Only) 0x40008014 to 0x00000060 (reset value)
+set {int}0x40008014 = 0x0060 
+
+
+# 16-bit Counter/Timer 1 Register Settings (base offset 0x40010000):
+
+# Set Timer Control Register 0x40010004 to 0 (reset value)
+set {int}0x40010004 = 0
+# Set Time Counter Register 0x40010008 to 0 (reset value)
+set {int}0x40010008 = 0
+# Set Match Control Register 0x40010014 to 0 (reset value)
+set {int}0x40010014 = 0
+# Set PWM Control Register 0x40010074 to 0 (reset value)
+set {int}0x40010074 = 0
+
+
+# 32-bit Counter/Timer 1 Register Settings (base offset 0x40018000):
+
+# Set Timer Control Register 0x40018004 to 0 (reset value)
+set {int}0x40018004 = 0
+# Set Match Control Register 0x40018014 to 0 (reset value)
+set {int}0x40018014 = 0
+
+
+# PMU Register Settings (base offset 0x40038000):
+
+# Set General purpose register 0 0x40038004 to 0x00000000 (reset value)
+set {int}0x40038004 = 0
+
+
+# Flash/EEPROM Controller Register Settings (base offset 0x4003C000):
+
+# Set Flash configuration register 0x4003c010 to 0x00000002 (reset value)
+set {int}0x4003c010 = 2
+# Set Flash module status register 0x4003cfe0 to 0xFFFFFFFF to indicate that EEPROM write finished
+#  Note: According to UM10462 datahsset, flash module status register 0x4003cfe0 only has bit 2 as 
+#  non-reserved, but boot ROM code is checking other bits for status.Assumptionis that this must be 
+#  some weird hardware issue with how reserved bits function. Upper bits should be non-use, but 
+#  setting bit 2 does not add up to check being performed on register (lsl immediate).
+set {int}0x4003cfe0 = 0xFFFFFFFF
+
+
+# System Control Register Settings (base offset 0x40048000):
+
+# Set System memory remap register 0x40048000 to 0x00000002 (reset value)
+set {int}0x40048000 = 2
+# Set System PLL contro register 0x40048008 to 0x00000000 (reset value)
+set {int}0x40048008 = 0
+# Set System PLL status register 0x4004800c to 0x00000001 (indicates System PLL is locked)
+set {int}0x4004800c = 1 
+# Set USB PLL status register 0x40048014 to 0x00000001 (indicates USB PLL is locked)
+set {int}0x40048014 = 1
+# Set System reset status register 0x40048030 to 0x00000003 (reset value)
+set {int}0x40048030 = 3
+# Set System PLL clock source register 0x40048040 to 0x00000001 (reset value)
+set {int}0x40048040 = 1
+# Set System PLL clock source update register 0x40048044 to 0x00000001 (reset value)
+set {int}0x40048044 = 1
+# Set Main clock source select register 0x40048070 to 0x00000000 (reset value)
+set {int}0x40048070 = 0
+# Set Main clock source update enable register 0x40048074 to 0x00000001 (reset value)
+set {int}0x40048074 = 1
+# Set System clock divider register 0x40048078 to 0x00000001 (reset value)
+set {int}0x40048078 = 1
+# Set Sytem clock control register 0x40048080 to 0x0000003F (reset value)
+set {int}0x40048080 = 0x3F
+# Set IRQ Latency register 0x40048170 to 0x00000010 (reset value)
+set {int}0x40048170 = 0x10
+# Set USB block status register 0x4004819C to 0x00000001 (reset value)
+set {int}0x4004819C = 1
+# Set Deep-sleep mode configuration register 0x40048230 to 0x0000FFFF (reset value)
+set {int}0x40048230 = 0xFFFF
+# Set Wake-up configuration register 0x40048234 to 0x0000EDFO (reset value)
+set {int}0x40048234 = 0xEDF0
+# Set Power configuration register 0x40048238 to 0x0000EDDO (reset value)
+set {int}0x40048238 = 0xEDD0
+
+
+# USB Register Settings (base offset 0x40080000):
+
+# Set USB Device Command/Status register 0x40080000 to 0x00000800 (reset value)
+set {int}0x40080000 = 0x0800
+
+
+# GPIO Register Settings (base offset 0x50000000):
+
+# Set GPIO port byte pin register 0x50000003 to 0x00000000 (assume external values of P0_3, P0_4, P0_5 and P0_6 are all 0)
+set {int}0x50000003 = 0
+# TODO: set these to different values based on config for simulation
+# Set GPIO direction port 1 register 0x50002004 to 0x00000000 (reset value)
+set {int}0x50002004 = 0
+
+
+# Private Peripheral Bus Register Settings (base offset 0xE0000000):
+
+# Set Input Priority Register 5 0xe000e414 to 0x00000000 (reset value)
+set {int}0xe000e414 = 0
+# Set System Handler Priority Register 3 0xe000ed20 to 0x00000000 (reset value)
+set {int}0xe000ed20 = 0
+
+# Fill boot ROM with binary downloaded from LPC11U37
+restore LPC11U3x16kBbootROM.bin binary 0x1fff0000

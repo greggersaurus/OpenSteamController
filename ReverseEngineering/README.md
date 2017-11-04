@@ -8,12 +8,10 @@ The work in this directory focuses on deconstructing the firmware and hardware
 
 ## [How to Manually Load Firmware](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
 
-* Hold right trigger while connecting via USB
+* From powered down state, hold right trigger while connecting via USB
     * Mount "CRP DISABLD" will appear
-    * cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin
-    * eject CRP DISABLD
-* Used to load old firmware on controller to monitor update process via Steam
-* Will be used to load custom firmware on to read/write EEPROM if necessary?
+    * Load new firmware binary with command "cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin"
+    * eject "CRP DISABLD"
 
 ## [Teardown of Steam Controller](https://www.ifixit.com/Teardown/Steam+Controller+Teardown/52578)
 
@@ -28,7 +26,7 @@ Understanding the processor may be key for meeting some requirements.
 
 ### [User Manual](http://www.nxp.com/documents/user_manual/UM10462.pdf)
 
-* Firmware is 128 kb.
+* Firmware can be up to 128 kb.
 
 #### Chapter 20: LPC11U3x/2x/1x Flash programming firmware
 
@@ -62,7 +60,7 @@ Note that in a new project under Project Properties -> C/C++ Build -> Settings -
 * Endianness
     * Certain sections default to little endian
     * Other sections are configurable
-    * TODO: Where is this stated in UM10462? And what are these sections?
+        * TODO: Where is this stated in UM10462? And what are these sections? Is this important?
 
 #### [LPC Image Checksums](https://community.nxp.com/thread/389046)
 
@@ -94,7 +92,7 @@ This is main method used for simulating the firmware.
         * Added memory table specific to LPC11U37, which would be confusing if logging for a different chip.
             * TODO: Think of how to do this better? chip specified as command line arg?
     * Disassembly
-        * TODO
+        * TODO: Worth spending time on option to out asm after running simulation? (will only cover instructions that were executed during sim)
 * Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb) to connect to simulator
 
 ### Simulation Steps
@@ -113,130 +111,20 @@ The following command launches the emulator with the proper memory map for the
 
 The following command launches gbd (installed by LPCXpresso IDE on OSX at /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb), attaches it to the running emulator and sets up register to values to desired states:
 
-* ./gdb -ex "target remote localhost:3333" -ex "set {int}0x40008004 = 0" -ex "set {int}0x4000800c = 0" -ex "set {int}0x40008014 = 0x0060" -ex "set {int}0x40010004 = 0" -ex "set {int}0x40010008 = 0" -ex "set {int}0x40010014 = 0" -ex "set {int}0x40010074 = 0" -ex "set {int}0x40018004 = 0" -ex "set {int}0x40018014 = 0" -ex "set {int}0x40038004 = 0" -ex "set {int}0x4003c010 = 2" -ex "set {int}0x4003cfe0 = 0xFFFFFFFF" -ex "set {int}0x40048000 = 2" -ex "set {int}0x40048008 = 0" -ex "set {int}0x4004800c = 1" -ex "set {int}0x40048014 = 1" -ex "set {int}0x40048030 = 3" -ex "set {int}0x40048040 = 1" -ex "set {int}0x40048044 = 1" -ex "set {int}0x40048070 = 0" -ex "set {int}0x40048074 = 1" -ex "set {int}0x40048078 = 1" -ex "set {int}0x40048080 = 0x3F" -ex "set {int}0x40048170 = 0x10" -ex "set {int}0x4004819C = 1" -ex "set {int}0x40048230 = 0xFFFF" -ex "set {int}0x40048234 = 0xEDF0" -ex "set {int}0x40048238 = 0xEDD0" -ex "set {int}0x40080000 = 0x0800" -ex "set {int}0x50000003 = 0" -ex "set {int}0x50002004 = 0" -ex "set {int}0xe000e414 = 0" -ex "set {int}0xe000ed20 = 0"
-    * Once connected use command "restore LPC11U3x16kBbootROM.bin binary 0x1fff0000" to fill boot ROM with binary downloaded from LPCXpresso11U37H dev board (i.e. LPC Expresso V2 board for 11U37H) 
+* ./gdb -ex "source -v gdbCmdFile"
+    * See comments in gdbCmd file for details on what it is doing (and can be configured to do)
+    * A binary file named LPC11U3x16kBbootROM.bin is expected to exist (in current directory). The file should contain the binary dump of 0x1FFF0000 to 0x1FFF4000 from an LPC11U37.
+        * This can be obtained from a Steam Controller using custom firmware from [Development Board](../DevBoard) project to peek at the 16 kB boot ROM.
+
+* TODO: incorporate the following into gdbCmdFile via local variables (if possible):
     * Execute "continue" to start simulation.
     * Will need to break (ctrl-c) and execute command "set {int}0x40010008 = 0" to get simulation past waiting for 16-bit counter/timer 1.
         * User can tell this needs to happen when instructions 0x61a, 0x61c, 0x61e repeat non-stop.
     * Simulation will end with 0xa6e as last valid instruction.
         * Next instruction is Wait for Interrupt (WFI), which pinkySim simulator reports as Unsupported Instruction.
-    * The following commands can be used to save the state of memory if say the user wants to reload state for attempting simulation of interrupts without having to re-run entire simulation.
-        * 8 kB SRAM
-             * dump binary memory sram.bin 0x10000000 0x10002000
-        * 2 kB USB SRAM
-             * dump binary memory usbsram.bin 0x20004000 0x20004800
-        * APB peripherals
-             * dump binary memory apb1.bin 0x40000000 0x40020000
-             * dump binary memory apb2.bin 0x40038000 0x40050000
-             * dump binary memory apb3.bin 0x40058000 0x40064000
-        * USB registers
-             * dump binary memory usb.bin 0x40080000 0x40084000
-        * GPIO registers
-             * dump binary memory gpio.bin 0x50000000 0x50004000
-        * private peripheral bus
-             * dump binary memory privperiph.bin 0xe0000000 0xe0100000 
-
-TODO: What about 0x40048030 and brown-out detect?
-TODO: What about 0x10000258 and setting to 8 to indicate proper hw (after EEPROM "read")?
-
-##### Breakdown of Input Arguments
-
-The following outlines details on the input arguments of the previous section and why they are set the way they are:
-
-* Connect to remote simulator being run on port 3333 of local machine
-    * target remote localhost:3333
-* USART/SMART CARD Register Settings (base offset 0x40008000)
-    * Set USART Divisor Latch Register (when DLAB = 0) 0x40008004 to 0 (reset value)
-        * set {int}0x40008004 = 0
-    * Set USART Line Control Register 0x4000800c to 0x00000000 (reset value)
-        * set {int}0x4000800c = 0
-    * Set Line Status Register (Read Only) 0x40008014 to 0x00000060 (reset value)
-        * set {int}0x40008014 = 0x0060 
-* 16-bit Counter/Timer 1 Register Settings (base offset 0x40010000)
-    * Set Timer Control Register 0x40010004 to 0 (reset value)
-        * set {int}0x40010004 = 0
-    * Set Time Counter Register 0x40010008 to 0 (reset value)
-        * set {int}0x40010008 = 0
-    * Set Match Control Register 0x40010014 to 0 (reset value)
-        * set {int}0x40010014 = 0
-    * Set PWM Control Register 0x40010074 to 0 (reset value)
-        * set {int}0x40010074 = 0
-* 32-bit Counter/Timer 1 Register Settings (base offset 0x40018000)
-    * Set Timer Control Register 0x40018004 to 0 (reset value)
-        * set {int}0x40018004 = 0
-    * Set Match Control Register 0x40018014 to 0 (reset value)
-        * set {int}0x40018014 = 0
-* PMU Register Settings (base offset 0x40038000)
-    * Set General purpose register 0 0x40038004 to 0x00000000 (reset value)
-        * set {int}0x40038004 = 0
-* Flash/EEPROM Controller Register Settings (base offset 0x4003C000)
-    * Set Flash configuration register 0x4003c010 to 0x00000002 (reset value)
-        * set {int}0x4003c010 = 2
-    * Set Flash module status register 0x4003cfe0 to 0xFFFFFFFF to indicate that EEPROM write finished
-        * set {int}0x4003cfe0 = 0xFFFFFFFF
-* System Control Register Settings (base offset 0x40048000)
-    * Set System memory remap register 0x40048000 to 0x00000002 (reset value)
-        * set {int}0x40048000 = 2
-    * Set System PLL contro register 0x40048008 to 0x00000000 (reset value)
-        * set {int}0x40048008 = 0
-    * Set System PLL status register 0x4004800c to 0x00000001 (indicates System PLL is locked)
-        * set {int}0x4004800c = 1 
-    * Set USB PLL status register 0x40048014 to 0x00000001 (indicates USB PLL is locked)
-        * set {int}0x40048014 = 1
-    * Set System reset status register 0x40048030 to 0x00000003 (reset value)
-        * set {int}0x40048030 = 3
-    * Set System PLL clock source register 0x40048040 to 0x00000001 (reset value)
-        * set {int}0x40048040 = 1
-    * Set System PLL clock source update register 0x40048044 to 0x00000001 (reset value)
-        * set {int}0x40048044 = 1
-    * Set Main clock source select register 0x40048070 to 0x00000000 (reset value)
-        * set {int}0x40048070 = 0
-    * Set Main clock source update enable register 0x40048074 to 0x00000001 (reset value)
-        * set {int}0x40048074 = 1
-    * Set System clock divider register 0x40048078 to 0x00000001 (reset value)
-        * set {int}0x40048078 = 1
-    * Set Sytem clock control register 0x40048080 to 0x0000003F (reset value)
-        * set {int}0x40048080 = 0x3F
-    * Set IRQ Latency register 0x40048170 to 0x00000010 (reset value)
-        * set {int}0x40048170 = 0x10
-    * Set USB block status register 0x4004819C to 0x00000001 (reset value)
-        * set {int}0x4004819C = 1
-    * Set Deep-sleep mode configuration register 0x40048230 to 0x0000FFFF (reset value)
-        * set {int}0x40048230 = 0xFFFF
-    * Set Wake-up configuration register 0x40048234 to 0x0000EDFO (reset value)
-        * set {int}0x40048234 = 0xEDF0
-    * Set Power configuration register 0x40048238 to 0x0000EDDO (reset value)
-        * set {int}0x40048238 = 0xEDD0
-* USB Register Settings (base offset 0x40080000)
-    * Set USB Device Command/Status register 0x40080000 to 0x00000800 (reset value)
-        * set {int}0x40080000 = 0x0800
-* GPIO Register Settings (base offset 0x50000000)
-    * Set GPIO port byte pin register 0x50000003 to 0x00000000 (assume external values of P0_3, P0_4, P0_5 and P0_6 are all 0)
-        * set {int}0x50000003 = 0
-        * Note that we do not yet know 100% what these GPIOs should read be reading or how the software reacts to them
-    * Set GPIO direction port 1 register 0x50002004 to 0x00000000 (reset value)
-        * set {int}0x50002004 = 0
-* Private Peripheral Bus Register Settings (base offset 0xE0000000)
-    * Set Input Priority Register 5 0xe000e414 to 0x00000000 (reset value)
-        * set {int}0xe000e414 = 0
-    * Set System Handler Priority Register 3 0xe000ed20 to 0x00000000 (reset value)
-        * set {int}0xe000ed20 = 0
-
-#### Simulation Oddities
-
-This section outlines oddities observed in simulation with possible explanations.
-
-* 0x4003c000 is read from and written to, but UM10462 datasheet makes no mention of this register.
-    * This is done by boot ROM code. So maybe it knows some secrets not mentioned in datasheet.
-* 0x4003c08c is read from and written to, but UM10462 datasheet makes no mention of this register.
-    * This is done by boot ROM code. So maybe it knows some secrets not mentioned in datasheet.
-* 0x4003c094 is read from and written to, but UM10462 datasheet makes no mention of this register.
-    * This is done by boot ROM code. So maybe it knows some secrets not mentioned in datasheet.
-* 0x40048224 is read from and written to, but UM10462 datasheet makes no mention of this register.
-    * This is done by boot ROM code. So maybe it knows some secrets not mentioned in datasheet.
-
-* According to UM10462 datahsset, flash module status register 0x4003cfe0 only has bit 2 as non-reserved, but boot ROM code is checking other bits for status.
-    * Assumptionis that this must be some weird hardware issue with how reserved bits function. Upper bits should be non-use, but setting bit 2 does not add up to check being performed on register (lsl immediate).
+    * TODO: What about 0x40048030 and brown-out detect?
+    * TODO: What about 0x10000258 and setting to 8 to indicate proper hw (after EEPROM "read")?
+    * TODO: What about USB voltage detect?
 
 ### Simulation Details
 
