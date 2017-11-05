@@ -31,11 +31,32 @@
 ###############################################################################
 
 #TODO: Can we add local gdb variables for defining behavior: 
-#	EEPROM values (i.e. hw version (0x10000258))
+#	more EEPROM values (i.e. hw version (0x10000258))
 #	USB cable present (PIO0_3 will read 1 if cable is present)
-#	simulating interrupt(s)
 #	brown out detect (0x40048030)
+#	simulating interrupt(s)
 #	Other hw inputs?
+
+# Note: standard breakpoints seem to be broken (gdb issue?) so instead 
+#	watchpoints are set for $pc == instruction_addr. The main issue with 
+#	this is that it makes execution slow while watchpoint is active and,
+#	therefore, these types of watchpoints should be removed once they are
+#	no longer needed
+
+
+#------------------------------------------------------------------------------#
+# Begin: Simulation Run Configuration Variables.                               #
+#                                                                              #
+
+# 32-bit word read from EEPROM byte offset 0 (lower 16-bits seem to be magic word)
+set $eeprom_0 = 0x0005a55a
+
+# 32-bit word read form EEPROM byte offset 4 (Board Revision)
+set $eeprom_4 = 0x0000000a
+
+#                                                                              #
+# End: Simulation Run Configuration Variables.                                 #
+#------------------------------------------------------------------------------#
 
 
 # Set preferred gdb layout
@@ -155,6 +176,21 @@ set {int}0xe000ed20 = 0
 restore LPC11U3x16kBbootROM.bin binary 0x1fff0000
 
 
+# Setup watchpoint for instruction immediately before checking values first
+#  read from EEPROM (i.e. magic number and hw version)
+watch $pc == 0x00000d10
+
+# Execute until watchpoint
+continue
+
+# Fill in memory with what should have been read from EEPROM address offset 0
+set {int}0x10000254 = $eeprom_0
+set {int}0x10000258 = $eeprom_4
+
+# Remove watchpoint
+delete 1
+
+
 # Set watch point for 16-bit Timer 1 (CT16B1) Timer Counter register
 #  In path for controller not connected to USB cable, CT16B1 is used to count
 #  timeout waiting for wireless to connect. The value of the time is set to
@@ -168,6 +204,9 @@ continue
 # Assumption is we have broken for watch on CT16B1 Timer Counter register
 #  Set back to zero to fake wrap around so code can continue
 set {int}0x40010008 = 0
+
+# Remove watchpoint
+delete 1
 
 # Resume execution (execution will break on wfi that pinkySim cannot handle)
 continue
