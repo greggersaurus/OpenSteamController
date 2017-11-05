@@ -107,24 +107,14 @@ The following command launches the emulator with the proper memory map for the
 * ./pinkySim --breakOnStart --logExe LPC11U37 --flash 0 131072 --ram 268435456 8192 --ram 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
     * Note: --ram 536805376 16384 --flash, but since we need to fill this ROM with the boot ROM code via gdb, this needs to be writable
 
-#### Connect to Simulator
+#### Simulate
 
-The following command launches gbd (installed by LPCXpresso IDE on OSX at /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb), attaches it to the running emulator and sets up register to values to desired states:
+The following command launches gbd (installed by LPCXpresso IDE on OSX at /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb) and executes the commands in gdbCmdFile:
 
 * ./gdb -ex "source -v gdbCmdFile"
     * See comments in gdbCmd file for details on what it is doing (and can be configured to do)
     * A binary file named LPC11U3x16kBbootROM.bin is expected to exist (in current directory). The file should contain the binary dump of 0x1FFF0000 to 0x1FFF4000 from an LPC11U37.
         * This can be obtained from a Steam Controller using custom firmware from [Development Board](../DevBoard) project to peek at the 16 kB boot ROM.
-
-* TODO: incorporate the following into gdbCmdFile via local variables (if possible):
-    * Execute "continue" to start simulation.
-    * Will need to break (ctrl-c) and execute command "set {int}0x40010008 = 0" to get simulation past waiting for 16-bit counter/timer 1.
-        * User can tell this needs to happen when instructions 0x61a, 0x61c, 0x61e repeat non-stop.
-    * Simulation will end with 0xa6e as last valid instruction.
-        * Next instruction is Wait for Interrupt (WFI), which pinkySim simulator reports as Unsupported Instruction.
-    * TODO: What about 0x40048030 and brown-out detect?
-    * TODO: What about 0x10000258 and setting to 8 to indicate proper hw (after EEPROM "read")?
-    * TODO: What about USB voltage detect?
 
 ### Simulation Details
 

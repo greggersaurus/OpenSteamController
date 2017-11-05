@@ -30,7 +30,16 @@
 #  SOFTWARE.
 ###############################################################################
 
-#TODO: Can we add local gdb variables for defining behavior (i.e. USB cable present, hw version, simulating interrupt)
+#TODO: Can we add local gdb variables for defining behavior: 
+#	EEPROM values (i.e. hw version (0x10000258))
+#	USB cable present (PIO0_3 will read 1 if cable is present)
+#	simulating interrupt(s)
+#	brown out detect (0x40048030)
+#	Other hw inputs?
+
+
+# Set preferred gdb layout
+layout reg
 
 # Connect to remote simulator (i.e. pinkySim) being run on port 3333 of local machine
 target remote localhost:3333
@@ -128,9 +137,8 @@ set {int}0x40080000 = 0x0800
 
 # GPIO Register Settings (base offset 0x50000000):
 
-# Set GPIO port byte pin register 0x50000003 to 0x00000000 (assume external values of P0_3, P0_4, P0_5 and P0_6 are all 0)
+# Set GPIO port byte pin register 0x50000003 to 0x00000000 (values of P0_3, P0_4, P0_5 and P0_6)
 set {int}0x50000003 = 0
-# TODO: set these to different values based on config for simulation
 # Set GPIO direction port 1 register 0x50002004 to 0x00000000 (reset value)
 set {int}0x50002004 = 0
 
@@ -142,5 +150,24 @@ set {int}0xe000e414 = 0
 # Set System Handler Priority Register 3 0xe000ed20 to 0x00000000 (reset value)
 set {int}0xe000ed20 = 0
 
+
 # Fill boot ROM with binary downloaded from LPC11U37
 restore LPC11U3x16kBbootROM.bin binary 0x1fff0000
+
+
+# Set watch point for 16-bit Timer 1 (CT16B1) Timer Counter register
+#  In path for controller not connected to USB cable, CT16B1 is used to count
+#  timeout waiting for wireless to connect. The value of the time is set to
+#  when the timer is enabled and the code waits for the timer to wrap once
+#  before continuing.
+watch *(int*)0x40010008
+
+# Start execution
+continue
+
+# Assumption is we have broken for watch on CT16B1 Timer Counter register
+#  Set back to zero to fake wrap around so code can continue
+set {int}0x40010008 = 0
+
+# Resume execution (execution will break on wfi that pinkySim cannot handle)
+continue
