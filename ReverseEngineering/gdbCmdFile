@@ -48,11 +48,14 @@
 # Begin: Simulation Run Configuration Variables.                               #
 #                                                                              #
 
-# 32-bit word read from EEPROM byte offset 0 (lower 16-bits seem to be magic word)
-set $eeprom_0 = 0x0005a55a
+# 32-bit word read from EEPROM byte offset 0x000 (lower 16-bits seem to be magic word)
+set $eeprom_0x000 = 0x0005a55a
 
-# 32-bit word read form EEPROM byte offset 4 (Board Revision)
-set $eeprom_4 = 0x0000000a
+# 32-bit word read from EEPROM byte offset 0x004 (Board Revision)
+set $eeprom_0x004 = 0x0000000a
+
+# 32-bit word read from EEPROM byte offset 0x500 (TODO: purpose)
+set $eeprom_0x500 = 0xbeacc4c4
 
 #                                                                              #
 # End: Simulation Run Configuration Variables.                                 #
@@ -184,11 +187,25 @@ watch $pc == 0x00000d10
 continue
 
 # Fill in memory with what should have been read from EEPROM address offset 0
-set {int}0x10000254 = $eeprom_0
-set {int}0x10000258 = $eeprom_4
+set {int}0x10000254 = $eeprom_0x000
+set {int}0x10000258 = $eeprom_0x004
 
 # Remove watchpoint
-delete 1
+delete 
+
+
+# Setup watchpoint for instruction immediately before checking values first
+#  read from EEPROM offset 0x500 (TODO: purpose of this data?)
+watch $pc == 0x000015be
+
+# Execute until watchpoint
+continue
+
+# Fill in memory with what should have been read from EEPROM address offset 0
+set {int}0x10001c08 = $eeprom_0x500
+
+# Remove watchpoint
+delete 
 
 
 # Set watch point for 16-bit Timer 1 (CT16B1) Timer Counter register
@@ -206,7 +223,7 @@ continue
 set {int}0x40010008 = 0
 
 # Remove watchpoint
-delete 1
+delete 
 
 # Resume execution (execution will break on wfi that pinkySim cannot handle)
 continue
