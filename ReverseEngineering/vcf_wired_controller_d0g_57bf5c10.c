@@ -1,6 +1,28 @@
 /**
  * All captured data from simulation vcf_wired_controller_d0g_57bf5c10.bin using
  *  pinkySim.
+ *
+ * MIT License
+ *
+ * Copyright (c) 2017 Gregory Gluszek
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 
@@ -111,15 +133,16 @@ void checkSysPllClockSrcSel(){
 }
 
 /**
- * Check if a USB cable is plugged into the controller.
+ * Check if a USB voltage is detected (i.e. from plugged in cable).
  *
  * Firmware Offset(s): 
  *	0x00000ce8 - 0x00000cf0
+ *	0x00000cf2 - ...
  *	0x00000cf4 - 0x00000cf4
  *
  * \return True if USB cable is plugged into controller. False otherwise. (Reg 0).
  */
-bool usbCablePresent(){
+bool usbVoltPresent(){
 	bool retval = false;
 
 	// Check state of PIO0_3 (USB voltage detected) 
@@ -168,7 +191,7 @@ void setGpioOutDir(uint32_t baseAddr, uint32_t port, uint32_t gpioNum) {
  *	0x00000fb8 - ??
  *	0x00000fbe - 0x00000fc0
  *
- * \param hwVer Pointer to data read from EEPROM that stores hw version data.
+ * \param hwVer Pointer to data read from EEPROM that stores hw version data. //TODO: This is referred to as Board Revision in Steam. My controller is 10
  * \param gpioVal Value to drive power up GPIO at (Reg 0).
  *
  * \return 0-based GPIO number that is being driven for proper power up.
@@ -176,7 +199,7 @@ void setGpioOutDir(uint32_t baseAddr, uint32_t port, uint32_t gpioNum) {
 uint32_t drivePwrUpGpio(uint32_t* hwVer, uint8_t gpioVal) {
 	int gpio_num = 0;
 
-	if (*hwVer == 8) {
+	if (*hwVer >= 8) {
 		// Firmware Offset(s): 
 		//	0x00000fa2 - 0x00000fac
 
@@ -239,7 +262,7 @@ void init()
 	// Firmware Offset(s): 
 	//	0x00000fe8 - 0x00000ffe
 
-	// Some sort of delay required after last system control register mod?          
+	// Delay required after last system control register mod?          
 	for (uint32_t cnt = 0; cnt < 0x1600; cnt++);
 
 
@@ -452,7 +475,7 @@ void init()
 	*0x10000248 = 0x00000000	
 	*0x1000024c = 0x00000000	
 	*0x10000250 = 0x00000000	
-	*0x10000254 = 0x00000000 // To be filled with data read from EEPROM (upper 16-bits are magic word?)
+	*0x10000254 = 0x00000000 // To be filled with data read from EEPROM (lower 16-bits are magic word?)
 	*0x10000258 = 0x00000000 // To be filled with data read from EEPROM (indicates hardware version?)
 	*0x1000025c = 0x00000000 // Bytes seem to be used for marked CT32B1 as enabled, and whether CT32B1 interrupt occurred
 	*0x10000260 = 0x00000000
@@ -568,12 +591,12 @@ void init()
 	//	0x00000bf4 - 0x00000bf4
 	//	0x00000d10 - 0x00000d22
 
-	// Check if 0x10000254 has value 0x0000a55a stored in it
+	// Check if (uint16_t*)0x10000254 has value 0xa55a stored in it
 	//	This is where EEPROM read data ends up
 	// If it had been we would skip writing to EEPROM
 	//	Not branching to 0x00000d26
 
-	if (eeprom_data[0] != 0x0000a55a)
+	if ((uint16_t)eeprom_data[0] != 0xa55a)
 	{
 		// Entry Num: 56019 - 56073
 		// Step Num: 42760 - 42792
@@ -594,7 +617,7 @@ void init()
 		//	*0x10001bc8 = 0x0000b71b Param3: System Clock Frequency = 0x0000b71b
 
 		// Data to write to EEPROM
-		eeprom_data[0] = 0x0000a55a;
+		eeprom_data[0] |= 0xa55a;
 		eeprom_data[1] = 0;
 
 		// Command 61 for EEPROM Write
@@ -658,7 +681,7 @@ void init()
 	//	0x00000ce8 - 0x00000cf0
 	//	0x00000cf4 - 0x00000cf4
 
-	bool usbConnected = usbCablePresent();
+	bool usbConnected = usbVoltPresent();
 
 
         // Entry Num: 57999 - 58008
@@ -793,7 +816,7 @@ void init()
 	//	0x00000ce8 - 0x00000cf0
 	//	0x00000cf4 - 0x00000cf4
 
-	usbConnected = usbCablePresent();
+	usbConnected = usbVoltPresent();
 
 
         // Entry Num: 58155 - 58164
@@ -889,14 +912,19 @@ void init()
 	//	0x00000bd0 - 0x00000bd4
 	//	0x00000bf4 - 0x00000bf4
 	//	0x000015be - 0x000015c4 
-	//	0x000015de - 0x000015e6 
+	//	0x000015c6 - 0x000015ce 
 
 	// Check if 0x10001c08 (Value read from EEPROM) is 0
-	// if (eeprom_data2 != 0)
-	// {
-	// 	TODO: UNKNOWN PATHS
-	//	if value read from EEPROM offset 0x500 is not 0 execute instruction at 0x000015c6
-	// }
+	if (eeprom_data2 != 0)
+	{
+		// Firmware Offset(s): 
+		//	0x000015c6 - 0x000015ce 
+		// ...
+	}
+
+
+
+	// Firmware Offset(s): 
 
 	// Check if GPREG0 is set to 0xecaabac0
 	// reg32 = 0x40038004;
@@ -913,7 +941,9 @@ void init()
 	// Firmware Offset(s): 
 	//	0x000015ec - 0x000015fa
 
-	// Call into some function that checks if reg32 0 is set to 0xecaabac0. Could be UNKNOWN PATH, but in this case reg32 0 is set from firmware read 
+	// Call into some function that checks if Reg 0 is set to 0xecaabac0. 
+	//  I think this is an impossible path, as Reg 0 is set compare above.
+	//  Either way UKNOWN PATH is to branch to instruction at 0x00001618 if Reg 0 does not equal 0xecaabac0
 
 
         // Entry Num: 60110 - 60117
@@ -1511,7 +1541,7 @@ void init()
 	//	0x00000ce8 - 0x00000cf0
 	//	0x00000cf4 - 0x00000cf4
 
-	usbConnected = usbCablePresent();
+	usbConnected = usbVoltPresent();
 
 
         // Entry Num: 65305 - 265309
@@ -1803,7 +1833,7 @@ void init()
 	// Firmware Offset(s): 
 	//	0x0000060c - 0x00000622
 
-	// Store the Timer Control Register for CT17B1
+	// Store the Timer Control Register for CT16B1
 	reg32 = (volatile uint32_t*)0x40010004;
 	val = *reg32;
 
