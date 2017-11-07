@@ -79,23 +79,24 @@ Note that in a new project under Project Properties -> C/C++ Build -> Settings -
 
 # Disassembling the LPC11U37 Firwmare
 
-This section details the approaches attempted and used to disassemble the 
- Steam Controller firmware. 
+This section details the approaches attempted and ultimately used to reverse 
+ engineer the Steam Controller firmware. 
 
 ## [pinkySim](https://github.com/greggersaurus/pinkySim)
 
-This is the main method used for simulating the firmware. 
+This is the primary method used for simulating the firmware and deconstructing 
+ its behavior.
 
-* Note: Need to use "make pinkySim" as building unit tests fails...
+* Note: Need to build pinkySim specifically with command "make pinkySim" as building unit tests fails...
     * TODO: get to bottom of this.
 * ARMv6-M Thumb instruction simulator.
-* Forked and working on custom functionality.
+* I have forked this repo and am working on custom functionality geared specfically towards the Steam Controller reverse engineering effort.
     * Logging (--logExe chipType)
         * Creates csv log of all instructions and memory accesses executed during simulation.
         * Currently "LPC11U37" is the only supported chip type
     * Disassembly
         * TODO: Worth spending time on option to out asm after running simulation? (will only cover instructions that were executed during sim)
-* Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb) to connect to simulator
+* Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb) to connect to the simulator
 
 ### Simulation Steps
 
@@ -162,7 +163,7 @@ Also, according 24.3.3.6.1 LR is set to EXC_RETURN upon interrupt entry. Thus a
  changing the PC to the interrupt handler so that you know when the interrupt 
  handler is exiting.
 
-## FirmwareParser.py
+## [FirmwareParser.py](./FirmwareParser.py)
 
 This is only being used to display the Vector Table.
 
