@@ -4,7 +4,10 @@ The work in this directory focuses on deconstructing the firmware and hardware
  of the Steam Controller. The understanding gained from this is the basis for
  the other work being done in this project. 
 
-# Resources, Utilities and Influences
+# Resources and Utilities
+
+This section details some basic information gathered about the Steam Controller
+ and its processors.
 
 ## [How to Manually Load Firmware](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
 
@@ -15,9 +18,9 @@ The work in this directory focuses on deconstructing the firmware and hardware
 
 ## [Teardown of Steam Controller](https://www.ifixit.com/Teardown/Steam+Controller+Teardown/52578)
 
-* Picture shows main processor is LPC11U37F/501
+* Pictures show main processor is LPC11U37F/501
 
-## [NXP LPC11U37FBD64/501 Specifics](http://www.nxp.com/products/microcontrollers-and-processors/arm-processors/lpc-cortex-m-mcus/lpc-cortex-m0-plus-m0/lpc1100-cortex-m0-plus-m0/128kb-flash-12kb-sram-lqfp64-package:LPC11U37FBD64?fpsp=1&tab=Documentation_Tab)
+## [NXP LPC11U37FBD64/501 Specifics](https://www.nxp.com/part/LPC11U37FBD64?lang_cd=en)
 
 Below are some accumulated details on the main processor on the Steam Controller. 
 Understanding the processor may be key for meeting some requirements.
@@ -81,7 +84,7 @@ This section details the approaches attempted and used to disassemble the
 
 ## [pinkySim](https://github.com/greggersaurus/pinkySim)
 
-This is main method used for simulating the firmware. 
+This is the main method used for simulating the firmware. 
 
 * Note: Need to use "make pinkySim" as building unit tests fails...
     * TODO: get to bottom of this.
@@ -89,8 +92,7 @@ This is main method used for simulating the firmware.
 * Forked and working on custom functionality.
     * Logging (--logExe chipType)
         * Creates csv log of all instructions and memory accesses executed during simulation.
-        * Added memory table specific to LPC11U37, which would be confusing if logging for a different chip.
-            * TODO: Think of how to do this better? chip specified as command line arg?
+        * Currently "LPC11U37" is the only supported chip type
     * Disassembly
         * TODO: Worth spending time on option to out asm after running simulation? (will only cover instructions that were executed during sim)
 * Using gdb installed by LPCXpresso IDE (On OSX: /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb) to connect to simulator
@@ -102,7 +104,7 @@ This is main method used for simulating the firmware.
 The following command launches the emulator with the proper memory map for the 
  LPC11U37F501, has the emulator halt on the first instruction to execute after
  reset and instructs pinkySim to log all instructions executed to a file named
- exeLog{datetimestmap}.csv.
+ exeLog{timestmap}.csv.
 
 * ./pinkySim --breakOnStart --logExe LPC11U37 --flash 0 131072 --ram 268435456 8192 --ram 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
     * Note: --ram 536805376 16384 --flash, but since we need to fill this ROM with the boot ROM code via gdb, this needs to be writable
@@ -112,9 +114,9 @@ The following command launches the emulator with the proper memory map for the
 The following command launches gbd (installed by LPCXpresso IDE on OSX at /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb) and executes the commands in gdbCmdFile:
 
 * ./gdb -ex "source -v gdbCmdFile"
-    * See comments in gdbCmd file for details on what it is doing (and can be configured to do)
-    * A binary file named LPC11U3x16kBbootROM.bin is expected to exist (in current directory). The file should contain the binary dump of 0x1FFF0000 to 0x1FFF4000 from an LPC11U37.
-        * This can be obtained from a Steam Controller using custom firmware from [Development Board](../DevBoard) project to peek at the 16 kB boot ROM.
+    * See comments in [gdbCmdFile](./gdbCmdFile) for details on simulation is doing, and can be configured to do.
+    * A binary file named LPC11U3x16kBbootROM.bin is expected to exist (in the current directory). The file should contain the binary dump of 0x1FFF0000 to 0x1FFF4000 from an LPC11U37.
+        * This can be obtained from a Steam Controller using custom firmware from the [Development Board](../DevBoard) project. Use read commands to peek at the 16 kB boot ROM.
 
 ### Simulation Details
 
@@ -164,7 +166,7 @@ Also, according 24.3.3.6.1 LR is set to EXC_RETURN upon interrupt entry. Thus a
 
 This is only being used to display the Vector Table.
 
-Original idea was to create disassembler that can recreate assembly file, 
+The original idea was to create disassembler that can recreate assembly file, 
 distinguishing data versus instructions by evaulating code and all possible
 branches. 
 
@@ -176,7 +178,7 @@ behavior to do this, as opposed to starting from scratch.
 
 Have not made much use of this yet. 
 
-Free book on how to reverse engineer code.
+Free book geared towards beginners on how to reverse engineer code.
 
 ## [Radare](http://www.radare.org/r/)
 
