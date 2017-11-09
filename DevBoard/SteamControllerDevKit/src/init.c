@@ -36,6 +36,11 @@
 
 #include "init.h"
 
+/* System oscillator rate and clock rate on the CLKIN pin */                    
+//TODO: is this correct?
+const uint32_t OscRateIn = 12000000;                                            
+const uint32_t ExtRateIn = 0;
+
 /**
  * Function to enable power to a specified analog block.
  *

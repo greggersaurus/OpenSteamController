@@ -30,10 +30,17 @@
 #ifndef _STEAM_CONTROLLER_USB_
 #define _STEAM_CONTROLLER_USB_
 
-void usbConfig(void);
+int usbConfig(void);
+
+//TODO: 
+// sendToHaptics (rumble?)
+// rcvFromHaptics (check for input on haptic sensor?)
 
 //TODO: temporary?
 void handleInput(void);
+
+// int getUsbSerialData(unit8_t* data, uint32_t maxDataLen);
+void sendUsbSerialData(const uint8_t* data, uint32_t dataLen);
 
 #endif /* _STEAM_CONTROLLER_USB_ */
 

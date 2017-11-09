@@ -44,7 +44,37 @@
 
 #include <string.h>
 
-static USBD_HANDLE_T usbHandle;
+const USBD_API_T *g_pUsbApi; //!< Through a series of non-ideal associations
+	//!< this is used to access boot ROM code for USB functions. See
+	//!< calls using USBD_API to access this. 
+
+static USBD_HANDLE_T usbHandle; //!< Handle for interacting with the USB device
+
+// Structure containing Virtual Comm port control data.
+typedef struct USB_UART_DATA {
+	USBD_HANDLE_T usbHandle; //!< Handle to USB device stack 
+	USBD_HANDLE_T cdcHandle; //!< Handle to Communications Device Class controller
+
+	uint8_t *rxBuf;	//!< USB CDC UART buffer to store received uart data
+	uint8_t rxRcvd; //!< Number of valid bytes in rxBuf received by IRQ 
+//TODO: remove?
+	uint8_t rxChecked; /*!< Number of bytes in rx buffer that have been checked by main thread */
+	volatile uint8_t rxBusy; //!< EP event handler is busy receiving data
+	volatile uint8_t rxRdBusy; //!< rxBuf is currently being drained by
+		//!< higher level code.
+
+	uint8_t *txBuf;	//!< USB CDC UART buffer where data to be transfered is stored
+	uint8_t txLen; //!< Number of bytes to send from txBuf in total
+	uint8_t txSent; //!< Number of bytes already sent from txBuf
+	volatile uint8_t txBusy; /*!< USB is busy sending previous packet */
+
+} USB_UART_DATA_T;
+
+// Virtual Comm port control data instance. 
+static USB_UART_DATA_T usbUartData;
+
+// Number of bytes for buffer tx and rx for USB CDC UART
+static const uint32_t USB_UART_BUFF_SIZE = 64;
 
 /**
  * USB Standard Device Descriptor
@@ -213,20 +243,10 @@ ALIGNED(4) const uint8_t USB_StringDescriptor[] = {
 	'M', 0,
 };
 
-const  USBD_API_T *g_pUsbApi; //!< Through a series of non-ideal associations
-	//!< this is used to access boot ROM code for USB functions. See
-	//!< calls using USBD_API to access this. TODO: change this to be less confusing?
-
-//TODO: begin: clean up and fix style
-
-/* System oscillator rate and clock rate on the CLKIN pin */                    
-//TODO: is this correct?
-const uint32_t OscRateIn = 12000000;                                            
-const uint32_t ExtRateIn = 0;
-
 /**
- * @brief	Handle interrupt from USB0
- * @return	Nothing
+ * Handle interrupt from USB0.
+ *
+ * \return None.
  */
 void USB_IRQHandler(void)
 {
@@ -273,44 +293,20 @@ USB_INTERFACE_DESCRIPTOR *find_IntfDesc(const uint8_t *pDesc, uint32_t intfClass
 
 	return pIntfDesc;
 }
-/* Number of bytes for buffer tx and rx for USB CDC UART*/
-#define UCOM_BUF_SZ (64)
 
 /**
- * Structure containing Virtual Comm port control data
+ * USB CDC UART bulk EP_IN and EP_OUT endpoints handler 
+ *
+ * \param[in] usbHandle Handle to USB device stack.
+ * \param[inout] data Pointer to USB UART data structure.
+ * \param event Provides information on transfer event that occurred to trigger
+ *	handler call.
+ *
+ * \return LPC_OK on success.
  */
-typedef struct UCOM_DATA {
-	USBD_HANDLE_T hUsb; /*!< Handle to USB stack */
-	USBD_HANDLE_T hCdc; /*!< Handle to CDC class controller */
-
-	uint8_t *rxBuf;	/*!< USB CDC UART Rx buffer */
-	uint8_t rxRcvd; /* Number bytes received by IRQ in rxBuf */
-	uint8_t rxChecked; /*!< Number of bytes in rx buffer that have been checked by main thread */
-	volatile uint8_t usbRxBusy; /*!< IRQ is busy receiving USB data */
-
-	uint8_t *txBuf;	/*!< USB CDC UART Tx buffer */
-	uint8_t txLen; /*!< Number of bytes to send from txBuf */
-	uint8_t txSent; /*!< Number of bytes already sent from txBuf */
-	volatile uint8_t usbTxBusy; /*!< USB is busy sending previous packet */
-
-	volatile uint8_t cmdHandlerBusy; /*!< Command handler loop is busy handling command */
-} UCOM_DATA_T;
-
-/** Virtual Comm port control data instance. */
-static UCOM_DATA_T g_uCOM;
-
-/*****************************************************************************
- * Public types/enumerations/variables
- ****************************************************************************/
-
-/*****************************************************************************
- * Private functions
- ****************************************************************************/
-
-/* UCOM bulk EP_IN and EP_OUT endpoints handler */
-static ErrorCode_t UCOM_bulk_hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t event)
+static ErrorCode_t usbUartBulkHandler(USBD_HANDLE_T usbHandle, void *data, uint32_t event)
 {
-	UCOM_DATA_T *pUcom = (UCOM_DATA_T *) data;
+	USB_UART_DATA_T *pUcom = (USB_UART_DATA_T *) data;
 	uint32_t count = 0;
 
 	switch (event) {
@@ -321,35 +317,35 @@ static ErrorCode_t UCOM_bulk_hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t event
 		if (count > 0)
 		{
 			// Request to send more data
-			pUcom->txSent += USBD_API->hw->WriteEP(hUsb, USB_CDC_IN_EP, &pUcom->txBuf[pUcom->txSent], count);
+			pUcom->txSent += USBD_API->hw->WriteEP(usbHandle, USB_CDC_IN_EP, &pUcom->txBuf[pUcom->txSent], count);
 		}
 		else
 		{
 			// Transmission request complete
 			pUcom->txSent = 0;
 			pUcom->txLen = 0;
-			pUcom->usbTxBusy = 0;
+			pUcom->txBusy = 0;
 		}
 		break;
 
 	/* We received a transfer from the USB host. */
 	case USB_EVT_OUT:
 		// Check if there is room for more data in buffer
-		if (pUcom->rxRcvd < UCOM_BUF_SZ && !pUcom->cmdHandlerBusy)
+		if (pUcom->rxRcvd < USB_UART_BUFF_SIZE && !pUcom->rxRdBusy)
 		{
 			// Mark we are busy receiving data
-			pUcom->usbRxBusy = 1;
+			pUcom->rxBusy = 1;
 
 			// Add data to the receive buffer
-			count = USBD_API->hw->ReadEP(hUsb, USB_CDC_OUT_EP, &pUcom->rxBuf[pUcom->rxRcvd]);
+			count = USBD_API->hw->ReadEP(usbHandle, USB_CDC_OUT_EP, &pUcom->rxBuf[pUcom->rxRcvd]);
 			// Echo back input
 			//TODO: we are not checking return value, and if input buffer is large, we may not echo back everything
-			USBD_API->hw->WriteEP(hUsb, USB_CDC_IN_EP, &pUcom->rxBuf[pUcom->rxRcvd], count);
+			USBD_API->hw->WriteEP(usbHandle, USB_CDC_IN_EP, &pUcom->rxBuf[pUcom->rxRcvd], count);
 			// Update how much data is in the receive buffer so main thread can check it
 			pUcom->rxRcvd += count;
 
-			// Mark we are busy receiving data
-			pUcom->usbRxBusy = 0;
+			// Mark we are no longer busy receiving data
+			pUcom->rxBusy = 0;
 		}
 
 		break;
@@ -362,7 +358,7 @@ static ErrorCode_t UCOM_bulk_hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t event
 }
 
 /* Set line coding call back routine */
-static ErrorCode_t UCOM_SetLineCode(USBD_HANDLE_T hCDC, CDC_LINE_CODING *line_coding)
+static ErrorCode_t usbUartSetLineCode(USBD_HANDLE_T hCDC, CDC_LINE_CODING *line_coding)
 {
 	uint32_t config_data = 0;
 
@@ -450,40 +446,6 @@ static ErrorCode_t UCOM_SetLineCode(USBD_HANDLE_T hCDC, CDC_LINE_CODING *line_co
 	return LPC_OK;
 }
 
-/**
- * Function for sending data out the CDC UART interface.
- *  Does not return until all the data has been sent.
- *
- * \param[in] data The data to transmit.
- * \param len The number of bytes in the data buffer.
- *
- * \return None.
- */
-void sendData(const uint8_t* data, uint32_t len)
-{
-	// Transmission may need to be broken up given txBuf size
-	for (uint32_t sent = 0; sent < len; sent+=UCOM_BUF_SZ)
-	{
-		// Calculate how much to send in this request
-		uint32_t to_send = len - sent;
-		if (to_send > UCOM_BUF_SZ)
-		{
-			g_uCOM.txLen = UCOM_BUF_SZ;
-		}
-		else
-		{
-			g_uCOM.txLen = to_send;
-		}
-
-		memcpy(g_uCOM.txBuf, &data[sent], g_uCOM.txLen);
-
-		g_uCOM.usbTxBusy = 1;
-		g_uCOM.txSent = USBD_API->hw->WriteEP(g_uCOM.hUsb, USB_CDC_IN_EP, g_uCOM.txBuf, g_uCOM.txLen);
-
-		// Wait for request to completely finish
-		while(g_uCOM.usbTxBusy);
-	}
-}
 
 /**
  * Process a read command.
@@ -512,7 +474,7 @@ void readCmd(const uint8_t* params, uint32_t len)
 	{
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nUsage: r word_size hex_base_addr num_words\r\n");
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		return;
 	}
 
@@ -520,7 +482,7 @@ void readCmd(const uint8_t* params, uint32_t len)
 	{
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nUnsuported word size %d\r\n", word_size);
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		return;
 	}
 
@@ -528,7 +490,7 @@ void readCmd(const uint8_t* params, uint32_t len)
 
 	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 		"\r\nReading %d %d-bit words starting at 0x%X\r\n", num_words, word_size, addr);
-	sendData(resp_msg, resp_msg_len);
+	sendUsbSerialData(resp_msg, resp_msg_len);
 
 	for (int word_cnt = 0; word_cnt < num_words; word_cnt++)
 	{
@@ -536,7 +498,7 @@ void readCmd(const uint8_t* params, uint32_t len)
 		{
 			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 				"\r\n%08X: ", addr);
-			sendData(resp_msg, resp_msg_len);
+			sendUsbSerialData(resp_msg, resp_msg_len);
 		}
 
 		if (word_size == 8)
@@ -554,13 +516,13 @@ void readCmd(const uint8_t* params, uint32_t len)
 			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 				"%08X ", *(uint32_t*)addr);
 		}
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 
 		addr += bytes_per_word;
 	}
 
 	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), "\r\n");
-	sendData(resp_msg, resp_msg_len);
+	sendUsbSerialData(resp_msg, resp_msg_len);
 }
 
 void eepromCmd(const uint8_t* params, uint32_t len)
@@ -582,7 +544,7 @@ void eepromCmd(const uint8_t* params, uint32_t len)
 	{
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nUsage: e word_size hex_offset num_words\r\n");
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		return;
 	}
 
@@ -590,7 +552,7 @@ void eepromCmd(const uint8_t* params, uint32_t len)
 	{
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nUnsuported word size %d\r\n", word_size);
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		return;
 	}
 
@@ -599,14 +561,14 @@ void eepromCmd(const uint8_t* params, uint32_t len)
 
 	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 		"\r\nReading %d %d-bit words starting at 0x%X in EEPROM\r\n", num_words, word_size, offset);
-	sendData(resp_msg, resp_msg_len);
+	sendUsbSerialData(resp_msg, resp_msg_len);
 
 
 	void* read_data = malloc(num_read_bytes);
 	if (!read_data){
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nmalloc failed for read_data buffer\r\n");
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		return;
 	}
 
@@ -614,7 +576,7 @@ void eepromCmd(const uint8_t* params, uint32_t len)
 	if (CMD_SUCCESS != err_code){
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nEEPROM Read failed with error code %d\r\n", err_code);
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		free(read_data);
 		return;
 	}
@@ -625,7 +587,7 @@ void eepromCmd(const uint8_t* params, uint32_t len)
 		{
 			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 				"\r\n%08X: ", offset);
-			sendData(resp_msg, resp_msg_len);
+			sendUsbSerialData(resp_msg, resp_msg_len);
 		}
 
 		if (word_size == 8)
@@ -643,13 +605,13 @@ void eepromCmd(const uint8_t* params, uint32_t len)
 			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 				"%08X ", *(uint32_t*)(read_data+offset));
 		}
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 
 		offset += bytes_per_word;
 	}
 
 	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), "\r\n");
-	sendData(resp_msg, resp_msg_len);
+	sendUsbSerialData(resp_msg, resp_msg_len);
 
 	free(read_data);
 }
@@ -672,7 +634,7 @@ void processCmd(const uint8_t* buffer, uint32_t len)
 	{
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nInvalid Command Length of 0\r\n");
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		return;
 	}
 
@@ -682,30 +644,42 @@ void processCmd(const uint8_t* buffer, uint32_t len)
 	{
 	case 'r':
 		readCmd(&buffer[1], len-1);
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		break;
 
 	case 'w':
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nWrite Command not supported yet\r\n");
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		break;
 
 	case 'e':
 		eepromCmd(&buffer[1], len-1);
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		break;
 
 	default:
 		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
 			"\r\nUnrecognized command %c\r\n", cmd);
-		sendData(resp_msg, resp_msg_len);
+		sendUsbSerialData(resp_msg, resp_msg_len);
 		break;
 	}
 }
 
 /* UART to USB com port init routine */
-ErrorCode_t UCOM_init(USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc, USBD_API_INIT_PARAM_T *pUsbParam)
+/**
+ * Intialize EP on USB to act as virtual UART.
+ *
+ * \param[in] usbHandle Handle to USB device stack.
+ * \param[in] usbDescs Points to various descriptors for the USB device, to 
+ *	provide details for EPs on the bus.
+ * \param[inout] usbParams Parameters related to the USB stack (i.e. memory
+ *	to be used by EPs)
+ *
+ * \return LPC_OK on success.
+ */
+static ErrorCode_t usbUartInit(USBD_HANDLE_T usbHandle, 
+	const USB_CORE_DESCS_T *usbDescs, USBD_API_INIT_PARAM_T *usbParams)
 {
 	USBD_CDC_INIT_PARAM_T cdc_param;
 	ErrorCode_t ret = LPC_OK;
@@ -713,47 +687,47 @@ ErrorCode_t UCOM_init(USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc, USBD_API_INIT
 	USB_CDC_CTRL_T *pCDC;
 
 	/* Store USB stack handle for future use. */
-	g_uCOM.hUsb = hUsb;
+	usbUartData.usbHandle = usbHandle;
 	/* Initi CDC params */
 	memset((void *) &cdc_param, 0, sizeof(USBD_CDC_INIT_PARAM_T));
-	cdc_param.mem_base = pUsbParam->mem_base;
-	cdc_param.mem_size = pUsbParam->mem_size;
-	cdc_param.cif_intf_desc = (uint8_t *) find_IntfDesc(pDesc->high_speed_desc, CDC_COMMUNICATION_INTERFACE_CLASS);
-	cdc_param.dif_intf_desc = (uint8_t *) find_IntfDesc(pDesc->high_speed_desc, CDC_DATA_INTERFACE_CLASS);
-	cdc_param.SetLineCode = UCOM_SetLineCode;
+	cdc_param.mem_base = usbParams->mem_base;
+	cdc_param.mem_size = usbParams->mem_size;
+	cdc_param.cif_intf_desc = (uint8_t *) find_IntfDesc(usbDescs->high_speed_desc, CDC_COMMUNICATION_INTERFACE_CLASS);
+	cdc_param.dif_intf_desc = (uint8_t *) find_IntfDesc(usbDescs->high_speed_desc, CDC_DATA_INTERFACE_CLASS);
+	cdc_param.SetLineCode = usbUartSetLineCode;
 
 	/* Init CDC interface */
-	ret = USBD_API->cdc->init(hUsb, &cdc_param, &g_uCOM.hCdc);
+	ret = USBD_API->cdc->init(usbHandle, &cdc_param, &usbUartData.cdcHandle);
 
 	if (ret == LPC_OK) {
 		/* allocate transfer buffers */
-		g_uCOM.txBuf = (uint8_t *) cdc_param.mem_base;
-		cdc_param.mem_base += UCOM_BUF_SZ;
-		cdc_param.mem_size -= UCOM_BUF_SZ;
-		g_uCOM.rxBuf = (uint8_t *) cdc_param.mem_base;
+		usbUartData.txBuf = (uint8_t *) cdc_param.mem_base;
+		cdc_param.mem_base += USB_UART_BUFF_SIZE;
+		cdc_param.mem_size -= USB_UART_BUFF_SIZE;
+		usbUartData.rxBuf = (uint8_t *) cdc_param.mem_base;
 		// Make rxBuf twice as big to avoid potential overflow. We are
 		//  using this buffer to build commands, as a USB packet of 
-		//  UCOM_BUF_SZ could come in to a partially filled buffer
-		cdc_param.mem_base += 2*UCOM_BUF_SZ;
-		cdc_param.mem_size -= 2*UCOM_BUF_SZ;
+		//  USB_UART_BUFF_SIZE could come in to a partially filled buffer
+		cdc_param.mem_base += 2*USB_UART_BUFF_SIZE;
+		cdc_param.mem_size -= 2*USB_UART_BUFF_SIZE;
 
 		/* register endpoint interrupt handler */
 		ep_indx = (((USB_CDC_IN_EP & 0x0F) << 1) + 1);
-		ret = USBD_API->core->RegisterEpHandler(hUsb, ep_indx, UCOM_bulk_hdlr, &g_uCOM);
+		ret = USBD_API->core->RegisterEpHandler(usbHandle, ep_indx, usbUartBulkHandler, &usbUartData);
 
 		if (ret == LPC_OK) {
 			/* register endpoint interrupt handler */
 			ep_indx = ((USB_CDC_OUT_EP & 0x0F) << 1);
-			ret = USBD_API->core->RegisterEpHandler(hUsb, ep_indx, UCOM_bulk_hdlr, &g_uCOM);
+			ret = USBD_API->core->RegisterEpHandler(usbHandle, ep_indx, usbUartBulkHandler, &usbUartData);
 			/* Set the line coding values as per UART Settings */
-			pCDC = (USB_CDC_CTRL_T *) g_uCOM.hCdc;
+			pCDC = (USB_CDC_CTRL_T *) usbUartData.cdcHandle;
 			pCDC->line_coding.dwDTERate = 115200;
 			pCDC->line_coding.bDataBits = 8;
 		}
 
 		/* update mem_base and size variables for cascading calls. */
-		pUsbParam->mem_base = cdc_param.mem_base;
-		pUsbParam->mem_size = cdc_param.mem_size;
+		usbParams->mem_base = cdc_param.mem_base;
+		usbParams->mem_size = cdc_param.mem_size;
 	}
 
 	return ret;
@@ -761,13 +735,12 @@ ErrorCode_t UCOM_init(USBD_HANDLE_T hUsb, USB_CORE_DESCS_T *pDesc, USBD_API_INIT
 //TODO: end: clean up and fix style
 
 /**
- * Configure USB to act as virtual UART for development kit command, control and
- *  feedback interface.
+ * Configure USB interface. This allows for USB to communicate to other devices
+ *  on the bus (i.e. act as a virtual comm port, or to haptics (TODO)).
  *
- * \return None. Though function will lock up and not return in case of failure
- *	(as there is no way to communicate failure if this setup fails).
+ * \return 0 on success.
  */
-void usbConfig(void){
+int usbConfig(void){
 	USBD_API_INIT_PARAM_T usb_param;
 	USB_CORE_DESCS_T usb_desc;
 	ErrorCode_t errCode = ERR_FAILED;
@@ -806,10 +779,7 @@ void usbConfig(void){
 	/* USB Initialization */
 	errCode = USBD_API->hw->Init(&usbHandle, &usb_desc, &usb_param);
 	if (LPC_OK != errCode){
-		// Hard lock. We have no interface to report error status, so 
-		//  we will just stop here.
-		volatile int lock = 1;
-		while (lock) {}
+		return -1;
 	}
 
 	/*	WORKAROUND for artf32219 ROM driver BUG:
@@ -820,13 +790,9 @@ void usbConfig(void){
 	usb_param.mem_base = USB_STACK_MEM_BASE + (USB_STACK_MEM_SIZE - usb_param.mem_size);
 
 	/* Init UCOM - USB to UART bridge interface */
-	errCode = UCOM_init(usbHandle, &usb_desc, &usb_param);
+	errCode = usbUartInit(usbHandle, &usb_desc, &usb_param);
 	if (errCode != LPC_OK) {
-		// Hard lock. We have no interface to report error status, so 
-		//  we will just stop here.
-		volatile int lock = 1;
-		while (lock) {}
-
+		return -1;
 	}
 
 	/* Make sure USB and UART IRQ priorities are same for this example */
@@ -843,51 +809,87 @@ void usbConfig(void){
 //TODO: should take input parameter for usb CDC device to handle input from instead of using global
 void handleInput()
 {
-	uint8_t rxRcvd = g_uCOM.rxRcvd;
+	uint8_t rxRcvd = usbUartData.rxRcvd;
 
 	// Don't want to be here if IRQ might be changing value underneath us
-	if (g_uCOM.usbRxBusy)
+	if (usbUartData.rxBusy)
 		return;
 
 	// See if there is anything new in the rxBuf to check
-	if (g_uCOM.rxChecked >= rxRcvd)
+	if (usbUartData.rxChecked >= rxRcvd)
 		return;
 
 	// Mark we are busy checking the receive buffer
-	g_uCOM.cmdHandlerBusy = 1;
+	usbUartData.rxRdBusy = 1;
 
 	// Check for new characters in buffer
-	for (uint8_t offset = g_uCOM.rxChecked; offset < rxRcvd; offset++)
+	for (uint8_t offset = usbUartData.rxChecked; offset < rxRcvd; offset++)
 	{
 		// Carriage return marks end of a command
-		if (g_uCOM.rxBuf[offset] == '\r')
+		if (usbUartData.rxBuf[offset] == '\r')
 		{
 			// Null terminate for when buffer is treated as cstring
-			g_uCOM.rxBuf[offset] = 0;
-			processCmd(g_uCOM.rxBuf, offset);
+			usbUartData.rxBuf[offset] = 0;
+			processCmd(usbUartData.rxBuf, offset);
 
 			// Reset receive buffer
-			g_uCOM.rxRcvd = 0;
-			g_uCOM.rxChecked = 0;
+			usbUartData.rxRcvd = 0;
+			usbUartData.rxChecked = 0;
 		}
 		else
 		{
-			g_uCOM.rxChecked++;
+			usbUartData.rxChecked++;
 		}
 	}
 
 	// Check if too long of a command has been input
-	if (g_uCOM.rxRcvd >= UCOM_BUF_SZ-1)
+	if (usbUartData.rxRcvd >= USB_UART_BUFF_SIZE-1)
 	{
 		char msg[] = "\r\nInvalid command. Too large. Clearing input buffer.\r\n";
-		sendData((uint8_t*)msg, sizeof(msg));
+		sendUsbSerialData((uint8_t*)msg, sizeof(msg));
 
 		// Reset receive buffer
-		g_uCOM.rxRcvd = 0;
-		g_uCOM.rxChecked = 0;
+		usbUartData.rxRcvd = 0;
+		usbUartData.rxChecked = 0;
 	}
 
 	// No longer busy with the receive buffer
-	g_uCOM.cmdHandlerBusy = 0;
+	usbUartData.rxRdBusy = 0;
+}
+
+/**
+ * Function for sending data out the CDC UART interface.
+ *  Does not return until all the data has been sent.
+ *
+ * \param[in] data The data to transmit.
+ * \param len The number of bytes in the data buffer.
+ *
+ * \return None.
+ */
+void sendUsbSerialData(const uint8_t* data, uint32_t len)
+{
+	// Transmission may need to be broken up given txBuf size
+	for (uint32_t sent = 0; sent < len; sent+=USB_UART_BUFF_SIZE)
+	{
+		// Calculate how much to send in this request
+		uint32_t to_send = len - sent;
+		if (to_send > USB_UART_BUFF_SIZE)
+		{
+			usbUartData.txLen = USB_UART_BUFF_SIZE;
+		}
+		else
+		{
+			usbUartData.txLen = to_send;
+		}
+
+		memcpy(usbUartData.txBuf, &data[sent], usbUartData.txLen);
+
+		usbUartData.txBusy = 1;
+		usbUartData.txSent = USBD_API->hw->WriteEP(usbUartData.usbHandle, 
+			USB_CDC_IN_EP, usbUartData.txBuf, usbUartData.txLen);
+
+		// Wait for request to completely finish
+		while(usbUartData.txBusy);
+	}
 }
 

@@ -65,8 +65,9 @@ int main(void){
 
 	stage2Init(eeprom_data[1]);
 
-	// Configure USB to act as virtual UART
+	// Configure USB (i.e. to act as virtual UART)
 	usbConfig();
+//TODO: return code check and blink LED on error?
 
 //TODO: What next? handle UART input (or can we do that completely from interrupt context?)
 
