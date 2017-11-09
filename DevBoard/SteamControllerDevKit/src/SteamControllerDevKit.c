@@ -57,10 +57,13 @@ int main(void){
 
 	// Read magic number and hw version from EEPROM
 	retval = eeprom_read(0, eeprom_data, sizeof(eeprom_data));
-//TODO: check retval
+	if (CMD_SUCCESS != retval) {
+		// Hard lock if we cannot read EEPROM
+		volatile int lock = 1;
+		while (lock) {}
+	}
 
-//TODO: pass in hw version read from EEPROM (eeprom_data[1])
-	stage2Init(8);
+	stage2Init(eeprom_data[1]);
 
 	// Configure USB to act as virtual UART
 	usbConfig();

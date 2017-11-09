@@ -192,8 +192,8 @@ void stage2Init(uint32_t hwVersion){
 	volatile uint32_t* reg32 = (volatile uint32_t)0;
 	uint32_t val = 0;
 
-	//TODO: Is 8 really the number I'm looking for here?
-	if (8 != hwVersion){
+	// Check board version read from EEPROM
+	if (hwVersion < 8){
 		// Hard lock if version is not what we have tested to. HW version
 		//  changes pins, such as battery power enable.
 		volatile int lock = 1;
