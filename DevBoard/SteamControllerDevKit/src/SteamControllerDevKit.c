@@ -38,7 +38,7 @@
 
 #include "init.h"
 #include "eeprom_access.h"
-#include "usb.h"
+#include "cmdline.h"
 
 /**
  * "Entry point" for Steam Controller dev kit. Keep in mind that you are most
@@ -90,8 +90,9 @@ int main(void){
 		i++ ;
 		// When Y button is pressed Steam Button LED will light
 		*((uint8_t*)0x50000015) = !(*((uint8_t*)0x5000002B));
-//TODO: remove/clean this? 
-		handleInput();
+
+		// Check serial input device for new characters to process
+		handleSerial();
 	}
 	return 0 ;
 }

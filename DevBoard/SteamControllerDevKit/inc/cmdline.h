@@ -1,6 +1,7 @@
 /**
- * \file usb.h
- * \brief This encapsulates all USB configuration, interfacing, etc.
+ * \file cmdline.h
+ * \brief Encompasses functions for command line interface for interacting with
+ *	the Steam Controller.
  *
  * MIT License
  *
@@ -25,19 +26,9 @@
  * SOFTWARE.
  */
 
-#include <stdint.h>
+#ifndef _CMDLINE_
+#define _CMDLINE_
 
-#ifndef _STEAM_CONTROLLER_USB_
-#define _STEAM_CONTROLLER_USB_
+void handleSerial(void);
 
-int usbConfig(void);
-
-//TODO: 
-// sendToHaptics (rumble?)
-// rcvFromHaptics (check for input on haptic sensor?)
-
-int getUsbSerialData(uint8_t* data, uint32_t maxDataLen);
-void sendUsbSerialData(const uint8_t* data, uint32_t dataLen);
-
-#endif /* _STEAM_CONTROLLER_USB_ */
-
+#endif /* _CMDLINE_ */
