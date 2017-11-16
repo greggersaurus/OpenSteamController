@@ -31,4 +31,6 @@
 
 void handleSerial(void);
 
+void consolePrint(const char* format, ...);
+
 #endif /* _CMDLINE_ */
