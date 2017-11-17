@@ -47,9 +47,23 @@ void consolePrint(const char* format, ...) {
 
 	va_start(args, format);
 	num_chars = vsnprintf((char*)buff, sizeof(buff), format, args);
-	if (num_chars > 0)
-//TODO: add handling of sending \r when encountering \n?
-		sendUsbSerialData(buff, num_chars);
+	if (num_chars > 0) {
+		int start_idx = 0;
+		int idx = 0;
+		for (idx = 0; idx < num_chars; idx++) {
+			if (buff[idx] == '\n') {
+				// Send carriage return so we don't just drop
+				//  down a line to same offset
+				sendUsbSerialData(&buff[start_idx], 
+					idx-start_idx+1);
+				sendUsbSerialData((uint8_t*)"\r", 1);
+				start_idx = idx+1;
+			}
+		}
+		if (start_idx < num_chars) {
+			sendUsbSerialData(&buff[start_idx], num_chars-start_idx);
+		}
+	}
 	va_end(args);
 }
 
@@ -89,20 +103,45 @@ static Cmd* searchCmds(const char* cmd) {
  * \return None.
  */
 void handleSerial(void){
-	int bytes_rcvd = -1;
-	static uint8_t buff[64];
-	static uint32_t buff_cnt = 0;
+	//TODO: add cmd history to iterate through with arrow keys
+//	static char* cmdHistory[];
 
+	static uint8_t buff[64]; // Command line buffer
+	static uint32_t buff_valid_size = 0; // Number of valid characters in cmd line buffer
+	static uint32_t buff_offset = 0; // Current location of cursor in cmd line buffer
+
+	int bytes_rcvd = -1;
+
+#if 1
+	// Debug code for knowing what exactly we are receiving
+	bytes_rcvd = getUsbSerialData(buff, sizeof(buff)-1);
+	if (bytes_rcvd > 0) {
+		consolePrint("\nBegin sequence received\n\n");
+		for (int idx = 0; idx < bytes_rcvd; idx++) {
+			char c = buff[idx];
+			consolePrint("Received char with hex value 0x%x. "
+				"This displays as \'%c\'\n", c, c);
+		}
+		consolePrint("\nEnd sequence received\n");
+	}
+	return;
+#endif
+	
 	// Check if there are new characters to process
-	if (buff_cnt < sizeof(buff))
-		bytes_rcvd = getUsbSerialData(&buff[buff_cnt], sizeof(buff)-1-buff_cnt);
+	if (buff_offset < sizeof(buff)) {
+		bytes_rcvd = getUsbSerialData(&buff[buff_offset], 
+			sizeof(buff)-1-buff_offset);
+	}
 
 	if (!bytes_rcvd)
 		return;
 
 	if (bytes_rcvd < 0) {
-		consolePrint("\n\rCommand Line Buffer Overflow! Flushing input stream.\n\r");
-		buff_cnt = 0;
+		consolePrint("\n!!! Command Line Buffer Overflow. Flushing input stream. !!!\n");
+
+		buff_valid_size = 0;
+		buff_offset = 0;
+
 		// Flush input stream
 		do {
 			bytes_rcvd = getUsbSerialData(buff, sizeof(buff)-1);
@@ -110,14 +149,16 @@ void handleSerial(void){
 		return;
 	}
 
+#if 0
 	// Check new characters 
-	int rd_idx = buff_cnt;
-	int wr_idx = buff_cnt;
+	int rd_idx = buff_offset;
+	int wr_idx = buff_offset;
 	buff_cnt += bytes_rcvd;
-//TODO: need to handle escape sequenes, such as arrow keys. Make while instead of for loop? Or just block them?
+//TODO: need to handle escape sequenes, such as arrow keys. Make while instead of for loop?
 	for (; rd_idx < buff_cnt; rd_idx++) {
 		switch (buff[rd_idx]) {
-			case 127:
+			// Character deletion
+			case 0x7f:
 			case '\b':
 				if (wr_idx)
 					wr_idx--;
@@ -127,7 +168,21 @@ void handleSerial(void){
 					buff_cnt = 0;
 				}
 				break;
+			
+			// Escape sequence. We only handle some of these.
+			case 0x33:
 
+				// Up or down to copy history to buff
+				// Left or right to adjust cursor (i.e. buff_offset)
+
+			// Tab (for completion)
+			case '\t':
+
+			// Enter or return indicates end of command
+			case '\r':
+			case '\n':
+
+			// All other characters
 			default:
 				buff[wr_idx++] = buff[rd_idx];
 				break;
@@ -143,6 +198,7 @@ void handleSerial(void){
 //TODO: instead of re-writing entire line each time, use escape sequences to only backtrack as much as is needed?
 	consolePrint("\r");
 	sendUsbSerialData(buff, buff_cnt);
+#endif
 
 /*
 	// TODO: temporary simple/dumb echo
