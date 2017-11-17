@@ -38,7 +38,8 @@
 
 #include "init.h"
 #include "eeprom_access.h"
-#include "cmdline.h"
+#include "console.h"
+#include "usb.h"
 
 /**
  * "Entry point" for Steam Controller dev kit. Keep in mind that you are most

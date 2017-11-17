@@ -1,5 +1,5 @@
 /**
- * \file cmdline.c
+ * \file console.c
  * \brief Encompasses functions for command line interface for interacting with
  *	the Steam Controller.
  *
@@ -26,7 +26,7 @@
  * SOFTWARE.
  */
 
-#include "cmdline.h"
+#include "console.h"
 
 #include "usb.h"
 

@@ -1,5 +1,5 @@
 /**
- * \file cmdline.h
+ * \file console.h
  * \brief Encompasses functions for command line interface for interacting with
  *	the Steam Controller.
  *
@@ -26,11 +26,11 @@
  * SOFTWARE.
  */
 
-#ifndef _CMDLINE_
-#define _CMDLINE_
+#ifndef _SC_CONSOLE_
+#define _SC_CONSOLE_
 
 void handleSerial(void);
 
 void consolePrint(const char* format, ...);
 
-#endif /* _CMDLINE_ */
+#endif /* _SC_CONSOLE_ */
