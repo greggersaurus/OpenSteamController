@@ -117,31 +117,133 @@ void printHex(const uint8_t* buff, uint32_t len){
 	// null termination of cmd string.
 
 /**
- * Print updated command to console, making sure previous characters are 
- *	removed if necessary.
+ * React to character received from serial input device.
  *
- * \param[in] cmd NULL terminated string with command text.
- * \param cursorIdx 0-based offset of cursor.
+ * \param c Character received from serial input device.
  *
  * \return None.
  */
-void updateCmd(char* cmd, uint32_t cursorIdx) {
+void handleSerialChar(uint8_t c) {
+	static uint8_t cmd_history[CMD_HISTORY_LEN][MAX_CMD_LEN];
 
-	// Clear line
-	consolePrint("\033[2K\r");
-	
-	// Write entire line to console
-	cmd[MAX_CMD_LEN-1] = 0;
-	consolePrint(cmd);
+	static uint32_t cmd_history_idx = 0; // Indicates which string in
+		// cmd_history (of length MAX_CMD_LEN) is currently being filled
 
-	// Position cursor appropriately
-//TODO: best way to do this?
-/*
-	consolePrint("\r");
-	for (int cnt = 0; cnt < cursorIdx; cnt++) {
-		consolePrint("\033[C");
+	static uint32_t cmd_len = 0; // Number of valid characters in current 
+		// command
+	static uint32_t cursor_idx = 0; // Location of cursor in current command
+
+	static uint8_t esc_seq[3]; // Used to store previously recievd escape
+		// sequences
+	static uint32_t esc_cnt = 0; // Number of valid escape sequence 
+		// characters in esc_seq
+
+	static char last_c = ' '; // Character received last function call
+
+	if (esc_cnt) {
+		esc_seq[esc_cnt++] = c;
+
+		if (esc_cnt == 3) {
+			if (esc_seq[1] == '[' && esc_seq[2] == 'A') {
+				// Up arrow key 
+//TODO: cycle through cmd history
+			} else if (esc_seq[1] == '[' && esc_seq[2] == 'B') {
+				// Down arrow key 
+//TODO: cycle through cmd history:
+			} else if (esc_seq[1] == '[' && esc_seq[2] == 'C') {
+				// Forward arrow key 
+				if (cursor_idx < cmd_len) {
+					cursor_idx++;
+					sendUsbSerialData(esc_seq, 3);
+				}
+			} else if (esc_seq[1] == '[' && esc_seq[2] == 'D') {
+				// Back arrow key
+				if (cursor_idx > 0) {
+					cursor_idx--;
+					sendUsbSerialData(esc_seq, 3);
+				}
+			}
+
+			esc_cnt = 0;
+		}
+		return;
 	}
-*/
+	
+	switch (c) {
+	case 0x1b:
+		// Start of escape sequence
+		esc_seq[0] = c;
+		esc_cnt = 1;
+		break;
+
+	case 0x7f:
+	case '\b':
+		// Character deletion
+		if (cursor_idx > 0) {
+			consolePrint("\b");
+
+			cmd_len--;
+			cursor_idx--;
+
+			for (int idx = cursor_idx; idx < cmd_len; idx++) {
+				consolePrint("%c", 
+					cmd_history[cmd_history_idx][idx+1]);
+				cmd_history[cmd_history_idx][idx] = 
+					cmd_history[cmd_history_idx][idx+1];
+			}
+			consolePrint(" \b");
+
+			for (int cnt = 0; cnt < cmd_len - cursor_idx; cnt++) {
+				consolePrint("\b");
+			}
+		}
+		break;
+	
+	case '\t':
+		// Tab (for completion)
+//TODO: use last_c to know how to autocomplete
+		break;
+
+	case '\r':
+	case '\n':
+		// Enter or return indicates end of command
+		consolePrint("\n");
+
+//TODO: call function to actually handle command 
+		printHex(cmd_history[cmd_history_idx], cmd_len);
+
+		cmd_history_idx++;
+		cmd_history_idx %= CMD_HISTORY_LEN;
+
+		cursor_idx = 0;
+		cmd_len = 0;
+		break;
+
+	default:
+		// Insert all other characters into buffer
+		if (cursor_idx < MAX_CMD_LEN) {
+			sendUsbSerialData(&c, 1);
+
+			for (int idx = cmd_len; idx > cursor_idx; idx--) {
+				cmd_history[cmd_history_idx][idx] = 
+					cmd_history[cmd_history_idx][idx-1];
+			}
+
+			cmd_history[cmd_history_idx][cursor_idx] = c;
+			cursor_idx++;
+			cmd_len++;
+
+			sendUsbSerialData(
+				&cmd_history[cmd_history_idx][cursor_idx],
+				cmd_len - cursor_idx);
+			for (int cnt = 0; cnt < cmd_len - cursor_idx; cnt++) {
+				consolePrint("\b");
+			}
+		}
+		break;
+	}
+
+	last_c = c;
 }
 
 /**
@@ -150,23 +252,11 @@ void updateCmd(char* cmd, uint32_t cursorIdx) {
  *
  * \return None.
  */
-void handleSerial(void){
-	static char cmd_history[CMD_HISTORY_LEN][MAX_CMD_LEN];
-	static uint32_t cmd_history_cnt = 0; // Keeps track of number of valid
-		// commands in history
-	static uint32_t curr_cmd_idx = 0; // Offset into cmd_history holding 
-		// current command being received
-	static uint32_t curr_cmd_len = 0; // Number of valid characters in 
-		// current command
-	static uint32_t cursor_idx = 0; // Location of cursor in current command
-
-	uint8_t rcv_buff[MAX_CMD_LEN]; // For receiving characters
+void handleSerial(void) {
+	uint8_t rcv_buff[64]; // For receiving characters
 	int bytes_rcvd = -1;
-
-	uint8_t cpy_buff[MAX_CMD_LEN]; // For holding values in case of 
-		// insertion of new characters into command
 	
-	bytes_rcvd = getUsbSerialData(rcv_buff, MAX_CMD_LEN);
+	bytes_rcvd = getUsbSerialData(rcv_buff, sizeof(rcv_buff));
 
 	if (!bytes_rcvd)
 		return;
@@ -175,121 +265,17 @@ void handleSerial(void){
 		consolePrint("\n!!! Error receiving serial data. Flushing "
 			"input stream. !!!\n");
 
-		curr_cmd_len = 0;
-		cursor_idx = 0;
-
 		// Flush input stream
 		do {
-			bytes_rcvd = getUsbSerialData(rcv_buff, MAX_CMD_LEN);
+			bytes_rcvd = getUsbSerialData(rcv_buff, 
+				sizeof(rcv_buff));
 		} while (bytes_rcvd);
 		return;
 	}
 
-	// Backup characters that might need to be shifted due to insertion
-	int cpy_len = curr_cmd_len - cursor_idx;
-	if (cpy_len > 0) {
-		memcpy(cpy_buff, &cmd_history[curr_cmd_idx][cursor_idx], 
-			cpy_len);
+	for (int idx = 0; idx < bytes_rcvd; idx++) {
+		handleSerialChar(rcv_buff[idx]);
 	}
-
-	// Process received characters
-	int rd_idx = 0;
-	while (rd_idx < bytes_rcvd) {
-		switch (rcv_buff[rd_idx]) {
-		// Character deletion
-		case 0x7f:
-		case '\b':
-			if (cursor_idx > 0) {
-				if (cursor_idx == curr_cmd_len && 
-					curr_cmd_len > 0) {
-					curr_cmd_len--;	
-				}
-				cursor_idx--;
-			}
-			rd_idx++;
-			break;
-		
-		// Tab (for completion)
-		case '\t':
-//TODO: need to know last char (in case it was tab)
-			rd_idx++;
-			break;
-
-		// Enter or return indicates end of command
-		case '\r':
-		case '\n':
-			rd_idx++;
-
-			cmd_history[curr_cmd_idx][cursor_idx] = 0;
-			updateCmd(cmd_history[curr_cmd_idx], cursor_idx);
-			consolePrint("\n");
-
-//TODO: call function to handle command
-			printHex(cmd_history[curr_cmd_idx], cursor_idx);
-
-			curr_cmd_idx++;
-			curr_cmd_idx %= CMD_HISTORY_LEN;
-			if (cmd_history_cnt < CMD_HISTORY_LEN-1) {
-				cmd_history_cnt++;
-			}
-			cursor_idx = 0;
-			curr_cmd_len = 0;
-			break;
-
-		// (Potentially) beginning of escape sequence. We only handle some of these.
-		case 0x1b:
-			rd_idx++;
-
-			if (bytes_rcvd - rd_idx > 1) {
-				if (rcv_buff[rd_idx] == 0x5b 
-					&& rcv_buff[rd_idx+1] == 0x41) {
-					// Up arrow
-//TODO
-				} else if (rcv_buff[rd_idx] == 0x5b 
-					&& rcv_buff[rd_idx+1] == 0x42) {
-					// Down arrow
-//TODO
-				} else if (rcv_buff[rd_idx] == 0x5b 
-					&& rcv_buff[rd_idx+1] == 0x43) {
-					// Forward arrow
-//TODO
-				} else if (rcv_buff[rd_idx] == 0x5b 
-					&& rcv_buff[rd_idx+1] == 0x44) {
-					// Back arrow
-//TODO
-				}
-			}
-			break;
-
-		// Straight copy of all other characters
-		default:
-			if (cursor_idx < MAX_CMD_LEN) {
-				cmd_history[curr_cmd_idx][cursor_idx] = 
-					rcv_buff[rd_idx];
-				cursor_idx++;
-			}
-			curr_cmd_len++;
-			rd_idx++;
-			break;
-		}
-
-	}
-
-	// Check for overflow
-	if (curr_cmd_len >= MAX_CMD_LEN) {
-		cpy_len -= curr_cmd_len - MAX_CMD_LEN - 1;
-		curr_cmd_len = MAX_CMD_LEN-1;
-	}
-
-	// Copy over any saved characters after insertion
-	if (cpy_len > 0) {
-		memcpy(&cmd_history[curr_cmd_idx][cursor_idx], cpy_buff, 
-			cpy_len);
-	}
-
-	// Write entire line to console
-	cmd_history[curr_cmd_idx][curr_cmd_len] = 0;
-	updateCmd(cmd_history[curr_cmd_idx], curr_cmd_len);
 }
 
 #if (0)
