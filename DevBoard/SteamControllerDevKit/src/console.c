@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 /**
  * printf-like function for printing text to console.
@@ -95,6 +96,53 @@ static Cmd* searchCmds(const char* cmd) {
 	return 0;
 }
 
+/**
+ * Print the hex representation of each character in the buffer to console.
+ *
+ * \param[in] str Buffer to print as a series of hex values.
+ * \param len Numbers of bytes in buff.
+ *
+ * \return None.
+ */
+void printHex(const uint8_t* buff, uint32_t len){
+	for (int idx = 0; idx < len; idx++) {
+		char c = buff[idx];
+		consolePrint("0x%x ", c);
+	}
+	consolePrint("\n");
+}
+
+#define CMD_HISTORY_LEN (16) // Number of commands that may be saved
+#define MAX_CMD_LEN (64) // Maximum number of characters per command, including
+	// null termination of cmd string.
+
+/**
+ * Print updated command to console, making sure previous characters are 
+ *	removed if necessary.
+ *
+ * \param[in] cmd NULL terminated string with command text.
+ * \param cursorIdx 0-based offset of cursor.
+ *
+ * \return None.
+ */
+void updateCmd(char* cmd, uint32_t cursorIdx) {
+
+	// Clear line
+	consolePrint("\033[2K\r");
+	
+	// Write entire line to console
+	cmd[MAX_CMD_LEN-1] = 0;
+	consolePrint(cmd);
+
+	// Position cursor appropriately
+//TODO: best way to do this?
+/*
+	consolePrint("\r");
+	for (int cnt = 0; cnt < cursorIdx; cnt++) {
+		consolePrint("\033[C");
+	}
+*/
+}
 
 /**
  * Process characters received on serial input device and handle actions if
@@ -103,111 +151,145 @@ static Cmd* searchCmds(const char* cmd) {
  * \return None.
  */
 void handleSerial(void){
-	//TODO: add cmd history to iterate through with arrow keys
-//	static char* cmdHistory[];
+	static char cmd_history[CMD_HISTORY_LEN][MAX_CMD_LEN];
+	static uint32_t cmd_history_cnt = 0; // Keeps track of number of valid
+		// commands in history
+	static uint32_t curr_cmd_idx = 0; // Offset into cmd_history holding 
+		// current command being received
+	static uint32_t curr_cmd_len = 0; // Number of valid characters in 
+		// current command
+	static uint32_t cursor_idx = 0; // Location of cursor in current command
 
-	static uint8_t buff[64]; // Command line buffer
-	static uint32_t buff_valid_size = 0; // Number of valid characters in cmd line buffer
-	static uint32_t buff_offset = 0; // Current location of cursor in cmd line buffer
-
+	uint8_t rcv_buff[MAX_CMD_LEN]; // For receiving characters
 	int bytes_rcvd = -1;
 
-#if 1
-	// Debug code for knowing what exactly we are receiving
-	bytes_rcvd = getUsbSerialData(buff, sizeof(buff)-1);
-	if (bytes_rcvd > 0) {
-		consolePrint("\nBegin sequence received\n\n");
-		for (int idx = 0; idx < bytes_rcvd; idx++) {
-			char c = buff[idx];
-			consolePrint("Received char with hex value 0x%x. "
-				"This displays as \'%c\'\n", c, c);
-		}
-		consolePrint("\nEnd sequence received\n");
-	}
-	return;
-#endif
+	uint8_t cpy_buff[MAX_CMD_LEN]; // For holding values in case of 
+		// insertion of new characters into command
 	
-	// Check if there are new characters to process
-	if (buff_offset < sizeof(buff)) {
-		bytes_rcvd = getUsbSerialData(&buff[buff_offset], 
-			sizeof(buff)-1-buff_offset);
-	}
+	bytes_rcvd = getUsbSerialData(rcv_buff, MAX_CMD_LEN);
 
 	if (!bytes_rcvd)
 		return;
 
 	if (bytes_rcvd < 0) {
-		consolePrint("\n!!! Command Line Buffer Overflow. Flushing input stream. !!!\n");
+		consolePrint("\n!!! Error receiving serial data. Flushing "
+			"input stream. !!!\n");
 
-		buff_valid_size = 0;
-		buff_offset = 0;
+		curr_cmd_len = 0;
+		cursor_idx = 0;
 
 		// Flush input stream
 		do {
-			bytes_rcvd = getUsbSerialData(buff, sizeof(buff)-1);
+			bytes_rcvd = getUsbSerialData(rcv_buff, MAX_CMD_LEN);
 		} while (bytes_rcvd);
 		return;
 	}
 
-#if 0
-	// Check new characters 
-	int rd_idx = buff_offset;
-	int wr_idx = buff_offset;
-	buff_cnt += bytes_rcvd;
-//TODO: need to handle escape sequenes, such as arrow keys. Make while instead of for loop?
-	for (; rd_idx < buff_cnt; rd_idx++) {
-		switch (buff[rd_idx]) {
-			// Character deletion
-			case 0x7f:
-			case '\b':
-				if (wr_idx)
-					wr_idx--;
-				if (buff_cnt > 1) {
-					buff_cnt -= 2;
-				} else {
-					buff_cnt = 0;
+	// Backup characters that might need to be shifted due to insertion
+	int cpy_len = curr_cmd_len - cursor_idx;
+	if (cpy_len > 0) {
+		memcpy(cpy_buff, &cmd_history[curr_cmd_idx][cursor_idx], 
+			cpy_len);
+	}
+
+	// Process received characters
+	int rd_idx = 0;
+	while (rd_idx < bytes_rcvd) {
+		switch (rcv_buff[rd_idx]) {
+		// Character deletion
+		case 0x7f:
+		case '\b':
+			if (cursor_idx > 0) {
+				if (cursor_idx == curr_cmd_len && 
+					curr_cmd_len > 0) {
+					curr_cmd_len--;	
 				}
-				break;
-			
-			// Escape sequence. We only handle some of these.
-			case 0x33:
+				cursor_idx--;
+			}
+			rd_idx++;
+			break;
+		
+		// Tab (for completion)
+		case '\t':
+//TODO: need to know last char (in case it was tab)
+			rd_idx++;
+			break;
 
-				// Up or down to copy history to buff
-				// Left or right to adjust cursor (i.e. buff_offset)
+		// Enter or return indicates end of command
+		case '\r':
+		case '\n':
+			rd_idx++;
 
-			// Tab (for completion)
-			case '\t':
+			cmd_history[curr_cmd_idx][cursor_idx] = 0;
+			updateCmd(cmd_history[curr_cmd_idx], cursor_idx);
+			consolePrint("\n");
 
-			// Enter or return indicates end of command
-			case '\r':
-			case '\n':
+//TODO: call function to handle command
+			printHex(cmd_history[curr_cmd_idx], cursor_idx);
 
-			// All other characters
-			default:
-				buff[wr_idx++] = buff[rd_idx];
-				break;
+			curr_cmd_idx++;
+			curr_cmd_idx %= CMD_HISTORY_LEN;
+			if (cmd_history_cnt < CMD_HISTORY_LEN-1) {
+				cmd_history_cnt++;
+			}
+			cursor_idx = 0;
+			curr_cmd_len = 0;
+			break;
+
+		// (Potentially) beginning of escape sequence. We only handle some of these.
+		case 0x1b:
+			rd_idx++;
+
+			if (bytes_rcvd - rd_idx > 1) {
+				if (rcv_buff[rd_idx] == 0x5b 
+					&& rcv_buff[rd_idx+1] == 0x41) {
+					// Up arrow
+//TODO
+				} else if (rcv_buff[rd_idx] == 0x5b 
+					&& rcv_buff[rd_idx+1] == 0x42) {
+					// Down arrow
+//TODO
+				} else if (rcv_buff[rd_idx] == 0x5b 
+					&& rcv_buff[rd_idx+1] == 0x43) {
+					// Forward arrow
+//TODO
+				} else if (rcv_buff[rd_idx] == 0x5b 
+					&& rcv_buff[rd_idx+1] == 0x44) {
+					// Back arrow
+//TODO
+				}
+			}
+			break;
+
+		// Straight copy of all other characters
+		default:
+			if (cursor_idx < MAX_CMD_LEN) {
+				cmd_history[curr_cmd_idx][cursor_idx] = 
+					rcv_buff[rd_idx];
+				cursor_idx++;
+			}
+			curr_cmd_len++;
+			rd_idx++;
+			break;
 		}
+
 	}
 
-/*
-	for (; wr_idx < rd_idx; wr_idx++) {
-		buff[wr_idx] = ' ';
+	// Check for overflow
+	if (curr_cmd_len >= MAX_CMD_LEN) {
+		cpy_len -= curr_cmd_len - MAX_CMD_LEN - 1;
+		curr_cmd_len = MAX_CMD_LEN-1;
 	}
-*/
 
-//TODO: instead of re-writing entire line each time, use escape sequences to only backtrack as much as is needed?
-	consolePrint("\r");
-	sendUsbSerialData(buff, buff_cnt);
-#endif
-
-/*
-	// TODO: temporary simple/dumb echo
-	bytes_rcvd = getUsbSerialData(buff, sizeof(buff));
-	if (bytes_rcvd > 0){
-		sendUsbSerialData(buff, bytes_rcvd);
+	// Copy over any saved characters after insertion
+	if (cpy_len > 0) {
+		memcpy(&cmd_history[curr_cmd_idx][cursor_idx], cpy_buff, 
+			cpy_len);
 	}
-	//TODO: report error via serial if necesssary...
-*/
+
+	// Write entire line to console
+	cmd_history[curr_cmd_idx][curr_cmd_len] = 0;
+	updateCmd(cmd_history[curr_cmd_idx], curr_cmd_len);
 }
 
 #if (0)
