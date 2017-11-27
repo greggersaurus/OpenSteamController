@@ -124,13 +124,16 @@ void printHex(const uint8_t* buff, uint32_t len){
  * \return None.
  */
 void handleSerialChar(uint8_t c) {
+//TODO: turn into struct?
+	static uint32_t cmd_lens[CMD_HISTORY_LEN];
 	static uint8_t cmd_history[CMD_HISTORY_LEN][MAX_CMD_LEN];
 
-	static uint32_t cmd_history_idx = 0; // Indicates which string in
+	static uint32_t curr_cmd_wr_idx = 0; // Indicates which string in
 		// cmd_history (of length MAX_CMD_LEN) is currently being filled
+	static uint32_t curr_cmd_rd_idx = 0; // Indicates which string in
+		// cmd_history was last read to fill wr_idx when cycling through
+		// history
 
-	static uint32_t cmd_len = 0; // Number of valid characters in current 
-		// command
 	static uint32_t cursor_idx = 0; // Location of cursor in current command
 
 	static uint8_t esc_seq[3]; // Used to store previously recievd escape
@@ -140,19 +143,57 @@ void handleSerialChar(uint8_t c) {
 
 	static char last_c = ' '; // Character received last function call
 
+//TODO: handle in separate function/C file?
 	if (esc_cnt) {
 		esc_seq[esc_cnt++] = c;
 
 		if (esc_cnt == 3) {
 			if (esc_seq[1] == '[' && esc_seq[2] == 'A') {
 				// Up arrow key 
-//TODO: cycle through cmd history
+				uint32_t next_idx = curr_cmd_rd_idx - 1;
+				if (!curr_cmd_rd_idx) {
+					next_idx = CMD_HISTORY_LEN - 1;
+				}
+
+				if (next_idx == curr_cmd_wr_idx) {
+					consolePrint("\a");
+				} else {
+					consolePrint("\r\x1B[2K");
+
+					curr_cmd_rd_idx = next_idx;
+					memcpy(cmd_history[curr_cmd_wr_idx],
+						cmd_history[curr_cmd_rd_idx],
+						MAX_CMD_LEN);
+					cmd_lens[curr_cmd_wr_idx] = cmd_lens[curr_cmd_rd_idx];
+					cursor_idx = cmd_lens[curr_cmd_rd_idx];
+			
+					sendUsbSerialData(cmd_history[curr_cmd_wr_idx], cmd_lens[curr_cmd_wr_idx]);
+				}
 			} else if (esc_seq[1] == '[' && esc_seq[2] == 'B') {
 				// Down arrow key 
-//TODO: cycle through cmd history:
+				if (curr_cmd_rd_idx == curr_cmd_wr_idx) {
+					consolePrint("\a");
+				} else {
+					consolePrint("\r\x1B[2K");
+
+					curr_cmd_rd_idx++;
+					curr_cmd_rd_idx %= CMD_HISTORY_LEN;
+					if (curr_cmd_rd_idx == curr_cmd_wr_idx) {
+						cmd_lens[curr_cmd_wr_idx] = 0;
+						cursor_idx = 0;
+					} else {
+						memcpy(cmd_history[curr_cmd_wr_idx],
+							cmd_history[curr_cmd_rd_idx],
+							MAX_CMD_LEN);
+						cmd_lens[curr_cmd_wr_idx] = cmd_lens[curr_cmd_rd_idx];
+						cursor_idx = cmd_lens[curr_cmd_rd_idx];
+
+						sendUsbSerialData(cmd_history[curr_cmd_wr_idx], cmd_lens[curr_cmd_wr_idx]);
+					}
+				}
 			} else if (esc_seq[1] == '[' && esc_seq[2] == 'C') {
 				// Forward arrow key 
-				if (cursor_idx < cmd_len) {
+				if (cursor_idx < cmd_lens[curr_cmd_wr_idx]) {
 					cursor_idx++;
 					sendUsbSerialData(esc_seq, 3);
 				}
@@ -182,18 +223,18 @@ void handleSerialChar(uint8_t c) {
 		if (cursor_idx > 0) {
 			consolePrint("\b");
 
-			cmd_len--;
+			cmd_lens[curr_cmd_wr_idx]--;
 			cursor_idx--;
 
-			for (int idx = cursor_idx; idx < cmd_len; idx++) {
+			for (int idx = cursor_idx; idx < cmd_lens[curr_cmd_wr_idx]; idx++) {
 				consolePrint("%c", 
-					cmd_history[cmd_history_idx][idx+1]);
-				cmd_history[cmd_history_idx][idx] = 
-					cmd_history[cmd_history_idx][idx+1];
+					cmd_history[curr_cmd_wr_idx][idx+1]);
+				cmd_history[curr_cmd_wr_idx][idx] = 
+					cmd_history[curr_cmd_wr_idx][idx+1];
 			}
 			consolePrint(" \b");
 
-			for (int cnt = 0; cnt < cmd_len - cursor_idx; cnt++) {
+			for (int cnt = 0; cnt < cmd_lens[curr_cmd_wr_idx] - cursor_idx; cnt++) {
 				consolePrint("\b");
 			}
 		}
@@ -210,13 +251,14 @@ void handleSerialChar(uint8_t c) {
 		consolePrint("\n");
 
 //TODO: call function to actually handle command 
-		printHex(cmd_history[cmd_history_idx], cmd_len);
+		printHex(cmd_history[curr_cmd_wr_idx], cmd_lens[curr_cmd_wr_idx]);
 
-		cmd_history_idx++;
-		cmd_history_idx %= CMD_HISTORY_LEN;
+		curr_cmd_wr_idx++;
+		curr_cmd_wr_idx %= CMD_HISTORY_LEN;
+		curr_cmd_rd_idx = curr_cmd_wr_idx;
 
 		cursor_idx = 0;
-		cmd_len = 0;
+		cmd_lens[curr_cmd_wr_idx] = 0;
 		break;
 
 	default:
@@ -224,19 +266,19 @@ void handleSerialChar(uint8_t c) {
 		if (cursor_idx < MAX_CMD_LEN) {
 			sendUsbSerialData(&c, 1);
 
-			for (int idx = cmd_len; idx > cursor_idx; idx--) {
-				cmd_history[cmd_history_idx][idx] = 
-					cmd_history[cmd_history_idx][idx-1];
+			for (int idx = cmd_lens[curr_cmd_wr_idx]; idx > cursor_idx; idx--) {
+				cmd_history[curr_cmd_wr_idx][idx] = 
+					cmd_history[curr_cmd_wr_idx][idx-1];
 			}
 
-			cmd_history[cmd_history_idx][cursor_idx] = c;
+			cmd_history[curr_cmd_wr_idx][cursor_idx] = c;
 			cursor_idx++;
-			cmd_len++;
+			cmd_lens[curr_cmd_wr_idx]++;
 
 			sendUsbSerialData(
-				&cmd_history[cmd_history_idx][cursor_idx],
-				cmd_len - cursor_idx);
-			for (int cnt = 0; cnt < cmd_len - cursor_idx; cnt++) {
+				&cmd_history[curr_cmd_wr_idx][cursor_idx],
+				cmd_lens[curr_cmd_wr_idx] - cursor_idx);
+			for (int cnt = 0; cnt < cmd_lens[curr_cmd_wr_idx] - cursor_idx; cnt++) {
 				consolePrint("\b");
 			}
 		}
