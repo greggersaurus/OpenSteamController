@@ -93,7 +93,7 @@ int main(void){
 		*((uint8_t*)0x50000015) = !(*((uint8_t*)0x5000002B));
 
 		// Check serial input device for new characters to process
-		handleSerial();
+		handleConsoleInput();
 	}
 	return 0 ;
 }

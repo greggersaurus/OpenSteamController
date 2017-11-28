@@ -1,7 +1,6 @@
 /**
- * \file console.h
- * \brief Encompasses functions for interacting with console (i.e. displaying
- *	text and reacting to user input).
+ * \file command.h
+ * \brief Encompasses functions for processing commands received via console.
  *
  * MIT License
  *
@@ -26,11 +25,11 @@
  * SOFTWARE.
  */
 
-#ifndef _SC_CONSOLE_
-#define _SC_CONSOLE_
+#ifndef _SC_COMMAND_
+#define _SC_COMMAND_
 
-void handleConsoleInput(void);
+const char* completeCmd(const char* str, uint32_t len);
+void printPossibleCmds(const char* str, uint32_t len);
+int executeCmd(const char* str, uint32_t len);
 
-void consolePrint(const char* format, ...);
-
-#endif /* _SC_CONSOLE_ */
+#endif /* _SC_COMMAND_ */
