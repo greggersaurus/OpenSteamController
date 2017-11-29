@@ -34,7 +34,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-
 #define HISTORY_SIZE (16) // Number of entries that may be saved to be recalled
 	// later by user
 #define MAX_ENTRY_LEN (64) // Maximum number of characters per console entry
@@ -58,6 +57,7 @@ static uint32_t cursorIdx = 0; // Indicates where cursor is for entry currently
 
 /**
  * Print the hex representation of each character in the buffer to console.
+ *  Also marks where internal cursor marker is.
  *
  * \param[in] str Buffer to print as a series of hex values.
  * \param len Numbers of bytes in buff.
@@ -67,9 +67,238 @@ static uint32_t cursorIdx = 0; // Indicates where cursor is for entry currently
 static void printHex(const uint8_t* buff, uint32_t len){
 	for (int idx = 0; idx < len; idx++) {
 		char c = buff[idx];
-		consolePrint("0x%x ", c);
+		if (idx == cursorIdx) {
+			consolePrint("[");
+		}
+		consolePrint("0x%x", c);
+		if (idx == cursorIdx) {
+			consolePrint("]");
+		}
+		consolePrint(" ");
 	}
 	consolePrint("\n");
+}
+
+/**
+ * Handle escape sequence received from console.
+ *
+ * \param[in] seq Sequence of characters to handle.
+ * \param len Number of valid characters in seq.
+ *
+ * \return 0 on successful handle. Non-zero indicates incomplete sequence.
+ */
+static int handleEscSeq(const uint8_t* seq, uint32_t len) {
+
+	if (len < 3) {
+		return -1;
+	}
+
+	if (seq[1] == '[' && seq[2] == 'A') {
+		// Up arrow key 
+		uint32_t next_idx = entriesRdIdx - 1;
+		if (!entriesRdIdx) {
+			next_idx = HISTORY_SIZE - 1;
+		}
+
+		if (next_idx == entriesWrIdx) {
+			// Sound to indicate we are at limit 
+			consolePrint("\a");
+		} else {
+			// Clear line
+			consolePrint("\r\x1B[2K");
+
+			// Copy and display entry from history
+			entriesRdIdx = next_idx;
+			memcpy(entries[entriesWrIdx].str,
+				entries[entriesRdIdx].str, MAX_ENTRY_LEN);
+			entries[entriesWrIdx].len = entries[entriesRdIdx].len;
+			cursorIdx = entries[entriesRdIdx].len;
+	
+			sendUsbSerialData(entries[entriesWrIdx].str, 
+				entries[entriesWrIdx].len);
+		}
+	} else if (seq[1] == '[' && seq[2] == 'B') {
+		// Down arrow key 
+		if (entriesRdIdx == entriesWrIdx) {
+			// Sound to indicate we are at limit 
+			consolePrint("\a");
+		} else {
+			// Clear line
+			consolePrint("\r\x1B[2K");
+
+			// (Possibly) Copy and display entry from history
+			entriesRdIdx++;
+			entriesRdIdx %= HISTORY_SIZE;
+			if (entriesRdIdx == entriesWrIdx) {
+				entries[entriesWrIdx].len = 0;
+				cursorIdx = 0;
+			} else {
+				memcpy(entries[entriesWrIdx].str,
+					entries[entriesRdIdx].str,
+					MAX_ENTRY_LEN);
+				entries[entriesWrIdx].len = 
+					entries[entriesRdIdx].len;
+				cursorIdx = entries[entriesRdIdx].len;
+
+				sendUsbSerialData(entries[entriesWrIdx].str,
+					entries[entriesWrIdx].len);
+			}
+		}
+	} else if (seq[1] == '[' && seq[2] == 'C') {
+		// Forward arrow key 
+		if (cursorIdx < entries[entriesWrIdx].len) {
+			cursorIdx++;
+			sendUsbSerialData(seq, 3);
+		} else {
+			// Sound to indicate we are at limit 
+			consolePrint("\a");
+		}
+	} else if (seq[1] == '[' && seq[2] == 'D') {
+		// Back arrow key
+		if (cursorIdx > 0) {
+			cursorIdx--;
+			sendUsbSerialData(seq, 3);
+		} else {
+			// Sound to indicate we are at limit 
+			consolePrint("\a");
+		}
+	}
+
+	//TODO: handle ctrl-C and other escape sequences?? different lengths?
+
+	return 0;
+}
+
+/**
+ * Delete character before cursor.
+ * 
+ * \return None.
+ */
+static void delChar() {
+	if (cursorIdx > 0) {
+		consolePrint("\b");
+
+		entries[entriesWrIdx].len--;
+		cursorIdx--;
+
+		for (int idx = cursorIdx; idx < entries[entriesWrIdx].len; 
+			idx++) {
+			consolePrint("%c", entries[entriesWrIdx].str[idx+1]);
+			entries[entriesWrIdx].str[idx] = 
+				entries[entriesWrIdx].str[idx+1];
+		}
+		consolePrint(" \b");
+
+		for (int cnt = 0; cnt < entries[entriesWrIdx].len - cursorIdx; 
+			cnt++) {
+			consolePrint("\b");
+		}
+	} else {
+		// Sound to indicate we are at limit and del must be ignored
+		consolePrint("\a");
+	}
+}
+
+/**
+ * Handle tab completion request.
+ *
+ * \return 0 if completion was occurred. 
+ */
+static int completeCmd() {
+
+//TODO
+	return -1;
+}
+
+/**
+ * Print all possible command completions to console. 
+ *
+ * \return None.
+ */
+static void printCmdCompletions() {
+
+//TODO
+}
+
+/**
+ * Insert data into current entry at current cursor position. If entry reaches
+ *	limit, excess data will be ignored.
+ *
+ * \param[in] data Data to insert into entry.
+ * \param len Length of data.
+ *
+ * \return None.
+ */
+static void insertEntryData(const uint8_t* data, uint32_t len) {
+	// Print newly received characters (up to entry limit)
+	uint32_t insert_len = len;
+	if (insert_len > MAX_ENTRY_LEN - cursorIdx) {
+		insert_len = MAX_ENTRY_LEN - cursorIdx;
+	}
+
+	if (!insert_len) {
+		// Sound to indicate we are at limit 
+		consolePrint("\a");
+		return;
+	}
+
+	sendUsbSerialData(data, insert_len);
+
+	// Keep track of adjusted cursor location
+	uint32_t new_cursor_idx = cursorIdx + insert_len;
+
+	// Print shifted characters (up to entry limit)
+	uint32_t cpy_len = entries[entriesWrIdx].len - cursorIdx;
+	if (cpy_len > MAX_ENTRY_LEN - new_cursor_idx) {
+		cpy_len = MAX_ENTRY_LEN - new_cursor_idx;
+		// Sound to indicate we are at limit 
+		consolePrint("\a");
+	}
+
+	if (cpy_len) {
+		sendUsbSerialData(&entries[entriesWrIdx].str[cursorIdx], 
+			cpy_len);
+		int wr_idx = new_cursor_idx + cpy_len - 1;
+		int rd_idx = cursorIdx + cpy_len - 1;
+		for (int cnt = 0; cnt < cpy_len; cnt++) {
+			// Back up console display cursor
+			consolePrint("\b");
+
+			// Copy shifted characters (up to entry limit)
+			entries[entriesWrIdx].str[wr_idx--] = 
+				entries[entriesWrIdx].str[rd_idx--];
+		}
+	}
+
+	// Copy inserted characters (up to entry limit)
+	memcpy(&entries[entriesWrIdx].str[cursorIdx], data, insert_len);
+
+	// Update cursor location and entry length
+	cursorIdx = new_cursor_idx;
+	entries[entriesWrIdx].len += insert_len;
+	if (entries[entriesWrIdx].len > MAX_ENTRY_LEN) {
+		entries[entriesWrIdx].len = MAX_ENTRY_LEN;
+	}
+}
+
+/**
+ * Mark current entry as complete and attempt to execute.
+ * 
+ * \return.
+ */
+static void entryComplete() {
+	// Enter or return indicates end of command
+	consolePrint("\n");
+
+//TODO: call function to actually handle command 
+	printHex(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
+
+	entriesWrIdx++;
+	entriesWrIdx %= HISTORY_SIZE;
+	entriesRdIdx = entriesWrIdx;
+
+	cursorIdx = 0;
+	entries[entriesWrIdx].len = 0;
 }
 
 /**
@@ -87,73 +316,12 @@ static void handleSerialChar(uint8_t c) {
 
 	static char prev_c = ' '; // Character received last function call
 
-//TODO: handle in separate function/C file?
 	if (esc_cnt) {
 		esc_seq[esc_cnt++] = c;
 
-		if (esc_cnt == 3) {
-			if (esc_seq[1] == '[' && esc_seq[2] == 'A') {
-				// Up arrow key 
-				uint32_t next_idx = entriesRdIdx - 1;
-				if (!entriesRdIdx) {
-					next_idx = HISTORY_SIZE - 1;
-				}
+		int retval = handleEscSeq(esc_seq, esc_cnt);
 
-				if (next_idx == entriesWrIdx) {
-					consolePrint("\a");
-				} else {
-					consolePrint("\r\x1B[2K");
-
-					entriesRdIdx = next_idx;
-					memcpy(entries[entriesWrIdx].str,
-						entries[entriesRdIdx].str,
-						MAX_ENTRY_LEN);
-					entries[entriesWrIdx].len = 
-						entries[entriesRdIdx].len;
-					cursorIdx = entries[entriesRdIdx].len;
-			
-					sendUsbSerialData(
-						entries[entriesWrIdx].str, 
-						entries[entriesWrIdx].len);
-				}
-			} else if (esc_seq[1] == '[' && esc_seq[2] == 'B') {
-				// Down arrow key 
-				if (entriesRdIdx == entriesWrIdx) {
-					consolePrint("\a");
-				} else {
-					consolePrint("\r\x1B[2K");
-
-					entriesRdIdx++;
-					entriesRdIdx %= HISTORY_SIZE;
-					if (entriesRdIdx == entriesWrIdx) {
-						entries[entriesWrIdx].len = 0;
-						cursorIdx = 0;
-					} else {
-						memcpy(entries[entriesWrIdx].str,
-							entries[entriesRdIdx].str,
-							MAX_ENTRY_LEN);
-						entries[entriesWrIdx].len = 
-							entries[entriesRdIdx].len;
-						cursorIdx = entries[entriesRdIdx].len;
-
-						sendUsbSerialData(entries[entriesWrIdx].str,
-							entries[entriesWrIdx].len);
-					}
-				}
-			} else if (esc_seq[1] == '[' && esc_seq[2] == 'C') {
-				// Forward arrow key 
-				if (cursorIdx < entries[entriesWrIdx].len) {
-					cursorIdx++;
-					sendUsbSerialData(esc_seq, 3);
-				}
-			} else if (esc_seq[1] == '[' && esc_seq[2] == 'D') {
-				// Back arrow key
-				if (cursorIdx > 0) {
-					cursorIdx--;
-					sendUsbSerialData(esc_seq, 3);
-				}
-			}
-
+		if (!retval) {
 			esc_cnt = 0;
 		}
 		return;
@@ -168,69 +336,31 @@ static void handleSerialChar(uint8_t c) {
 
 	case 0x7f:
 	case '\b':
-		// Character deletion
-		if (cursorIdx > 0) {
-			consolePrint("\b");
-
-			entries[entriesWrIdx].len--;
-			cursorIdx--;
-
-			for (int idx = cursorIdx; idx < entries[entriesWrIdx].len; idx++) {
-				consolePrint("%c", 
-					entries[entriesWrIdx].str[idx+1]);
-				entries[entriesWrIdx].str[idx] = 
-					entries[entriesWrIdx].str[idx+1];
-			}
-			consolePrint(" \b");
-
-			for (int cnt = 0; cnt < entries[entriesWrIdx].len - cursorIdx; cnt++) {
-				consolePrint("\b");
-			}
-		}
+		delChar();
 		break;
 	
 	case '\t':
-		// Tab (for completion)
-//TODO: use prev_c to know how to autocomplete
+		if (prev_c != '\t') {
+			int retval = completeCmd();
+
+			if (retval) {
+				// On commpletion need to ignore tab was pressed
+				prev_c = ' ';
+				return;
+			}
+		} else {
+			printCmdCompletions();
+		}
 		break;
 
 	case '\r':
 	case '\n':
-		// Enter or return indicates end of command
-		consolePrint("\n");
-
-//TODO: call function to actually handle command 
-		printHex(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
-
-		entriesWrIdx++;
-		entriesWrIdx %= HISTORY_SIZE;
-		entriesRdIdx = entriesWrIdx;
-
-		cursorIdx = 0;
-		entries[entriesWrIdx].len = 0;
+		entryComplete();
 		break;
 
 	default:
 		// Insert all other characters into buffer
-		if (cursorIdx < MAX_ENTRY_LEN) {
-			sendUsbSerialData(&c, 1);
-
-			for (int idx = entries[entriesWrIdx].len; idx > cursorIdx; idx--) {
-				entries[entriesWrIdx].str[idx] = 
-					entries[entriesWrIdx].str[idx-1];
-			}
-
-			entries[entriesWrIdx].str[cursorIdx] = c;
-			cursorIdx++;
-			entries[entriesWrIdx].len++;
-
-			sendUsbSerialData(
-				&entries[entriesWrIdx].str[cursorIdx],
-				entries[entriesWrIdx].len - cursorIdx);
-			for (int cnt = 0; cnt < entries[entriesWrIdx].len - cursorIdx; cnt++) {
-				consolePrint("\b");
-			}
-		}
+		insertEntryData(&c, 1);
 		break;
 	}
 
