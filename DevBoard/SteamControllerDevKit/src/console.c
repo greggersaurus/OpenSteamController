@@ -55,6 +55,10 @@ static uint32_t entriesRdIdx = 0; // Inidcates which of entries was last read
 static uint32_t cursorIdx = 0; // Indicates where cursor is for entry currently
 	// being updated by user input
 
+static uint32_t historyCnt = 0; // Number of valid entries in history.
+static uint32_t oldestHistoryIdx = 0; // If entriesRdIdx is set to this value
+	// we are at the limit fo entries history.
+
 /**
  * Print the hex representation of each character in the buffer to console.
  *  Also marks where internal cursor marker is.
@@ -95,12 +99,7 @@ static int handleEscSeq(const uint8_t* seq, uint32_t len) {
 
 	if (seq[1] == '[' && seq[2] == 'A') {
 		// Up arrow key 
-		uint32_t next_idx = entriesRdIdx - 1;
-		if (!entriesRdIdx) {
-			next_idx = HISTORY_SIZE - 1;
-		}
-
-		if (next_idx == entriesWrIdx) {
+		if (entriesRdIdx == oldestHistoryIdx) {
 			// Sound to indicate we are at limit 
 			consolePrint("\a");
 		} else {
@@ -108,7 +107,12 @@ static int handleEscSeq(const uint8_t* seq, uint32_t len) {
 			consolePrint("\r\x1B[2K");
 
 			// Copy and display entry from history
-			entriesRdIdx = next_idx;
+			if (!entriesRdIdx) {
+				entriesRdIdx = HISTORY_SIZE - 1;
+			} else {
+				entriesRdIdx--;
+			}
+
 			memcpy(entries[entriesWrIdx].str,
 				entries[entriesRdIdx].str, MAX_ENTRY_LEN);
 			entries[entriesWrIdx].len = entries[entriesRdIdx].len;
@@ -293,8 +297,18 @@ static void entryComplete() {
 //TODO: call function to actually handle command 
 	printHex(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
 
-	entriesWrIdx++;
-	entriesWrIdx %= HISTORY_SIZE;
+	// Only save history if there was content in entry
+	if (entries[entriesWrIdx].len) {
+		entriesWrIdx++;
+		entriesWrIdx %= HISTORY_SIZE;
+		if (historyCnt < HISTORY_SIZE-1) {
+			historyCnt++;
+		} else {
+			oldestHistoryIdx++;
+			oldestHistoryIdx %= HISTORY_SIZE;
+		}
+	}
+
 	entriesRdIdx = entriesWrIdx;
 
 	cursorIdx = 0;
@@ -328,6 +342,16 @@ static void handleSerialChar(uint8_t c) {
 	}
 	
 	switch (c) {
+	case 0x3:
+		// Crtl-C
+		consolePrint("\n");
+
+		entriesRdIdx = entriesWrIdx;
+
+		cursorIdx = 0;
+		entries[entriesWrIdx].len = 0;
+		break;
+
 	case 0x1b:
 		// Start of escape sequence
 		esc_seq[0] = c;
