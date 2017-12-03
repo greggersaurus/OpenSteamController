@@ -1,6 +1,6 @@
 /**
- * \file eeprom_access.h
- * \brief This is a place to organize all functions related to accessing EEPROM.
+ * \file mem_access.h
+ * \brief Encompasses functions for memory peak poke command handling.
  *
  * MIT License
  *
@@ -25,23 +25,9 @@
  * SOFTWARE.
  */
 
-#ifndef _EEPROM_ACCESS_
-#define _EEPROM_ACCESS_
+#ifndef _MEM_ACCESS_
+#define _MEM_ACCESS_
 
-#include <stdint.h>
+int memCmdFnc(int argc, const char* argv[]);
 
-#define CMD_SUCCESS (0) // Command is executed successfully. Sent by ISP handler
-	// only when command given by the host has been completely and 
-	// successfully executed.
-#define INVALID_COMMAND (1) // Invalid command.
-#define SRC_ADDR_NOT_MAPPED (2) // Source address is not mapped in the memory 
-	// map. Count value is taken in to consideration where applicable.
-#define DST_ADDR_NOT_MAPPED (3) // Destination address is not mapped in the 
-	// memory map. Count value is taken in to consideration where applicable.
-
-int eepromCmdFnc(int argc, const char* argv[]);
-
-int eeprom_read(uint32_t offset, void* readData, uint32_t numBytes);
-int eeprom_write(uint32_t offset, const void* writeData, uint32_t numBytes);
-
-#endif /* _EEPROM_ACCESS_ */
+#endif /* _MEM_ACCESS_ */

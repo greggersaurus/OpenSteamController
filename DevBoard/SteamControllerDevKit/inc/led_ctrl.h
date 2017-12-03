@@ -1,6 +1,7 @@
 /**
- * \file eeprom_access.h
- * \brief This is a place to organize all functions related to accessing EEPROM.
+ * \file led_ctrl.h
+ * \brief Encompasses functions for controlling LED that illuminates Steam
+ *	Controller button.
  *
  * MIT License
  *
@@ -25,23 +26,14 @@
  * SOFTWARE.
  */
 
-#ifndef _EEPROM_ACCESS_
-#define _EEPROM_ACCESS_
+#ifndef _LED_CTRL_
+#define _LED_CTRL_
 
-#include <stdint.h>
+int ledCmdFnc(int argc, const char* argv[]);
 
-#define CMD_SUCCESS (0) // Command is executed successfully. Sent by ISP handler
-	// only when command given by the host has been completely and 
-	// successfully executed.
-#define INVALID_COMMAND (1) // Invalid command.
-#define SRC_ADDR_NOT_MAPPED (2) // Source address is not mapped in the memory 
-	// map. Count value is taken in to consideration where applicable.
-#define DST_ADDR_NOT_MAPPED (3) // Destination address is not mapped in the 
-	// memory map. Count value is taken in to consideration where applicable.
+//TODO: combine some of these?
+//void turnOnLed(void); 
+//void turnOffLed(void);
+//void pulseLed(pwmRate);
 
-int eepromCmdFnc(int argc, const char* argv[]);
-
-int eeprom_read(uint32_t offset, void* readData, uint32_t numBytes);
-int eeprom_write(uint32_t offset, const void* writeData, uint32_t numBytes);
-
-#endif /* _EEPROM_ACCESS_ */
+#endif /* _LED_CTRL_ */
