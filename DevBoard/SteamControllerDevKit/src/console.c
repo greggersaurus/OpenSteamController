@@ -29,6 +29,7 @@
 #include "console.h"
 
 #include "usb.h"
+#include "command.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -168,8 +169,6 @@ static int handleEscSeq(const uint8_t* seq, uint32_t len) {
 		}
 	}
 
-	//TODO: handle ctrl-C and other escape sequences?? different lengths?
-
 	return 0;
 }
 
@@ -201,27 +200,6 @@ static void delChar() {
 		// Sound to indicate we are at limit and del must be ignored
 		consolePrint("\a");
 	}
-}
-
-/**
- * Handle tab completion request.
- *
- * \return 0 if completion was occurred. 
- */
-static int completeCmd() {
-
-//TODO
-	return -1;
-}
-
-/**
- * Print all possible command completions to console. 
- *
- * \return None.
- */
-static void printCmdCompletions() {
-
-//TODO
 }
 
 /**
@@ -286,6 +264,57 @@ static void insertEntryData(const uint8_t* data, uint32_t len) {
 }
 
 /**
+ * Handle tab completion request.
+ *
+ * \return NULL terminated list of potential completions, or NULL if fewer
+ *	completions was handled. 
+ */
+static const char** completeCmd() {
+	const char** cmd_completions = NULL;
+
+	cmd_completions = getCmdCompletions(
+		(const char*)entries[entriesWrIdx].str, cursorIdx);
+
+	// Sound to indicate no completion matches available
+	if (!cmd_completions[0]) {
+		consolePrint("\a");
+		return NULL;
+	}
+
+	// If only single match, insert completion data into current entry
+	if (cmd_completions[0] && !cmd_completions[1]) {
+		int insert_len = strlen(cmd_completions[0]) - cursorIdx;
+		insertEntryData((const uint8_t*)&cmd_completions[0][cursorIdx],
+			insert_len);
+		insertEntryData((const uint8_t*)" ", 1);
+		return NULL;
+	}
+
+	return cmd_completions;
+}
+
+/**
+ * Print all possible command completions to console. 
+ *
+ * \param[in] NULL terminated list of possible command completions.
+ *
+ * \return None.
+ */
+static void printCmdCompletions(const char** cmdCompletions) {
+	consolePrint("\n");
+	for (int idx = 0; cmdCompletions[idx]; idx++) {
+		consolePrint("%s\t\t", cmdCompletions[idx]);
+	}
+	consolePrint("\n");
+
+	// Reprint current entry (putting cursor in proper position)
+	sendUsbSerialData(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
+	for (int cnt = 0; cnt < entries[entriesWrIdx].len - cursorIdx; cnt++) {
+		consolePrint("\b");
+	}
+}
+
+/**
  * Mark current entry as complete and attempt to execute.
  * 
  * \return.
@@ -294,8 +323,12 @@ static void entryComplete() {
 	// Enter or return indicates end of command
 	consolePrint("\n");
 
-//TODO: call function to actually handle command 
+//TODO: debug so we see exactly what was in entry buffer
 	printHex(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
+
+//TODO: change all uint8_t* to char* so we don't need this casting?
+	executeCmd((const char*)entries[entriesWrIdx].str, 
+		entries[entriesWrIdx].len);
 
 	// Only save history if there was content in entry
 	if (entries[entriesWrIdx].len) {
@@ -328,7 +361,8 @@ static void handleSerialChar(uint8_t c) {
 	static uint32_t esc_cnt = 0; // Number of valid escape sequence 
 		// characters in esc_seq
 
-	static char prev_c = ' '; // Character received last function call
+	static const char** prev_cmd_completions = NULL;
+	const char** cmd_completions = NULL;
 
 	if (esc_cnt) {
 		esc_seq[esc_cnt++] = c;
@@ -364,16 +398,11 @@ static void handleSerialChar(uint8_t c) {
 		break;
 	
 	case '\t':
-		if (prev_c != '\t') {
-			int retval = completeCmd();
-
-			if (retval) {
-				// On commpletion need to ignore tab was pressed
-				prev_c = ' ';
-				return;
-			}
+		if (prev_cmd_completions) {
+			cmd_completions = prev_cmd_completions;
+			printCmdCompletions(cmd_completions);
 		} else {
-			printCmdCompletions();
+			cmd_completions = completeCmd();
 		}
 		break;
 
@@ -388,7 +417,7 @@ static void handleSerialChar(uint8_t c) {
 		break;
 	}
 
-	prev_c = c;
+	prev_cmd_completions = cmd_completions;
 }
 
 /**

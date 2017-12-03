@@ -1,5 +1,5 @@
 /**
- * \file command.h
+ * \file command.c
  * \brief Encompasses functions for processing commands received via console.
  *
  * MIT License
@@ -25,32 +25,121 @@
  * SOFTWARE.
  */
 
+#include "command.h"
+#include "console.h"
+
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
+
 typedef struct {
 	const char* cmdName;
 	int (*cmdFnc)(int argc, const char* argv[]);
 } Cmd;
 
 int memCmdFnc(int argc, const char* argv[]) {
+	consolePrint("memCmdFnc not implemented yet!\n");
 	return 0;
 }
 
 int eepromCmdFnc(int argc, const char* argv[]) {
+	consolePrint("eepromCmdFnc not implemented yet!\n");
 	return 0;
 }
 
-static Cmd memCmd = { .cmdName = "mem", .cmdFnc = memCmdFnc };
-static Cmd eepromCmd = { .cmdName = "eeprom", .cmdFnc = eepromCmdFnc };
+static Cmd memCmd = {.cmdName = "mem", .cmdFnc = memCmdFnc};
+static Cmd eepromCmd = {.cmdName = "eeprom", .cmdFnc = eepromCmdFnc};
+static Cmd epromCmd = {.cmdName = "eprom", .cmdFnc = eepromCmdFnc};
 
 static Cmd* cmds[] = {
 	&memCmd,
-	&eepromCmd
+	&eepromCmd,
+	&epromCmd,
 };
 
 /**
+ * Find commands whose name match the given string.
+ *
+ * \param[in] cmd String containing potential command name.
+ * \param len Number of characters in cmd to consider for command name.
+ *
  * \return NULL terminated list of Cmds that could match cmd string.
  */
-static Cmd* searchCmds(const char* cmd) {
-	return 0;
+static const Cmd** searchCmds(const char* cmd, uint32_t len) {
+	static const Cmd* found_cmds[ARRAY_SIZE(cmds) + 1];
+	found_cmds[0] = 0;
+
+	//TODO: replace with trie instead of linear search?
+	int insert_idx = 0;
+	for (int cmd_idx = 0; cmd_idx < ARRAY_SIZE(cmds); cmd_idx++) {
+		int skip = 0;
+		for (int str_idx = 0; str_idx < len; str_idx++) {
+			if (!cmds[cmd_idx]->cmdName[str_idx]) {
+				skip = 1;
+				break;
+			}
+			if (cmds[cmd_idx]->cmdName[str_idx] != cmd[str_idx]) {
+				skip = 1;
+				break;
+			}
+		}
+		if (!skip) {
+			found_cmds[insert_idx] = cmds[cmd_idx];
+			insert_idx++;
+		}
+	}
+	found_cmds[insert_idx] = 0;
+
+	return found_cmds;
+}
+
+/**
+ * Find possible command completions for given string.
+ *
+ * \param[in] str String containing data to potentially complete with command
+ *	names.
+ * \param len Number of valid characters in str.
+ *
+ * \return A NULL terminated list of strings that are completions of str.
+ */
+const char** getCmdCompletions(const char* str, uint32_t len) {
+	static const char* completions[ARRAY_SIZE(cmds) + 1];
+	completions[0] = 0;
+
+	const Cmd** possible_cmds = searchCmds(str, len);
+	for (int idx = 0; possible_cmds[idx]; idx++) {
+		completions[idx] = possible_cmds[idx]->cmdName;
+		completions[idx+1] = 0;
+	}
+
+	return completions;
+}
+
+/**
+ * Attempt to execute command as instructed by entry buffer.
+ *
+ * \param[in] str Entry buffer.
+ * \param len Number of valid characters in entry buffer.
+ *
+ * \return None.
+ */
+void executeCmd(const char* str, uint32_t len) {
+	int cmd_len = 0;
+
+	// Search for whitespace to mark end of command name
+	while (cmd_len < len) {
+		if (str[cmd_len] == ' ') 
+			break;
+		cmd_len++;
+	}
+
+	const Cmd** possible_cmds = searchCmds(str, cmd_len);
+
+	if (possible_cmds[0] && !possible_cmds[1]) {
+//TODO: pasing in args
+		possible_cmds[0]->cmdFnc(0, 0);
+		return;
+	}
+
+	consolePrint("command not found\n");
 }
 
 

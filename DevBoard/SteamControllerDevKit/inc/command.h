@@ -28,8 +28,9 @@
 #ifndef _SC_COMMAND_
 #define _SC_COMMAND_
 
-const char* completeCmd(const char* str, uint32_t len);
-void printPossibleCmds(const char* str, uint32_t len);
-int executeCmd(const char* str, uint32_t len);
+#include <stdint.h>
+
+const char** getCmdCompletions(const char* str, uint32_t len);
+void executeCmd(const char* str, uint32_t len);
 
 #endif /* _SC_COMMAND_ */
