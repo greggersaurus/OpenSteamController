@@ -31,6 +31,9 @@
 
 int memCmdFnc(int argc, const char* argv[]) {
 	consolePrint("memCmdFnc not implemented yet!\n");
+	for (int idx = 0; idx < argc; idx++) {
+		consolePrint("arg %d = %s\n", idx, argv[idx]);
+	}
 	return 0;
 }
 

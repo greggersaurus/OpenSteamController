@@ -33,6 +33,9 @@
 #include "mem_access.h"
 #include "led_ctrl.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
 typedef struct {
@@ -44,6 +47,7 @@ static Cmd cmds[] = {
 	{.cmdName = "mem", .cmdFnc = memCmdFnc},
 	{.cmdName = "eeprom", .cmdFnc = eepromCmdFnc},
 	{.cmdName = "led", .cmdFnc = ledCmdFnc},
+//TODO: help fnc?
 };
 
 /**
@@ -112,23 +116,50 @@ const char** getCmdCompletions(const char* str, uint32_t len) {
  *
  * \return None.
  */
-void executeCmd(const char* str, uint32_t len) {
+void executeCmd(const char* entry, uint32_t len) {
 	int cmd_len = 0;
 
 	// Search for whitespace to mark end of command name
 	while (cmd_len < len) {
-		if (str[cmd_len] == ' ') 
+		if (entry[cmd_len] == ' ') 
 			break;
 		cmd_len++;
 	}
 
-	const Cmd** possible_cmds = searchCmds(str, cmd_len);
+	const Cmd** possible_cmds = searchCmds(entry, cmd_len);
 
 	if (!possible_cmds[0] || possible_cmds[1]) {
 		consolePrint("command not found\n");
 		return;
 	}
 
-//TODO: Count arguments and create array 
-	possible_cmds[0]->cmdFnc(0, 0);
+	int argc = 0;
+	const char* argv[16];
+	char* entry_cpy = (char*)malloc(sizeof(char)*(len + 1));
+
+	memcpy(entry_cpy, entry, len);
+	entry_cpy[len] = 0;
+
+	argv[argc] = entry_cpy;
+	argc++;
+
+	for (int idx = 0; idx < len; idx++) {
+		if (entry_cpy[idx] == ' ') {
+			entry_cpy[idx] = 0;
+		} else if (idx && !entry_cpy[idx-1]) {
+			if (argc >= ARRAY_SIZE(argv)) {
+				consolePrint("Too many arguments for system to "
+					"handle!\n");
+				goto exit;
+			}
+
+			argv[argc] = &entry_cpy[idx];
+			argc++;
+		}
+	}
+
+	possible_cmds[0]->cmdFnc(argc, argv);
+
+exit:
+	free(entry_cpy);
 }

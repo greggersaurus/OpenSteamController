@@ -31,6 +31,6 @@
 #include <stdint.h>
 
 const char** getCmdCompletions(const char* str, uint32_t len);
-void executeCmd(const char* str, uint32_t len);
+void executeCmd(const char* entry, uint32_t len);
 
 #endif /* _SC_COMMAND_ */
