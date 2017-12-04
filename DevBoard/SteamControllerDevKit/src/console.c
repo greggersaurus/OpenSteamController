@@ -460,12 +460,13 @@ void handleConsoleInput(void) {
  * \return None.
  */
 void consolePrint(const char* format, ...) {
-	uint8_t buff[256];
+	uint8_t buff[1024];
 	va_list args;
 	int num_chars = 0;
 
 	va_start(args, format);
 	num_chars = vsnprintf((char*)buff, sizeof(buff), format, args);
+//TODO: handle case where num_chars >= sizeof(buff) (maybe something to do with \r to \r\n case?
 	if (num_chars > 0) {
 		int start_idx = 0;
 		int idx = 0;

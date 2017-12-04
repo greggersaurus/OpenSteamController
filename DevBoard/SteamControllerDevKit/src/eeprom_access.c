@@ -33,104 +33,140 @@
 #include "chip.h"
 #include "romapi_11xx.h"
 
-int eepromCmdFnc(int argc, const char* argv[]) {
-	consolePrint("eepromCmdFnc not implemented yet!\n");
-	return 0;
+#include <string.h>
+#include <stdlib.h>
+
+#define EEPROM_SIZE (4 * 1024)
+
+/**
+ * Print command usage details to console.
+ *
+ * \return None.
+ */
+static void printUsage() {
+	consolePrint(
+		"usage: eeprom read word_size EEPROM_address num_words\n"
+		"       eeprom write word_size EEPROM_address value\n"
+		"\n"
+		"word_size = specify read/write size of 8, 16 or 32 bit word\n"
+		"EEPROM_address = specify read/write EEPROM address\n"
+		"num_words = specify number of words to read\n"
+		"value = specify value to write to EEPROM\n"
+	);
 }
 
-#if (0)
-//TODO: add back in support for this...
-void eepromCmd(const uint8_t* params, uint32_t len)
-{
-	uint8_t resp_msg[256];
-	int resp_msg_len = 0;
+/**
+ * Read from EEPROM and print results to console.
+ *
+ * \param wordSize Number of bits per word read from EEPROM.
+ * \param addr Start offset to read from in EEPROM.
+ * \param numWords Number of words to read from EEPROM.
+ *
+ * \return 0 on success.
+ */
+static int eepromReadToConsole(uint32_t wordSize, uint32_t addr, uint32_t numWords) {
+	int retval = 0;
+	uint32_t bytes_per_word = wordSize / 8;
+	uint32_t num_read_bytes = bytes_per_word * numWords;
+	uint32_t curr_addr = addr;
 
-	int word_size = 0;
-	uint32_t offset = 0;
-	int num_words = 0;	
-
-	int bytes_per_word = 0;
-
-	int num_params_rd = 0;
-
-	num_params_rd = sscanf(params, "%d %x %d", &word_size, &offset, &num_words);
-
-	if (num_params_rd != 3)
-	{
-		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-			"\r\nUsage: e word_size hex_offset num_words\r\n");
-		sendUsbSerialData(resp_msg, resp_msg_len);
-		return;
+	if (wordSize != 8 && wordSize != 16 && wordSize != 32) {
+		consolePrint("Invalid word size %d\n", wordSize);
+		return -1;
+	}
+	
+	if (addr >= EEPROM_SIZE) {
+		consolePrint("Address of 0x%x exceeds EEPROM size of 0x%0x\n",
+			addr, EEPROM_SIZE);
+		return -1;
 	}
 
-	if (word_size != 8 && word_size != 16 && word_size != 32)
-	{
-		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-			"\r\nUnsuported word size %d\r\n", word_size);
-		sendUsbSerialData(resp_msg, resp_msg_len);
-		return;
+	if (addr + numWords > EEPROM_SIZE) {
+		consolePrint("Read request of %d words from offset 0x%x"
+			" exceeds EEPROM size of 0x%x\n", numWords, addr, 
+			EEPROM_SIZE);
+		return -1;
 	}
 
-	bytes_per_word = word_size / 8;
-	uint32_t num_read_bytes = bytes_per_word * num_words;
-
-	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-		"\r\nReading %d %d-bit words starting at 0x%X in EEPROM\r\n", num_words, word_size, offset);
-	sendUsbSerialData(resp_msg, resp_msg_len);
-
+	consolePrint("Reading %d %d-bit words starting at 0x%X in EEPROM\n", 
+		numWords, wordSize, addr);
 
 	void* read_data = malloc(num_read_bytes);
 	if (!read_data){
-		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-			"\r\nmalloc failed for read_data buffer\r\n");
-		sendUsbSerialData(resp_msg, resp_msg_len);
-		return;
+		consolePrint("malloc failed for read_data buffer\n");
+		return -1;
 	}
 
-	int err_code = eeprom_read(offset, read_data, num_read_bytes);
+	int err_code = eepromRead(addr, read_data, num_read_bytes);
 	if (CMD_SUCCESS != err_code){
-		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-			"\r\nEEPROM Read failed with error code %d\r\n", err_code);
-		sendUsbSerialData(resp_msg, resp_msg_len);
-		free(read_data);
-		return;
+		consolePrint("EEPROM Read failed with error code %d\n", 
+			err_code);
+		retval = -1;
+		goto exit;
 	}
 
-	for (int word_cnt = 0; word_cnt < num_words; word_cnt++)
+	for (int word_cnt = 0; word_cnt < numWords; word_cnt++)
 	{
 		if (!(word_cnt % 8))
 		{
-			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-				"\r\n%08X: ", offset);
-			sendUsbSerialData(resp_msg, resp_msg_len);
+			consolePrint("\n%03X: ", curr_addr);
 		}
 
-		if (word_size == 8)
+		if (wordSize == 8)
 		{
-			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-				"%02X ", *(uint8_t*)(read_data+offset));
+			consolePrint("%02X ", ((uint8_t*)read_data)[word_cnt]);
 		}
-		else if (word_size == 16)
+		else if (wordSize == 16)
 		{
-			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-				"%04X ", *(uint16_t*)(read_data+offset));
+			consolePrint("%04X ", ((uint16_t*)read_data)[word_cnt]);
 		}
-		else if (word_size == 32)
+		else if (wordSize == 32)
 		{
-			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-				"%08X ", *(uint32_t*)(read_data+offset));
+			consolePrint("%08X ", ((uint32_t*)read_data)[word_cnt]);
 		}
-		sendUsbSerialData(resp_msg, resp_msg_len);
 
-		offset += bytes_per_word;
+		curr_addr += bytes_per_word;
+	}
+	consolePrint("\n");
+
+exit:
+	free(read_data);
+
+	return retval;
+}
+
+/**
+ * Handle EEPROM access command line function.
+ *
+ * \param argc Number of arguments (i.e. size of argv)
+ * \param argv Command line entry broken into array argument strings.
+ *
+ * \return 0 on success.
+ */
+int eepromCmdFnc(int argc, const char* argv[]) {
+	int retval = 0;
+
+	if (argc != 5) {
+		printUsage();
+		return -1;
 	}
 
-	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), "\r\n");
-	sendUsbSerialData(resp_msg, resp_msg_len);
+	uint32_t word_size = strtol(argv[2], NULL, 0);
+	uint32_t addr = strtol(argv[3], NULL, 0);
 
-	free(read_data);
+	if (!strcmp("read", argv[1])) {
+		uint32_t num_words = strtol(argv[4], NULL, 0);
+		retval = eepromReadToConsole(word_size, addr, num_words);
+	} else if (!strcmp("write ", argv[1])) {
+		consolePrint("eeprom writing not implemented yet\n");
+		return -1;
+	} else {
+		consolePrint("Invalid argument \"%s\"\n", argv[1]);
+		return -1;
+	}
+
+	return retval;
 }
-#endif
 
 /**
  * Wrapper around IAP command for EEPROM read.
@@ -141,7 +177,7 @@ void eepromCmd(const uint8_t* params, uint32_t len)
  *
  * \return CMD_SUCCESS | SRC_ADDR_NOT_MAPPED | DST_ADDR_NOT_MAPPED.
  */
-int eeprom_read(uint32_t offset, void* readData, uint32_t numBytes){
+int eepromRead(uint32_t offset, void* readData, uint32_t numBytes){
 	unsigned int command_param[5];
 	unsigned int status_result[4];
 
@@ -163,7 +199,10 @@ int eeprom_read(uint32_t offset, void* readData, uint32_t numBytes){
 	return status_result[0];
 }
 
-int eeprom_write(uint32_t offset, const void* writeData, uint32_t numBytes){
+/**
+ * //TODO: document this
+ */
+int eepromWrite(uint32_t offset, const void* writeData, uint32_t numBytes){
 	//TODO: implement this
 	return INVALID_COMMAND;
 }

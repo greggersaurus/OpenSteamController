@@ -41,7 +41,7 @@
 
 int eepromCmdFnc(int argc, const char* argv[]);
 
-int eeprom_read(uint32_t offset, void* readData, uint32_t numBytes);
-int eeprom_write(uint32_t offset, const void* writeData, uint32_t numBytes);
+int eepromRead(uint32_t offset, void* readData, uint32_t numBytes);
+int eepromWrite(uint32_t offset, const void* writeData, uint32_t numBytes);
 
 #endif /* _EEPROM_ACCESS_ */

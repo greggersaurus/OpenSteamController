@@ -57,7 +57,7 @@ int main(void){
 	uint32_t eeprom_data[2];
 
 	// Read magic number and hw version from EEPROM
-	retval = eeprom_read(0, eeprom_data, sizeof(eeprom_data));
+	retval = eepromRead(0, eeprom_data, sizeof(eeprom_data));
 	if (CMD_SUCCESS != retval) {
 		// Hard lock if we cannot read EEPROM
 		volatile int lock = 1;

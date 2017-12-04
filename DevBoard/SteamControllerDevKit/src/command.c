@@ -135,6 +135,8 @@ void executeCmd(const char* entry, uint32_t len) {
 
 	int argc = 0;
 	const char* argv[16];
+	// So we can add in NULL terminations for argument strings without
+	//  modifying entry buffer
 	char* entry_cpy = (char*)malloc(sizeof(char)*(len + 1));
 
 	memcpy(entry_cpy, entry, len);
