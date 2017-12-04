@@ -29,91 +29,108 @@
 
 #include "console.h"
 
-int memCmdFnc(int argc, const char* argv[]) {
-	consolePrint("memCmdFnc not implemented yet!\n");
-	for (int idx = 0; idx < argc; idx++) {
-		consolePrint("arg %d = %s\n", idx, argv[idx]);
-	}
-	return 0;
-}
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
-#if (0)
-//TODO: add back in support for this...
 /**
- * Process a read command.
- *
- * \param[in] params Portion of null terminated command string containing parameters.
- * \param len Number of bytes in params
+ * Print command usage details to console.
  *
  * \return None.
  */
-void readCmd(const uint8_t* params, uint32_t len)
-{
-	uint8_t resp_msg[256];
-	int resp_msg_len = 0;
+static void printUsage() {
+	consolePrint(
+		"usage: mem read word_size address num_words\n"
+		"       mem write word_size address value\n"
+		"\n"
+		"word_size = specify read/write size of 8, 16 or 32 bit word\n"
+		"address = specify read/write memory mapped address\n"
+		"num_words = specify number of words to read\n"
+		"value = specify value to write to memory mapped address\n"
+	);
+}
 
-	int word_size = 0;
-	uint32_t addr = 0;
-	int num_words = 0;	
+/**
+ * Read from memory mapped region and print results to console.
+ *
+ * \param wordSize Number of bits per word read from memory mapped region.
+ * \param addr Start offset to read from in memory mapped region.
+ * \param numWords Number of words to read from memory mapped region.
+ *
+ * \return 0 on success.
+ */
+static int memReadToConsole(uint32_t wordSize, uint32_t addr, 
+	uint32_t numWords) {
+	uint32_t bytes_per_word = wordSize / 8;
+	uint32_t curr_addr = addr;
 
-	int bytes_per_word = 0;
-
-	int num_params_rd = 0;
-
-	num_params_rd = sscanf(params, "%d %x %d", &word_size, &addr, &num_words);
-
-	if (num_params_rd != 3)
-	{
-		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-			"\r\nUsage: r word_size hex_base_addr num_words\r\n");
-		sendUsbSerialData(resp_msg, resp_msg_len);
-		return;
+	if (wordSize != 8 && wordSize != 16 && wordSize != 32) {
+		consolePrint("Invalid word size %d\n", wordSize);
+		return -1;
 	}
+	
+	consolePrint("Reading %d %d-bit words starting at 0x%X from memory "
+		"mapped region\n", numWords, wordSize, addr);
 
-	if (word_size != 8 && word_size != 16 && word_size != 32)
-	{
-		resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-			"\r\nUnsuported word size %d\r\n", word_size);
-		sendUsbSerialData(resp_msg, resp_msg_len);
-		return;
-	}
+	void* read_data = (void*)addr;
 
-	bytes_per_word = word_size / 8;
-
-	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-		"\r\nReading %d %d-bit words starting at 0x%X\r\n", num_words, word_size, addr);
-	sendUsbSerialData(resp_msg, resp_msg_len);
-
-	for (int word_cnt = 0; word_cnt < num_words; word_cnt++)
+	for (int word_cnt = 0; word_cnt < numWords; word_cnt++)
 	{
 		if (!(word_cnt % 8))
 		{
-			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-				"\r\n%08X: ", addr);
-			sendUsbSerialData(resp_msg, resp_msg_len);
+			consolePrint("\n%08X: ", curr_addr);
 		}
 
-		if (word_size == 8)
+		if (wordSize == 8)
 		{
-			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-				"%02X ", *(uint8_t*)addr);
+			consolePrint("%02X ", ((uint8_t*)read_data)[word_cnt]);
 		}
-		else if (word_size == 16)
+		else if (wordSize == 16)
 		{
-			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-				"%04X ", *(uint16_t*)addr);
+			consolePrint("%04X ", ((uint16_t*)read_data)[word_cnt]);
 		}
-		else if (word_size == 32)
+		else if (wordSize == 32)
 		{
-			resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), 
-				"%08X ", *(uint32_t*)addr);
+			consolePrint("%08X ", ((uint32_t*)read_data)[word_cnt]);
 		}
-		sendUsbSerialData(resp_msg, resp_msg_len);
 
-		addr += bytes_per_word;
+		curr_addr += bytes_per_word;
+	}
+	consolePrint("\n");
+
+	return 0;
+}
+
+/**
+ * Handle memory (mapped) access command line function.
+ *
+ * \param argc Number of arguments (i.e. size of argv)
+ * \param argv Command line entry broken into array argument strings.
+ *
+ * \return 0 on success.
+ */
+int memCmdFnc(int argc, const char* argv[]) {
+	int retval = 0;
+
+	if (argc != 5) {
+		printUsage();
+		return -1;
 	}
 
-	resp_msg_len = snprintf((char*)resp_msg, sizeof(resp_msg), "\r\n");
-	sendUsbSerialData(resp_msg, resp_msg_len);
+	uint32_t word_size = strtol(argv[2], NULL, 0);
+	uint32_t addr = strtol(argv[3], NULL, 0);
+
+	if (!strcmp("read", argv[1])) {
+		uint32_t num_words = strtol(argv[4], NULL, 0);
+		retval = memReadToConsole(word_size, addr, num_words);
+	} else if (!strcmp("write", argv[1])) {
+		//TODO: implement this
+		consolePrint("memory mapped writing not implemented yet\n");
+		return -1;
+	} else {
+		consolePrint("Invalid argument \"%s\"\n", argv[1]);
+		return -1;
+	}
+
+	return retval;
 }
-#endif

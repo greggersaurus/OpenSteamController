@@ -45,11 +45,11 @@
  */
 static void printUsage() {
 	consolePrint(
-		"usage: eeprom read word_size EEPROM_address num_words\n"
-		"       eeprom write word_size EEPROM_address value\n"
+		"usage: eeprom read word_size address num_words\n"
+		"       eeprom write word_size address value\n"
 		"\n"
 		"word_size = specify read/write size of 8, 16 or 32 bit word\n"
-		"EEPROM_address = specify read/write EEPROM address\n"
+		"address = specify read/write EEPROM address\n"
 		"num_words = specify number of words to read\n"
 		"value = specify value to write to EEPROM\n"
 	);
@@ -59,12 +59,13 @@ static void printUsage() {
  * Read from EEPROM and print results to console.
  *
  * \param wordSize Number of bits per word read from EEPROM.
- * \param addr Start offset to read from in EEPROM.
+ * \param addr Start address to read from EEPROM.
  * \param numWords Number of words to read from EEPROM.
  *
  * \return 0 on success.
  */
-static int eepromReadToConsole(uint32_t wordSize, uint32_t addr, uint32_t numWords) {
+static int eepromReadToConsole(uint32_t wordSize, uint32_t addr, 
+	uint32_t numWords) {
 	int retval = 0;
 	uint32_t bytes_per_word = wordSize / 8;
 	uint32_t num_read_bytes = bytes_per_word * numWords;
@@ -88,7 +89,7 @@ static int eepromReadToConsole(uint32_t wordSize, uint32_t addr, uint32_t numWor
 		return -1;
 	}
 
-	consolePrint("Reading %d %d-bit words starting at 0x%X in EEPROM\n", 
+	consolePrint("Reading %d %d-bit words starting at 0x%X from EEPROM\n", 
 		numWords, wordSize, addr);
 
 	void* read_data = malloc(num_read_bytes);
@@ -157,7 +158,8 @@ int eepromCmdFnc(int argc, const char* argv[]) {
 	if (!strcmp("read", argv[1])) {
 		uint32_t num_words = strtol(argv[4], NULL, 0);
 		retval = eepromReadToConsole(word_size, addr, num_words);
-	} else if (!strcmp("write ", argv[1])) {
+	} else if (!strcmp("write", argv[1])) {
+		//TODO: imeplement this
 		consolePrint("eeprom writing not implemented yet\n");
 		return -1;
 	} else {

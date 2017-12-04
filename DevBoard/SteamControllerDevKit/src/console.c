@@ -70,6 +70,7 @@ static uint32_t oldestHistoryIdx = 0; // If entriesRdIdx is set to this value
  * \return None.
  */
 static void printHex(const uint8_t* buff, uint32_t len){
+	consolePrint("\n");
 	for (int idx = 0; idx < len; idx++) {
 		char c = buff[idx];
 		if (idx == cursorIdx) {
@@ -81,6 +82,7 @@ static void printHex(const uint8_t* buff, uint32_t len){
 		}
 		consolePrint(" ");
 	}
+	consolePrint("\n");
 	consolePrint("\n");
 }
 
