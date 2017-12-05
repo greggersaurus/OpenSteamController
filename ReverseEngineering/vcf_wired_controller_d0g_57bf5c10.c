@@ -323,7 +323,8 @@ void init()
         // Entry Num: 45138 - 45143
         // Step Num: 33851 - 33855
 	// Firmware Offset(s): 
-	//	0x00001014 - 0x0000101e
+	//	0x00001014 - 0x00001014
+	//	0x00001018 - 0x0000101e
 
 	// Wait until PLL is locked                                                     
 	do{
@@ -439,11 +440,13 @@ void init()
         // Step Num: 33913 - 40670 
 	// Firmware Offset(s): 
 	//	0x000000d8 - 0x000000da
-	//	0x000000d0 - 0x000000c4
-	//	0x000003d0 - 0x000003ca
+	//	0x000000c0 - 0x000000c4
+	//	0x000003b4 - 0x000003ba
+	//	0x000003c8 - 0x000003ca
 	//	0x000003bc - 0x000003c4
-	//	0x0000152c - 0x00001536
-	//	0x0000152e - 0x00001538	
+	//	0x0000152c - 0x0000152c
+	//	0x00001534 - 0x00001536
+	//	0x00001538 - 0x00001538	
 	//	0x000003c6 - 0x000003ca
 	//	0x000003bc - 0x000003c4
 	//	0x0000153c - 0x0000153e
@@ -476,9 +479,9 @@ void init()
 	*0x1000024c = 0x00000000	
 	*0x10000250 = 0x00000000	
 	*0x10000254 = 0x00000000 // To be filled with data read from EEPROM (lower 16-bits are magic word?)
-	*0x10000258 = 0x00000000 // To be filled with data read from EEPROM (indicates hardware version?)
+	*0x10000258 = 0x00000000 // To be filled with data read from EEPROM (indicates hardware version)
 	*0x1000025c = 0x00000000 // Bytes seem to be used for marked CT32B1 as enabled, and whether CT32B1 interrupt occurred
-	*0x10000260 = 0x00000000
+	*0x10000260 = 0x00000000 // Results calculations based on value of system PLL control register (used for EEPROM access calculations)
 	Clear 0x10000264 - 0x10001c1c (inclusive 4 byte writes)
 
 
@@ -584,12 +587,12 @@ void init()
 	//	Has to do with cps command (i.e. disabling/enabling interrupts)
 
 
-        // Entry Num: 55992 - 56018
-        // Step Num: 42746 - 42759
+        // Entry Num: 55992 - 56010
+        // Step Num: 42746 - 42754
 	// Firmware Offset(s): 
 	//	0x00000bd0 - 0x00000bd4
 	//	0x00000bf4 - 0x00000bf4
-	//	0x00000d10 - 0x00000d22
+	//	0x00000d10 - 0x00000d18
 
 	// Check if (uint16_t*)0x10000254 has value 0xa55a stored in it
 	//	This is where EEPROM read data ends up
@@ -598,8 +601,7 @@ void init()
 
 	if ((uint16_t)eeprom_data[0] != 0xa55a)
 	{
-		// Entry Num: 56019 - 56073
-		// Step Num: 42760 - 42792
+		// TODO: should re-sim this case to make sure we got everything correctly...
 		// Firmware Offset(s): 
 		//	0x00000f5c - 0x00000f64
 		//	0x00000bfc - 0x00000c10
@@ -632,8 +634,6 @@ void init()
 		command_param[4] = 46875;
 
 
-		// Entry Num: 56074 - 57950
-		// Step Num: 42793 - 44499
 		// Firmware Offset(s): 
 		//	0x1fff1ff0 - 0x1fff1ff2
 		//	0x1fff171c - 0x1fff171c
@@ -646,8 +646,6 @@ void init()
 		// Surprisingly no check of status_result...
 
 
-		// Entry Num: 57951 - 57961
-		// Step Num: 44500 - 44507
 		// Firmware Offset(s): 
 		//	0x00000bcc - 0x00000bcc
 		//	0x000007c0 - 0x000007cc
@@ -657,12 +655,7 @@ void init()
 	}
 
 
-        // Entry Num: 57962 - 57990
-        // Step Num: 44508 - 44522
 	// Firmware Offset(s): 
-	//	0x00000bd0 - 0x00000bd4
-	//	0x00000c14 - 0x00000c14
-	//	0x00000f68 - 0x00000f68
 	//	0x00000d26 - 0x00000d26
 	//	0x00001556 - 0x00001558
 	//	0x00000428 - 0x00000434
@@ -674,8 +667,6 @@ void init()
 	*reg32 = val;
 
 
-        // Entry Num: 57991 - 57998
-        // Step Num: 44523 - 44529
 	// Firmware Offset(s): 
 	//	0x0000155c - 0x0000155c
 	//	0x00000ce8 - 0x00000cf0
@@ -684,8 +675,6 @@ void init()
 	bool usbConnected = usbVoltPresent();
 
 
-        // Entry Num: 57999 - 58008
-        // Step Num: 44530 - 44537
 	// Firmware Offset(s): 
 	//	0x00001560 - 0x0000156a
 
@@ -717,8 +706,6 @@ void init()
 	}
 
 
-        // Entry Num: 58009 - 58027
-        // Step Num: 44538 - 44548
 	// Firmware Offset(s): 
 	//	0x00000f90 - 0x00000f94
 	//	0x00000cf8 - 0x00000cfc
@@ -739,8 +726,6 @@ void init()
 	// Branch to LR (0x0000055c)
 
 
-        // Entry Num: 58041 - 58053
-        // Step Num: 44560 - 44570
 	// Firmware Offset(s): 
 	//	0x0000055c - 0x00000570
 
@@ -748,8 +733,6 @@ void init()
 	setGpioOutDir(baseAddr = 0x50000000, port = 1, gpioNum = gpio_num);
 
 
-        // Entry Num: 58054 - 58067
-        // Step Num: 44571 - 44578
 	// Firmware Offset(s): 
 	//	0x00000fc8 - 0x00000fc8
 	//	0x00001580 - 0x00001582
@@ -760,8 +743,6 @@ void init()
 	*reg32 = 0;
 
 
-        // Entry Num: 58068 - 58087
-        // Step Num: 44579 - 44594
 	// Firmware Offset(s): 
 	//	0x00001586 - 0x0000159a
 	//	0x00000572 - 0x00000576
@@ -772,8 +753,6 @@ void init()
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000003, regVal = 0x00000008);
 
 
-        // Entry Num: 58088 - 58105
-        // Step Num: 44595 - 44610
 	// Firmware Offset(s): 
 	//	0x0000159e - 0x000015a2
 	//	0x0000158c - 0x0000159a
@@ -785,32 +764,25 @@ void init()
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000006, regVal = 0x00000001);
 	
 
-        // Entry Num: 58106 - 58127
-        // Step Num: 44611 - 44630
 	// Firmware Offset(s): 
 	//	0x0000159e - 0x000015a2
 	//	0x0000158c - 0x0000159a
 	//	0x00000572 - 0x0000057c
 
-//TODO: watch this line to see comms between LPC11U37F and Radio Chip
-	// Set PIO1_17 to function as RXD - Receiver input for USART
+	// Set PIO1_17 to function as RXD - Receiver input for USART (for communications with Radio Chip?)
 	// *(uint32_t*)0x400440a4 = 0x00000002;
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 1, regWordOffset = 0x00000011, regVal = 0x00000002);
 
 
-        // Entry Num: 58128 - 58143
-        // Step Num: 44631 - 44644
 	// Firmware Offset(s): 
 	//	0x0000158c - 0x0000159a
 	//	0x00000572 - 0x0000057c
 
-	// Set PIO1_18 to function as TXD - Transmitter output for USART
+	// Set PIO1_18 to function as TXD - Transmitter output for USART (for communications with Radio Chip?)
 	// *(uint32_t*)0x400440a8 = 0x00000002
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 1, regWordOffset = 0x00000012, regVal = 0x00000002);
 
 
-        // Entry Num: 58144 - 58154
-        // Step Num: 44645 - 44654
 	// Firmware Offset(s): 
 	//	0x0000159e - 0x000015a4
 	//	0x00000ce8 - 0x00000cf0
@@ -819,8 +791,6 @@ void init()
 	usbConnected = usbVoltPresent();
 
 
-        // Entry Num: 58155 - 58164
-        // Step Num: 44655 - 44660
 	// Firmware Offset(s): 
 	//	0x000015a8 - 0x000015ac
 	//	0x00000f90 - 0x00000f94
@@ -842,8 +812,6 @@ void init()
 	// Branch to LR (0x0000055c)
 
 
-        // Entry Num: 58190 - 58202
-        // Step Num: 44680 - 44690
 	// Firmware Offset(s): 
 	//	0x0000055c - 0x00000570
 
@@ -851,8 +819,6 @@ void init()
 	setGpioOutDir(baseAddr = 0x50000000, port = 1, gpioNum = gpio_num);
 
 
-        // Entry Num: 58203 - 58260
-        // Step Num: 44691 - 44725
 	// Firmware Offset(s): 
 	//	0x00000fc8 - 0x00000fc8
 	//	0x000015b0 - 0x000015ba
@@ -883,8 +849,6 @@ void init()
 	command_param[4] = 46875;
 
 
-        // Entry Num: 58261 - 60061
-        // Step Num: 44726 - 46373
 	// Firmware Offset(s): 
 	//	0x1fff1ff0 - 0x1fff1ff2
 	//	0x1fff171c - 0x1fff171c
@@ -897,8 +861,6 @@ void init()
 	// Surprisingly no check of status_result...
 
 
-        // Entry Num: 60062 - 60072
-        // Step Num: 46374 - 46381
 	// Firmware Offset(s): 
 	//	0x00000bcc - 0x00000bcc
 	//	0x000007c0 - 0x000007cc
@@ -906,55 +868,83 @@ void init()
 	// Decrement 0x10000250 and cps (change processor state (to reenable interrupts after IAP command?)
 
 
-        // Entry Num: 60073 - 60096
-        // Step Num: 46382 - 46394
 	// Firmware Offset(s): 
 	//	0x00000bd0 - 0x00000bd4
 	//	0x00000bf4 - 0x00000bf4
 	//	0x000015be - 0x000015c4 
-	//	0x000015c6 - 0x000015ce 
 
 	// Check if 0x10001c08 (Value read from EEPROM) is 0
 	if (eeprom_data2 != 0)
 	{
 		// Firmware Offset(s): 
 		//	0x000015c6 - 0x000015ce 
-		// ...
+		// 	0x00000bfc - 0x00000c10
+		//	0x00000bb4 - 0x00000bc0
+
+		*(uint32_t*)0x10001c0c = 0;
+
+		// Setup for EEPROM write via IAP command 
+		//	*0x10001bc8 = 0x0000003e Command code : 61 (0x3d)
+		//	*0x10001bcc = 0x00000500 Param0: EEPROM Address = 0x00000500
+		//	*0x10001bd0 = 0x10001c0c Param1: RAM Address = 0x10001c0c
+		//	*0x10001bd4 = 0x00000004 Param2: Number of bytes to be read = 4
+		//	*0x10001bd8 = 0x0000b71b Param3: System Clock Frequency = 0x0000b71b
+
+		// Firmware Offset(s): 
+		//	0x000007b0 - 0x000007ba
+		//	0x00000bc4 - 0x00000bca
+
+		// For marking cps state of disabling interrupts (I think)
+		*(uint32_t*)0x10000250 += 1;
+
+		// Firmware Offset(s): 
+		//	0x1fff1ff0 - 0x1fff1ff2
+		//	0x1fff171c - 0x1fff171c
+		//	... 
+
+		// boot ROM code for executing IAB command
+		iap_entry(command_param = 0x10001bc8, status_result = 0x10001bdc);
+
+
+		// Firmware Offset(s): 
+		//	0x00000bcc - 0x00000bcc
+		//	0x000007d0 - 0x000007cc
+
+		// Decrement 0x10000250 and cps (change processor state (to reenable interrupts after IAP command?)
 	}
 
 
-
 	// Firmware Offset(s): 
+	//	0x000015de - 0x000015e6
 
 	// Check if GPREG0 is set to 0xecaabac0
-	// reg32 = 0x40038004;
-	// val = *reg32;
-	// if (val == 0xecaabac0)
-	// {
-		// TODO: UNKNOWN PATHS
-		//	If GPREG0 is 0xecaabac0 execute instruction 0x000015e6 instead of branching to 0x000015ec
-	// }
+	reg32 = 0x40038004;
+	val = *reg32;
+	if (val == 0xecaabac0)
+	{
+	     // TODO: UNKNOWN PATHS
+	     //	If GPREG0 is 0xecaabac0 execute instruction 0x000015e6 instead of branching to 0x000015ec
+	}
 
 
-        // Entry Num: 60097 - 60109
-        // Step Num: 46395 - 46402
 	// Firmware Offset(s): 
 	//	0x000015ec - 0x000015fa
+	//	0x000015fc - 0x000015fc
 
 	// Call into some function that checks if Reg 0 is set to 0xecaabac0. 
 	//  I think this is an impossible path, as Reg 0 is set compare above.
 	//  Either way UKNOWN PATH is to branch to instruction at 0x00001618 if Reg 0 does not equal 0xecaabac0
 
 
-        // Entry Num: 60110 - 60117
-        // Step Num: 46403 - 46408
+//TODO: !! pick up translating simulation results. This seems to be divergent path now that we are reading hw/board version from EEPROM correctly in sim.
 	// Firmware Offset(s): 
-	//	0x000015fc - 0x000015fc
-	//	0x00000cf8 - 0x00000cf8
+	//	0x00000cf8 - 0x00000cfc
 	//	0x00001600 - 0x00001602	
 
-	// Check if 0x10000258 == 0
-	//	TODO: UNKNOWN PATH what if 0x10000258 is not 0?
+	if (*0x10000258 == 0)
+	{
+		//TODO: UNKNOWN PATH what if 0x10000258 is not 0?
+	}
 
 
         // Entry Num: 60118 - 60140

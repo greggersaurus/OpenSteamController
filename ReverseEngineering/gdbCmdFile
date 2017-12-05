@@ -54,8 +54,9 @@ set $eeprom_0x000 = 0x0005a55a
 # 32-bit word read from EEPROM byte offset 0x004 (Board Revision)
 set $eeprom_0x004 = 0x0000000a
 
-# 32-bit word read from EEPROM byte offset 0x500 (TODO: purpose)
-set $eeprom_0x500 = 0xbeacc4c4
+# 32-bit word read from EEPROM byte offset 0x500 (TODO: purpose? Think this 
+#	might affect use of watchdog somehow, but need to verify...)
+set $eeprom_0x500 = 0x00000000
 
 #                                                                              #
 # End: Simulation Run Configuration Variables.                                 #
