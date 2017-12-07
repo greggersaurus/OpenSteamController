@@ -456,7 +456,7 @@ void init()
  	//	0x0000154c - 0x0000154e
 	//	0x00000fd0 - 0x00000fd2
 
-	// Initialize heap (bss and/or data segment?)
+	// Initialize heap (bss and/or data segment?) in SRAM0
 	*0x10000200 = 0x00000000
 	*0x10000204 = 0x00002000	
 	*0x10000208 = 0x00220209 // Passed as full_speed_desc later...
@@ -936,17 +936,198 @@ void init()
 	//  Either way UKNOWN PATH is to branch to instruction at 0x00001618 if Reg 0 does not equal 0xecaabac0
 
 
-//TODO: !! pick up translating simulation results. This seems to be divergent path now that we are reading hw/board version from EEPROM correctly in sim.
 	// Firmware Offset(s): 
 	//	0x00000cf8 - 0x00000cfc
 	//	0x00001600 - 0x00001602	
 
-	if (*0x10000258 == 0)
+	// Check hw version read from EEPROM
+	if (*0x10000258 != 0)
 	{
-		//TODO: UNKNOWN PATH what if 0x10000258 is not 0?
+		// Firmware Offset(s): 
+		//	0x000007a0 - 0x000007a8
+
+		// Set GPREG1 to 0
+		reg32 = (volatile uint32_t*)0x40038008;
+		*reg32 = 1;
+
+
+		// Firmware Offset(s): 
+		//	0x0000160a - 0x0000160c
+		//	0x00000428 - 0x00000434
+		//	0x00001610 - 0x00001610
+
+		// Enables SRAM1 block at address 0x2000 0000 via system clock control register
+		reg32 = (volatile uint32_t*)0x40048080;
+		val = *reg32;
+		val |= 0x04000000;
+		*reg32 = val;
+
+
+		// Firmware Offset(s): 
+		//	0x000000dc - 0x000000e8
+		//	0x000020d4 - 0x000020d6
+		//	0x000020c0 - 0x000020c4
+		//	0x000029e4 - 0x000029ea
+		//	0x000029f8 - 0x000029fa
+		
+		// Read a whole bunch of code from flash and compare results
+		//  There is a branch here, but its impossible given values are
+		//   read from firmware section of memory.
+		//  Not sure purpose of all this...
+
+
+		// Firmware Offset(s): 
+		//	0x000029ec - 0x000029f4
+		//	0x0000c2cc - 0x0000c2cc
+
+		// Read more code from flash into registers...
+
+
+		// Firmware Offset(s): 
+		//	0x0000c2ce - 0x0000c2d8
+
+		// Initialize some heap space in SRAM0
+		*(uint32_t*)0x10000000 = 0;
+		*(uint32_t*)0x10000004 = 0;
+		*(uint32_t*)0x10000008 = 0;
+		*(uint32_t*)0x1000000c = 0;
+		*(uint32_t*)0x10000010 = 0;
+		*(uint32_t*)0x10000014 = 0;
+		*(uint32_t*)0x10000018 = 0;
+		*(uint32_t*)0x1000001c = 0;
+		*(uint32_t*)0x10000020 = 0;
+		*(uint32_t*)0x10000024 = 0;
+		*(uint32_t*)0x10000028 = 0;
+		*(uint32_t*)0x1000002c = 0;
+		*(uint32_t*)0x10000030 = 0;
+		*(uint32_t*)0x10000034 = 0;
+		*(uint32_t*)0x10000038 = 0;
+		*(uint32_t*)0x1000003c = 0;
+		*(uint32_t*)0x10000040 = 0;
+		*(uint32_t*)0x10000044 = 0;
+		*(uint32_t*)0x10000048 = 0;
+		*(uint32_t*)0x1000004c = 0;
+		*(uint32_t*)0x10000050 = 0;
+		*(uint32_t*)0x10000054 = 0;
+		*(uint32_t*)0x10000058 = 0;
+		*(uint32_t*)0x1000005c = 0;
+		*(uint32_t*)0x10000060 = 0;
+		*(uint32_t*)0x10000064 = 0;
+		*(uint32_t*)0x10000068 = 0;
+		*(uint32_t*)0x1000006c = 0;
+		*(uint32_t*)0x10000070 = 0;
+		*(uint32_t*)0x10000074 = 0;
+		*(uint32_t*)0x10000078 = 0;
+		*(uint32_t*)0x1000007c = 0;
+		*(uint32_t*)0x10000080 = 0;
+		*(uint32_t*)0x10000084 = 0;
+		*(uint32_t*)0x10000088 = 0;
+		*(uint32_t*)0x1000008c = 0;
+		*(uint32_t*)0x10000090 = 0;
+		*(uint32_t*)0x10000094 = 0;
+		*(uint32_t*)0x10000098 = 0;
+		*(uint32_t*)0x1000009c = 0;
+		*(uint32_t*)0x100000a0 = 0;
+		*(uint32_t*)0x100000a4 = 0;
+		*(uint32_t*)0x100000a8 = 0;
+		*(uint32_t*)0x100000ac = 0;
+		*(uint32_t*)0x100000b0 = 0;
+		*(uint32_t*)0x100000b4 = 0;
+		*(uint32_t*)0x100000b8 = 0;
+		*(uint32_t*)0x100000bc = 0;
+		*(uint32_t*)0x100000c0 = 0;
+
+
+		// Firmware Offset(s): 
+		//	0x000029f6 - 0x000029fa
+		//	0x000029ec - 0x000029f4
+		//	0x00002a2a - 0x00002a36
+		//	0x00002a3c - 0x00002a3e	
+		//	0x00002a46 - 0x00002a5a
+		//	0x00002a78 - 0x00002a7a
+
+		// Initialize more heap space in SRAM0
+		*(uint8_t)0x10000200 = 0xff;
+		*(uint8_t)0x10000201 = 0xff;
+		*(uint8_t)0x10000202 = 0x00;
+		*(uint8_t)0x10000203 = 0x00;
+
+
+		// Firmware Offset(s): 
+		//	0x00002a2e - 0x00002a36
+		//	0x00002a3c - 0x00002a3e
+		//	0x00002a40 - 0x00002a44
+		//	0x00002a46 - 0x00002a60
+
+		// Initialize more heap space in SRAM0
+		*(uint8_t)0x10000204 = 0x01;
+		*(uint8_t)0x10000205 = 0x0e;
+		*(uint8_t)0x10000206 = 0x08;
+		*(uint8_t)0x10000207 = 0x00;
+
+
+		// Firmware Offset(s): 
+		//	0x00002a58 - 0x00002a60
+		//	0x00002a78 - 0x00002a7a
+
+		// Initialize more heap space in SRAM0
+		*(uint8_t)0x10000206 = 0x00;
+		*(uint8_t)0x10000207 = 0x00;
+		*(uint8_t)0x10000208 = 0x00;
+		*(uint8_t)0x10000209 = 0x00;
+		*(uint8_t)0x1000020a = 0x00;
+		*(uint8_t)0x1000020b = 0x00;
+		*(uint8_t)0x1000020c = 0x00;
+		*(uint8_t)0x1000020d = 0x00;
+		*(uint8_t)0x1000020e = 0x00;
+		*(uint8_t)0x1000020f = 0x00;
+		*(uint8_t)0x10000210 = 0x00;
+		*(uint8_t)0x10000211 = 0x00;
+		*(uint8_t)0x10000212 = 0x00;
+		*(uint8_t)0x10000213 = 0x00;
+		*(uint8_t)0x10000214 = 0x00;
+		*(uint8_t)0x10000215 = 0x00;
+		*(uint8_t)0x10000216 = 0x00;
+		*(uint8_t)0x10000217 = 0x00;
+		*(uint8_t)0x10000218 = 0x00;
+		*(uint8_t)0x10000219 = 0x00;
+		*(uint8_t)0x1000021a = 0x00;
+		*(uint8_t)0x1000021b = 0x00;
+		*(uint8_t)0x1000021c = 0x00;
+		*(uint8_t)0x1000021d = 0x00;
+		*(uint8_t)0x1000021e = 0x00;
+		*(uint8_t)0x1000021f = 0x00;
+		*(uint8_t)0x10000220 = 0x00;
+		*(uint8_t)0x10000221 = 0x00;
+		*(uint8_t)0x10000222 = 0x00;
+		*(uint8_t)0x10000223 = 0x00;
+		*(uint8_t)0x10000224 = 0x00;
+		*(uint8_t)0x10000225 = 0x00;
+		*(uint8_t)0x10000226 = 0x00;
+		*(uint8_t)0x10000227 = 0x00;
+		*(uint8_t)0x10000228 = 0x00;
+		*(uint8_t)0x10000229 = 0x00;
+		*(uint8_t)0x1000022a = 0x00;
+		*(uint8_t)0x1000022b = 0x00;
+		*(uint8_t)0x1000022c = 0x00;
+		*(uint8_t)0x1000022d = 0x00;
+		*(uint8_t)0x1000022e = 0x00;
+		*(uint8_t)0x1000022f = 0x00;
+		*(uint8_t)0x10000230 = 0x00;
+		*(uint8_t)0x10000231 = 0x00;
+		*(uint8_t)0x10000232 = 0x00;
+		*(uint8_t)0x10000233 = 0x00;
+		*(uint8_t)0x10000234 = 0x00;
+		*(uint8_t)0x10000235 = 0x00;
+
+
+		// Firmware Offset(s): 
+		//	0x00002a2e - 
+
+		return;
 	}
 
-
+//TODO: clean up or remove the following as it only pertains to different board revisions?
         // Entry Num: 60118 - 60140
         // Step Num: 46409 - 46423
 	// Firmware Offset(s): 
