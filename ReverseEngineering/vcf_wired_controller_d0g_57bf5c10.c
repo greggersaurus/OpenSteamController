@@ -2663,7 +2663,119 @@ void init()
 
 
 		// Firmware Offset(s): 
-		//	0x00002a7e - 
+		//	0x00002a7e - 0x00002a7e
+		//	0x000029f6 - 0x000029fa
+		//	0x000029ec - 0x000029f4
+		//	0x0000c2cc - 0x0000c2cc
+
+		// Control logic to exit SRAM0 heap init above
+
+
+		// Firmware Offset(s): 
+		//	0x0000c2ce - 0x0000c2d8
+
+		// SRAM1 initialization
+		*(uint32_t*)0x20000000 = 0x0000ffff;
+		*(uint32_t*)0x20000004 = 0x00016400	
+		*(uint32_t*)0x20000008 = 0x00001400
+		*(uint32_t*)0x2000000c = 0x00000000
+		*(uint32_t*)0x20000010 = 0x27100000
+		*(uint32_t*)0x20000014 = 0x00000000
+		*(uint32_t*)0x20000018 = 0x00000000
+		*(uint32_t*)0x2000001c = 0x00000000
+		*(uint32_t*)0x20000020 = 0x00000000
+		*(uint32_t*)0x20000024 = 0x00000000
+		*(uint32_t*)0x20000028 = 0x00000000
+		*(uint32_t*)0x2000002c = 0x00000000
+		*(uint32_t*)0x20000030 = 0x00000000
+		*(uint32_t*)0x20000034 = 0x00000000
+		*(uint32_t*)0x20000038 = 0x00000000
+		*(uint32_t*)0x2000003c = 0x00000000
+		*(uint32_t*)0x20000040 = 0x00000000
+		*(uint32_t*)0x20000044 = 0x00000000
+		*(uint32_t*)0x20000048 = 0x00000000
+		*(uint32_t*)0x2000004c = 0x00000000
+		*(uint32_t*)0x20000050 = 0x00000000
+		*(uint32_t*)0x20000054 = 0x00000000
+		*(uint32_t*)0x2000005c = 0x00000000
+		*(uint32_t*)0x20000060 = 0x00000000
+		*(uint32_t*)0x20000064 = 0x00000000
+		*(uint32_t*)0x20000068 = 0x00000000
+		*(uint32_t*)0x2000006c = 0x00000000
+		*(uint32_t*)0x20000070 = 0x00000000
+		*(uint32_t*)0x20000074 = 0x00000000
+		*(uint32_t*)0x20000078 = 0x00000000
+
+
+		// Firmware Offset(s): 
+		//	0x000029f6 - 0x000029fa
+		//	0x000029ec - 0x000029f4
+		//	0x0000c2dc - 0x0000c2de
+		//	0x0000c2e0 - 0x0000c2e8
+
+		// SRAM0 initialization
+		*(uint32_t*)0x100000c4 = 0x00000000
+		*(uint32_t*)0x100000c8 = 0x00000000
+		*(uint32_t*)0x100000cc = 0x00000000
+		*(uint32_t*)0x100000d0 = 0x00000000
+		*(uint32_t*)0x100000d4 = 0x00000000
+		*(uint32_t*)0x100000d8 = 0x00000000
+		*(uint32_t*)0x100000dc = 0x00000000
+		*(uint32_t*)0x100000e0 = 0x00000000
+		*(uint32_t*)0x100000e4 = 0x00000000
+		*(uint32_t*)0x100000e8 = 0x00000000
+		*(uint32_t*)0x100000ec = 0x00000000
+		*(uint32_t*)0x100000f0 = 0x00000000
+
+
+		// Firmware Offset(s): 
+		//	0x000029f6 - 0x000029fa
+		//	0x000029ec - 0x000029f4
+		//	0x0000c2dc - 0x0000c2de
+		//	0x0000c2e0 - 0x0000c2e8
+
+		// SRAM0 initialization
+		write 0's to 0x100007e8 to 0x10001fc4 with 32-bit writes
+
+
+		// Firmware Offset(s): 
+		//	0x000029f6 - 0x000029fa
+		//	0x000029ec - 0x000029f4
+		//	0x0000c2dc - 0x0000c2de
+		//	0x0000c2e0 - 0x0000c2e8
+
+		// SRAM1 initialization
+		write 0's to 0x2000007c to 0x2000030c with 32-bit writes
+
+
+		// Firmware Offset(s): 
+		//	0x000029f6 - 0x000029fc
+		//	0x000020c8 - 0x000020ca
+		//	0x0000d778 - 0x0000d778
+		//	0x00009cfc - 0x00009cfe
+		//	0x00004174 - 0x00004176
+
+		// Steps to back away from memory filling logics (i.e. stack pops, etc.)
+
+
+		// Firmware Offset(s): 
+		//	0x00004130 - 0x0000414a
+
+		//	Check that Main clock source select register is set to PLL output
+		val = *(uint32_t)0x40048070;
+
+		if (val != 3) {
+			// TODO: UNKNOWN PATHS
+			//	Jump to 0x00004150 for IRC Oscillator
+			//	Jump to 0x00004154 for PLL input
+			//	Jump to 0x0000415a for Watchdown oscillator
+			//	Execute 0x0000414e if none of the above
+		}
+
+
+		// Firmware Offset(s): 
+		//	0x000041b0 - 
+		
 
 		return;
 	}
