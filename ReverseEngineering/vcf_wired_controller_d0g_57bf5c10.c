@@ -2762,7 +2762,7 @@ void init()
 		//	0x00004130 - 0x0000414a
 
 		//	Check that Main clock source select register is set to PLL output
-		val = *(uint32_t)0x40048070;
+		val = *(uint32_t*)0x40048070;
 
 		if (val != 3) {
 			// TODO: UNKNOWN PATHS
@@ -2774,8 +2774,65 @@ void init()
 
 
 		// Firmware Offset(s): 
-		//	0x000041b0 - 
-		
+		//	0x000041b0 - 0x000041b2
+		//	0x00004188 - 0x00004194
+
+		// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+		val = *(uint32_t*)0x40048040;
+		if (val != 1) {
+			// TODO: UNKNOWN PATHS 
+			//	Branch to 0x0000419a if val == 0
+			//	Execute 0x00004196 if val != 0 && val != 1
+		}
+
+
+		// Firmware Offset(s): 
+		//	0x0000419e - 0x000041a2
+		//	0x000041b6 - 0x000041bc
+		//	0x00004168 - 0x00004172
+		//	0x000041c0 - 0x000041c0
+		//	0x0000414e - 0x0000414e
+		//	0x0000417a - 0x0000417e
+		//	0x000020ec - 0x000020f8
+		//	0x0000210e - 0x00002114
+		//	0x000020fa - 0x00002100
+		//	0x00002102 - 0x00002116
+		//	0x00004182 - 0x00004182
+		//	0x00009d06 - 0x00009d06
+		//	0x0000d77c - 0x0000d77c
+
+		// Read System PLL control register
+		reg0 = *(uint32_t*)0x40048008;
+		// Isolate MSEL (feedback divider value)
+		reg0 &= 0x1f;
+
+		// Read System clock divider register
+		reg1 = *(uint32_t*)0x40048078;
+
+		// And then a long series of loops based on the values read above
+		//  TODO: looks like a delay, but maybe something is being calculated?
+
+
+		// Firmware Offset(s): 
+		//	0x00009c50 - 0x00009c56
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 0;
+		reg0 = 0x15;
+
+		reg2 = 0xff;
+
+		// Read Interrupt Priority Register 5
+		reg3 = (*uint32_t*)0xe000e414;
+
+		// Isolate interrupt priority for SSP0 and set to highest (0)
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009c5a - 
 
 		return;
 	}
