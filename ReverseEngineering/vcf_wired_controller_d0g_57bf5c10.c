@@ -3235,7 +3235,145 @@ void init()
 		// Firmware Offset(s): 
 		//	0x00009cfa - 0x00009cfa
 		//	0x0000d780 - 0x0000d780
-		//	0x0000a0d8 - 
+		//	0x0000a0d8 - 0x0000a0f4
+
+		// Initialize more heap space in SRAM0
+		*(uint32_t*)0x10000818 = 0x00000000;
+		*(uint32_t*)0x1000081c = 0x00000000;
+		*(uint32_t*)0x10000820 = 0x00000000;
+		*(uint32_t*)0x10000824 = 0x00000000;
+		*(uint32_t*)0x10000828 = 0x00000000;
+		*(uint32_t*)0x1000082c = 0x00000000;
+		*(uint32_t*)0x10000830 = 0x00000000;
+		*(uint32_t*)0x10000834 = 0x00000000;
+		*(uint32_t*)0x10000838 = 0x00000000;
+		*(uint32_t*)0x1000083c = 0x00000000;
+		*(uint32_t*)0x10000840 = 0x00000000;
+		*(uint32_t*)0x10000844 = 0x00000000;
+		*(uint32_t*)0x10000848 = 0x00000000;
+		*(uint32_t*)0x1000084c = 0x00000000;
+		*(uint32_t*)0x10000850 = 0x00000000;
+		*(uint32_t*)0x10000854 = 0x00000000;
+
+
+		// Firmware Offset(s): 
+		//	0x0000a0f6 - 0x0000a0f6
+		//	0x0000d784 - 0x0000d784
+		//	0x00005644 - 0x00005648
+		//	0x00004108 - 0x00004114
+
+		// Enables clock for I/O configuration block via System clock control register
+		reg2 = *(uint32_t*)0x40048080;
+		reg2 |= 0x00010000;
+		*(uint32_t*)0x40048080 = reg2;
+
+
+		// Firmware Offset(s): 
+		//	0x0000564c - 0x00005650
+		//	0x00004224 - 0x0000422e
+
+		// Enables clock for 16-bit counter/timer 0 via System clock control register
+		reg1 = *(uint32_t*)0x40048080;
+		reg1 |= 0x00000040;
+		*(uint32_t*)0x40048080 = reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00005654 - 0x00005656
+		//	0x00004108 - 0x00004114
+
+		// Enables clock to GPIO Pin interrupts register via System clock control register
+		reg2 = *(uint32_t*)0x40048080;
+		reg2 |= 0x00080000;
+		*(uint32_t*)0x40048080 = reg2;
+
+
+		// Firmware Offset(s): 
+		//	0x0000565a - 0x0000565a
+		//	0x0000d788 - 0x0000d788
+		//	0x00002ba0 - 0x00002ba8
+		//	0x00003fd0 - 0x00003fd8
+		//	0x0000452c - 0x00004540
+
+		// Power ADC via Power configuration register
+		reg1 = *(uint32_t*)0x40048238;
+		reg1 &= 0x000005ff;
+		reg1 &= ~0x00000010;
+		reg1 |= 0x0000e800;
+		*(uint32_t*)0x40048238 = reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00003fdc - 0x00003ffa
+	
+		// Enables clock for ADC via System clock control register
+		reg1 = *(uint32_t*)0x40048080;
+		reg1 |= 0x00002000;
+		*(uint32_t*)0x40048080 = reg1;
+
+		// Disable all A/D interrupts via A/D Interrupt Enable Register
+		*(uint32_t*)0x4001c00c = 0x00000000	
+
+
+		// Firmware Offset(s): 
+		//	0x0000d0e8 - 0x0000d0f0
+		//	0x00004174 - 0x00004176
+		//	0x00004130 - 0x0000414a
+
+		//	Check that Main clock source select register is set to PLL output
+		val = *(uint32_t*)0x40048070;
+
+		if (val != 3) {
+			// TODO: UNKNOWN PATHS
+			//	Jump to 0x00004150 for IRC Oscillator
+			//	Jump to 0x00004154 for PLL input
+			//	Jump to 0x0000415a for Watchdown oscillator
+			//	Execute 0x0000414e if none of the above
+		}
+
+
+		// Firmware Offset(s): 
+		//	0x00004188 - 0x00004194
+
+		// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+		val = *(uint32_t*)0x40048040;
+		if (val != 1) {
+			// TODO: UNKNOWN PATHS 
+			//	Branch to 0x0000419a if val == 0
+			//	Execute 0x00004196 if val != 0 && val != 1
+		}
+
+
+		// Firmware Offset(s): 
+		//	0x0000419e - 0x000041a2
+		//	0x000041b6 - 0x000041bc
+		//	0x00004168 - 0x00004172
+		//	0x000041c0 - 0x000041c0
+		//	0x0000414e - 0x0000414e
+		//	0x0000417a - 0x0000417e
+		//	0x000020ec - 0x000020f8
+		//	0x0000210e - 0x00002114
+		//	0x000020fa - 0x00002100
+		//	0x00002102 - 0x00002116
+		//	0x00004182 - 0x00004182
+
+		// Read System PLL control register
+		reg0 = *(uint32_t*)0x40048008;
+		// Isolate MSEL (feedback divider value)
+		reg0 &= 0x1f;
+
+		// Read System clock divider register
+		reg1 = *(uint32_t*)0x40048078;
+
+		// And then a long series of loops based on the values read above
+		//  Looks like a delay based on PLL and system clock settings
+
+
+		// Firmware Offset(s): 
+		//	0x0000d0f4 - 0x0000d0f6
+		//	0x0000d0fc - 0x0000d106
+		//	0x000020ec - 
+
 
 		return;
 	}
