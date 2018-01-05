@@ -2810,7 +2810,7 @@ void init()
 		reg1 = *(uint32_t*)0x40048078;
 
 		// And then a long series of loops based on the values read above
-		//  TODO: looks like a delay, but maybe something is being calculated?
+		//  Looks like a delay based on PLL and system clock settings
 
 
 		// Firmware Offset(s): 
@@ -2832,10 +2832,414 @@ void init()
 
 
 		// Firmware Offset(s): 
-		//	0x00009c5a - 
+		//	0x00009c5a - 0x00009c5e
+		//	0x000072dc - 0x00007304
+
+		reg1 = 0;
+		reg0 = 0xFFFFFFFF;
+		
+		reg3 = reg0;
+		reg2 = 0xff000000;
+
+		// Used to count shifts for reg1 and reg2
+		reg3 >>= 27; // 0x18
+
+		// Read Interrupt Control and State Register (ICSR)
+		reg3 = *(uint32_t*)0xe000ed04;
+
+		// Set lower 24 bits, but these are all RO... Not sure why this is happening...
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009c62 - 0x00009c66
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 1;
+		reg0 = 0x14;
+
+		...
+		reg2 = 0xFF;
+		reg1 = 0x40;
+
+		// Read Interrupt Priority Register 5
+		reg3 = *(uint32_t*)0xe000e414;
+
+		// Isolate interrupt priority for SSP0 and set to 1, one below highest 
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+		
+		
+		// Firmware Offset(s): 
+		//	0x00009c6a - 0x00009c6e
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 1;
+		reg0 = 0xe;
+
+		...
+		reg2 = 0x00ff0000;
+		reg1 = 0x00400000;
+	
+		// Read Interrupt Priority Register 3
+		reg3 = *(uint32_t*)0xe000e40c;
+
+		// Isolate interrupt priority for SSP1 and set to 1, one below highest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009c72 - 0x00009c76
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 1;
+		reg0 = 0x12;
+
+		...
+		reg2 = 0x00ff0000;
+		reg1 = 0x00400000;
+	
+		// Read Interrupt Priority Register 4
+		reg3 = *(uint32_t*)0xe000e410;
+
+		// Isolate interrupt priority for CT32B0 and set to 1, one below highest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009c7a - 0x00009c7e
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 1;
+		reg0 = 0x16;
+
+		...
+		reg2 = 0x00ff0000;
+		reg1 = 0x00400000;
+	
+		// Read Interrupt Priority Register 5
+		reg3 = *(uint32_t*)0xe000e414;
+
+		// Isolate interrupt priority for USB_IRQ and set to 1, one below highest 
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009c82 - 0x00009c86
+		//	0x000072dc - 0x00007304
+
+		reg1 = 1;
+		reg0 = 0xFFFFFFFE;
+		
+		..
+		reg2 = 0x00ff0000;
+		reg1 = 0x00400000;
+
+		// Read System Handler Priority Register 3 (SHPR3)
+		reg3 = *(uint32_t*)0xe000ed20;
+
+		// Set PRI_14 Priority of system handler 14, PendSV to 1, one below highest 
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009c8a - 0x00009c8e
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 2;
+		reg0 = 0x10;
+
+		...
+		reg2 = 0x000000ff;
+		reg1 = 0x00000080;
+	
+		// Read Interrupt Priority Register 4
+		reg3 = *(uint32_t*)0xe000e410;
+
+		// Isolate interrupt priority for CT16B0 and set to 2, one above lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009c92 - 0x00009c96
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 2;
+		reg0 = 0x11;
+
+		...
+		reg2 = 0x0000ff00;
+		reg1 = 0x00008000;
+	
+		// Read Interrupt Priority Register 4
+		reg3 = *(uint32_t*)0xe000e410;
+
+		// Isolate interrupt priority for CT16B1 and set to 2, one above lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009c9a - 0x00009c9e
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 2;
+		reg0 = 0x13;
+
+		...
+		reg2 = 0xff000000;
+		reg1 = 0x80000000;
+	
+		// Read Interrupt Priority Register 4
+		reg3 = *(uint32_t*)0xe000e410;
+
+		// Isolate interrupt priority for CT32B1 and set to 2, one above lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009ca2 - 0x00009ca6
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 2;
+		reg0 = 0x18;
+
+		...
+		reg2 = 0x000000ff;
+		reg1 = 0x00000080;
+	
+		// Read Interrupt Priority Register 4
+		reg3 = *(uint32_t*)0xe000e418;
+
+		// Isolate interrupt priority for ADC and set to 2, one above lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009caa - 0x00009cae
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 2;
+		reg0 = 0xf;
+
+		...
+		reg2 = 0xff000000;
+		reg1 = 0x80000000;
+	
+		// Read Interrupt Priority Register 3
+		reg3 = *(uint32_t*)0xe000e40c;
+
+		// Isolate interrupt priority for I2C0 and set to 2, one above lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009cb2 - 0x00009cb6
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 3;
+		reg0 = 0x0;
+
+		...
+		reg2 = 0x000000ff;
+		reg1 = 0x000000c0;
+	
+		// Read Interrupt Priority Register 0
+		reg3 = *(uint32_t*)0xe000e400;
+
+		// Isolate interrupt priority for PIN_INT0 and set to 3, lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009cba - 0x00009cbe
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 3;
+		reg0 = 0x1;
+
+		...
+		reg2 = 0x0000ff00;
+		reg1 = 0x0000c000;
+	
+		// Read Interrupt Priority Register 0
+		reg3 = *(uint32_t*)0xe000e400;
+
+		// Isolate interrupt priority for PIN_INT1 and set to 3, lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009cc2 - 0x00009cc6
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 3;
+		reg0 = 0x2;
+
+		...
+		reg2 = 0x00ff0000;
+		reg1 = 0x00c00000;
+	
+		// Read Interrupt Priority Register 0
+		reg3 = *(uint32_t*)0xe000e400;
+
+		// Isolate interrupt priority for PIN_INT2 and set to 3, lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009cca - 0x00009cce
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 3;
+		reg0 = 0x3;
+
+		...
+		reg2 = 0xff000000;
+		reg1 = 0xc0000000;
+	
+		// Read Interrupt Priority Register 0
+		reg3 = *(uint32_t*)0xe000e400;
+
+		// Isolate interrupt priority for PIN_INT3 and set to 3, lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009cd2 - 0x00009cd6
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 3;
+		reg0 = 0x4;
+
+		...
+		reg2 = 0x000000ff;
+		reg1 = 0x000000c0;
+	
+		// Read Interrupt Priority Register 1
+		reg3 = *(uint32_t*)0xe000e404;
+
+		// Isolate interrupt priority for PIN_INT4 and set to 3, lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009cda - 0x00009cde
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 3;
+		reg0 = 0x5;
+
+		...
+		reg2 = 0x0000ff00;
+		reg1 = 0x0000c000;
+	
+		// Read Interrupt Priority Register 1
+		reg3 = *(uint32_t*)0xe000e404;
+
+		// Isolate interrupt priority for PIN_INT5 and set to 3, lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009ce2 - 0x00009ce6
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 3;
+		reg0 = 0x6;
+
+		...
+		reg2 = 0x00ff0000;
+		reg1 = 0x00c00000;
+	
+		// Read Interrupt Priority Register 1
+		reg3 = *(uint32_t*)0xe000e404;
+
+		// Isolate interrupt priority for PIN_INT6 and set to 3, lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009cea - 0x00009cee
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 3;
+		reg0 = 0x7;
+
+		...
+		reg2 = 0xff000000;
+		reg1 = 0xc0000000;
+	
+		// Read Interrupt Priority Register 1
+		reg3 = *(uint32_t*)0xe000e404;
+
+		// Isolate interrupt priority for PIN_INT7 and set to 3, lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009cf2 - 0x00009cf6
+		//	0x000072dc - 0x000072ec
+		//	0x00007306 - 0x00007316
+
+		reg1 = 3;
+		reg0 = 0x8;
+
+		...
+		reg2 = 0x000000ff;
+		reg1 = 0x000000c0;
+	
+		// Read Interrupt Priority Register 2
+		reg3 = *(uint32_t*)0xe000e408;
+
+		// Isolate interrupt priority for GINT0 (GPIO GROUP0) and set to 3, lowest
+		reg3 &= ~reg2;
+		reg3 |= reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x00009cfa - 0x00009cfa
+		//	0x0000d780 - 0x0000d780
+		//	0x0000a0d8 - 
 
 		return;
 	}
+
 
 //TODO: clean up or remove the following as it only pertains to different board revisions?
         // Entry Num: 60118 - 60140
