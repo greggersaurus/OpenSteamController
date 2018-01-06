@@ -884,7 +884,7 @@ void init()
 		*(uint32_t*)0x10001c0c = 0;
 
 		// Setup for EEPROM write via IAP command 
-		//	*0x10001bc8 = 0x0000003e Command code : 61 (0x3d)
+		//	*0x10001bc8 = 0x0000003d Command code : 61 (0x3d)
 		//	*0x10001bcc = 0x00000500 Param0: EEPROM Address = 0x00000500
 		//	*0x10001bd0 = 0x10001c0c Param1: RAM Address = 0x10001c0c
 		//	*0x10001bd4 = 0x00000004 Param2: Number of bytes to be read = 4
@@ -1028,7 +1028,7 @@ void init()
 		*(uint32_t*)0x10000098 = 0;
 		*(uint32_t*)0x1000009c = 0;
 		*(uint32_t*)0x100000a0 = 0;
-		*(uint32_t*)0x100000a4 = 0;
+		*(uint32_t*)0x100000a4 = 0; // 48000000 is stored here and may be some calculated clock rate
 		*(uint32_t*)0x100000a8 = 0;
 		*(uint32_t*)0x100000ac = 0;
 		*(uint32_t*)0x100000b0 = 0;
@@ -1468,7 +1468,7 @@ void init()
 		*(uint8_t*)0x1000033d = 0x00
 		*(uint8_t*)0x1000033e = 0x00
 		*(uint8_t*)0x1000033f = 0x00
-		*(uint8_t*)0x10000340 = 0x00
+		*(uint8_t*)0x10000340 = 0x00 // Tracks if EEPROM access is taking place
 		*(uint8_t*)0x10000341 = 0x00
 		*(uint8_t*)0x10000342 = 0x00
 		*(uint8_t*)0x10000343 = 0x00
@@ -2812,6 +2812,9 @@ void init()
 		// And then a long series of loops based on the values read above
 		//  Looks like a delay based on PLL and system clock settings
 
+		// Store these result to SRAM0 value
+		*(uint32_t*)0x100000a4 = 0x02dc6c00;
+
 
 		// Firmware Offset(s): 
 		//	0x00009c50 - 0x00009c56
@@ -3372,9 +3375,189 @@ void init()
 		// Firmware Offset(s): 
 		//	0x0000d0f4 - 0x0000d0f6
 		//	0x0000d0fc - 0x0000d106
-		//	0x000020ec - 
+		//	0x000020ec - 0x000020f8
+		//	0x0000210e - 0x00002114
+		// 	0x000020fa - 0x00002100
+		//	0x00002116 - 0x00002116
+
+		// Some big loop calculating some values, possibly related to above
 
 
+		// Firmware Offset(s): 
+		//	0x0000d10a - 0x0000d10e
+		//	0x00003ffe - 0x0000400c
+		//	0x00002bac - 0x00002bb8
+
+		// A/D Control Register
+		//	Set CLKDIV to 11 (This divides APB/PCLK)
+		//	TODO: Not sure why bit 21 is set '1' this should be a reserved bit and only 0 written...
+		*(uint32_t*)0x4001c000 = 0x00200a00;
+
+
+		// Firmware Offset(s): 
+		//	0x0000404c - 0x00004066
+
+		// Read A/D Control Register, but ends up stored on stack for now?
+		reg6 = *(uint32_t*)0x4001c000;
+
+
+		// Firmware Offset(s): 
+		//	0x0000d0e8 - 0x0000d0f0
+		//	0x00004174 - 0x00004176
+		//	0x00004130 - 0x0000414a
+
+		//	Check that Main clock source select register is set to PLL output
+		val = *(uint32_t*)0x40048070;
+
+		if (val != 3) {
+			// TODO: UNKNOWN PATHS
+			//	Jump to 0x00004150 for IRC Oscillator
+			//	Jump to 0x00004154 for PLL input
+			//	Jump to 0x0000415a for Watchdown oscillator
+			//	Execute 0x0000414e if none of the above
+		}
+
+
+		// Firmware Offset(s): 
+		//	0x000041b0 - 0x000041b2
+		//	0x00004188 - 0x00004194
+
+		// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+		val = *(uint32_t*)0x40048040;
+		if (val != 1) {
+			// TODO: UNKNOWN PATHS 
+			//	Branch to 0x0000419a if val == 0
+			//	Execute 0x00004196 if val != 0 && val != 1
+		}
+
+
+		// Firmware Offset(s): 
+		//	0x0000419e - 0x000041a2
+		//	0x000041b6 - 0x000041bc
+		//	0x00004168 - 0x00004172
+		//	0x000041c0 - 0x000041c0
+		//	0x0000414e - 0x0000414e
+		//	0x0000417a - 0x0000417e
+		//	0x000020ec - 0x000020f8
+		//	0x0000210e - 0x00002114
+		//	0x000020fa - 0x00002100
+		//	0x00002102 - 0x00002116
+		//	0x00004182 - 0x00004182
+
+		// Read System PLL control register
+		reg0 = *(uint32_t*)0x40048008;
+		// Isolate MSEL (feedback divider value)
+		reg0 &= 0x1f;
+
+		// Read System clock divider register
+		reg1 = *(uint32_t*)0x40048078;
+
+		// And then a long series of loops based on the values read above
+		//  Looks like a delay based on PLL and system clock settings
+
+
+		// Firmware Offset(s): 
+		//	0x0000d0f4 - 0x0000d0fa
+		//	0x0000d100 - 0x0000d106
+		//	0x000020ec - 0x000020f8
+		//	0x0000210e - 0x00002114
+		// 	0x000020fa - 0x00002100
+		//	0x00002116 - 0x00002116
+
+		// Some big loop calculating some values, possibly related to above
+
+
+		// Firmware Offset(s): 
+		//	0x0000d10a - 0x0000d10e
+		//	0x0000406a - 0x00004078
+		//	0x00002bbc - 0x00002bc2
+
+		// Note: this is pretty much same code above for last access of this register, but executes different code space...
+		//	Guessing this is superfluous code from some NXP library or something
+
+		// A/D Control Register
+		//	Set CLKDIV to 11 (This divides APB/PCLK)
+		//	TODO: Not sure why bit 21 is set '1' this should be a reserved bit and only 0 written...
+		*(uint32_t*)0x4001c000 = 0x00200a00;
+
+
+		// Firmware Offset(s): 
+		//	0x00004080 - 0x0000409c
+		//	0x0000e6e8 - 0x0000e6f6
+
+		reg1 = 0;
+
+		// A/D Control Register
+		reg2 = *(uint32_t*)0x4001c000;
+		// Clear START (clearing clearing PDN to 0?)
+		reg2 &= ~0x07000000;
+		reg1 |= reg2;
+		*(uint32_t*)0x4001c000 = reg1;
+
+
+		// Firmware Offset(s): 
+		//	0x000040a0 - 0x000040a0
+		//	0x00002bc6 - 0x00002bce
+
+		// Set a value in SRAM0 (heap?) 
+		*(uint8_t*)0x10000012 = 0x00;
+
+
+		// Firmware Offset(s): 
+		//	0x000040b8 - 0x000040c4 
+		
+		// TODO: did I miss something above... Why was ADC enabled, and is now being disabled...?
+
+		// Disable ADC clock via System clock control register 
+		reg2 = *(uint32_t*)0x40048080;
+		reg2 &= ~0x00002000;
+		*(uint32_t*)0x40048080 = reg2;
+
+
+		// Firmware Offset(s): 
+		//	0x00002bd2 - 0x00002bd2
+		//	0x0000d78c - 0x0000d78c
+		//	0x00006644 - 0x0000664c
+		//	0x000051c4 - 0x000051d8
+	
+		// Read SRAM0 value (think this is some clock in MHZ as sim value comes out to 48000000)
+		reg1 = *(uint32_t*)0x100000a4;
+		// reg1 val is then shifted to right by 10 and stored on the stack... (computes to 46875)
+
+
+		// Firmware Offset(s): 
+		//	0x00005d10 - 0x00005d1c
+		//	0x00009b4c - 0x00009b56
+		//	0x00005d20 - 0x00005d26
+
+		
+		// Setup command_param for EEPROM read via IAP command
+		*0x10001f78 = 0x0000003e // Command code (62)
+		*0x10001f7c = 0x00000000 // Param0: EEPROM Address
+		*0x10001f80 = 0x100009b4 // Param1: RAM Address 
+		*0x10001f84 = 0x00000084 // Param2: Number of bytes to be read (132)
+		*0x10001f88 = 0x0000b71b // Param3: System Clock Frequency 
+
+		// This means that 0x100009b4 - 0x10000a38 will store first 0x84 bytes of EEPROM
+		// TODO: make more coherent memory map to refer to?
+
+		// Mark EEPROM access is taking place
+		*(uint8_t*)0x10000340 = 0x01;
+
+		// Firmware Offset(s): 
+		//	0x1fff1ff0 - ...
+		//	...        - 0x1fff1ff6
+
+		// boot ROM code for executing IAB command
+		iap_entry(command_param = 0x10001f78, status_result = 0x10001f8c);
+
+//TODO: need to re-run sim with EEPROM values added into SRAM0 after this call
+
+
+		// Firmware Offset(s): 
+		//	0x00005d28 - 0x00005d28
+		//	0x00009b70 - 
+	
 		return;
 	}
 
