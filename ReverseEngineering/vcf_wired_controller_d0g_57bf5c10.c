@@ -31,13 +31,15 @@
 
   EEPROM:
 
-	0x000 (uint16_t) - Magic number to indicate EEPROM has valid data
-	0x002 (uint16_t) - 
+	0x000 (uint16_t) - Magic Number to indicate EEPROM has valid data
+	0x002 (uint16_t) - Continuation of Magic Number? (Only checked in init phase 2 for hw version > 0)
 
 	0x004 (uint32_t) - Board/HW Revision Number
 
 	0x074 (uint8_t) - Power-on Jingle Index
 	0x075 (uint8_t) - Power-off Jingle Index
+
+	0x500 (uint32_t) - Think this might affect use of watchdog somehow, but not 100% sure
 
 
   init (phase1):
@@ -3642,9 +3644,36 @@ void init_phase2_hw_not0()
 
 
 	// Firmware Offset(s): 
-	//	0x00005d2c - 0x00006658
+	//	0x00005d2c - 0x00005d30
+	//	0x000051dc - 0x000051dc
+	//	0x00006650 - 0x00006658
+
+	// Check Magic Number (value read from EEPROM)
+	reg0 = *(uint16_t)0x100009b4;
+	if (reg0 != 0xa55a) {
+		// UNKNOWN PATHS execute instruction 0x0000665A
+	}
 
 
+	// Firmware Offset(s): 
+	//	0x0000666c - 0x00006670
+
+	// Continuation of Magic Number check (value read from EEPROM)
+	reg0 = *(uint16_t)0x100009b6;
+	if (reg0 != 0x0005) {
+		// UNKNOWN PATHS execute instruction 0x00006672
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x00006676 - 0x00006676
+	//	0x0000d790 - 0x0000d790
+	//	0x00006cb0 - 0x00006cb2
+	//	0x00004cd8 - 0x00004cde
+	//	0x000021be - 0x000021c0
+	//	0x000021b0 - 0x000021b2
+	//	0x000021b8 - 
+	
 }
 
 /**

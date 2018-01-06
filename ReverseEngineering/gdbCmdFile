@@ -48,12 +48,10 @@
 # Begin: Simulation Run Configuration Variables.                               #
 #                                                                              #
 
-# 32-bit word read from EEPROM byte offset 0xXXX:
+# 32-bit word read from EEPROM byte offset 0xXXX (see MEM LAYOUT in 
+#  vcf_wired_controller_d0g_57bf5c10.c for details on value significance):
 
-# Upper 16-bits are checked in sim... but what do they mean...?
-# Lower 16-bits seem to be magic word:
 set $eeprom_0x000 = 0x0005a55a 
-# Board Revision:
 set $eeprom_0x004 = 0x0000000a 
 set $eeprom_0x008 = 0x00000000 
 set $eeprom_0x00C = 0x34354D50 
@@ -82,14 +80,11 @@ set $eeprom_0x064 = 0x00000000
 set $eeprom_0x068 = 0x00000000 
 set $eeprom_0x06C = 0x00000000 
 set $eeprom_0x070 = 0x00000000 
-# Byte 1 = power-off jingle index, Byte 0 = power-on jingle index:
 set $eeprom_0x074 = 0xFFFF0A00 
 set $eeprom_0x078 = 0xFF050903 
 set $eeprom_0x07C = 0xFFFFFFFF 
 set $eeprom_0x080 = 0xFFFFFFFF 
 
-# 32-bit word read from EEPROM byte offset 0x500 (TODO: purpose? Think this 
-#	might affect use of watchdog somehow, but need to verify...)
 set $eeprom_0x500 = 0x00000000
 
 #                                                                              #
