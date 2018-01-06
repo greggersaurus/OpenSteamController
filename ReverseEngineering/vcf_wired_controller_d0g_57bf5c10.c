@@ -3800,7 +3800,7 @@ void init_phase2_hw_0()
 	// reg32 0 = 0 -> Return code LPC_OK
 	// *0x1000022c = 0x200040b8 --> USB_HANDLE_T USB device stack handle
 
-//TODO: Worth looking at decomp of Boot ROM call below or just rely on function description and input parameter values?
+	//TODO: Worth looking at decomp of Boot ROM call below or just rely on function description and input parameter values?
 
 		// Clear 0x20004000 - 0x2000405f (byte-wise zero write)
 		// Clear 0x200040b8 - 0x20004223 (byte-wise zero write)
@@ -4241,7 +4241,8 @@ void init_phase2_hw_0()
         // Entry Num: 65290 - 65304
         // Step Num: 50348 - 50357
 	// Firmware Offset(s): 
-//TODO: what are these instructions doing?
+
+	//TODO: what are these instructions doing?
 	//	0x00001156 - 0x00001156
 	//	0x00000f30 - 0x00000f30
 	//	0x000012bc - 0x000012be
@@ -4428,8 +4429,8 @@ void init_phase2_hw_0()
 	//	0x00000ef6 - 0x00000efe
 	//	...
 
-//TODO: think this area is mostly USART related, skipping over for now. Come back and disect this later
-//TODO: bumping priority as this is communicating with Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC (which will tell us if we connect with USB dongle, right?)
+	//TODO: think this area is mostly USART related, skipping over for now. Come back and disect this later
+	//TODO: bumping priority as this is communicating with Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC (which will tell us if we connect with USB dongle, right?)
 
 	*0x100006dc = 0x00000001
 
@@ -4461,11 +4462,11 @@ void init_phase2_hw_0()
 	val = *reg32;
 	// TODO: UNKNOWN PATHS check status (i.e. that transmit occurred?)
 
-//TODO: are we looping here looking for USART to react?
-//	Maybe at least map out instruction calls to see if we are looping before giving up on USART?
-//	Pay attention to RAM addresses and see if one is counting up to a timeout or something...
+	//TODO: are we looping here looking for USART to react?
+	//	Maybe at least map out instruction calls to see if we are looping before giving up on USART?
+	//	Pay attention to RAM addresses and see if one is counting up to a timeout or something...
 
-//TODO: check what USART is connected to on board!
+	//TODO: check what USART is connected to on board!
 
 
         // Entry Num: 266719 - 266735
@@ -4477,7 +4478,7 @@ void init_phase2_hw_0()
 
 	// Set pin function to CT16B1_MAT0 via PIO0_21 register
 	// PIO0_21 is connected to button LED
-//TODO: Use scope to get timing for on and off pattern and make sure it matches settings
+	//TODO: Use scope to get timing for on and off pattern and make sure it matches settings
 	// *(uint32_t*)0x40044054 = 0x00000081
 	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000015, regVal = 0x00000008);
 
@@ -4513,7 +4514,7 @@ void init_phase2_hw_0()
 	reg32 = (volatile uint32_t*)0x4001000c;
 	*reg32 = 0x00000000;
 
-//TODO: Is this the pin connected to the Steam Button LED? Ohm it out!
+	//TODO: Is this the pin connected to the Steam Button LED? Ohm it out!
 	// PWM mode is enabled for CT16Bn_MAT0 via PWM Control Register for CT16B1
 	reg32 = (volatile uint32_t*)0x40010074;
 	val = *reg32;
@@ -4636,7 +4637,7 @@ void init_phase2_hw_0()
         // Entry Num: 357128 - 357806
         // Step Num: 319101 - 319757
 	// Firmware Offset(s): 
-//TODO: this is similar to above
+	//TODO: this is similar to above
 	//	0x000004d6 - 0x000004dc
 	//	0x00000488 - 0x00000492
 	//	0x000004e0 - 0x000004e0
@@ -4646,7 +4647,7 @@ void init_phase2_hw_0()
 	//	0x00000322 - 0x00000328
 	//	0x0000030e - 0x0000032a
 	//	0x000004a2 - 0x000004a2
-//TODO: this is different than above
+	//TODO: this is different than above
  	//	0x000009c2 - 0x000009c6
 
 	// System PLL control register
@@ -4783,8 +4784,8 @@ void init_phase2_hw_0()
 
 			// 	0x00000a58 - 0x00000a5c
 			//	0x000003a2 - 0x000003b2
-	//TODO: this needs to be generalized into a function call (both what is being set to addresses and and what the addresses are)
-	// Filling 4 bytes ...
+			//TODO: this needs to be generalized into a function call (both what is being set to addresses and and what the addresses are)
+			// Filling 4 bytes ...
 			*0x100007e4 = 0x00
 			*0x100007e5 = 0x00
 			*0x100007e6 = 0x00
@@ -5285,7 +5286,7 @@ void Interrupt_22_USB_IRQ()
 	 *  \return Nothing.                                                          
 	 */                                                                           
 	USBD_HW_API->ISR(USBD_HANDLE_T hUsb = 0x200040b8);
-//TODO: dig more into ISR function call? Could this be calling some other handler function potentially?
+	//TODO: dig more into ISR function call? Could this be calling some other handler function potentially?
 }
 
 /*******************************************************************************
