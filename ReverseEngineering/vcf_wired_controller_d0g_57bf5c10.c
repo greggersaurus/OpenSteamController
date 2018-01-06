@@ -25,212 +25,59 @@
  * SOFTWARE.
  */
 
+/*******************************************************************************
+  MEM LAYOUT: This section is set aside to track and define different 
+   memory sections and how they are being used.
 
-/**
- * Function to enable power to a specified analog block.
- *
- * Firmware Offset(s): 
- *	0x000005a4 - 0x000005b8
- * 
- * \param reg0 Set bit(s) specify which blocks to power. See 3.5.41 
- *	Power configuration register in UM10462 for details.
- * 
- * \return None.
- */
-void pwrAnalogBlock(uint32_t reg0)
-{
-	// Power Configuration Register                                                 
-	volatile uint32_t* reg32 = (volatile uint32_t*)0x40048238;
-	uint32_t val = 0;
+  EEPROM:
 
-	// Read current register value                                                           
-	val = *reg32;                                                                     
-	// Clear reserved bit that must stay cleared                                    
-	val &= 0x000005ff;                                                              
-	// Clear desired bit (clearing enables desired block(s))
-	val &= ~(reg0 & 0x000005ff);                                                           
-	// Reserved bits that must always be set                                        
-	val |= 0xe800;                                                                  
+	0x000 (uint16_t) - Magic number to indicate EEPROM has valid data
+	0x002 (uint16_t) - 
 
-	// Write result to register
-	*reg32 = val;  
-}
+	0x004 (uint32_t) - Board/HW Revision Number
 
-/**
- * Function for setting a 32-bit register to a particular value.
- * 
- * Firmware Offset(s): 
- * 	0x00000572 - 0x00000576
- *	0x00000578 - 0x0000057c
- * 	0x0000057e - 0x00000580
- *
- * \param baseReg Base register value
- * \param additionalOffset Add additional 0x60 byte offset to baseReg
- * \param regWordOffset Word sized offset from baseReg indicates which register to change
- * \param regVal Value to write to register
- * 
- * \return None.
- */
-void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOffset, uint32_t regVal)
-{
-	regWordOffset <<= 2;
+	0x074 (uint8_t) - Power-on Jingle Index
+	0x075 (uint8_t) - Power-off Jingle Index
 
-	if (additionalOffset != 0)
-	{
-		// Execture instruction 0x00000578
-		volatile uint32_t* reg32 = (volatile uint32_t*)(baseReg + regWordOffset + 0x60);
-		*reg32 = regVal;
-		return;
-	}
 
-	volatile uint32_t* reg32 = (volatile uint32_t*)baseReg + regWordOffset;
-	*reg32 = regVal;
-}
+  init (phase1):
 
-/**
- * Function for checking Main Clock Source Select Register.
- * 
- * Firmware Offset(s): 
- *	0x00000494 - 0x00000496
- *	0x00000450 - 0x0000046a
- * 
- * \return None.
- */
-void checkMainClockSourceSel(){
-	// Check main clock source select register and verify is set to PLL output
-	//  reg32 = (volatile uint32_t*)0x40048070;
-	//  val = *reg32;
-	//  if (val ...)
-	//  {
-		// TODO: UKNOWN PATHS
-		// 	Branch to 0x00000470 if 0x3&val is 0
-		// 	Branch to 0x00000474 if val is 1
-		// 	Branch to 0x0000047a if val is 2
-		// 	Branch to 0x0000046e if val != 3
-	//  }
-}
+	0x10000254 (uint32_t) - Start of 0x8 bytes of EEPROM data from EEPROM offset 0
+	0x10000258 (uint32_t) - Start of 0x8 bytes of EEPROM data from EEPROM offset 0
 
-/**
- * Function for checking Main Clock Source Select Register.
- * 
- * Firmware Offset(s): 
- * 	0x000004d0 - 0x000004d2
- *	0x000004a8 - 0x000004b4
- *	0x000004be - 0x000004c2
- * 
- * \return None.
- */
-void checkSysPllClockSrcSel(){
-	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
-	//  reg32 = (volatile uint32_t*)0x40048040;
-	//  val = *reg32;
-	//  if (val ...)
-	//  {
-		// TODO: UKNOWN PATHS
-		// 	Branch to 0x000004ba if val is 0
-		// 	Execute instruction at 0x000004b6 if val != 1
-	//  }
-}
 
-/**
- * Check if a USB voltage is detected (i.e. from plugged in cable).
- *
- * Firmware Offset(s): 
- *	0x00000ce8 - 0x00000cf0
- *	0x00000cf2 - ...
- *	0x00000cf4 - 0x00000cf4
- *
- * \return True if USB cable is plugged into controller. False otherwise. (Reg 0).
- */
-bool usbVoltPresent(){
-	bool retval = false;
+  init phase2 hw version not 0:
 
-	// Check state of PIO0_3 (USB voltage detected) 
-	uint8_t val = *((uint8_t*)0x50000003);
+	0x100000a4 (uint32_t) - System Clock Frequency (CCLK) in MHz. (48000000 is calcualted and stored here).
 
-	if (val) {
-		// TODO: UKNOWN PATHS
-		//	if PIO0_3 is not 0 (USB cable is conected) instruction at 0x00000cf2 is executed
-	}
+	0x10000340 (uint8_t) - Tracks if EEPROM access is taking place
 
-	return retval;
-}
+	0x100009b4 (uint32_t) - Start of 0x84 bytes of EEPROM data from EEPROM offset 0
+	...
+	0x10000a34 (uint32_t) - End of 0x84 bytes of EEPROM data from EEPROM offset 0
 
-/**
- * Set the specified GPIO direction to output via the GPIO port direcetion 
- *  registers.
- *
- * Firmware Offset(s): 
- *	0x0000055c - 0x00000570
- *
- * \param baseAddr Base address of GPIO registers (Reg 0).
- * \param port Specify port 0 or port 1 banks of GPIOs (Reg 1).
- * \param gpioNum 0-based GPIO number to set as an output (Reg 2).
- *
- * \return None.
- */
-void setGpioOutDir(uint32_t baseAddr, uint32_t port, uint32_t gpioNum) {
-	volatile uint32_t* reg32 = (volatile uint32_t*)(baseAddr + 0x2000 + port * 4)
-	uint32_t val = *reg32;
-	val |= (1 << gpioNum);
-	*reg32 = val;
-}
 
-/**
- * Set a GPIO's state as part of power up. GPIO driven differs based on hw
- *  version.
- *
- * Firmware Offset(s): 
- *	0x00000f90 - 0x00000f94
- * 	0x00000cf8 - 0x00000cfc
- * 	0x00000f98 - 0x00000fa0
- *	0x00000fa2 - 0x00000fac
- *	0x00000fae - 0x00000fae
- *	0x00000cf8 - 0x00000cfc
- *	0x00000fb2 - 0x00000fb6
- *	0x00000fb8 - ??
- *	0x00000fbe - 0x00000fc0
- *
- * \param hwVer Pointer to data read from EEPROM that stores hw version data. //TODO: This is referred to as Board Revision in Steam. My controller is 10
- * \param gpioVal Value to drive power up GPIO at (Reg 0).
- *
- * \return 0-based GPIO number that is being driven for proper power up.
- */
-uint32_t drivePwrUpGpio(uint32_t* hwVer, uint8_t gpioVal) {
-	int gpio_num = 0;
+  init phase2 hw version 0:
 
-	if (*hwVer >= 8) {
-		// Firmware Offset(s): 
-		//	0x00000fa2 - 0x00000fac
+	TODO: Even both with cleaning up and improving this?
 
-		// Set PIO1_10 output bit
-		*((uint8_t*)0x5000002a) = !gpio_val;
-		gpio_num = 10;
-	} else {
-		// Firmware Offset(s): 
-		//	0x00000fae - 0x00000fae
+	0x10000208 Pointer to USB device configuration descriptor when device is operating in full and high speed modes.
 
-		// Entry Num: 58028 - 58035
-		// Step Num: 44549 - 44555
-		// Firmware Offset(s): 
-		//	0x00000cf8 - 0x00000cfc
-		//	0x00000fb2 - 0x00000fb6
+	0x10000211 Pointer to the HID interface descriptor within the descriptor array (\em high_speed_desc) passed to Init() through \ref USB_CORE_DESCS_T structure.
 
-		// Read value of 0x10000258 and check if it's 5
-		//	TODO: UNKNOWN PATHS
-		//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
+	0x10000234 USB_HID_REPORT_T*
+	//TODO: size and contents of USB_HID_REPORT_T
 
-		// Entry Num: 58036 - 58040
-		// Step Num: 44556 - 44559
-		// Firmware Offset(s): 
-		//	0x00000fbe - 0x00000fc0
-		// Set PIO1_8 output bit
-		*((uint8_t*)0x50000028) = gpio_val;
-		gpio_num = 8;
-	}
+	0x10000250 incremented/decrement before/after cps. Has to do with disabling interrupts (I think)
 
-	return gpio_num;
-}
+	0x200040b8 - USBD_HANDLE_T - Handle to the USB device stack
+	//TODO: size and content of USBD_HANDLE_T
+
+	0x20004340 -  USB HID Base memory location from where the stack can allocate data and buffers
+	...
+	0x20004800
+
+*******************************************************************************/
 
 /**
  * In this simulation run the system was run from reset with no external input
@@ -941,2628 +788,2882 @@ void init()
 	//	0x00001600 - 0x00001602	
 
 	// Check hw version read from EEPROM
-	if (*0x10000258 != 0)
+	if (*0x10000258 == 0) {
+		// This path I decomposed before properly aquiring EEPROM
+		//  data. This is kept mostly for the sake of having already
+		//  put the work in. It most likely will not actually be 
+		//  useful at this point.
+		init_phase2_hw_0();
+	} else {
+		// This path matches behavior of my Steam Controller.
+		init_phase2_hw_not0();
+	}
+}
+
+/**
+ * Function to enable power to a specified analog block.
+ *
+ * Firmware Offset(s): 
+ *	0x000005a4 - 0x000005b8
+ * 
+ * \param reg0 Set bit(s) specify which blocks to power. See 3.5.41 
+ *	Power configuration register in UM10462 for details.
+ * 
+ * \return None.
+ */
+void pwrAnalogBlock(uint32_t reg0)
+{
+	// Power Configuration Register                                                 
+	volatile uint32_t* reg32 = (volatile uint32_t*)0x40048238;
+	uint32_t val = 0;
+
+	// Read current register value                                                           
+	val = *reg32;                                                                     
+	// Clear reserved bit that must stay cleared                                    
+	val &= 0x000005ff;                                                              
+	// Clear desired bit (clearing enables desired block(s))
+	val &= ~(reg0 & 0x000005ff);                                                           
+	// Reserved bits that must always be set                                        
+	val |= 0xe800;                                                                  
+
+	// Write result to register
+	*reg32 = val;  
+}
+
+/**
+ * Function for setting a 32-bit register to a particular value.
+ * 
+ * Firmware Offset(s): 
+ * 	0x00000572 - 0x00000576
+ *	0x00000578 - 0x0000057c
+ * 	0x0000057e - 0x00000580
+ *
+ * \param baseReg Base register value
+ * \param additionalOffset Add additional 0x60 byte offset to baseReg
+ * \param regWordOffset Word sized offset from baseReg indicates which register to change
+ * \param regVal Value to write to register
+ * 
+ * \return None.
+ */
+void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOffset, uint32_t regVal)
+{
+	regWordOffset <<= 2;
+
+	if (additionalOffset != 0)
 	{
-		// Firmware Offset(s): 
-		//	0x000007a0 - 0x000007a8
-
-		// Set GPREG1 to 0
-		reg32 = (volatile uint32_t*)0x40038008;
-		*reg32 = 1;
-
-
-		// Firmware Offset(s): 
-		//	0x0000160a - 0x0000160c
-		//	0x00000428 - 0x00000434
-		//	0x00001610 - 0x00001610
-
-		// Enables SRAM1 block at address 0x2000 0000 via system clock control register
-		reg32 = (volatile uint32_t*)0x40048080;
-		val = *reg32;
-		val |= 0x04000000;
-		*reg32 = val;
-
-
-		// Firmware Offset(s): 
-		//	0x000000dc - 0x000000e8
-		//	0x000020d4 - 0x000020d6
-		//	0x000020c0 - 0x000020c4
-		//	0x000029e4 - 0x000029ea
-		//	0x000029f8 - 0x000029fa
-		
-		// Read a whole bunch of code from flash and compare results
-		//  There is a branch here, but its impossible given values are
-		//   read from firmware section of memory.
-		//  Not sure purpose of all this...
-
-
-		// Firmware Offset(s): 
-		//	0x000029ec - 0x000029f4
-		//	0x0000c2cc - 0x0000c2cc
-
-		// Read more code from flash into registers...
-
-
-		// Firmware Offset(s): 
-		//	0x0000c2ce - 0x0000c2d8
-
-		// Initialize some heap space in SRAM0
-		*(uint32_t*)0x10000000 = 0;
-		*(uint32_t*)0x10000004 = 0;
-		*(uint32_t*)0x10000008 = 0;
-		*(uint32_t*)0x1000000c = 0;
-		*(uint32_t*)0x10000010 = 0;
-		*(uint32_t*)0x10000014 = 0;
-		*(uint32_t*)0x10000018 = 0;
-		*(uint32_t*)0x1000001c = 0;
-		*(uint32_t*)0x10000020 = 0;
-		*(uint32_t*)0x10000024 = 0;
-		*(uint32_t*)0x10000028 = 0;
-		*(uint32_t*)0x1000002c = 0;
-		*(uint32_t*)0x10000030 = 0;
-		*(uint32_t*)0x10000034 = 0;
-		*(uint32_t*)0x10000038 = 0;
-		*(uint32_t*)0x1000003c = 0;
-		*(uint32_t*)0x10000040 = 0;
-		*(uint32_t*)0x10000044 = 0;
-		*(uint32_t*)0x10000048 = 0;
-		*(uint32_t*)0x1000004c = 0;
-		*(uint32_t*)0x10000050 = 0;
-		*(uint32_t*)0x10000054 = 0;
-		*(uint32_t*)0x10000058 = 0;
-		*(uint32_t*)0x1000005c = 0;
-		*(uint32_t*)0x10000060 = 0;
-		*(uint32_t*)0x10000064 = 0;
-		*(uint32_t*)0x10000068 = 0;
-		*(uint32_t*)0x1000006c = 0;
-		*(uint32_t*)0x10000070 = 0;
-		*(uint32_t*)0x10000074 = 0;
-		*(uint32_t*)0x10000078 = 0;
-		*(uint32_t*)0x1000007c = 0;
-		*(uint32_t*)0x10000080 = 0;
-		*(uint32_t*)0x10000084 = 0;
-		*(uint32_t*)0x10000088 = 0;
-		*(uint32_t*)0x1000008c = 0;
-		*(uint32_t*)0x10000090 = 0;
-		*(uint32_t*)0x10000094 = 0;
-		*(uint32_t*)0x10000098 = 0;
-		*(uint32_t*)0x1000009c = 0;
-		*(uint32_t*)0x100000a0 = 0;
-		*(uint32_t*)0x100000a4 = 0; // 48000000 is stored here and may be some calculated clock rate
-		*(uint32_t*)0x100000a8 = 0;
-		*(uint32_t*)0x100000ac = 0;
-		*(uint32_t*)0x100000b0 = 0;
-		*(uint32_t*)0x100000b4 = 0;
-		*(uint32_t*)0x100000b8 = 0;
-		*(uint32_t*)0x100000bc = 0;
-		*(uint32_t*)0x100000c0 = 0;
-
-
-		// Firmware Offset(s): 
-		//	0x000029f6 - 0x000029fa
-		//	0x000029ec - 0x000029f4
-		//	0x00002a2a - 0x00002a36
-		//	0x00002a3c - 0x00002a3e	
-		//	0x00002a46 - 0x00002a5a
-		//	0x00002a78 - 0x00002a7a
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x10000200 = 0xff;
-		*(uint8_t*)0x10000201 = 0xff;
-		*(uint8_t*)0x10000202 = 0x00;
-		*(uint8_t*)0x10000203 = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x00002a2e - 0x00002a36
-		//	0x00002a3c - 0x00002a3e
-		//	0x00002a40 - 0x00002a44
-		//	0x00002a46 - 0x00002a60
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x10000204 = 0x01;
-		*(uint8_t*)0x10000205 = 0x0e;
-		*(uint8_t*)0x10000206 = 0x08;
-		*(uint8_t*)0x10000207 = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x00002a58 - 0x00002a60
-		//	0x00002a78 - 0x00002a7a
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x10000206 = 0x00;
-		*(uint8_t*)0x10000207 = 0x00;
-		*(uint8_t*)0x10000208 = 0x00;
-		*(uint8_t*)0x10000209 = 0x00;
-		*(uint8_t*)0x1000020a = 0x00;
-		*(uint8_t*)0x1000020b = 0x00;
-		*(uint8_t*)0x1000020c = 0x00;
-		*(uint8_t*)0x1000020d = 0x00;
-		*(uint8_t*)0x1000020e = 0x00;
-		*(uint8_t*)0x1000020f = 0x00;
-		*(uint8_t*)0x10000210 = 0x00;
-		*(uint8_t*)0x10000211 = 0x00;
-		*(uint8_t*)0x10000212 = 0x00;
-		*(uint8_t*)0x10000213 = 0x00;
-		*(uint8_t*)0x10000214 = 0x00;
-		*(uint8_t*)0x10000215 = 0x00;
-		*(uint8_t*)0x10000216 = 0x00;
-		*(uint8_t*)0x10000217 = 0x00;
-		*(uint8_t*)0x10000218 = 0x00;
-		*(uint8_t*)0x10000219 = 0x00;
-		*(uint8_t*)0x1000021a = 0x00;
-		*(uint8_t*)0x1000021b = 0x00;
-		*(uint8_t*)0x1000021c = 0x00;
-		*(uint8_t*)0x1000021d = 0x00;
-		*(uint8_t*)0x1000021e = 0x00;
-		*(uint8_t*)0x1000021f = 0x00;
-		*(uint8_t*)0x10000220 = 0x00;
-		*(uint8_t*)0x10000221 = 0x00;
-		*(uint8_t*)0x10000222 = 0x00;
-		*(uint8_t*)0x10000223 = 0x00;
-		*(uint8_t*)0x10000224 = 0x00;
-		*(uint8_t*)0x10000225 = 0x00;
-		*(uint8_t*)0x10000226 = 0x00;
-		*(uint8_t*)0x10000227 = 0x00;
-		*(uint8_t*)0x10000228 = 0x00;
-		*(uint8_t*)0x10000229 = 0x00;
-		*(uint8_t*)0x1000022a = 0x00;
-		*(uint8_t*)0x1000022b = 0x00;
-		*(uint8_t*)0x1000022c = 0x00;
-		*(uint8_t*)0x1000022d = 0x00;
-		*(uint8_t*)0x1000022e = 0x00;
-		*(uint8_t*)0x1000022f = 0x00;
-		*(uint8_t*)0x10000230 = 0x00;
-		*(uint8_t*)0x10000231 = 0x00;
-		*(uint8_t*)0x10000232 = 0x00;
-		*(uint8_t*)0x10000233 = 0x00;
-		*(uint8_t*)0x10000234 = 0x00;
-		*(uint8_t*)0x10000235 = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x00002a2e - 0x00002a36
-		//	0x00002a3c - 0x00002a3e
-		//	0x00002a46 - 0x00002a60
-		//	0x00002a78 - 0x00002a7a
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x10000236 = 0x0b;
-		*(uint8_t*)0x10000237 = 0x00;
-		*(uint8_t*)0x10000238 = 0x00;
-		*(uint8_t*)0x10000239 = 0x00;
-		*(uint8_t*)0x1000023a = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x00002a2e - 0x00002a36
-		//	0x00002a3c - 0x00002a3e
-		//	0x00002a46 - 0x00002a60	
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x1000023b = 0x01;
-		*(uint8_t*)0x1000023c = 0x16;
-		*(uint8_t*)0x1000023d = 0x0d;
-		*(uint8_t*)0x1000023e = 0x01;
-		*(uint8_t*)0x1000023f = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x00002a58 - 0x00002a5a
-		//	0x00002a78 - 0x00002a7a
-		//	0x00002a2e - 0x00002a36
-		//	0x00002a3c - 0x00002a44
-		//	0x00002a46 - 0x00002a5a
-		//	0x00002a78 - 0x00002a7a
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x10000240 = 0x1c;
-		*(uint8_t*)0x10000241 = 0x07;
-		*(uint8_t*)0x10000242 = 0x00;
-		*(uint8_t*)0x10000243 = 0x00;
-		*(uint8_t*)0x10000244 = 0x00;
-		*(uint8_t*)0x10000245 = 0x00;
-		*(uint8_t*)0x10000246 = 0x00;
-		*(uint8_t*)0x10000247 = 0x00;
-		*(uint8_t*)0x10000248 = 0x00;
-		*(uint8_t*)0x10000249 = 0x00;
-		*(uint8_t*)0x1000024a = 0x00;
-		*(uint8_t*)0x1000024b = 0x00;
-		*(uint8_t*)0x1000024c = 0x00;
-		*(uint8_t*)0x1000024d = 0x00;
-		*(uint8_t*)0x1000024e = 0x00;
-		*(uint8_t*)0x1000024f = 0x00;
-		*(uint8_t*)0x10000250 = 0x00;
-		*(uint8_t*)0x10000251 = 0x00;
-		*(uint8_t*)0x10000252 = 0x00;
-		*(uint8_t*)0x10000253 = 0x00;
-		*(uint8_t*)0x10000254 = 0x00;
-		*(uint8_t*)0x10000255 = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x00002a2e - 0x00002a36	
-		//	0x00002a3c - 0x00002a3e
-		//	0x00002a46 - 0x00002a5a
-		//	0x00002a78 - 0x00002a7a
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x10000256 = 0x04;
-		*(uint8_t*)0x10000257 = 0x40;
-		*(uint8_t*)0x10000258 = 0x00;
-		*(uint8_t*)0x10000259 = 0x00;
-		*(uint8_t*)0x1000025a = 0x00;
-		*(uint8_t*)0x1000025b = 0x00;
-		*(uint8_t*)0x1000025c = 0x00;
-		*(uint8_t*)0x1000025d = 0x00;
-		*(uint8_t*)0x1000025e = 0x00;
-		*(uint8_t*)0x1000025f = 0x00;
-		*(uint8_t*)0x10000260 = 0x00;
-		*(uint8_t*)0x10000261 = 0x00;
-		*(uint8_t*)0x10000262 = 0x00;
-		*(uint8_t*)0x10000263 = 0x00;
-		*(uint8_t*)0x10000264 = 0x00;
-		*(uint8_t*)0x10000265 = 0x00;
-		*(uint8_t*)0x10000266 = 0x00;
-		*(uint8_t*)0x10000267 = 0x00;
-		*(uint8_t*)0x10000268 = 0x00;
-		*(uint8_t*)0x10000269 = 0x00;
-		*(uint8_t*)0x1000026a = 0x00;
-		*(uint8_t*)0x1000026b = 0x00;
-		*(uint8_t*)0x1000026c = 0x00;
-		*(uint8_t*)0x1000026d = 0x00;
-		*(uint8_t*)0x1000026e = 0x00;
-		*(uint8_t*)0x1000026f = 0x00;
-		*(uint8_t*)0x10000270 = 0x00;
-		*(uint8_t*)0x10000271 = 0x00;
-		*(uint8_t*)0x10000272 = 0x00;
-		*(uint8_t*)0x10000273 = 0x00;
-		*(uint8_t*)0x10000274 = 0x00;
-		*(uint8_t*)0x10000275 = 0x00;
-		*(uint8_t*)0x10000276 = 0x00;
-		*(uint8_t*)0x10000277 = 0x00;
-		*(uint8_t*)0x10000278 = 0x00;
-		*(uint8_t*)0x10000279 = 0x00;
-		*(uint8_t*)0x1000027a = 0x00;
-		*(uint8_t*)0x1000027b = 0x00;
-		*(uint8_t*)0x1000027c = 0x00;
-		*(uint8_t*)0x1000027d = 0x00;
-		*(uint8_t*)0x1000027e = 0x00;
-		*(uint8_t*)0x1000027f = 0x00;
-		*(uint8_t*)0x10000280 = 0x00;
-		*(uint8_t*)0x10000281 = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x00002a2e - 0x00002a36
-		//	0x00002a3c - 0x00002a44
-		//	0x00002a46 - 0x00002a5a
-		//	0x00002a78 - 0x00002a7a
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x10000282 = 0x01;
-		*(uint8_t*)0x10000283 = 0x01;
-		*(uint8_t*)0x10000284 = 0x00;
-		*(uint8_t*)0x10000285 = 0x00;
-		*(uint8_t*)0x10000286 = 0x00;
-		*(uint8_t*)0x10000287 = 0x00;
-		*(uint8_t*)0x10000288 = 0x00;
-		*(uint8_t*)0x10000289 = 0x00;
-		*(uint8_t*)0x1000028a = 0x00;
-		*(uint8_t*)0x1000028b = 0x00;
-		*(uint8_t*)0x1000028c = 0x00;
-		*(uint8_t*)0x1000028d = 0x00;
-		*(uint8_t*)0x1000028e = 0x00;
-		*(uint8_t*)0x1000028f = 0x00;
-		*(uint8_t*)0x10000290 = 0x00;
-		*(uint8_t*)0x10000291 = 0x00;
-		*(uint8_t*)0x10000292 = 0x00;
-		*(uint8_t*)0x10000293 = 0x00;
-		*(uint8_t*)0x10000294 = 0x00;
-		*(uint8_t*)0x10000295 = 0x00;
-		*(uint8_t*)0x10000296 = 0x00;
-		*(uint8_t*)0x10000297 = 0x00;
-		*(uint8_t*)0x10000298 = 0x00;
-		*(uint8_t*)0x10000299 = 0x00;
-		*(uint8_t*)0x1000029a = 0x00;
-		*(uint8_t*)0x1000029b = 0x00;
-		*(uint8_t*)0x1000029c = 0x00;
-		*(uint8_t*)0x1000029d = 0x00;
-		*(uint8_t*)0x1000029e = 0x00;
-		*(uint8_t*)0x1000029f = 0x00;
-		*(uint8_t*)0x100002a0 = 0x00;
-		*(uint8_t*)0x100002a1 = 0x00;
-		*(uint8_t*)0x100002a2 = 0x00;
-		*(uint8_t*)0x100002a3 = 0x00;
-		*(uint8_t*)0x100002a4 = 0x00;
-		*(uint8_t*)0x100002a5 = 0x00;
-		*(uint8_t*)0x100002a6 = 0x00;
-		*(uint8_t*)0x100002a7 = 0x00;
-		*(uint8_t*)0x100002a8 = 0x00;
-		*(uint8_t*)0x100002a9 = 0x00;
-		*(uint8_t*)0x100002aa = 0x00;
-		*(uint8_t*)0x100002ab = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x00002a2e - 0x00002a36
-		//	0x00002a3c - 0x00002a3e
-		//	0x00002a4e - 0x00002a54
-		//	0x00002a62 - 0x00002a6a
-		//	0x00002a6c - 0x00002a7a
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x100002ac = 0xff;
-		*(uint8_t*)0x100002ad = 0xff;
-		*(uint8_t*)0x100002ae = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x00002a2e - 0x00002a36
-		//	0x00002a3c - 0x00002a3e
-		//	0x00002a46 - 0x00002a54
-		//	0x00002a62 - 0x00002a7a
-	
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x100002af = 0xff;
-		*(uint8_t*)0x100002b0 = 0xff;
-		*(uint8_t*)0x100002b1 = 0xff;
-		*(uint8_t*)0x100002b2 = 0x00;
-		*(uint8_t*)0x100002b3 = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	... - 0x00002a7a (See note below)
-
-		// Note: This SRAM0 heap initialization is going on forever, 
-		//  and repetitive, but not repetivie enough to generalize into
-		//  a function (conditionals are based on code reads from 
-		//  flash).
-		// Therefore, I'm going to just list how the memory is being
-		//  setup without concern for all the firmware offsets being
-		//  used as code. It may be worth painstakingly revisiting this
-		//  in the future if something isn't adding up in terms of an
-		//  important branch (not based on code read from flash).
-
-		// Initialize more heap space in SRAM0
-		*(uint8_t*)0x100002b4  = 0x;
-
-		*(uint8_t*)0x100002b4 = 0x00
-		*(uint8_t*)0x100002b5 = 0x00
-		*(uint8_t*)0x100002b6 = 0x01
-		*(uint8_t*)0x100002b7 = 0x00
-		*(uint8_t*)0x100002b8 = 0x00
-		*(uint8_t*)0x100002b9 = 0x00
-		*(uint8_t*)0x100002ba = 0xca
-		*(uint8_t*)0x100002bb = 0x08
-		*(uint8_t*)0x100002bc = 0x00
-		*(uint8_t*)0x100002bd = 0x00
-		*(uint8_t*)0x100002be = 0x00
-		*(uint8_t*)0x100002bf = 0x00
-		*(uint8_t*)0x100002c0 = 0x00
-		*(uint8_t*)0x100002c1 = 0x00
-		*(uint8_t*)0x100002c2 = 0x00
-		*(uint8_t*)0x100002c3 = 0x40
-		*(uint8_t*)0x100002c4 = 0x00
-		*(uint8_t*)0x100002c5 = 0x00
-		*(uint8_t*)0x100002c6 = 0x00
-		*(uint8_t*)0x100002c7 = 0x00
-		*(uint8_t*)0x100002c8 = 0x00
-		*(uint8_t*)0x100002c9 = 0x00
-		*(uint8_t*)0x100002ca = 0x00
-		*(uint8_t*)0x100002cb = 0x00
-		*(uint8_t*)0x100002cc = 0x00
-		*(uint8_t*)0x100002cd = 0x00
-		*(uint8_t*)0x100002ce = 0x00
-		*(uint8_t*)0x100002cf = 0x00
-		*(uint8_t*)0x100002d0 = 0xff
-		*(uint8_t*)0x100002d1 = 0xff
-		*(uint8_t*)0x100002d2 = 0xff
-		*(uint8_t*)0x100002d3 = 0xff
-		*(uint8_t*)0x100002d4 = 0xff
-		*(uint8_t*)0x100002d5 = 0xff
-		*(uint8_t*)0x100002d6 = 0x00
-		*(uint8_t*)0x100002d7 = 0x00
-		*(uint8_t*)0x100002d8 = 0x00
-		*(uint8_t*)0x100002d9 = 0x00
-		*(uint8_t*)0x100002da = 0x00
-		*(uint8_t*)0x100002db = 0x00
-		*(uint8_t*)0x100002dc = 0x00
-		*(uint8_t*)0x100002dd = 0x00
-		*(uint8_t*)0x100002de = 0x00
-		*(uint8_t*)0x100002df = 0x00
-		*(uint8_t*)0x100002e0 = 0x00
-		*(uint8_t*)0x100002e1 = 0x00
-		*(uint8_t*)0x100002e2 = 0x00
-		*(uint8_t*)0x100002e3 = 0x00
-		*(uint8_t*)0x100002e4 = 0x00
-		*(uint8_t*)0x100002e5 = 0x00
-		*(uint8_t*)0x100002e6 = 0x00
-		*(uint8_t*)0x100002e7 = 0x00
-		*(uint8_t*)0x100002e8 = 0x00
-		*(uint8_t*)0x100002e9 = 0x00
-		*(uint8_t*)0x100002ea = 0x00
-		*(uint8_t*)0x100002eb = 0x00
-		*(uint8_t*)0x100002ec = 0x00
-		*(uint8_t*)0x100002ed = 0x00
-		*(uint8_t*)0x100002ee = 0x00
-		*(uint8_t*)0x100002ef = 0x00
-		*(uint8_t*)0x100002f0 = 0x00
-		*(uint8_t*)0x100002f1 = 0x00
-		*(uint8_t*)0x100002f2 = 0x00
-		*(uint8_t*)0x100002f3 = 0x00
-		*(uint8_t*)0x100002f4 = 0x00
-		*(uint8_t*)0x100002f5 = 0x00
-		*(uint8_t*)0x100002f6 = 0x00
-		*(uint8_t*)0x100002f7 = 0x00
-		*(uint8_t*)0x100002f8 = 0x00
-		*(uint8_t*)0x100002f9 = 0x00
-		*(uint8_t*)0x100002fa = 0x00
-		*(uint8_t*)0x100002fb = 0x00
-		*(uint8_t*)0x100002fc = 0x00
-		*(uint8_t*)0x100002fd = 0x00
-		*(uint8_t*)0x100002fe = 0x00
-		*(uint8_t*)0x100002ff = 0x00
-		*(uint8_t*)0x10000300 = 0x00
-		*(uint8_t*)0x10000301 = 0x00
-		*(uint8_t*)0x10000302 = 0x00
-		*(uint8_t*)0x10000303 = 0x00
-		*(uint8_t*)0x10000304 = 0x00
-		*(uint8_t*)0x10000305 = 0x00
-		*(uint8_t*)0x10000306 = 0x00
-		*(uint8_t*)0x10000307 = 0x00
-		*(uint8_t*)0x10000308 = 0x00
-		*(uint8_t*)0x10000309 = 0x00
-		*(uint8_t*)0x1000030a = 0x00
-		*(uint8_t*)0x1000030b = 0x00
-		*(uint8_t*)0x1000030c = 0x00
-		*(uint8_t*)0x1000030d = 0x00
-		*(uint8_t*)0x1000030e = 0x00
-		*(uint8_t*)0x1000030f = 0x00
-		*(uint8_t*)0x10000310 = 0x02
-		*(uint8_t*)0x10000311 = 0x03
-		*(uint8_t*)0x10000312 = 0x00
-		*(uint8_t*)0x10000313 = 0x00
-		*(uint8_t*)0x10000314 = 0x00
-		*(uint8_t*)0x10000315 = 0x00
-		*(uint8_t*)0x10000316 = 0x00
-		*(uint8_t*)0x10000317 = 0x00
-		*(uint8_t*)0x10000318 = 0x00
-		*(uint8_t*)0x10000319 = 0x00
-		*(uint8_t*)0x1000031a = 0x00
-		*(uint8_t*)0x1000031b = 0x00
-		*(uint8_t*)0x1000031c = 0x00
-		*(uint8_t*)0x1000031d = 0x00
-		*(uint8_t*)0x1000031e = 0x00
-		*(uint8_t*)0x1000031f = 0x00
-		*(uint8_t*)0x10000320 = 0x00
-		*(uint8_t*)0x10000321 = 0x00
-		*(uint8_t*)0x10000322 = 0x00
-		*(uint8_t*)0x10000323 = 0x00
-		*(uint8_t*)0x10000324 = 0x00
-		*(uint8_t*)0x10000325 = 0x00
-		*(uint8_t*)0x10000326 = 0x00
-		*(uint8_t*)0x10000327 = 0x00
-		*(uint8_t*)0x10000328 = 0x01
-		*(uint8_t*)0x10000329 = 0x00
-		*(uint8_t*)0x1000032a = 0x00
-		*(uint8_t*)0x1000032b = 0x00
-		*(uint8_t*)0x1000032c = 0x00
-		*(uint8_t*)0x1000032d = 0x00
-		*(uint8_t*)0x1000032e = 0x00
-		*(uint8_t*)0x1000032f = 0x00
-		*(uint8_t*)0x10000330 = 0x00
-		*(uint8_t*)0x10000331 = 0x00
-		*(uint8_t*)0x10000332 = 0x00
-		*(uint8_t*)0x10000333 = 0x00
-		*(uint8_t*)0x10000334 = 0x00
-		*(uint8_t*)0x10000335 = 0x00
-		*(uint8_t*)0x10000336 = 0x00
-		*(uint8_t*)0x10000337 = 0x00
-		*(uint8_t*)0x10000338 = 0x00
-		*(uint8_t*)0x10000339 = 0x00
-		*(uint8_t*)0x1000033a = 0x00
-		*(uint8_t*)0x1000033b = 0x00
-		*(uint8_t*)0x1000033c = 0x00
-		*(uint8_t*)0x1000033d = 0x00
-		*(uint8_t*)0x1000033e = 0x00
-		*(uint8_t*)0x1000033f = 0x00
-		*(uint8_t*)0x10000340 = 0x00 // Tracks if EEPROM access is taking place
-		*(uint8_t*)0x10000341 = 0x00
-		*(uint8_t*)0x10000342 = 0x00
-		*(uint8_t*)0x10000343 = 0x00
-		*(uint8_t*)0x10000344 = 0x00
-		*(uint8_t*)0x10000345 = 0x00
-		*(uint8_t*)0x10000346 = 0x00
-		*(uint8_t*)0x10000347 = 0x00
-		*(uint8_t*)0x10000348 = 0x00
-		*(uint8_t*)0x10000349 = 0x00
-		*(uint8_t*)0x1000034a = 0x00
-		*(uint8_t*)0x1000034b = 0x00
-		*(uint8_t*)0x1000034c = 0x00
-		*(uint8_t*)0x1000034d = 0x00
-		*(uint8_t*)0x1000034e = 0x00
-		*(uint8_t*)0x1000034f = 0x00
-		*(uint8_t*)0x10000350 = 0x00
-		*(uint8_t*)0x10000351 = 0x00
-		*(uint8_t*)0x10000352 = 0x00
-		*(uint8_t*)0x10000353 = 0x00
-		*(uint8_t*)0x10000354 = 0x00
-		*(uint8_t*)0x10000355 = 0x00
-		*(uint8_t*)0x10000356 = 0x00
-		*(uint8_t*)0x10000357 = 0x00
-		*(uint8_t*)0x10000358 = 0x00
-		*(uint8_t*)0x10000359 = 0x00
-		*(uint8_t*)0x1000035a = 0x00
-		*(uint8_t*)0x1000035b = 0x00
-		*(uint8_t*)0x1000035c = 0x00
-		*(uint8_t*)0x1000035d = 0x01
-		*(uint8_t*)0x1000035e = 0x00
-		*(uint8_t*)0x1000035f = 0x00
-		*(uint8_t*)0x10000360 = 0x00
-		*(uint8_t*)0x10000361 = 0x00
-		*(uint8_t*)0x10000362 = 0x00
-		*(uint8_t*)0x10000363 = 0x00
-		*(uint8_t*)0x10000364 = 0x00
-		*(uint8_t*)0x10000365 = 0x00
-		*(uint8_t*)0x10000366 = 0x00
-		*(uint8_t*)0x10000367 = 0x00
-		*(uint8_t*)0x10000368 = 0x00
-		*(uint8_t*)0x10000369 = 0x00
-		*(uint8_t*)0x1000036a = 0x00
-		*(uint8_t*)0x1000036b = 0x00
-		*(uint8_t*)0x1000036c = 0x00
-		*(uint8_t*)0x1000036d = 0x00
-		*(uint8_t*)0x1000036e = 0x00
-		*(uint8_t*)0x1000036f = 0x00
-		*(uint8_t*)0x10000370 = 0x00
-		*(uint8_t*)0x10000371 = 0x00
-		*(uint8_t*)0x10000372 = 0x00
-		*(uint8_t*)0x10000373 = 0x00
-		*(uint8_t*)0x10000374 = 0x40
-		*(uint8_t*)0x10000375 = 0x11
-		*(uint8_t*)0x10000376 = 0x00
-		*(uint8_t*)0x10000377 = 0x10
-		*(uint8_t*)0x10000378 = 0x00
-		*(uint8_t*)0x10000379 = 0x00
-		*(uint8_t*)0x1000037a = 0x00
-		*(uint8_t*)0x1000037b = 0x00
-		*(uint8_t*)0x1000037c = 0x00
-		*(uint8_t*)0x1000037d = 0x00
-		*(uint8_t*)0x1000037e = 0x00
-		*(uint8_t*)0x1000037f = 0x00
-		*(uint8_t*)0x10000380 = 0x00
-		*(uint8_t*)0x10000381 = 0x00
-		*(uint8_t*)0x10000382 = 0x00
-		*(uint8_t*)0x10000383 = 0x00
-		*(uint8_t*)0x10000384 = 0x00
-		*(uint8_t*)0x10000385 = 0x00
-		*(uint8_t*)0x10000386 = 0x00
-		*(uint8_t*)0x10000387 = 0x00
-		*(uint8_t*)0x10000388 = 0x00
-		*(uint8_t*)0x10000389 = 0x00
-		*(uint8_t*)0x1000038a = 0x00
-		*(uint8_t*)0x1000038b = 0x00
-		*(uint8_t*)0x1000038c = 0x00
-		*(uint8_t*)0x1000038d = 0x00
-		*(uint8_t*)0x1000038e = 0x00
-		*(uint8_t*)0x1000038f = 0x00
-		*(uint8_t*)0x10000390 = 0x00
-		*(uint8_t*)0x10000391 = 0x00
-		*(uint8_t*)0x10000392 = 0x00
-		*(uint8_t*)0x10000393 = 0x00
-		*(uint8_t*)0x10000394 = 0x00
-		*(uint8_t*)0x10000395 = 0x00
-		*(uint8_t*)0x10000396 = 0x00
-		*(uint8_t*)0x10000397 = 0x00
-		*(uint8_t*)0x10000398 = 0x00
-		*(uint8_t*)0x10000399 = 0x00
-		*(uint8_t*)0x1000039a = 0x00
-		*(uint8_t*)0x1000039b = 0x00
-		*(uint8_t*)0x1000039c = 0x00
-		*(uint8_t*)0x1000039d = 0x00
-		*(uint8_t*)0x1000039e = 0x00
-		*(uint8_t*)0x1000039f = 0x00
-		*(uint8_t*)0x100003a0 = 0x00
-		*(uint8_t*)0x100003a1 = 0x00
-		*(uint8_t*)0x100003a2 = 0x00
-		*(uint8_t*)0x100003a3 = 0x00
-		*(uint8_t*)0x100003a4 = 0x00
-		*(uint8_t*)0x100003a5 = 0x00
-		*(uint8_t*)0x100003a6 = 0x00
-		*(uint8_t*)0x100003a7 = 0x00
-		*(uint8_t*)0x100003a8 = 0x00
-		*(uint8_t*)0x100003a9 = 0x00
-		*(uint8_t*)0x100003aa = 0x00
-		*(uint8_t*)0x100003ab = 0x00
-		*(uint8_t*)0x100003ac = 0x00
-		*(uint8_t*)0x100003ad = 0x00
-		*(uint8_t*)0x100003ae = 0x00
-		*(uint8_t*)0x100003af = 0x00
-		*(uint8_t*)0x100003b0 = 0x00
-		*(uint8_t*)0x100003b1 = 0x00
-		*(uint8_t*)0x100003b2 = 0x00
-		*(uint8_t*)0x100003b3 = 0x00
-		*(uint8_t*)0x100003b4 = 0x00
-		*(uint8_t*)0x100003b5 = 0x00
-		*(uint8_t*)0x100003b6 = 0x00
-		*(uint8_t*)0x100003b7 = 0x00
-		*(uint8_t*)0x100003b8 = 0xad
-		*(uint8_t*)0x100003b9 = 0xbe
-		*(uint8_t*)0x100003ba = 0x00
-		*(uint8_t*)0x100003bb = 0x00
-		*(uint8_t*)0x100003bc = 0x0e
-		*(uint8_t*)0x100003bd = 0x7b
-		*(uint8_t*)0x100003be = 0x22
-		*(uint8_t*)0x100003bf = 0x00
-		*(uint8_t*)0x100003c0 = 0x62
-		*(uint8_t*)0x100003c1 = 0x00
-		*(uint8_t*)0x100003c2 = 0xde
-		*(uint8_t*)0x100003c3 = 0x00
-		*(uint8_t*)0x100003c4 = 0x2a
-		*(uint8_t*)0x100003c5 = 0x01
-		*(uint8_t*)0x100003c6 = 0x58
-		*(uint8_t*)0x100003c7 = 0x01
-		*(uint8_t*)0x100003c8 = 0x7a
-		*(uint8_t*)0x100003c9 = 0x01
-		*(uint8_t*)0x100003ca = 0x96
-		*(uint8_t*)0x100003cb = 0x01
-		*(uint8_t*)0x100003cc = 0xdc
-		*(uint8_t*)0x100003cd = 0x01
-		*(uint8_t*)0x100003ce = 0xa0
-		*(uint8_t*)0x100003cf = 0x02
-		*(uint8_t*)0x100003d0 = 0xce
-		*(uint8_t*)0x100003d1 = 0x02
-		*(uint8_t*)0x100003d2 = 0xf6
-		*(uint8_t*)0x100003d3 = 0x02
-		*(uint8_t*)0x100003d4 = 0x18
-		*(uint8_t*)0x100003d5 = 0x03
-		*(uint8_t*)0x100003d6 = 0x4c
-		*(uint8_t*)0x100003d7 = 0x03
-		*(uint8_t*)0x100003d8 = 0x6e
-		*(uint8_t*)0x100003d9 = 0x03
-		*(uint8_t*)0x100003da = 0x05
-		*(uint8_t*)0x100003db = 0x00
-		*(uint8_t*)0x100003dc = 0x05
-		*(uint8_t*)0x100003dd = 0x00
-		*(uint8_t*)0x100003de = 0x5e
-		*(uint8_t*)0x100003df = 0x00
-		*(uint8_t*)0x100003e0 = 0x17
-		*(uint8_t*)0x100003e1 = 0x04
-		*(uint8_t*)0x100003e2 = 0x88
-		*(uint8_t*)0x100003e3 = 0x00
-		*(uint8_t*)0x100003e4 = 0x7f
-		*(uint8_t*)0x100003e5 = 0x00
-		*(uint8_t*)0x100003e6 = 0x97
-		*(uint8_t*)0x100003e7 = 0x04
-		*(uint8_t*)0x100003e8 = 0x88
-		*(uint8_t*)0x100003e9 = 0x00
-		*(uint8_t*)0x100003ea = 0x00
-		*(uint8_t*)0x100003eb = 0x00
-		*(uint8_t*)0x100003ec = 0x00
-		*(uint8_t*)0x100003ed = 0x00
-		*(uint8_t*)0x100003ee = 0x01
-		*(uint8_t*)0x100003ef = 0x00
-		*(uint8_t*)0x100003f0 = 0x33
-		*(uint8_t*)0x100003f1 = 0x00
-		*(uint8_t*)0x100003f2 = 0x27
-		*(uint8_t*)0x100003f3 = 0x05
-		*(uint8_t*)0x100003f4 = 0x88
-		*(uint8_t*)0x100003f5 = 0x00
-		*(uint8_t*)0x100003f6 = 0x4f
-		*(uint8_t*)0x100003f7 = 0x00
-		*(uint8_t*)0x100003f8 = 0x75
-		*(uint8_t*)0x100003f9 = 0x05
-		*(uint8_t*)0x100003fa = 0xc7
-		*(uint8_t*)0x100003fb = 0x00
-		*(uint8_t*)0x100003fc = 0x54
-		*(uint8_t*)0x100003fd = 0x00
-		*(uint8_t*)0x100003fe = 0x75
-		*(uint8_t*)0x100003ff = 0x05
-		*(uint8_t*)0x10000400 = 0x88
-		*(uint8_t*)0x10000401 = 0x00
-		*(uint8_t*)0x10000402 = 0x7b
-		*(uint8_t*)0x10000403 = 0x00
-		*(uint8_t*)0x10000404 = 0xe0
-		*(uint8_t*)0x10000405 = 0x06
-		*(uint8_t*)0x10000406 = 0x88
-		*(uint8_t*)0x10000407 = 0x00
-		*(uint8_t*)0x10000408 = 0x00
-		*(uint8_t*)0x10000409 = 0x00
-		*(uint8_t*)0x1000040a = 0x00
-		*(uint8_t*)0x1000040b = 0x00
-		*(uint8_t*)0x1000040c = 0x01
-		*(uint8_t*)0x1000040d = 0x00
-		*(uint8_t*)0x1000040e = 0x33
-		*(uint8_t*)0x1000040f = 0x00
-		*(uint8_t*)0x10000410 = 0x20
-		*(uint8_t*)0x10000411 = 0x06
-		*(uint8_t*)0x10000412 = 0x88
-		*(uint8_t*)0x10000413 = 0x00
-		*(uint8_t*)0x10000414 = 0x4f
-		*(uint8_t*)0x10000415 = 0x00
-		*(uint8_t*)0x10000416 = 0xe0
-		*(uint8_t*)0x10000417 = 0x06
-		*(uint8_t*)0x10000418 = 0xc7
-		*(uint8_t*)0x10000419 = 0x00
-		*(uint8_t*)0x1000041a = 0x0a
-		*(uint8_t*)0x1000041b = 0x00
-		*(uint8_t*)0x1000041c = 0x0a
-		*(uint8_t*)0x1000041d = 0x00
-		*(uint8_t*)0x1000041e = 0x71
-		*(uint8_t*)0x1000041f = 0x00
-		*(uint8_t*)0x10000420 = 0x75
-		*(uint8_t*)0x10000421 = 0x05
-		*(uint8_t*)0x10000422 = 0x22
-		*(uint8_t*)0x10000423 = 0x00
-		*(uint8_t*)0x10000424 = 0x5c
-		*(uint8_t*)0x10000425 = 0x00
-		*(uint8_t*)0x10000426 = 0x27
-		*(uint8_t*)0x10000427 = 0x05
-		*(uint8_t*)0x10000428 = 0x22
-		*(uint8_t*)0x10000429 = 0x00
-		*(uint8_t*)0x1000042a = 0x51
-		*(uint8_t*)0x1000042b = 0x00
-		*(uint8_t*)0x1000042c = 0xdd
-		*(uint8_t*)0x1000042d = 0x04
-		*(uint8_t*)0x1000042e = 0x22
-		*(uint8_t*)0x1000042f = 0x00
-		*(uint8_t*)0x10000430 = 0x43
-		*(uint8_t*)0x10000431 = 0x00
-		*(uint8_t*)0x10000432 = 0x17
-		*(uint8_t*)0x10000433 = 0x04
-		*(uint8_t*)0x10000434 = 0x22
-		*(uint8_t*)0x10000435 = 0x00
-		*(uint8_t*)0x10000436 = 0x3b
-		*(uint8_t*)0x10000437 = 0x00
-		*(uint8_t*)0x10000438 = 0xa4
-		*(uint8_t*)0x10000439 = 0x03
-		*(uint8_t*)0x1000043a = 0x22
-		*(uint8_t*)0x1000043b = 0x00
-		*(uint8_t*)0x1000043c = 0x33
-		*(uint8_t*)0x1000043d = 0x00
-		*(uint8_t*)0x1000043e = 0x17
-		*(uint8_t*)0x1000043f = 0x04
-		*(uint8_t*)0x10000440 = 0x22
-		*(uint8_t*)0x10000441 = 0x00
-		*(uint8_t*)0x10000442 = 0x00
-		*(uint8_t*)0x10000443 = 0x00
-		*(uint8_t*)0x10000444 = 0x00
-		*(uint8_t*)0x10000445 = 0x00
-		*(uint8_t*)0x10000446 = 0x01
-		*(uint8_t*)0x10000447 = 0x00
-		*(uint8_t*)0x10000448 = 0x2c
-		*(uint8_t*)0x10000449 = 0x00
-		*(uint8_t*)0x1000044a = 0xdd
-		*(uint8_t*)0x1000044b = 0x04
-		*(uint8_t*)0x1000044c = 0x22
-		*(uint8_t*)0x1000044d = 0x00
-		*(uint8_t*)0x1000044e = 0x26
-		*(uint8_t*)0x1000044f = 0x00
-		*(uint8_t*)0x10000450 = 0x27
-		*(uint8_t*)0x10000451 = 0x05
-		*(uint8_t*)0x10000452 = 0x22
-		*(uint8_t*)0x10000453 = 0x00
-		*(uint8_t*)0x10000454 = 0x21
-		*(uint8_t*)0x10000455 = 0x00
-		*(uint8_t*)0x10000456 = 0x75
-		*(uint8_t*)0x10000457 = 0x05
-		*(uint8_t*)0x10000458 = 0x22
-		*(uint8_t*)0x10000459 = 0x00
-		*(uint8_t*)0x1000045a = 0x71
-		*(uint8_t*)0x1000045b = 0x00
-		*(uint8_t*)0x1000045c = 0xe0
-		*(uint8_t*)0x1000045d = 0x06
-		*(uint8_t*)0x1000045e = 0x22
-		*(uint8_t*)0x1000045f = 0x00
-		*(uint8_t*)0x10000460 = 0x5c
-		*(uint8_t*)0x10000461 = 0x00
-		*(uint8_t*)0x10000462 = 0x20
-		*(uint8_t*)0x10000463 = 0x06
-		*(uint8_t*)0x10000464 = 0x22
-		*(uint8_t*)0x10000465 = 0x00
-		*(uint8_t*)0x10000466 = 0x51
-		*(uint8_t*)0x10000467 = 0x00
-		*(uint8_t*)0x10000468 = 0x75
-		*(uint8_t*)0x10000469 = 0x05
-		*(uint8_t*)0x1000046a = 0x22
-		*(uint8_t*)0x1000046b = 0x00
-		*(uint8_t*)0x1000046c = 0x43
-		*(uint8_t*)0x1000046d = 0x00
-		*(uint8_t*)0x1000046e = 0x27
-		*(uint8_t*)0x1000046f = 0x05
-		*(uint8_t*)0x10000470 = 0x22
-		*(uint8_t*)0x10000471 = 0x00
-		*(uint8_t*)0x10000472 = 0x3b
-		*(uint8_t*)0x10000473 = 0x00
-		*(uint8_t*)0x10000474 = 0x97
-		*(uint8_t*)0x10000475 = 0x04
-		*(uint8_t*)0x10000476 = 0x22
-		*(uint8_t*)0x10000477 = 0x00
-		*(uint8_t*)0x10000478 = 0x33
-		*(uint8_t*)0x10000479 = 0x00
-		*(uint8_t*)0x1000047a = 0x27
-		*(uint8_t*)0x1000047b = 0x05
-		*(uint8_t*)0x1000047c = 0x22
-		*(uint8_t*)0x1000047d = 0x00
-		*(uint8_t*)0x1000047e = 0x00
-		*(uint8_t*)0x1000047f = 0x00
-		*(uint8_t*)0x10000480 = 0x00
-		*(uint8_t*)0x10000481 = 0x00
-		*(uint8_t*)0x10000482 = 0x01
-		*(uint8_t*)0x10000483 = 0x00
-		*(uint8_t*)0x10000484 = 0x2c
-		*(uint8_t*)0x10000485 = 0x00
-		*(uint8_t*)0x10000486 = 0x75
-		*(uint8_t*)0x10000487 = 0x05
-		*(uint8_t*)0x10000488 = 0x22
-		*(uint8_t*)0x10000489 = 0x00
-		*(uint8_t*)0x1000048a = 0x26
-		*(uint8_t*)0x1000048b = 0x00
-		*(uint8_t*)0x1000048c = 0x20
-		*(uint8_t*)0x1000048d = 0x06
-		*(uint8_t*)0x1000048e = 0x22
-		*(uint8_t*)0x1000048f = 0x00
-		*(uint8_t*)0x10000490 = 0x21
-		*(uint8_t*)0x10000491 = 0x00
-		*(uint8_t*)0x10000492 = 0xe0
-		*(uint8_t*)0x10000493 = 0x06
-		*(uint8_t*)0x10000494 = 0x22
-		*(uint8_t*)0x10000495 = 0x00
-		*(uint8_t*)0x10000496 = 0x0a
-		*(uint8_t*)0x10000497 = 0x00
-		*(uint8_t*)0x10000498 = 0x02
-		*(uint8_t*)0x10000499 = 0x00
-		*(uint8_t*)0x1000049a = 0x60
-		*(uint8_t*)0x1000049b = 0x00
-		*(uint8_t*)0x1000049c = 0xc0
-		*(uint8_t*)0x1000049d = 0x0d
-		*(uint8_t*)0x1000049e = 0x2f
-		*(uint8_t*)0x1000049f = 0x00
-		*(uint8_t*)0x100004a0 = 0x00
-		*(uint8_t*)0x100004a1 = 0x00
-		*(uint8_t*)0x100004a2 = 0x00
-		*(uint8_t*)0x100004a3 = 0x00
-		*(uint8_t*)0x100004a4 = 0x16
-		*(uint8_t*)0x100004a5 = 0x00
-		*(uint8_t*)0x100004a6 = 0x7f
-		*(uint8_t*)0x100004a7 = 0x00
-		*(uint8_t*)0x100004a8 = 0x17
-		*(uint8_t*)0x100004a9 = 0x04
-		*(uint8_t*)0x100004aa = 0x41
-		*(uint8_t*)0x100004ab = 0x00
-		*(uint8_t*)0x100004ac = 0x00
-		*(uint8_t*)0x100004ad = 0x00
-		*(uint8_t*)0x100004ae = 0x00
-		*(uint8_t*)0x100004af = 0x00
-		*(uint8_t*)0x100004b0 = 0x03
-		*(uint8_t*)0x100004b1 = 0x00
-		*(uint8_t*)0x100004b2 = 0x7d
-		*(uint8_t*)0x100004b3 = 0x00
-		*(uint8_t*)0x100004b4 = 0xc0
-		*(uint8_t*)0x100004b5 = 0x0d
-		*(uint8_t*)0x100004b6 = 0x2c
-		*(uint8_t*)0x100004b7 = 0x00
-		*(uint8_t*)0x100004b8 = 0x00
-		*(uint8_t*)0x100004b9 = 0x00
-		*(uint8_t*)0x100004ba = 0x00
-		*(uint8_t*)0x100004bb = 0x00
-		*(uint8_t*)0x100004bc = 0x01
-		*(uint8_t*)0x100004bd = 0x00
-		*(uint8_t*)0x100004be = 0x00
-		*(uint8_t*)0x100004bf = 0x00
-		*(uint8_t*)0x100004c0 = 0x00
-		*(uint8_t*)0x100004c1 = 0x00
-		*(uint8_t*)0x100004c2 = 0x18
-		*(uint8_t*)0x100004c3 = 0x00
-		*(uint8_t*)0x100004c4 = 0x7b
-		*(uint8_t*)0x100004c5 = 0x00
-		*(uint8_t*)0x100004c6 = 0x17
-		*(uint8_t*)0x100004c7 = 0x04
-		*(uint8_t*)0x100004c8 = 0x48
-		*(uint8_t*)0x100004c9 = 0x00
-		*(uint8_t*)0x100004ca = 0x00
-		*(uint8_t*)0x100004cb = 0x00
-		*(uint8_t*)0x100004cc = 0x00
-		*(uint8_t*)0x100004cd = 0x00
-		*(uint8_t*)0x100004ce = 0x41
-		*(uint8_t*)0x100004cf = 0x00
-		*(uint8_t*)0x100004d0 = 0x75
-		*(uint8_t*)0x100004d1 = 0x00
-		*(uint8_t*)0x100004d2 = 0x17
-		*(uint8_t*)0x100004d3 = 0x04
-		*(uint8_t*)0x100004d4 = 0x3e
-		*(uint8_t*)0x100004d5 = 0x00
-		*(uint8_t*)0x100004d6 = 0x00
-		*(uint8_t*)0x100004d7 = 0x00
-		*(uint8_t*)0x100004d8 = 0x00
-		*(uint8_t*)0x100004d9 = 0x00
-		*(uint8_t*)0x100004da = 0x11
-		*(uint8_t*)0x100004db = 0x01
-		*(uint8_t*)0x100004dc = 0x7f
-		*(uint8_t*)0x100004dd = 0x00
-		*(uint8_t*)0x100004de = 0xc0
-		*(uint8_t*)0x100004df = 0x0d
-		*(uint8_t*)0x100004e0 = 0x32
-		*(uint8_t*)0x100004e1 = 0x00
-		*(uint8_t*)0x100004e2 = 0x05
-		*(uint8_t*)0x100004e3 = 0x00
-		*(uint8_t*)0x100004e4 = 0x02
-		*(uint8_t*)0x100004e5 = 0x00
-		*(uint8_t*)0x100004e6 = 0x5c
-		*(uint8_t*)0x100004e7 = 0x00
-		*(uint8_t*)0x100004e8 = 0xba
-		*(uint8_t*)0x100004e9 = 0x02
-		*(uint8_t*)0x100004ea = 0x88
-		*(uint8_t*)0x100004eb = 0x00
-		*(uint8_t*)0x100004ec = 0x00
-		*(uint8_t*)0x100004ed = 0x00
-		*(uint8_t*)0x100004ee = 0x00
-		*(uint8_t*)0x100004ef = 0x00
-		*(uint8_t*)0x100004f0 = 0x88
-		*(uint8_t*)0x100004f1 = 0x00
-		*(uint8_t*)0x100004f2 = 0x00
-		*(uint8_t*)0x100004f3 = 0x00
-		*(uint8_t*)0x100004f4 = 0x00
-		*(uint8_t*)0x100004f5 = 0x00
-		*(uint8_t*)0x100004f6 = 0x01
-		*(uint8_t*)0x100004f7 = 0x00
-		*(uint8_t*)0x100004f8 = 0x66
-		*(uint8_t*)0x100004f9 = 0x00
-		*(uint8_t*)0x100004fa = 0xba
-		*(uint8_t*)0x100004fb = 0x02
-		*(uint8_t*)0x100004fc = 0x88
-		*(uint8_t*)0x100004fd = 0x00
-		*(uint8_t*)0x100004fe = 0x76
-		*(uint8_t*)0x100004ff = 0x00
-		*(uint8_t*)0x10000500 = 0x17
-		*(uint8_t*)0x10000501 = 0x04
-		*(uint8_t*)0x10000502 = 0x18
-		*(uint8_t*)0x10000503 = 0x01
-		*(uint8_t*)0x10000504 = 0x00
-		*(uint8_t*)0x10000505 = 0x00
-		*(uint8_t*)0x10000506 = 0x00
-		*(uint8_t*)0x10000507 = 0x00
-		*(uint8_t*)0x10000508 = 0x99
-		*(uint8_t*)0x10000509 = 0x01
-		*(uint8_t*)0x1000050a = 0x38
-		*(uint8_t*)0x1000050b = 0x00
-		*(uint8_t*)0x1000050c = 0x75
-		*(uint8_t*)0x1000050d = 0x05
-		*(uint8_t*)0x1000050e = 0x19
-		*(uint8_t*)0x1000050f = 0x01
-		*(uint8_t*)0x10000510 = 0x02
-		*(uint8_t*)0x10000511 = 0x00
-		*(uint8_t*)0x10000512 = 0x03
-		*(uint8_t*)0x10000513 = 0x00
-		*(uint8_t*)0x10000514 = 0x40
-		*(uint8_t*)0x10000515 = 0x00
-		*(uint8_t*)0x10000516 = 0xba
-		*(uint8_t*)0x10000517 = 0x02
-		*(uint8_t*)0x10000518 = 0x99
-		*(uint8_t*)0x10000519 = 0x01
-		*(uint8_t*)0x1000051a = 0x56
-		*(uint8_t*)0x1000051b = 0x00
-		*(uint8_t*)0x1000051c = 0x17
-		*(uint8_t*)0x1000051d = 0x04
-		*(uint8_t*)0x1000051e = 0x44
-		*(uint8_t*)0x1000051f = 0x02
-		*(uint8_t*)0x10000520 = 0x00
-		*(uint8_t*)0x10000521 = 0x00
-		*(uint8_t*)0x10000522 = 0x00
-		*(uint8_t*)0x10000523 = 0x00
-		*(uint8_t*)0x10000524 = 0x11
-		*(uint8_t*)0x10000525 = 0x01
-		*(uint8_t*)0x10000526 = 0x46
-		*(uint8_t*)0x10000527 = 0x00
-		*(uint8_t*)0x10000528 = 0xa4
-		*(uint8_t*)0x10000529 = 0x03
-		*(uint8_t*)0x1000052a = 0x11
-		*(uint8_t*)0x1000052b = 0x01
-		*(uint8_t*)0x1000052c = 0x8e
-		*(uint8_t*)0x1000052d = 0x00
-		*(uint8_t*)0x1000052e = 0x75
-		*(uint8_t*)0x1000052f = 0x05
-		*(uint8_t*)0x10000530 = 0xbb
-		*(uint8_t*)0x10000531 = 0x01
-		*(uint8_t*)0x10000532 = 0x02
-		*(uint8_t*)0x10000533 = 0x00
-		*(uint8_t*)0x10000534 = 0x02
-		*(uint8_t*)0x10000535 = 0x00
-		*(uint8_t*)0x10000536 = 0x40
-		*(uint8_t*)0x10000537 = 0x00
-		*(uint8_t*)0x10000538 = 0x75
-		*(uint8_t*)0x10000539 = 0x05
-		*(uint8_t*)0x1000053a = 0x88
-		*(uint8_t*)0x1000053b = 0x00
-		*(uint8_t*)0x1000053c = 0xc8
-		*(uint8_t*)0x1000053d = 0x00
-		*(uint8_t*)0x1000053e = 0x2d
-		*(uint8_t*)0x1000053f = 0x08
-		*(uint8_t*)0x10000540 = 0x62
-		*(uint8_t*)0x10000541 = 0x00
-		*(uint8_t*)0x10000542 = 0x00
-		*(uint8_t*)0x10000543 = 0x00
-		*(uint8_t*)0x10000544 = 0x00
-		*(uint8_t*)0x10000545 = 0x00
-		*(uint8_t*)0x10000546 = 0x44
-		*(uint8_t*)0x10000547 = 0x00
-		*(uint8_t*)0x10000548 = 0x7a
-		*(uint8_t*)0x10000549 = 0x00
-		*(uint8_t*)0x1000054a = 0xe0
-		*(uint8_t*)0x1000054b = 0x06
-		*(uint8_t*)0x1000054c = 0xa5
-		*(uint8_t*)0x1000054d = 0x00
-		*(uint8_t*)0x1000054e = 0x06
-		*(uint8_t*)0x1000054f = 0x00
-		*(uint8_t*)0x10000550 = 0x05
-		*(uint8_t*)0x10000551 = 0x00
-		*(uint8_t*)0x10000552 = 0x5e
-		*(uint8_t*)0x10000553 = 0x00
-		*(uint8_t*)0x10000554 = 0x17
-		*(uint8_t*)0x10000555 = 0x04
-		*(uint8_t*)0x10000556 = 0xaa
-		*(uint8_t*)0x10000557 = 0x00
-		*(uint8_t*)0x10000558 = 0x00
-		*(uint8_t*)0x10000559 = 0x00
-		*(uint8_t*)0x1000055a = 0x00
-		*(uint8_t*)0x1000055b = 0x00
-		*(uint8_t*)0x1000055c = 0x66
-		*(uint8_t*)0x1000055d = 0x00
-		*(uint8_t*)0x1000055e = 0x00
-		*(uint8_t*)0x1000055f = 0x00
-		*(uint8_t*)0x10000560 = 0x00
-		*(uint8_t*)0x10000561 = 0x00
-		*(uint8_t*)0x10000562 = 0x01
-		*(uint8_t*)0x10000563 = 0x00
-		*(uint8_t*)0x10000564 = 0x4b
-		*(uint8_t*)0x10000565 = 0x00
-		*(uint8_t*)0x10000566 = 0x70
-		*(uint8_t*)0x10000567 = 0x03
-		*(uint8_t*)0x10000568 = 0x66
-		*(uint8_t*)0x10000569 = 0x00
-		*(uint8_t*)0x1000056a = 0x00
-		*(uint8_t*)0x1000056b = 0x00
-		*(uint8_t*)0x1000056c = 0x00
-		*(uint8_t*)0x1000056d = 0x00
-		*(uint8_t*)0x1000056e = 0x22
-		*(uint8_t*)0x1000056f = 0x00
-		*(uint8_t*)0x10000570 = 0x7f
-		*(uint8_t*)0x10000571 = 0x00
-		*(uint8_t*)0x10000572 = 0x75
-		*(uint8_t*)0x10000573 = 0x05
-		*(uint8_t*)0x10000574 = 0x66
-		*(uint8_t*)0x10000575 = 0x00
-		*(uint8_t*)0x10000576 = 0x00
-		*(uint8_t*)0x10000577 = 0x00
-		*(uint8_t*)0x10000578 = 0x00
-		*(uint8_t*)0x10000579 = 0x00
-		*(uint8_t*)0x1000057a = 0x88
-		*(uint8_t*)0x1000057b = 0x00
-		*(uint8_t*)0x1000057c = 0x2e
-		*(uint8_t*)0x1000057d = 0x00
-		*(uint8_t*)0x1000057e = 0xba
-		*(uint8_t*)0x1000057f = 0x02
-		*(uint8_t*)0x10000580 = 0xaa
-		*(uint8_t*)0x10000581 = 0x00
-		*(uint8_t*)0x10000582 = 0x00
-		*(uint8_t*)0x10000583 = 0x00
-		*(uint8_t*)0x10000584 = 0x00
-		*(uint8_t*)0x10000585 = 0x00
-		*(uint8_t*)0x10000586 = 0x01
-		*(uint8_t*)0x10000587 = 0x00
-		*(uint8_t*)0x10000588 = 0x00
-		*(uint8_t*)0x10000589 = 0x00
-		*(uint8_t*)0x1000058a = 0x00
-		*(uint8_t*)0x1000058b = 0x00
-		*(uint8_t*)0x1000058c = 0x22
-		*(uint8_t*)0x1000058d = 0x00
-		*(uint8_t*)0x1000058e = 0x5e
-		*(uint8_t*)0x1000058f = 0x00
-		*(uint8_t*)0x10000590 = 0x17
-		*(uint8_t*)0x10000591 = 0x04
-		*(uint8_t*)0x10000592 = 0x66
-		*(uint8_t*)0x10000593 = 0x00
-		*(uint8_t*)0x10000594 = 0x04
-		*(uint8_t*)0x10000595 = 0x00
-		*(uint8_t*)0x10000596 = 0x1c
-		*(uint8_t*)0x10000597 = 0x00
-		*(uint8_t*)0x10000598 = 0x0e
-		*(uint8_t*)0x10000599 = 0x00
-		*(uint8_t*)0x1000059a = 0x5d
-		*(uint8_t*)0x1000059b = 0x01
-		*(uint8_t*)0x1000059c = 0x32
-		*(uint8_t*)0x1000059d = 0x03
-		*(uint8_t*)0x1000059e = 0x2a
-		*(uint8_t*)0x1000059f = 0x00
-		*(uint8_t*)0x100005a0 = 0x88
-		*(uint8_t*)0x100005a1 = 0x01
-		*(uint8_t*)0x100005a2 = 0x10
-		*(uint8_t*)0x100005a3 = 0x03
-		*(uint8_t*)0x100005a4 = 0x00
-		*(uint8_t*)0x100005a5 = 0x00
-		*(uint8_t*)0x100005a6 = 0x00
-		*(uint8_t*)0x100005a7 = 0x00
-		*(uint8_t*)0x100005a8 = 0x22
-		*(uint8_t*)0x100005a9 = 0x00
-		*(uint8_t*)0x100005aa = 0x32
-		*(uint8_t*)0x100005ab = 0x00
-		*(uint8_t*)0x100005ac = 0x0b
-		*(uint8_t*)0x100005ad = 0x02
-		*(uint8_t*)0x100005ae = 0x32
-		*(uint8_t*)0x100005af = 0x03
-		*(uint8_t*)0x100005b0 = 0x30
-		*(uint8_t*)0x100005b1 = 0x00
-		*(uint8_t*)0x100005b2 = 0xd2
-		*(uint8_t*)0x100005b3 = 0x01
-		*(uint8_t*)0x100005b4 = 0x5b
-		*(uint8_t*)0x100005b5 = 0x00
-		*(uint8_t*)0x100005b6 = 0x00
-		*(uint8_t*)0x100005b7 = 0x00
-		*(uint8_t*)0x100005b8 = 0x00
-		*(uint8_t*)0x100005b9 = 0x00
-		*(uint8_t*)0x100005ba = 0x0b
-		*(uint8_t*)0x100005bb = 0x00
-		*(uint8_t*)0x100005bc = 0x36
-		*(uint8_t*)0x100005bd = 0x00
-		*(uint8_t*)0x100005be = 0xb8
-		*(uint8_t*)0x100005bf = 0x01
-		*(uint8_t*)0x100005c0 = 0x84
-		*(uint8_t*)0x100005c1 = 0x00
-		*(uint8_t*)0x100005c2 = 0x00
-		*(uint8_t*)0x100005c3 = 0x00
-		*(uint8_t*)0x100005c4 = 0x00
-		*(uint8_t*)0x100005c5 = 0x00
-		*(uint8_t*)0x100005c6 = 0x05
-		*(uint8_t*)0x100005c7 = 0x00
-		*(uint8_t*)0x100005c8 = 0x3e
-		*(uint8_t*)0x100005c9 = 0x00
-		*(uint8_t*)0x100005ca = 0xd2
-		*(uint8_t*)0x100005cb = 0x01
-		*(uint8_t*)0x100005cc = 0x57
-		*(uint8_t*)0x100005cd = 0x00
-		*(uint8_t*)0x100005ce = 0x00
-		*(uint8_t*)0x100005cf = 0x00
-		*(uint8_t*)0x100005d0 = 0x00
-		*(uint8_t*)0x100005d1 = 0x00
-		*(uint8_t*)0x100005d2 = 0x0f
-		*(uint8_t*)0x100005d3 = 0x00
-		*(uint8_t*)0x100005d4 = 0x38
-		*(uint8_t*)0x100005d5 = 0x00
-		*(uint8_t*)0x100005d6 = 0xb8
-		*(uint8_t*)0x100005d7 = 0x01
-		*(uint8_t*)0x100005d8 = 0x83
-		*(uint8_t*)0x100005d9 = 0x00
-		*(uint8_t*)0x100005da = 0x00
-		*(uint8_t*)0x100005db = 0x00
-		*(uint8_t*)0x100005dc = 0x00
-		*(uint8_t*)0x100005dd = 0x00
-		*(uint8_t*)0x100005de = 0x06
-		*(uint8_t*)0x100005df = 0x00
-		*(uint8_t*)0x100005e0 = 0x46
-		*(uint8_t*)0x100005e1 = 0x00
-		*(uint8_t*)0x100005e2 = 0xd2
-		*(uint8_t*)0x100005e3 = 0x01
-		*(uint8_t*)0x100005e4 = 0x44
-		*(uint8_t*)0x100005e5 = 0x00
-		*(uint8_t*)0x100005e6 = 0x00
-		*(uint8_t*)0x100005e7 = 0x00
-		*(uint8_t*)0x100005e8 = 0x00
-		*(uint8_t*)0x100005e9 = 0x00
-		*(uint8_t*)0x100005ea = 0x11
-		*(uint8_t*)0x100005eb = 0x01
-		*(uint8_t*)0x100005ec = 0x58
-		*(uint8_t*)0x100005ed = 0x00
-		*(uint8_t*)0x100005ee = 0x4b
-		*(uint8_t*)0x100005ef = 0x02
-		*(uint8_t*)0x100005f0 = 0x66
-		*(uint8_t*)0x100005f1 = 0x00
-		*(uint8_t*)0x100005f2 = 0x4c
-		*(uint8_t*)0x100005f3 = 0x00
-		*(uint8_t*)0x100005f4 = 0x0b
-		*(uint8_t*)0x100005f5 = 0x02
-		*(uint8_t*)0x100005f6 = 0x84
-		*(uint8_t*)0x100005f7 = 0x00
-		*(uint8_t*)0x100005f8 = 0x00
-		*(uint8_t*)0x100005f9 = 0x00
-		*(uint8_t*)0x100005fa = 0x00
-		*(uint8_t*)0x100005fb = 0x00
-		*(uint8_t*)0x100005fc = 0x05
-		*(uint8_t*)0x100005fd = 0x00
-		*(uint8_t*)0x100005fe = 0x52
-		*(uint8_t*)0x100005ff = 0x00
-		*(uint8_t*)0x10000600 = 0x4b
-		*(uint8_t*)0x10000601 = 0x02
-		*(uint8_t*)0x10000602 = 0x66
-		*(uint8_t*)0x10000603 = 0x00
-		*(uint8_t*)0x10000604 = 0x48
-		*(uint8_t*)0x10000605 = 0x00
-		*(uint8_t*)0x10000606 = 0x0b
-		*(uint8_t*)0x10000607 = 0x02
-		*(uint8_t*)0x10000608 = 0x83
-		*(uint8_t*)0x10000609 = 0x00
-		*(uint8_t*)0x1000060a = 0x00
-		*(uint8_t*)0x1000060b = 0x00
-		*(uint8_t*)0x1000060c = 0x00
-		*(uint8_t*)0x1000060d = 0x00
-		*(uint8_t*)0x1000060e = 0x06
-		*(uint8_t*)0x1000060f = 0x00
-		*(uint8_t*)0x10000610 = 0x4e
-		*(uint8_t*)0x10000611 = 0x00
-		*(uint8_t*)0x10000612 = 0x4b
-		*(uint8_t*)0x10000613 = 0x02
-		*(uint8_t*)0x10000614 = 0x44
-		*(uint8_t*)0x10000615 = 0x00
-		*(uint8_t*)0x10000616 = 0x00
-		*(uint8_t*)0x10000617 = 0x00
-		*(uint8_t*)0x10000618 = 0x00
-		*(uint8_t*)0x10000619 = 0x00
-		*(uint8_t*)0x1000061a = 0x01
-		*(uint8_t*)0x1000061b = 0x00
-		*(uint8_t*)0x1000061c = 0x00
-		*(uint8_t*)0x1000061d = 0x00
-		*(uint8_t*)0x1000061e = 0x00
-		*(uint8_t*)0x1000061f = 0x00
-		*(uint8_t*)0x10000620 = 0x11
-		*(uint8_t*)0x10000621 = 0x01
-		*(uint8_t*)0x10000622 = 0x66
-		*(uint8_t*)0x10000623 = 0x00
-		*(uint8_t*)0x10000624 = 0xba
-		*(uint8_t*)0x10000625 = 0x02
-		*(uint8_t*)0x10000626 = 0x66
-		*(uint8_t*)0x10000627 = 0x00
-		*(uint8_t*)0x10000628 = 0x00
-		*(uint8_t*)0x10000629 = 0x00
-		*(uint8_t*)0x1000062a = 0x00
-		*(uint8_t*)0x1000062b = 0x00
-		*(uint8_t*)0x1000062c = 0x01
-		*(uint8_t*)0x1000062d = 0x00
-		*(uint8_t*)0x1000062e = 0x82
-		*(uint8_t*)0x1000062f = 0x00
-		*(uint8_t*)0x10000630 = 0x93
-		*(uint8_t*)0x10000631 = 0x02
-		*(uint8_t*)0x10000632 = 0x85
-		*(uint8_t*)0x10000633 = 0x00
-		*(uint8_t*)0x10000634 = 0x00
-		*(uint8_t*)0x10000635 = 0x00
-		*(uint8_t*)0x10000636 = 0x00
-		*(uint8_t*)0x10000637 = 0x00
-		*(uint8_t*)0x10000638 = 0x03
-		*(uint8_t*)0x10000639 = 0x00
-		*(uint8_t*)0x1000063a = 0x7c
-		*(uint8_t*)0x1000063b = 0x00
-		*(uint8_t*)0x1000063c = 0xba
-		*(uint8_t*)0x1000063d = 0x02
-		*(uint8_t*)0x1000063e = 0x66
-		*(uint8_t*)0x1000063f = 0x00
-		*(uint8_t*)0x10000640 = 0x90
-		*(uint8_t*)0x10000641 = 0x00
-		*(uint8_t*)0x10000642 = 0x93
-		*(uint8_t*)0x10000643 = 0x02
-		*(uint8_t*)0x10000644 = 0x80
-		*(uint8_t*)0x10000645 = 0x00
-		*(uint8_t*)0x10000646 = 0x00
-		*(uint8_t*)0x10000647 = 0x00
-		*(uint8_t*)0x10000648 = 0x00
-		*(uint8_t*)0x10000649 = 0x00
-		*(uint8_t*)0x1000064a = 0x01
-		*(uint8_t*)0x1000064b = 0x00
-		*(uint8_t*)0x1000064c = 0x00
-		*(uint8_t*)0x1000064d = 0x00
-		*(uint8_t*)0x1000064e = 0x00
-		*(uint8_t*)0x1000064f = 0x00
-		*(uint8_t*)0x10000650 = 0x08
-		*(uint8_t*)0x10000651 = 0x00
-		*(uint8_t*)0x10000652 = 0xaa
-		*(uint8_t*)0x10000653 = 0x00
-		*(uint8_t*)0x10000654 = 0xba
-		*(uint8_t*)0x10000655 = 0x02
-		*(uint8_t*)0x10000656 = 0x55
-		*(uint8_t*)0x10000657 = 0x01
-		*(uint8_t*)0x10000658 = 0x07
-		*(uint8_t*)0x10000659 = 0x00
-		*(uint8_t*)0x1000065a = 0x00
-		*(uint8_t*)0x1000065b = 0x00
-		*(uint8_t*)0x1000065c = 0x7f
-		*(uint8_t*)0x1000065d = 0x00
-		*(uint8_t*)0x1000065e = 0x75
-		*(uint8_t*)0x1000065f = 0x05
-		*(uint8_t*)0x10000660 = 0x32
-		*(uint8_t*)0x10000661 = 0x00
-		*(uint8_t*)0x10000662 = 0x00
-		*(uint8_t*)0x10000663 = 0x00
-		*(uint8_t*)0x10000664 = 0x00
-		*(uint8_t*)0x10000665 = 0x00
-		*(uint8_t*)0x10000666 = 0x2f
-		*(uint8_t*)0x10000667 = 0x00
-		*(uint8_t*)0x10000668 = 0x7f
-		*(uint8_t*)0x10000669 = 0x00
-		*(uint8_t*)0x1000066a = 0x97
-		*(uint8_t*)0x1000066b = 0x04
-		*(uint8_t*)0x1000066c = 0x3d
-		*(uint8_t*)0x1000066d = 0x00
-		*(uint8_t*)0x1000066e = 0x00
-		*(uint8_t*)0x1000066f = 0x00
-		*(uint8_t*)0x10000670 = 0x00
-		*(uint8_t*)0x10000671 = 0x00
-		*(uint8_t*)0x10000672 = 0x34
-		*(uint8_t*)0x10000673 = 0x00
-		*(uint8_t*)0x10000674 = 0x78
-		*(uint8_t*)0x10000675 = 0x00
-		*(uint8_t*)0x10000676 = 0x75
-		*(uint8_t*)0x10000677 = 0x05
-		*(uint8_t*)0x10000678 = 0x39
-		*(uint8_t*)0x10000679 = 0x00
-		*(uint8_t*)0x1000067a = 0x00
-		*(uint8_t*)0x1000067b = 0x00
-		*(uint8_t*)0x1000067c = 0x00
-		*(uint8_t*)0x1000067d = 0x00
-		*(uint8_t*)0x1000067e = 0x43
-		*(uint8_t*)0x1000067f = 0x00
-		*(uint8_t*)0x10000680 = 0x7f
-		*(uint8_t*)0x10000681 = 0x00
-		*(uint8_t*)0x10000682 = 0x97
-		*(uint8_t*)0x10000683 = 0x04
-		*(uint8_t*)0x10000684 = 0x46
-		*(uint8_t*)0x10000685 = 0x00
-		*(uint8_t*)0x10000686 = 0x03
-		*(uint8_t*)0x10000687 = 0x00
-		*(uint8_t*)0x10000688 = 0x03
-		*(uint8_t*)0x10000689 = 0x00
-		*(uint8_t*)0x1000068a = 0x46
-		*(uint8_t*)0x1000068b = 0x00
-		*(uint8_t*)0x1000068c = 0x93
-		*(uint8_t*)0x1000068d = 0x02
-		*(uint8_t*)0x1000068e = 0x8b
-		*(uint8_t*)0x1000068f = 0x00
-		*(uint8_t*)0x10000690 = 0x00
-		*(uint8_t*)0x10000691 = 0x00
-		*(uint8_t*)0x10000692 = 0x00
-		*(uint8_t*)0x10000693 = 0x00
-		*(uint8_t*)0x10000694 = 0x20
-		*(uint8_t*)0x10000695 = 0x00
-		*(uint8_t*)0x10000696 = 0x5a
-		*(uint8_t*)0x10000697 = 0x00
-		*(uint8_t*)0x10000698 = 0x93
-		*(uint8_t*)0x10000699 = 0x02
-		*(uint8_t*)0x1000069a = 0xaa
-		*(uint8_t*)0x1000069b = 0x00
-		*(uint8_t*)0x1000069c = 0x52
-		*(uint8_t*)0x1000069d = 0x00
-		*(uint8_t*)0x1000069e = 0xba
-		*(uint8_t*)0x1000069f = 0x02
-		*(uint8_t*)0x100006a0 = 0x8b
-		*(uint8_t*)0x100006a1 = 0x00
-		*(uint8_t*)0x100006a2 = 0x00
-		*(uint8_t*)0x100006a3 = 0x00
-		*(uint8_t*)0x100006a4 = 0x00
-		*(uint8_t*)0x100006a5 = 0x00
-		*(uint8_t*)0x100006a6 = 0x20
-		*(uint8_t*)0x100006a7 = 0x00
-		*(uint8_t*)0x100006a8 = 0x46
-		*(uint8_t*)0x100006a9 = 0x00
-		*(uint8_t*)0x100006aa = 0xba
-		*(uint8_t*)0x100006ab = 0x02
-		*(uint8_t*)0x100006ac = 0x9e
-		*(uint8_t*)0x100006ad = 0x00
-		*(uint8_t*)0x100006ae = 0x02
-		*(uint8_t*)0x100006af = 0x00
-		*(uint8_t*)0x100006b0 = 0x03
-		*(uint8_t*)0x100006b1 = 0x00
-		*(uint8_t*)0x100006b2 = 0x47
-		*(uint8_t*)0x100006b3 = 0x00
-		*(uint8_t*)0x100006b4 = 0x75
-		*(uint8_t*)0x100006b5 = 0x05
-		*(uint8_t*)0x100006b6 = 0x11
-		*(uint8_t*)0x100006b7 = 0x01
-		*(uint8_t*)0x100006b8 = 0x32
-		*(uint8_t*)0x100006b9 = 0x00
-		*(uint8_t*)0x100006ba = 0x70
-		*(uint8_t*)0x100006bb = 0x03
-		*(uint8_t*)0x100006bc = 0x11
-		*(uint8_t*)0x100006bd = 0x01
-		*(uint8_t*)0x100006be = 0x26
-		*(uint8_t*)0x100006bf = 0x00
-		*(uint8_t*)0x100006c0 = 0xe0
-		*(uint8_t*)0x100006c1 = 0x06
-		*(uint8_t*)0x100006c2 = 0x88
-		*(uint8_t*)0x100006c3 = 0x00
-		*(uint8_t*)0x100006c4 = 0x22
-		*(uint8_t*)0x100006c5 = 0x00
-		*(uint8_t*)0x100006c6 = 0x17
-		*(uint8_t*)0x100006c7 = 0x04
-		*(uint8_t*)0x100006c8 = 0x11
-		*(uint8_t*)0x100006c9 = 0x01
-		*(uint8_t*)0x100006ca = 0x33
-		*(uint8_t*)0x100006cb = 0x00
-		*(uint8_t*)0x100006cc = 0xba
-		*(uint8_t*)0x100006cd = 0x02
-		*(uint8_t*)0x100006ce = 0x88
-		*(uint8_t*)0x100006cf = 0x00
-		*(uint8_t*)0x100006d0 = 0x05
-		*(uint8_t*)0x100006d1 = 0x00
-		*(uint8_t*)0x100006d2 = 0x03
-		*(uint8_t*)0x100006d3 = 0x00
-		*(uint8_t*)0x100006d4 = 0x5e
-		*(uint8_t*)0x100006d5 = 0x00
-		*(uint8_t*)0x100006d6 = 0x17
-		*(uint8_t*)0x100006d7 = 0x04
-		*(uint8_t*)0x100006d8 = 0x88
-		*(uint8_t*)0x100006d9 = 0x00
-		*(uint8_t*)0x100006da = 0x7f
-		*(uint8_t*)0x100006db = 0x00
-		*(uint8_t*)0x100006dc = 0xa4
-		*(uint8_t*)0x100006dd = 0x03
-		*(uint8_t*)0x100006de = 0x88
-		*(uint8_t*)0x100006df = 0x00
-		*(uint8_t*)0x100006e0 = 0x00
-		*(uint8_t*)0x100006e1 = 0x00
-		*(uint8_t*)0x100006e2 = 0x00
-		*(uint8_t*)0x100006e3 = 0x00
-		*(uint8_t*)0x100006e4 = 0x01
-		*(uint8_t*)0x100006e5 = 0x00
-		*(uint8_t*)0x100006e6 = 0x33
-		*(uint8_t*)0x100006e7 = 0x00
-		*(uint8_t*)0x100006e8 = 0x70
-		*(uint8_t*)0x100006e9 = 0x03
-		*(uint8_t*)0x100006ea = 0x88
-		*(uint8_t*)0x100006eb = 0x00
-		*(uint8_t*)0x100006ec = 0x4f
-		*(uint8_t*)0x100006ed = 0x00
-		*(uint8_t*)0x100006ee = 0xba
-		*(uint8_t*)0x100006ef = 0x02
-		*(uint8_t*)0x100006f0 = 0xc7
-		*(uint8_t*)0x100006f1 = 0x00
-		*(uint8_t*)0x100006f2 = 0x00
-		*(uint8_t*)0x100006f3 = 0x00
-		*(uint8_t*)0x100006f4 = 0x00
-		*(uint8_t*)0x100006f5 = 0x00
-		*(uint8_t*)0x100006f6 = 0x11
-		*(uint8_t*)0x100006f7 = 0x01
-		*(uint8_t*)0x100006f8 = 0x54
-		*(uint8_t*)0x100006f9 = 0x00
-		*(uint8_t*)0x100006fa = 0x75
-		*(uint8_t*)0x100006fb = 0x05
-		*(uint8_t*)0x100006fc = 0x88
-		*(uint8_t*)0x100006fd = 0x00
-		*(uint8_t*)0x100006fe = 0x7b
-		*(uint8_t*)0x100006ff = 0x00
-		*(uint8_t*)0x10000700 = 0xe0
-		*(uint8_t*)0x10000701 = 0x06
-		*(uint8_t*)0x10000702 = 0xcd
-		*(uint8_t*)0x10000703 = 0x00
-		*(uint8_t*)0x10000704 = 0x05
-		*(uint8_t*)0x10000705 = 0x00
-		*(uint8_t*)0x10000706 = 0x00
-		*(uint8_t*)0x10000707 = 0x00
-		*(uint8_t*)0x10000708 = 0x64
-		*(uint8_t*)0x10000709 = 0x00
-		*(uint8_t*)0x1000070a = 0x20
-		*(uint8_t*)0x1000070b = 0x06
-		*(uint8_t*)0x1000070c = 0xc8
-		*(uint8_t*)0x1000070d = 0x00
-		*(uint8_t*)0x1000070e = 0xc8
-		*(uint8_t*)0x1000070f = 0x00
-		*(uint8_t*)0x10000710 = 0xc8
-		*(uint8_t*)0x10000711 = 0x05
-		*(uint8_t*)0x10000712 = 0xc8
-		*(uint8_t*)0x10000713 = 0x00
-		*(uint8_t*)0x10000714 = 0x64
-		*(uint8_t*)0x10000715 = 0x00
-		*(uint8_t*)0x10000716 = 0x27
-		*(uint8_t*)0x10000717 = 0x05
-		*(uint8_t*)0x10000718 = 0xc8
-		*(uint8_t*)0x10000719 = 0x00
-		*(uint8_t*)0x1000071a = 0xc8
-		*(uint8_t*)0x1000071b = 0x00
-		*(uint8_t*)0x1000071c = 0x27
-		*(uint8_t*)0x1000071d = 0x05
-		*(uint8_t*)0x1000071e = 0xc8
-		*(uint8_t*)0x1000071f = 0x00
-		*(uint8_t*)0x10000720 = 0x64
-		*(uint8_t*)0x10000721 = 0x00
-		*(uint8_t*)0x10000722 = 0xc8
-		*(uint8_t*)0x10000723 = 0x05
-		*(uint8_t*)0x10000724 = 0xd6
-		*(uint8_t*)0x10000725 = 0x00
-		*(uint8_t*)0x10000726 = 0x0b
-		*(uint8_t*)0x10000727 = 0x00
-		*(uint8_t*)0x10000728 = 0x0b
-		*(uint8_t*)0x10000729 = 0x00
-		*(uint8_t*)0x1000072a = 0x00
-		*(uint8_t*)0x1000072b = 0x00
-		*(uint8_t*)0x1000072c = 0x00
-		*(uint8_t*)0x1000072d = 0x00
-		*(uint8_t*)0x1000072e = 0x04
-		*(uint8_t*)0x1000072f = 0x00
-		*(uint8_t*)0x10000730 = 0x56
-		*(uint8_t*)0x10000731 = 0x00
-		*(uint8_t*)0x10000732 = 0xdc
-		*(uint8_t*)0x10000733 = 0x03
-		*(uint8_t*)0x10000734 = 0xc6
-		*(uint8_t*)0x10000735 = 0x00
-		*(uint8_t*)0x10000736 = 0x00
-		*(uint8_t*)0x10000737 = 0x00
-		*(uint8_t*)0x10000738 = 0x00
-		*(uint8_t*)0x10000739 = 0x00
-		*(uint8_t*)0x1000073a = 0x04
-		*(uint8_t*)0x1000073b = 0x00
-		*(uint8_t*)0x1000073c = 0x5b
-		*(uint8_t*)0x1000073d = 0x00
-		*(uint8_t*)0x1000073e = 0xa4
-		*(uint8_t*)0x1000073f = 0x03
-		*(uint8_t*)0x10000740 = 0xce
-		*(uint8_t*)0x10000741 = 0x00
-		*(uint8_t*)0x10000742 = 0x00
-		*(uint8_t*)0x10000743 = 0x00
-		*(uint8_t*)0x10000744 = 0x00
-		*(uint8_t*)0x10000745 = 0x00
-		*(uint8_t*)0x10000746 = 0x01
-		*(uint8_t*)0x10000747 = 0x00
-		*(uint8_t*)0x10000748 = 0x00
-		*(uint8_t*)0x10000749 = 0x00
-		*(uint8_t*)0x1000074a = 0x00
-		*(uint8_t*)0x1000074b = 0x00
-		*(uint8_t*)0x1000074c = 0x06
-		*(uint8_t*)0x1000074d = 0x00
-		*(uint8_t*)0x1000074e = 0x5b
-		*(uint8_t*)0x1000074f = 0x00
-		*(uint8_t*)0x10000750 = 0x70
-		*(uint8_t*)0x10000751 = 0x03
-		*(uint8_t*)0x10000752 = 0xce
-		*(uint8_t*)0x10000753 = 0x00
-		*(uint8_t*)0x10000754 = 0x00
-		*(uint8_t*)0x10000755 = 0x00
-		*(uint8_t*)0x10000756 = 0x00
-		*(uint8_t*)0x10000757 = 0x00
-		*(uint8_t*)0x10000758 = 0x03
-		*(uint8_t*)0x10000759 = 0x00
-		*(uint8_t*)0x1000075a = 0x3b
-		*(uint8_t*)0x1000075b = 0x00
-		*(uint8_t*)0x1000075c = 0x20
-		*(uint8_t*)0x1000075d = 0x06
-		*(uint8_t*)0x1000075e = 0xc1
-		*(uint8_t*)0x1000075f = 0x00
-		*(uint8_t*)0x10000760 = 0x00
-		*(uint8_t*)0x10000761 = 0x00
-		*(uint8_t*)0x10000762 = 0x00
-		*(uint8_t*)0x10000763 = 0x00
-		*(uint8_t*)0x10000764 = 0x02
-		*(uint8_t*)0x10000765 = 0x00
-		*(uint8_t*)0x10000766 = 0x61
-		*(uint8_t*)0x10000767 = 0x00
-		*(uint8_t*)0x10000768 = 0x93
-		*(uint8_t*)0x10000769 = 0x02
-		*(uint8_t*)0x1000076a = 0xd7
-		*(uint8_t*)0x1000076b = 0x00
-		*(uint8_t*)0x1000076c = 0x00
-		*(uint8_t*)0x1000076d = 0x00
-		*(uint8_t*)0x1000076e = 0x00
-		*(uint8_t*)0x1000076f = 0x00
-		*(uint8_t*)0x10000770 = 0x06
-		*(uint8_t*)0x10000771 = 0x00
-		*(uint8_t*)0x10000772 = 0x39
-		*(uint8_t*)0x10000773 = 0x00
-		*(uint8_t*)0x10000774 = 0xb8
-		*(uint8_t*)0x10000775 = 0x07
-		*(uint8_t*)0x10000776 = 0xc5
-		*(uint8_t*)0x10000777 = 0x00
-		*(uint8_t*)0x10000778 = 0x00
-		*(uint8_t*)0x10000779 = 0x00
-		*(uint8_t*)0x1000077a = 0x00
-		*(uint8_t*)0x1000077b = 0x00
-		*(uint8_t*)0x1000077c = 0x05
-		*(uint8_t*)0x1000077d = 0x00
-		*(uint8_t*)0x1000077e = 0x32
-		*(uint8_t*)0x1000077f = 0x00
-		*(uint8_t*)0x10000780 = 0x49
-		*(uint8_t*)0x10000781 = 0x07
-		*(uint8_t*)0x10000782 = 0xce
-		*(uint8_t*)0x10000783 = 0x00
-		*(uint8_t*)0x10000784 = 0x00
-		*(uint8_t*)0x10000785 = 0x00
-		*(uint8_t*)0x10000786 = 0x00
-		*(uint8_t*)0x10000787 = 0x00
-		*(uint8_t*)0x10000788 = 0x01
-		*(uint8_t*)0x10000789 = 0x00
-		*(uint8_t*)0x1000078a = 0x00
-		*(uint8_t*)0x1000078b = 0x00
-		*(uint8_t*)0x1000078c = 0x00
-		*(uint8_t*)0x1000078d = 0x00
-		*(uint8_t*)0x1000078e = 0x04
-		*(uint8_t*)0x1000078f = 0x00
-		*(uint8_t*)0x10000790 = 0x3f
-		*(uint8_t*)0x10000791 = 0x00
-		*(uint8_t*)0x10000792 = 0xe0
-		*(uint8_t*)0x10000793 = 0x06
-		*(uint8_t*)0x10000794 = 0xc8
-		*(uint8_t*)0x10000795 = 0x00
-		*(uint8_t*)0x10000796 = 0x00
-		*(uint8_t*)0x10000797 = 0x00
-		*(uint8_t*)0x10000798 = 0x00
-		*(uint8_t*)0x10000799 = 0x00
-		*(uint8_t*)0x1000079a = 0x0a
-		*(uint8_t*)0x1000079b = 0x00
-		*(uint8_t*)0x1000079c = 0x5b
-		*(uint8_t*)0x1000079d = 0x00
-		*(uint8_t*)0x1000079e = 0x10
-		*(uint8_t*)0x1000079f = 0x03
-		*(uint8_t*)0x100007a0 = 0xbf
-		*(uint8_t*)0x100007a1 = 0x00
-		*(uint8_t*)0x100007a2 = 0x00
-		*(uint8_t*)0x100007a3 = 0x00
-		*(uint8_t*)0x100007a4 = 0x00
-		*(uint8_t*)0x100007a5 = 0x00
-		*(uint8_t*)0x100007a6 = 0x09
-		*(uint8_t*)0x100007a7 = 0x00
-		*(uint8_t*)0x100007a8 = 0x35
-		*(uint8_t*)0x100007a9 = 0x00
-		*(uint8_t*)0x100007aa = 0x27
-		*(uint8_t*)0x100007ab = 0x05
-		*(uint8_t*)0x100007ac = 0xd5
-		*(uint8_t*)0x100007ad = 0x00
-		*(uint8_t*)0x100007ae = 0x00
-		*(uint8_t*)0x100007af = 0x00
-		*(uint8_t*)0x100007b0 = 0x00
-		*(uint8_t*)0x100007b1 = 0x00
-		*(uint8_t*)0x100007b2 = 0x00
-		*(uint8_t*)0x100007b3 = 0x00
-		*(uint8_t*)0x100007b4 = 0x00
-		*(uint8_t*)0x100007b5 = 0x00
-		*(uint8_t*)0x100007b6 = 0x00
-		*(uint8_t*)0x100007b7 = 0x00
-		*(uint8_t*)0x100007b8 = 0x60
-		*(uint8_t*)0x100007b9 = 0xf1
-		*(uint8_t*)0x100007ba = 0x00
-		*(uint8_t*)0x100007bb = 0x00
-		*(uint8_t*)0x100007bc = 0x7e
-		*(uint8_t*)0x100007bd = 0xf1
-		*(uint8_t*)0x100007be = 0x00
-		*(uint8_t*)0x100007bf = 0x00
-		*(uint8_t*)0x100007c0 = 0x00
-		*(uint8_t*)0x100007c1 = 0x00
-		*(uint8_t*)0x100007c2 = 0x00
-		*(uint8_t*)0x100007c3 = 0x00
-		*(uint8_t*)0x100007c4 = 0x00
-		*(uint8_t*)0x100007c5 = 0x00
-		*(uint8_t*)0x100007c6 = 0x00
-		*(uint8_t*)0x100007c7 = 0x00
-		*(uint8_t*)0x100007c8 = 0x00
-		*(uint8_t*)0x100007c9 = 0x00
-		*(uint8_t*)0x100007ca = 0x00
-		*(uint8_t*)0x100007cb = 0x00
-		*(uint8_t*)0x100007cc = 0x00
-		*(uint8_t*)0x100007cd = 0x00
-		*(uint8_t*)0x100007ce = 0x00
-		*(uint8_t*)0x100007cf = 0x00
-		*(uint8_t*)0x100007d0 = 0x00
-		*(uint8_t*)0x100007d1 = 0x00
-		*(uint8_t*)0x100007d2 = 0x00
-		*(uint8_t*)0x100007d3 = 0x00
-		*(uint8_t*)0x100007d4 = 0x00
-		*(uint8_t*)0x100007d5 = 0x00
-		*(uint8_t*)0x100007d6 = 0x00
-		*(uint8_t*)0x100007d7 = 0x00
-		*(uint8_t*)0x100007d8 = 0x00
-		*(uint8_t*)0x100007d9 = 0x00
-		*(uint8_t*)0x100007da = 0x00
-		*(uint8_t*)0x100007db = 0x00
-		*(uint8_t*)0x100007dc = 0x00
-		*(uint8_t*)0x100007dd = 0x00
-		*(uint8_t*)0x100007de = 0x00
-		*(uint8_t*)0x100007df = 0x00
-		*(uint8_t*)0x100007e0 = 0x8c
-		*(uint8_t*)0x100007e1 = 0xf1
-		*(uint8_t*)0x100007e2 = 0x00
-		*(uint8_t*)0x100007e3 = 0x00
-		*(uint8_t*)0x100007e4 = 0x00
-		*(uint8_t*)0x100007e5 = 0x00
-		*(uint8_t*)0x100007e6 = 0x00
-		*(uint8_t*)0x100007e7 = 0x00
-
-
-		// Firmware Offset(s): 
-		//	0x00002a7e - 0x00002a7e
-		//	0x000029f6 - 0x000029fa
-		//	0x000029ec - 0x000029f4
-		//	0x0000c2cc - 0x0000c2cc
-
-		// Control logic to exit SRAM0 heap init above
-
-
-		// Firmware Offset(s): 
-		//	0x0000c2ce - 0x0000c2d8
-
-		// SRAM1 initialization
-		*(uint32_t*)0x20000000 = 0x0000ffff;
-		*(uint32_t*)0x20000004 = 0x00016400	
-		*(uint32_t*)0x20000008 = 0x00001400
-		*(uint32_t*)0x2000000c = 0x00000000
-		*(uint32_t*)0x20000010 = 0x27100000
-		*(uint32_t*)0x20000014 = 0x00000000
-		*(uint32_t*)0x20000018 = 0x00000000
-		*(uint32_t*)0x2000001c = 0x00000000
-		*(uint32_t*)0x20000020 = 0x00000000
-		*(uint32_t*)0x20000024 = 0x00000000
-		*(uint32_t*)0x20000028 = 0x00000000
-		*(uint32_t*)0x2000002c = 0x00000000
-		*(uint32_t*)0x20000030 = 0x00000000
-		*(uint32_t*)0x20000034 = 0x00000000
-		*(uint32_t*)0x20000038 = 0x00000000
-		*(uint32_t*)0x2000003c = 0x00000000
-		*(uint32_t*)0x20000040 = 0x00000000
-		*(uint32_t*)0x20000044 = 0x00000000
-		*(uint32_t*)0x20000048 = 0x00000000
-		*(uint32_t*)0x2000004c = 0x00000000
-		*(uint32_t*)0x20000050 = 0x00000000
-		*(uint32_t*)0x20000054 = 0x00000000
-		*(uint32_t*)0x2000005c = 0x00000000
-		*(uint32_t*)0x20000060 = 0x00000000
-		*(uint32_t*)0x20000064 = 0x00000000
-		*(uint32_t*)0x20000068 = 0x00000000
-		*(uint32_t*)0x2000006c = 0x00000000
-		*(uint32_t*)0x20000070 = 0x00000000
-		*(uint32_t*)0x20000074 = 0x00000000
-		*(uint32_t*)0x20000078 = 0x00000000
-
-
-		// Firmware Offset(s): 
-		//	0x000029f6 - 0x000029fa
-		//	0x000029ec - 0x000029f4
-		//	0x0000c2dc - 0x0000c2de
-		//	0x0000c2e0 - 0x0000c2e8
-
-		// SRAM0 initialization
-		*(uint32_t*)0x100000c4 = 0x00000000
-		*(uint32_t*)0x100000c8 = 0x00000000
-		*(uint32_t*)0x100000cc = 0x00000000
-		*(uint32_t*)0x100000d0 = 0x00000000
-		*(uint32_t*)0x100000d4 = 0x00000000
-		*(uint32_t*)0x100000d8 = 0x00000000
-		*(uint32_t*)0x100000dc = 0x00000000
-		*(uint32_t*)0x100000e0 = 0x00000000
-		*(uint32_t*)0x100000e4 = 0x00000000
-		*(uint32_t*)0x100000e8 = 0x00000000
-		*(uint32_t*)0x100000ec = 0x00000000
-		*(uint32_t*)0x100000f0 = 0x00000000
-
-
-		// Firmware Offset(s): 
-		//	0x000029f6 - 0x000029fa
-		//	0x000029ec - 0x000029f4
-		//	0x0000c2dc - 0x0000c2de
-		//	0x0000c2e0 - 0x0000c2e8
-
-		// SRAM0 initialization
-		write 0's to 0x100007e8 to 0x10001fc4 with 32-bit writes
-
-
-		// Firmware Offset(s): 
-		//	0x000029f6 - 0x000029fa
-		//	0x000029ec - 0x000029f4
-		//	0x0000c2dc - 0x0000c2de
-		//	0x0000c2e0 - 0x0000c2e8
-
-		// SRAM1 initialization
-		write 0's to 0x2000007c to 0x2000030c with 32-bit writes
-
-
-		// Firmware Offset(s): 
-		//	0x000029f6 - 0x000029fc
-		//	0x000020c8 - 0x000020ca
-		//	0x0000d778 - 0x0000d778
-		//	0x00009cfc - 0x00009cfe
-		//	0x00004174 - 0x00004176
-
-		// Steps to back away from memory filling logics (i.e. stack pops, etc.)
-
-
-		// Firmware Offset(s): 
-		//	0x00004130 - 0x0000414a
-
-		//	Check that Main clock source select register is set to PLL output
-		val = *(uint32_t*)0x40048070;
-
-		if (val != 3) {
-			// TODO: UNKNOWN PATHS
-			//	Jump to 0x00004150 for IRC Oscillator
-			//	Jump to 0x00004154 for PLL input
-			//	Jump to 0x0000415a for Watchdown oscillator
-			//	Execute 0x0000414e if none of the above
-		}
-
-
-		// Firmware Offset(s): 
-		//	0x000041b0 - 0x000041b2
-		//	0x00004188 - 0x00004194
-
-		// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
-		val = *(uint32_t*)0x40048040;
-		if (val != 1) {
-			// TODO: UNKNOWN PATHS 
-			//	Branch to 0x0000419a if val == 0
-			//	Execute 0x00004196 if val != 0 && val != 1
-		}
-
-
-		// Firmware Offset(s): 
-		//	0x0000419e - 0x000041a2
-		//	0x000041b6 - 0x000041bc
-		//	0x00004168 - 0x00004172
-		//	0x000041c0 - 0x000041c0
-		//	0x0000414e - 0x0000414e
-		//	0x0000417a - 0x0000417e
-		//	0x000020ec - 0x000020f8
-		//	0x0000210e - 0x00002114
-		//	0x000020fa - 0x00002100
-		//	0x00002102 - 0x00002116
-		//	0x00004182 - 0x00004182
-		//	0x00009d06 - 0x00009d06
-		//	0x0000d77c - 0x0000d77c
-
-		// Read System PLL control register
-		reg0 = *(uint32_t*)0x40048008;
-		// Isolate MSEL (feedback divider value)
-		reg0 &= 0x1f;
-
-		// Read System clock divider register
-		reg1 = *(uint32_t*)0x40048078;
-
-		// And then a long series of loops based on the values read above
-		//  Looks like a delay based on PLL and system clock settings
-
-		// Store these result to SRAM0 value
-		*(uint32_t*)0x100000a4 = 0x02dc6c00;
-
-
-		// Firmware Offset(s): 
-		//	0x00009c50 - 0x00009c56
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 0;
-		reg0 = 0x15;
-
-		reg2 = 0xff;
-
-		// Read Interrupt Priority Register 5
-		reg3 = (*uint32_t*)0xe000e414;
-
-		// Isolate interrupt priority for SSP0 and set to highest (0)
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009c5a - 0x00009c5e
-		//	0x000072dc - 0x00007304
-
-		reg1 = 0;
-		reg0 = 0xFFFFFFFF;
-		
-		reg3 = reg0;
-		reg2 = 0xff000000;
-
-		// Used to count shifts for reg1 and reg2
-		reg3 >>= 27; // 0x18
-
-		// Read Interrupt Control and State Register (ICSR)
-		reg3 = *(uint32_t*)0xe000ed04;
-
-		// Set lower 24 bits, but these are all RO... Not sure why this is happening...
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009c62 - 0x00009c66
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 1;
-		reg0 = 0x14;
-
-		...
-		reg2 = 0xFF;
-		reg1 = 0x40;
-
-		// Read Interrupt Priority Register 5
-		reg3 = *(uint32_t*)0xe000e414;
-
-		// Isolate interrupt priority for SSP0 and set to 1, one below highest 
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-		
-		
-		// Firmware Offset(s): 
-		//	0x00009c6a - 0x00009c6e
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 1;
-		reg0 = 0xe;
-
-		...
-		reg2 = 0x00ff0000;
-		reg1 = 0x00400000;
-	
-		// Read Interrupt Priority Register 3
-		reg3 = *(uint32_t*)0xe000e40c;
-
-		// Isolate interrupt priority for SSP1 and set to 1, one below highest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009c72 - 0x00009c76
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 1;
-		reg0 = 0x12;
-
-		...
-		reg2 = 0x00ff0000;
-		reg1 = 0x00400000;
-	
-		// Read Interrupt Priority Register 4
-		reg3 = *(uint32_t*)0xe000e410;
-
-		// Isolate interrupt priority for CT32B0 and set to 1, one below highest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009c7a - 0x00009c7e
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 1;
-		reg0 = 0x16;
-
-		...
-		reg2 = 0x00ff0000;
-		reg1 = 0x00400000;
-	
-		// Read Interrupt Priority Register 5
-		reg3 = *(uint32_t*)0xe000e414;
-
-		// Isolate interrupt priority for USB_IRQ and set to 1, one below highest 
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009c82 - 0x00009c86
-		//	0x000072dc - 0x00007304
-
-		reg1 = 1;
-		reg0 = 0xFFFFFFFE;
-		
-		..
-		reg2 = 0x00ff0000;
-		reg1 = 0x00400000;
-
-		// Read System Handler Priority Register 3 (SHPR3)
-		reg3 = *(uint32_t*)0xe000ed20;
-
-		// Set PRI_14 Priority of system handler 14, PendSV to 1, one below highest 
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009c8a - 0x00009c8e
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 2;
-		reg0 = 0x10;
-
-		...
-		reg2 = 0x000000ff;
-		reg1 = 0x00000080;
-	
-		// Read Interrupt Priority Register 4
-		reg3 = *(uint32_t*)0xe000e410;
-
-		// Isolate interrupt priority for CT16B0 and set to 2, one above lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009c92 - 0x00009c96
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 2;
-		reg0 = 0x11;
-
-		...
-		reg2 = 0x0000ff00;
-		reg1 = 0x00008000;
-	
-		// Read Interrupt Priority Register 4
-		reg3 = *(uint32_t*)0xe000e410;
-
-		// Isolate interrupt priority for CT16B1 and set to 2, one above lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009c9a - 0x00009c9e
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 2;
-		reg0 = 0x13;
-
-		...
-		reg2 = 0xff000000;
-		reg1 = 0x80000000;
-	
-		// Read Interrupt Priority Register 4
-		reg3 = *(uint32_t*)0xe000e410;
-
-		// Isolate interrupt priority for CT32B1 and set to 2, one above lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009ca2 - 0x00009ca6
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 2;
-		reg0 = 0x18;
-
-		...
-		reg2 = 0x000000ff;
-		reg1 = 0x00000080;
-	
-		// Read Interrupt Priority Register 4
-		reg3 = *(uint32_t*)0xe000e418;
-
-		// Isolate interrupt priority for ADC and set to 2, one above lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009caa - 0x00009cae
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 2;
-		reg0 = 0xf;
-
-		...
-		reg2 = 0xff000000;
-		reg1 = 0x80000000;
-	
-		// Read Interrupt Priority Register 3
-		reg3 = *(uint32_t*)0xe000e40c;
-
-		// Isolate interrupt priority for I2C0 and set to 2, one above lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009cb2 - 0x00009cb6
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 3;
-		reg0 = 0x0;
-
-		...
-		reg2 = 0x000000ff;
-		reg1 = 0x000000c0;
-	
-		// Read Interrupt Priority Register 0
-		reg3 = *(uint32_t*)0xe000e400;
-
-		// Isolate interrupt priority for PIN_INT0 and set to 3, lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009cba - 0x00009cbe
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 3;
-		reg0 = 0x1;
-
-		...
-		reg2 = 0x0000ff00;
-		reg1 = 0x0000c000;
-	
-		// Read Interrupt Priority Register 0
-		reg3 = *(uint32_t*)0xe000e400;
-
-		// Isolate interrupt priority for PIN_INT1 and set to 3, lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009cc2 - 0x00009cc6
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 3;
-		reg0 = 0x2;
-
-		...
-		reg2 = 0x00ff0000;
-		reg1 = 0x00c00000;
-	
-		// Read Interrupt Priority Register 0
-		reg3 = *(uint32_t*)0xe000e400;
-
-		// Isolate interrupt priority for PIN_INT2 and set to 3, lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009cca - 0x00009cce
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 3;
-		reg0 = 0x3;
-
-		...
-		reg2 = 0xff000000;
-		reg1 = 0xc0000000;
-	
-		// Read Interrupt Priority Register 0
-		reg3 = *(uint32_t*)0xe000e400;
-
-		// Isolate interrupt priority for PIN_INT3 and set to 3, lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009cd2 - 0x00009cd6
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 3;
-		reg0 = 0x4;
-
-		...
-		reg2 = 0x000000ff;
-		reg1 = 0x000000c0;
-	
-		// Read Interrupt Priority Register 1
-		reg3 = *(uint32_t*)0xe000e404;
-
-		// Isolate interrupt priority for PIN_INT4 and set to 3, lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009cda - 0x00009cde
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 3;
-		reg0 = 0x5;
-
-		...
-		reg2 = 0x0000ff00;
-		reg1 = 0x0000c000;
-	
-		// Read Interrupt Priority Register 1
-		reg3 = *(uint32_t*)0xe000e404;
-
-		// Isolate interrupt priority for PIN_INT5 and set to 3, lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009ce2 - 0x00009ce6
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 3;
-		reg0 = 0x6;
-
-		...
-		reg2 = 0x00ff0000;
-		reg1 = 0x00c00000;
-	
-		// Read Interrupt Priority Register 1
-		reg3 = *(uint32_t*)0xe000e404;
-
-		// Isolate interrupt priority for PIN_INT6 and set to 3, lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009cea - 0x00009cee
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 3;
-		reg0 = 0x7;
-
-		...
-		reg2 = 0xff000000;
-		reg1 = 0xc0000000;
-	
-		// Read Interrupt Priority Register 1
-		reg3 = *(uint32_t*)0xe000e404;
-
-		// Isolate interrupt priority for PIN_INT7 and set to 3, lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009cf2 - 0x00009cf6
-		//	0x000072dc - 0x000072ec
-		//	0x00007306 - 0x00007316
-
-		reg1 = 3;
-		reg0 = 0x8;
-
-		...
-		reg2 = 0x000000ff;
-		reg1 = 0x000000c0;
-	
-		// Read Interrupt Priority Register 2
-		reg3 = *(uint32_t*)0xe000e408;
-
-		// Isolate interrupt priority for GINT0 (GPIO GROUP0) and set to 3, lowest
-		reg3 &= ~reg2;
-		reg3 |= reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00009cfa - 0x00009cfa
-		//	0x0000d780 - 0x0000d780
-		//	0x0000a0d8 - 0x0000a0f4
-
-		// Initialize more heap space in SRAM0
-		*(uint32_t*)0x10000818 = 0x00000000;
-		*(uint32_t*)0x1000081c = 0x00000000;
-		*(uint32_t*)0x10000820 = 0x00000000;
-		*(uint32_t*)0x10000824 = 0x00000000;
-		*(uint32_t*)0x10000828 = 0x00000000;
-		*(uint32_t*)0x1000082c = 0x00000000;
-		*(uint32_t*)0x10000830 = 0x00000000;
-		*(uint32_t*)0x10000834 = 0x00000000;
-		*(uint32_t*)0x10000838 = 0x00000000;
-		*(uint32_t*)0x1000083c = 0x00000000;
-		*(uint32_t*)0x10000840 = 0x00000000;
-		*(uint32_t*)0x10000844 = 0x00000000;
-		*(uint32_t*)0x10000848 = 0x00000000;
-		*(uint32_t*)0x1000084c = 0x00000000;
-		*(uint32_t*)0x10000850 = 0x00000000;
-		*(uint32_t*)0x10000854 = 0x00000000;
-
-
-		// Firmware Offset(s): 
-		//	0x0000a0f6 - 0x0000a0f6
-		//	0x0000d784 - 0x0000d784
-		//	0x00005644 - 0x00005648
-		//	0x00004108 - 0x00004114
-
-		// Enables clock for I/O configuration block via System clock control register
-		reg2 = *(uint32_t*)0x40048080;
-		reg2 |= 0x00010000;
-		*(uint32_t*)0x40048080 = reg2;
-
-
-		// Firmware Offset(s): 
-		//	0x0000564c - 0x00005650
-		//	0x00004224 - 0x0000422e
-
-		// Enables clock for 16-bit counter/timer 0 via System clock control register
-		reg1 = *(uint32_t*)0x40048080;
-		reg1 |= 0x00000040;
-		*(uint32_t*)0x40048080 = reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00005654 - 0x00005656
-		//	0x00004108 - 0x00004114
-
-		// Enables clock to GPIO Pin interrupts register via System clock control register
-		reg2 = *(uint32_t*)0x40048080;
-		reg2 |= 0x00080000;
-		*(uint32_t*)0x40048080 = reg2;
-
-
-		// Firmware Offset(s): 
-		//	0x0000565a - 0x0000565a
-		//	0x0000d788 - 0x0000d788
-		//	0x00002ba0 - 0x00002ba8
-		//	0x00003fd0 - 0x00003fd8
-		//	0x0000452c - 0x00004540
-
-		// Power ADC via Power configuration register
-		reg1 = *(uint32_t*)0x40048238;
-		reg1 &= 0x000005ff;
-		reg1 &= ~0x00000010;
-		reg1 |= 0x0000e800;
-		*(uint32_t*)0x40048238 = reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x00003fdc - 0x00003ffa
-	
-		// Enables clock for ADC via System clock control register
-		reg1 = *(uint32_t*)0x40048080;
-		reg1 |= 0x00002000;
-		*(uint32_t*)0x40048080 = reg1;
-
-		// Disable all A/D interrupts via A/D Interrupt Enable Register
-		*(uint32_t*)0x4001c00c = 0x00000000	
-
-
-		// Firmware Offset(s): 
-		//	0x0000d0e8 - 0x0000d0f0
-		//	0x00004174 - 0x00004176
-		//	0x00004130 - 0x0000414a
-
-		//	Check that Main clock source select register is set to PLL output
-		val = *(uint32_t*)0x40048070;
-
-		if (val != 3) {
-			// TODO: UNKNOWN PATHS
-			//	Jump to 0x00004150 for IRC Oscillator
-			//	Jump to 0x00004154 for PLL input
-			//	Jump to 0x0000415a for Watchdown oscillator
-			//	Execute 0x0000414e if none of the above
-		}
-
-
-		// Firmware Offset(s): 
-		//	0x00004188 - 0x00004194
-
-		// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
-		val = *(uint32_t*)0x40048040;
-		if (val != 1) {
-			// TODO: UNKNOWN PATHS 
-			//	Branch to 0x0000419a if val == 0
-			//	Execute 0x00004196 if val != 0 && val != 1
-		}
-
-
-		// Firmware Offset(s): 
-		//	0x0000419e - 0x000041a2
-		//	0x000041b6 - 0x000041bc
-		//	0x00004168 - 0x00004172
-		//	0x000041c0 - 0x000041c0
-		//	0x0000414e - 0x0000414e
-		//	0x0000417a - 0x0000417e
-		//	0x000020ec - 0x000020f8
-		//	0x0000210e - 0x00002114
-		//	0x000020fa - 0x00002100
-		//	0x00002102 - 0x00002116
-		//	0x00004182 - 0x00004182
-
-		// Read System PLL control register
-		reg0 = *(uint32_t*)0x40048008;
-		// Isolate MSEL (feedback divider value)
-		reg0 &= 0x1f;
-
-		// Read System clock divider register
-		reg1 = *(uint32_t*)0x40048078;
-
-		// And then a long series of loops based on the values read above
-		//  Looks like a delay based on PLL and system clock settings
-
-
-		// Firmware Offset(s): 
-		//	0x0000d0f4 - 0x0000d0f6
-		//	0x0000d0fc - 0x0000d106
-		//	0x000020ec - 0x000020f8
-		//	0x0000210e - 0x00002114
-		// 	0x000020fa - 0x00002100
-		//	0x00002116 - 0x00002116
-
-		// Some big loop calculating some values, possibly related to above
-
-
-		// Firmware Offset(s): 
-		//	0x0000d10a - 0x0000d10e
-		//	0x00003ffe - 0x0000400c
-		//	0x00002bac - 0x00002bb8
-
-		// A/D Control Register
-		//	Set CLKDIV to 11 (This divides APB/PCLK)
-		//	TODO: Not sure why bit 21 is set '1' this should be a reserved bit and only 0 written...
-		*(uint32_t*)0x4001c000 = 0x00200a00;
-
-
-		// Firmware Offset(s): 
-		//	0x0000404c - 0x00004066
-
-		// Read A/D Control Register, but ends up stored on stack for now?
-		reg6 = *(uint32_t*)0x4001c000;
-
-
-		// Firmware Offset(s): 
-		//	0x0000d0e8 - 0x0000d0f0
-		//	0x00004174 - 0x00004176
-		//	0x00004130 - 0x0000414a
-
-		//	Check that Main clock source select register is set to PLL output
-		val = *(uint32_t*)0x40048070;
-
-		if (val != 3) {
-			// TODO: UNKNOWN PATHS
-			//	Jump to 0x00004150 for IRC Oscillator
-			//	Jump to 0x00004154 for PLL input
-			//	Jump to 0x0000415a for Watchdown oscillator
-			//	Execute 0x0000414e if none of the above
-		}
-
-
-		// Firmware Offset(s): 
-		//	0x000041b0 - 0x000041b2
-		//	0x00004188 - 0x00004194
-
-		// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
-		val = *(uint32_t*)0x40048040;
-		if (val != 1) {
-			// TODO: UNKNOWN PATHS 
-			//	Branch to 0x0000419a if val == 0
-			//	Execute 0x00004196 if val != 0 && val != 1
-		}
-
-
-		// Firmware Offset(s): 
-		//	0x0000419e - 0x000041a2
-		//	0x000041b6 - 0x000041bc
-		//	0x00004168 - 0x00004172
-		//	0x000041c0 - 0x000041c0
-		//	0x0000414e - 0x0000414e
-		//	0x0000417a - 0x0000417e
-		//	0x000020ec - 0x000020f8
-		//	0x0000210e - 0x00002114
-		//	0x000020fa - 0x00002100
-		//	0x00002102 - 0x00002116
-		//	0x00004182 - 0x00004182
-
-		// Read System PLL control register
-		reg0 = *(uint32_t*)0x40048008;
-		// Isolate MSEL (feedback divider value)
-		reg0 &= 0x1f;
-
-		// Read System clock divider register
-		reg1 = *(uint32_t*)0x40048078;
-
-		// And then a long series of loops based on the values read above
-		//  Looks like a delay based on PLL and system clock settings
-
-
-		// Firmware Offset(s): 
-		//	0x0000d0f4 - 0x0000d0fa
-		//	0x0000d100 - 0x0000d106
-		//	0x000020ec - 0x000020f8
-		//	0x0000210e - 0x00002114
-		// 	0x000020fa - 0x00002100
-		//	0x00002116 - 0x00002116
-
-		// Some big loop calculating some values, possibly related to above
-
-
-		// Firmware Offset(s): 
-		//	0x0000d10a - 0x0000d10e
-		//	0x0000406a - 0x00004078
-		//	0x00002bbc - 0x00002bc2
-
-		// Note: this is pretty much same code above for last access of this register, but executes different code space...
-		//	Guessing this is superfluous code from some NXP library or something
-
-		// A/D Control Register
-		//	Set CLKDIV to 11 (This divides APB/PCLK)
-		//	TODO: Not sure why bit 21 is set '1' this should be a reserved bit and only 0 written...
-		*(uint32_t*)0x4001c000 = 0x00200a00;
-
-
-		// Firmware Offset(s): 
-		//	0x00004080 - 0x0000409c
-		//	0x0000e6e8 - 0x0000e6f6
-
-		reg1 = 0;
-
-		// A/D Control Register
-		reg2 = *(uint32_t*)0x4001c000;
-		// Clear START (clearing clearing PDN to 0?)
-		reg2 &= ~0x07000000;
-		reg1 |= reg2;
-		*(uint32_t*)0x4001c000 = reg1;
-
-
-		// Firmware Offset(s): 
-		//	0x000040a0 - 0x000040a0
-		//	0x00002bc6 - 0x00002bce
-
-		// Set a value in SRAM0 (heap?) 
-		*(uint8_t*)0x10000012 = 0x00;
-
-
-		// Firmware Offset(s): 
-		//	0x000040b8 - 0x000040c4 
-		
-		// TODO: did I miss something above... Why was ADC enabled, and is now being disabled...?
-
-		// Disable ADC clock via System clock control register 
-		reg2 = *(uint32_t*)0x40048080;
-		reg2 &= ~0x00002000;
-		*(uint32_t*)0x40048080 = reg2;
-
-
-		// Firmware Offset(s): 
-		//	0x00002bd2 - 0x00002bd2
-		//	0x0000d78c - 0x0000d78c
-		//	0x00006644 - 0x0000664c
-		//	0x000051c4 - 0x000051d8
-	
-		// Read SRAM0 value (think this is some clock in MHZ as sim value comes out to 48000000)
-		reg1 = *(uint32_t*)0x100000a4;
-		// reg1 val is then shifted to right by 10 and stored on the stack... (computes to 46875)
-
-
-		// Firmware Offset(s): 
-		//	0x00005d10 - 0x00005d1c
-		//	0x00009b4c - 0x00009b56
-		//	0x00005d20 - 0x00005d26
-
-		
-		// Setup command_param for EEPROM read via IAP command
-		*0x10001f78 = 0x0000003e // Command code (62)
-		*0x10001f7c = 0x00000000 // Param0: EEPROM Address
-		*0x10001f80 = 0x100009b4 // Param1: RAM Address 
-		*0x10001f84 = 0x00000084 // Param2: Number of bytes to be read (132)
-		*0x10001f88 = 0x0000b71b // Param3: System Clock Frequency 
-
-		// This means that 0x100009b4 - 0x10000a38 will store first 0x84 bytes of EEPROM
-		// TODO: make more coherent memory map to refer to?
-
-		// Mark EEPROM access is taking place
-		*(uint8_t*)0x10000340 = 0x01;
-
-		// Firmware Offset(s): 
-		//	0x1fff1ff0 - ...
-		//	...        - 0x1fff1ff6
-
-		// boot ROM code for executing IAB command
-		iap_entry(command_param = 0x10001f78, status_result = 0x10001f8c);
-
-//TODO: need to re-run sim with EEPROM values added into SRAM0 after this call
-
-
-		// Firmware Offset(s): 
-		//	0x00005d28 - 0x00005d28
-		//	0x00009b70 - 
-	
+		// Execture instruction 0x00000578
+		volatile uint32_t* reg32 = (volatile uint32_t*)(baseReg + regWordOffset + 0x60);
+		*reg32 = regVal;
 		return;
 	}
 
+	volatile uint32_t* reg32 = (volatile uint32_t*)baseReg + regWordOffset;
+	*reg32 = regVal;
+}
 
-//TODO: clean up or remove the following as it only pertains to different board revisions?
+/**
+ * Function for checking Main Clock Source Select Register.
+ * 
+ * Firmware Offset(s): 
+ *	0x00000494 - 0x00000496
+ *	0x00000450 - 0x0000046a
+ * 
+ * \return None.
+ */
+void checkMainClockSourceSel(){
+	// Check main clock source select register and verify is set to PLL output
+	//  reg32 = (volatile uint32_t*)0x40048070;
+	//  val = *reg32;
+	//  if (val ...)
+	//  {
+		// TODO: UKNOWN PATHS
+		// 	Branch to 0x00000470 if 0x3&val is 0
+		// 	Branch to 0x00000474 if val is 1
+		// 	Branch to 0x0000047a if val is 2
+		// 	Branch to 0x0000046e if val != 3
+	//  }
+}
+
+/**
+ * Function for checking Main Clock Source Select Register.
+ * 
+ * Firmware Offset(s): 
+ * 	0x000004d0 - 0x000004d2
+ *	0x000004a8 - 0x000004b4
+ *	0x000004be - 0x000004c2
+ * 
+ * \return None.
+ */
+void checkSysPllClockSrcSel(){
+	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+	//  reg32 = (volatile uint32_t*)0x40048040;
+	//  val = *reg32;
+	//  if (val ...)
+	//  {
+		// TODO: UKNOWN PATHS
+		// 	Branch to 0x000004ba if val is 0
+		// 	Execute instruction at 0x000004b6 if val != 1
+	//  }
+}
+
+/**
+ * Check if a USB voltage is detected (i.e. from plugged in cable).
+ *
+ * Firmware Offset(s): 
+ *	0x00000ce8 - 0x00000cf0
+ *	0x00000cf2 - ...
+ *	0x00000cf4 - 0x00000cf4
+ *
+ * \return True if USB cable is plugged into controller. False otherwise. (Reg 0).
+ */
+bool usbVoltPresent(){
+	bool retval = false;
+
+	// Check state of PIO0_3 (USB voltage detected) 
+	uint8_t val = *((uint8_t*)0x50000003);
+
+	if (val) {
+		// TODO: UKNOWN PATHS
+		//	if PIO0_3 is not 0 (USB cable is conected) instruction at 0x00000cf2 is executed
+	}
+
+	return retval;
+}
+
+/**
+ * Set the specified GPIO direction to output via the GPIO port direcetion 
+ *  registers.
+ *
+ * Firmware Offset(s): 
+ *	0x0000055c - 0x00000570
+ *
+ * \param baseAddr Base address of GPIO registers (Reg 0).
+ * \param port Specify port 0 or port 1 banks of GPIOs (Reg 1).
+ * \param gpioNum 0-based GPIO number to set as an output (Reg 2).
+ *
+ * \return None.
+ */
+void setGpioOutDir(uint32_t baseAddr, uint32_t port, uint32_t gpioNum) {
+	volatile uint32_t* reg32 = (volatile uint32_t*)(baseAddr + 0x2000 + port * 4)
+	uint32_t val = *reg32;
+	val |= (1 << gpioNum);
+	*reg32 = val;
+}
+
+/**
+ * Set a GPIO's state as part of power up. GPIO driven differs based on hw
+ *  version.
+ *
+ * Firmware Offset(s): 
+ *	0x00000f90 - 0x00000f94
+ * 	0x00000cf8 - 0x00000cfc
+ * 	0x00000f98 - 0x00000fa0
+ *	0x00000fa2 - 0x00000fac
+ *	0x00000fae - 0x00000fae
+ *	0x00000cf8 - 0x00000cfc
+ *	0x00000fb2 - 0x00000fb6
+ *	0x00000fb8 - ??
+ *	0x00000fbe - 0x00000fc0
+ *
+ * \param hwVer Pointer to data read from EEPROM that stores hw version data. //TODO: This is referred to as Board Revision in Steam. My controller is 10
+ * \param gpioVal Value to drive power up GPIO at (Reg 0).
+ *
+ * \return 0-based GPIO number that is being driven for proper power up.
+ */
+uint32_t drivePwrUpGpio(uint32_t* hwVer, uint8_t gpioVal) {
+	int gpio_num = 0;
+
+	if (*hwVer >= 8) {
+		// Firmware Offset(s): 
+		//	0x00000fa2 - 0x00000fac
+
+		// Set PIO1_10 output bit
+		*((uint8_t*)0x5000002a) = !gpio_val;
+		gpio_num = 10;
+	} else {
+		// Firmware Offset(s): 
+		//	0x00000fae - 0x00000fae
+
+		// Entry Num: 58028 - 58035
+		// Step Num: 44549 - 44555
+		// Firmware Offset(s): 
+		//	0x00000cf8 - 0x00000cfc
+		//	0x00000fb2 - 0x00000fb6
+
+		// Read value of 0x10000258 and check if it's 5
+		//	TODO: UNKNOWN PATHS
+		//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
+
+		// Entry Num: 58036 - 58040
+		// Step Num: 44556 - 44559
+		// Firmware Offset(s): 
+		//	0x00000fbe - 0x00000fc0
+		// Set PIO1_8 output bit
+		*((uint8_t*)0x50000028) = gpio_val;
+		gpio_num = 8;
+	}
+
+	return gpio_num;
+}
+
+/**
+ * There reaches a point in the init code (i.e. execution starting from the RESET
+ *  entry point as defined in the Vector Table) in which the hw version read 
+ *  from EEPROM causes a significant branch in the code. I am calling everything
+ *  after this branch point phase2, and creating different functions to 
+ *  encapsulate what has been decomposed depending on what hw version was read.
+ *
+ * This function captures the path of reading a hw version that is not 0.
+ *
+ * Note that this matches the path my Steam Controller takes. 
+ *
+ * \return None.
+ */
+void init_phase2_hw_not0() 
+{
+	// Firmware Offset(s): 
+	//	0x000007a0 - 0x000007a8
+
+	// Set GPREG1 to 0
+	reg32 = (volatile uint32_t*)0x40038008;
+	*reg32 = 1;
+
+
+	// Firmware Offset(s): 
+	//	0x0000160a - 0x0000160c
+	//	0x00000428 - 0x00000434
+	//	0x00001610 - 0x00001610
+
+	// Enables SRAM1 block at address 0x2000 0000 via system clock control register
+	reg32 = (volatile uint32_t*)0x40048080;
+	val = *reg32;
+	val |= 0x04000000;
+	*reg32 = val;
+
+
+	// Firmware Offset(s): 
+	//	0x000000dc - 0x000000e8
+	//	0x000020d4 - 0x000020d6
+	//	0x000020c0 - 0x000020c4
+	//	0x000029e4 - 0x000029ea
+	//	0x000029f8 - 0x000029fa
+	
+	// Read a whole bunch of code from flash and compare results
+	//  There is a branch here, but its impossible given values are
+	//   read from firmware section of memory.
+	//  Not sure purpose of all this...
+
+
+	// Firmware Offset(s): 
+	//	0x000029ec - 0x000029f4
+	//	0x0000c2cc - 0x0000c2cc
+
+	// Read more code from flash into registers...
+
+
+	// Firmware Offset(s): 
+	//	0x0000c2ce - 0x0000c2d8
+
+	// Initialize some heap space in SRAM0
+	*(uint32_t*)0x10000000 = 0;
+	*(uint32_t*)0x10000004 = 0;
+	*(uint32_t*)0x10000008 = 0;
+	*(uint32_t*)0x1000000c = 0;
+	*(uint32_t*)0x10000010 = 0;
+	*(uint32_t*)0x10000014 = 0;
+	*(uint32_t*)0x10000018 = 0;
+	*(uint32_t*)0x1000001c = 0;
+	*(uint32_t*)0x10000020 = 0;
+	*(uint32_t*)0x10000024 = 0;
+	*(uint32_t*)0x10000028 = 0;
+	*(uint32_t*)0x1000002c = 0;
+	*(uint32_t*)0x10000030 = 0;
+	*(uint32_t*)0x10000034 = 0;
+	*(uint32_t*)0x10000038 = 0;
+	*(uint32_t*)0x1000003c = 0;
+	*(uint32_t*)0x10000040 = 0;
+	*(uint32_t*)0x10000044 = 0;
+	*(uint32_t*)0x10000048 = 0;
+	*(uint32_t*)0x1000004c = 0;
+	*(uint32_t*)0x10000050 = 0;
+	*(uint32_t*)0x10000054 = 0;
+	*(uint32_t*)0x10000058 = 0;
+	*(uint32_t*)0x1000005c = 0;
+	*(uint32_t*)0x10000060 = 0;
+	*(uint32_t*)0x10000064 = 0;
+	*(uint32_t*)0x10000068 = 0;
+	*(uint32_t*)0x1000006c = 0;
+	*(uint32_t*)0x10000070 = 0;
+	*(uint32_t*)0x10000074 = 0;
+	*(uint32_t*)0x10000078 = 0;
+	*(uint32_t*)0x1000007c = 0;
+	*(uint32_t*)0x10000080 = 0;
+	*(uint32_t*)0x10000084 = 0;
+	*(uint32_t*)0x10000088 = 0;
+	*(uint32_t*)0x1000008c = 0;
+	*(uint32_t*)0x10000090 = 0;
+	*(uint32_t*)0x10000094 = 0;
+	*(uint32_t*)0x10000098 = 0;
+	*(uint32_t*)0x1000009c = 0;
+	*(uint32_t*)0x100000a0 = 0;
+	*(uint32_t*)0x100000a4 = 0; // 48000000 is stored here and may be some calculated clock rate
+	*(uint32_t*)0x100000a8 = 0;
+	*(uint32_t*)0x100000ac = 0;
+	*(uint32_t*)0x100000b0 = 0;
+	*(uint32_t*)0x100000b4 = 0;
+	*(uint32_t*)0x100000b8 = 0;
+	*(uint32_t*)0x100000bc = 0;
+	*(uint32_t*)0x100000c0 = 0;
+
+
+	// Firmware Offset(s): 
+	//	0x000029f6 - 0x000029fa
+	//	0x000029ec - 0x000029f4
+	//	0x00002a2a - 0x00002a36
+	//	0x00002a3c - 0x00002a3e	
+	//	0x00002a46 - 0x00002a5a
+	//	0x00002a78 - 0x00002a7a
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x10000200 = 0xff;
+	*(uint8_t*)0x10000201 = 0xff;
+	*(uint8_t*)0x10000202 = 0x00;
+	*(uint8_t*)0x10000203 = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x00002a2e - 0x00002a36
+	//	0x00002a3c - 0x00002a3e
+	//	0x00002a40 - 0x00002a44
+	//	0x00002a46 - 0x00002a60
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x10000204 = 0x01;
+	*(uint8_t*)0x10000205 = 0x0e;
+	*(uint8_t*)0x10000206 = 0x08;
+	*(uint8_t*)0x10000207 = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x00002a58 - 0x00002a60
+	//	0x00002a78 - 0x00002a7a
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x10000206 = 0x00;
+	*(uint8_t*)0x10000207 = 0x00;
+	*(uint8_t*)0x10000208 = 0x00;
+	*(uint8_t*)0x10000209 = 0x00;
+	*(uint8_t*)0x1000020a = 0x00;
+	*(uint8_t*)0x1000020b = 0x00;
+	*(uint8_t*)0x1000020c = 0x00;
+	*(uint8_t*)0x1000020d = 0x00;
+	*(uint8_t*)0x1000020e = 0x00;
+	*(uint8_t*)0x1000020f = 0x00;
+	*(uint8_t*)0x10000210 = 0x00;
+	*(uint8_t*)0x10000211 = 0x00;
+	*(uint8_t*)0x10000212 = 0x00;
+	*(uint8_t*)0x10000213 = 0x00;
+	*(uint8_t*)0x10000214 = 0x00;
+	*(uint8_t*)0x10000215 = 0x00;
+	*(uint8_t*)0x10000216 = 0x00;
+	*(uint8_t*)0x10000217 = 0x00;
+	*(uint8_t*)0x10000218 = 0x00;
+	*(uint8_t*)0x10000219 = 0x00;
+	*(uint8_t*)0x1000021a = 0x00;
+	*(uint8_t*)0x1000021b = 0x00;
+	*(uint8_t*)0x1000021c = 0x00;
+	*(uint8_t*)0x1000021d = 0x00;
+	*(uint8_t*)0x1000021e = 0x00;
+	*(uint8_t*)0x1000021f = 0x00;
+	*(uint8_t*)0x10000220 = 0x00;
+	*(uint8_t*)0x10000221 = 0x00;
+	*(uint8_t*)0x10000222 = 0x00;
+	*(uint8_t*)0x10000223 = 0x00;
+	*(uint8_t*)0x10000224 = 0x00;
+	*(uint8_t*)0x10000225 = 0x00;
+	*(uint8_t*)0x10000226 = 0x00;
+	*(uint8_t*)0x10000227 = 0x00;
+	*(uint8_t*)0x10000228 = 0x00;
+	*(uint8_t*)0x10000229 = 0x00;
+	*(uint8_t*)0x1000022a = 0x00;
+	*(uint8_t*)0x1000022b = 0x00;
+	*(uint8_t*)0x1000022c = 0x00;
+	*(uint8_t*)0x1000022d = 0x00;
+	*(uint8_t*)0x1000022e = 0x00;
+	*(uint8_t*)0x1000022f = 0x00;
+	*(uint8_t*)0x10000230 = 0x00;
+	*(uint8_t*)0x10000231 = 0x00;
+	*(uint8_t*)0x10000232 = 0x00;
+	*(uint8_t*)0x10000233 = 0x00;
+	*(uint8_t*)0x10000234 = 0x00;
+	*(uint8_t*)0x10000235 = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x00002a2e - 0x00002a36
+	//	0x00002a3c - 0x00002a3e
+	//	0x00002a46 - 0x00002a60
+	//	0x00002a78 - 0x00002a7a
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x10000236 = 0x0b;
+	*(uint8_t*)0x10000237 = 0x00;
+	*(uint8_t*)0x10000238 = 0x00;
+	*(uint8_t*)0x10000239 = 0x00;
+	*(uint8_t*)0x1000023a = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x00002a2e - 0x00002a36
+	//	0x00002a3c - 0x00002a3e
+	//	0x00002a46 - 0x00002a60	
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x1000023b = 0x01;
+	*(uint8_t*)0x1000023c = 0x16;
+	*(uint8_t*)0x1000023d = 0x0d;
+	*(uint8_t*)0x1000023e = 0x01;
+	*(uint8_t*)0x1000023f = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x00002a58 - 0x00002a5a
+	//	0x00002a78 - 0x00002a7a
+	//	0x00002a2e - 0x00002a36
+	//	0x00002a3c - 0x00002a44
+	//	0x00002a46 - 0x00002a5a
+	//	0x00002a78 - 0x00002a7a
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x10000240 = 0x1c;
+	*(uint8_t*)0x10000241 = 0x07;
+	*(uint8_t*)0x10000242 = 0x00;
+	*(uint8_t*)0x10000243 = 0x00;
+	*(uint8_t*)0x10000244 = 0x00;
+	*(uint8_t*)0x10000245 = 0x00;
+	*(uint8_t*)0x10000246 = 0x00;
+	*(uint8_t*)0x10000247 = 0x00;
+	*(uint8_t*)0x10000248 = 0x00;
+	*(uint8_t*)0x10000249 = 0x00;
+	*(uint8_t*)0x1000024a = 0x00;
+	*(uint8_t*)0x1000024b = 0x00;
+	*(uint8_t*)0x1000024c = 0x00;
+	*(uint8_t*)0x1000024d = 0x00;
+	*(uint8_t*)0x1000024e = 0x00;
+	*(uint8_t*)0x1000024f = 0x00;
+	*(uint8_t*)0x10000250 = 0x00;
+	*(uint8_t*)0x10000251 = 0x00;
+	*(uint8_t*)0x10000252 = 0x00;
+	*(uint8_t*)0x10000253 = 0x00;
+	*(uint8_t*)0x10000254 = 0x00;
+	*(uint8_t*)0x10000255 = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x00002a2e - 0x00002a36	
+	//	0x00002a3c - 0x00002a3e
+	//	0x00002a46 - 0x00002a5a
+	//	0x00002a78 - 0x00002a7a
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x10000256 = 0x04;
+	*(uint8_t*)0x10000257 = 0x40;
+	*(uint8_t*)0x10000258 = 0x00;
+	*(uint8_t*)0x10000259 = 0x00;
+	*(uint8_t*)0x1000025a = 0x00;
+	*(uint8_t*)0x1000025b = 0x00;
+	*(uint8_t*)0x1000025c = 0x00;
+	*(uint8_t*)0x1000025d = 0x00;
+	*(uint8_t*)0x1000025e = 0x00;
+	*(uint8_t*)0x1000025f = 0x00;
+	*(uint8_t*)0x10000260 = 0x00;
+	*(uint8_t*)0x10000261 = 0x00;
+	*(uint8_t*)0x10000262 = 0x00;
+	*(uint8_t*)0x10000263 = 0x00;
+	*(uint8_t*)0x10000264 = 0x00;
+	*(uint8_t*)0x10000265 = 0x00;
+	*(uint8_t*)0x10000266 = 0x00;
+	*(uint8_t*)0x10000267 = 0x00;
+	*(uint8_t*)0x10000268 = 0x00;
+	*(uint8_t*)0x10000269 = 0x00;
+	*(uint8_t*)0x1000026a = 0x00;
+	*(uint8_t*)0x1000026b = 0x00;
+	*(uint8_t*)0x1000026c = 0x00;
+	*(uint8_t*)0x1000026d = 0x00;
+	*(uint8_t*)0x1000026e = 0x00;
+	*(uint8_t*)0x1000026f = 0x00;
+	*(uint8_t*)0x10000270 = 0x00;
+	*(uint8_t*)0x10000271 = 0x00;
+	*(uint8_t*)0x10000272 = 0x00;
+	*(uint8_t*)0x10000273 = 0x00;
+	*(uint8_t*)0x10000274 = 0x00;
+	*(uint8_t*)0x10000275 = 0x00;
+	*(uint8_t*)0x10000276 = 0x00;
+	*(uint8_t*)0x10000277 = 0x00;
+	*(uint8_t*)0x10000278 = 0x00;
+	*(uint8_t*)0x10000279 = 0x00;
+	*(uint8_t*)0x1000027a = 0x00;
+	*(uint8_t*)0x1000027b = 0x00;
+	*(uint8_t*)0x1000027c = 0x00;
+	*(uint8_t*)0x1000027d = 0x00;
+	*(uint8_t*)0x1000027e = 0x00;
+	*(uint8_t*)0x1000027f = 0x00;
+	*(uint8_t*)0x10000280 = 0x00;
+	*(uint8_t*)0x10000281 = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x00002a2e - 0x00002a36
+	//	0x00002a3c - 0x00002a44
+	//	0x00002a46 - 0x00002a5a
+	//	0x00002a78 - 0x00002a7a
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x10000282 = 0x01;
+	*(uint8_t*)0x10000283 = 0x01;
+	*(uint8_t*)0x10000284 = 0x00;
+	*(uint8_t*)0x10000285 = 0x00;
+	*(uint8_t*)0x10000286 = 0x00;
+	*(uint8_t*)0x10000287 = 0x00;
+	*(uint8_t*)0x10000288 = 0x00;
+	*(uint8_t*)0x10000289 = 0x00;
+	*(uint8_t*)0x1000028a = 0x00;
+	*(uint8_t*)0x1000028b = 0x00;
+	*(uint8_t*)0x1000028c = 0x00;
+	*(uint8_t*)0x1000028d = 0x00;
+	*(uint8_t*)0x1000028e = 0x00;
+	*(uint8_t*)0x1000028f = 0x00;
+	*(uint8_t*)0x10000290 = 0x00;
+	*(uint8_t*)0x10000291 = 0x00;
+	*(uint8_t*)0x10000292 = 0x00;
+	*(uint8_t*)0x10000293 = 0x00;
+	*(uint8_t*)0x10000294 = 0x00;
+	*(uint8_t*)0x10000295 = 0x00;
+	*(uint8_t*)0x10000296 = 0x00;
+	*(uint8_t*)0x10000297 = 0x00;
+	*(uint8_t*)0x10000298 = 0x00;
+	*(uint8_t*)0x10000299 = 0x00;
+	*(uint8_t*)0x1000029a = 0x00;
+	*(uint8_t*)0x1000029b = 0x00;
+	*(uint8_t*)0x1000029c = 0x00;
+	*(uint8_t*)0x1000029d = 0x00;
+	*(uint8_t*)0x1000029e = 0x00;
+	*(uint8_t*)0x1000029f = 0x00;
+	*(uint8_t*)0x100002a0 = 0x00;
+	*(uint8_t*)0x100002a1 = 0x00;
+	*(uint8_t*)0x100002a2 = 0x00;
+	*(uint8_t*)0x100002a3 = 0x00;
+	*(uint8_t*)0x100002a4 = 0x00;
+	*(uint8_t*)0x100002a5 = 0x00;
+	*(uint8_t*)0x100002a6 = 0x00;
+	*(uint8_t*)0x100002a7 = 0x00;
+	*(uint8_t*)0x100002a8 = 0x00;
+	*(uint8_t*)0x100002a9 = 0x00;
+	*(uint8_t*)0x100002aa = 0x00;
+	*(uint8_t*)0x100002ab = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x00002a2e - 0x00002a36
+	//	0x00002a3c - 0x00002a3e
+	//	0x00002a4e - 0x00002a54
+	//	0x00002a62 - 0x00002a6a
+	//	0x00002a6c - 0x00002a7a
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x100002ac = 0xff;
+	*(uint8_t*)0x100002ad = 0xff;
+	*(uint8_t*)0x100002ae = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x00002a2e - 0x00002a36
+	//	0x00002a3c - 0x00002a3e
+	//	0x00002a46 - 0x00002a54
+	//	0x00002a62 - 0x00002a7a
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x100002af = 0xff;
+	*(uint8_t*)0x100002b0 = 0xff;
+	*(uint8_t*)0x100002b1 = 0xff;
+	*(uint8_t*)0x100002b2 = 0x00;
+	*(uint8_t*)0x100002b3 = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	... - 0x00002a7a (See note below)
+
+	// Note: This SRAM0 heap initialization is going on forever, 
+	//  and repetitive, but not repetivie enough to generalize into
+	//  a function (conditionals are based on code reads from 
+	//  flash).
+	// Therefore, I'm going to just list how the memory is being
+	//  setup without concern for all the firmware offsets being
+	//  used as code. It may be worth painstakingly revisiting this
+	//  in the future if something isn't adding up in terms of an
+	//  important branch (not based on code read from flash).
+
+	// Initialize more heap space in SRAM0
+	*(uint8_t*)0x100002b4  = 0x;
+
+	*(uint8_t*)0x100002b4 = 0x00
+	*(uint8_t*)0x100002b5 = 0x00
+	*(uint8_t*)0x100002b6 = 0x01
+	*(uint8_t*)0x100002b7 = 0x00
+	*(uint8_t*)0x100002b8 = 0x00
+	*(uint8_t*)0x100002b9 = 0x00
+	*(uint8_t*)0x100002ba = 0xca
+	*(uint8_t*)0x100002bb = 0x08
+	*(uint8_t*)0x100002bc = 0x00
+	*(uint8_t*)0x100002bd = 0x00
+	*(uint8_t*)0x100002be = 0x00
+	*(uint8_t*)0x100002bf = 0x00
+	*(uint8_t*)0x100002c0 = 0x00
+	*(uint8_t*)0x100002c1 = 0x00
+	*(uint8_t*)0x100002c2 = 0x00
+	*(uint8_t*)0x100002c3 = 0x40
+	*(uint8_t*)0x100002c4 = 0x00
+	*(uint8_t*)0x100002c5 = 0x00
+	*(uint8_t*)0x100002c6 = 0x00
+	*(uint8_t*)0x100002c7 = 0x00
+	*(uint8_t*)0x100002c8 = 0x00
+	*(uint8_t*)0x100002c9 = 0x00
+	*(uint8_t*)0x100002ca = 0x00
+	*(uint8_t*)0x100002cb = 0x00
+	*(uint8_t*)0x100002cc = 0x00
+	*(uint8_t*)0x100002cd = 0x00
+	*(uint8_t*)0x100002ce = 0x00
+	*(uint8_t*)0x100002cf = 0x00
+	*(uint8_t*)0x100002d0 = 0xff
+	*(uint8_t*)0x100002d1 = 0xff
+	*(uint8_t*)0x100002d2 = 0xff
+	*(uint8_t*)0x100002d3 = 0xff
+	*(uint8_t*)0x100002d4 = 0xff
+	*(uint8_t*)0x100002d5 = 0xff
+	*(uint8_t*)0x100002d6 = 0x00
+	*(uint8_t*)0x100002d7 = 0x00
+	*(uint8_t*)0x100002d8 = 0x00
+	*(uint8_t*)0x100002d9 = 0x00
+	*(uint8_t*)0x100002da = 0x00
+	*(uint8_t*)0x100002db = 0x00
+	*(uint8_t*)0x100002dc = 0x00
+	*(uint8_t*)0x100002dd = 0x00
+	*(uint8_t*)0x100002de = 0x00
+	*(uint8_t*)0x100002df = 0x00
+	*(uint8_t*)0x100002e0 = 0x00
+	*(uint8_t*)0x100002e1 = 0x00
+	*(uint8_t*)0x100002e2 = 0x00
+	*(uint8_t*)0x100002e3 = 0x00
+	*(uint8_t*)0x100002e4 = 0x00
+	*(uint8_t*)0x100002e5 = 0x00
+	*(uint8_t*)0x100002e6 = 0x00
+	*(uint8_t*)0x100002e7 = 0x00
+	*(uint8_t*)0x100002e8 = 0x00
+	*(uint8_t*)0x100002e9 = 0x00
+	*(uint8_t*)0x100002ea = 0x00
+	*(uint8_t*)0x100002eb = 0x00
+	*(uint8_t*)0x100002ec = 0x00
+	*(uint8_t*)0x100002ed = 0x00
+	*(uint8_t*)0x100002ee = 0x00
+	*(uint8_t*)0x100002ef = 0x00
+	*(uint8_t*)0x100002f0 = 0x00
+	*(uint8_t*)0x100002f1 = 0x00
+	*(uint8_t*)0x100002f2 = 0x00
+	*(uint8_t*)0x100002f3 = 0x00
+	*(uint8_t*)0x100002f4 = 0x00
+	*(uint8_t*)0x100002f5 = 0x00
+	*(uint8_t*)0x100002f6 = 0x00
+	*(uint8_t*)0x100002f7 = 0x00
+	*(uint8_t*)0x100002f8 = 0x00
+	*(uint8_t*)0x100002f9 = 0x00
+	*(uint8_t*)0x100002fa = 0x00
+	*(uint8_t*)0x100002fb = 0x00
+	*(uint8_t*)0x100002fc = 0x00
+	*(uint8_t*)0x100002fd = 0x00
+	*(uint8_t*)0x100002fe = 0x00
+	*(uint8_t*)0x100002ff = 0x00
+	*(uint8_t*)0x10000300 = 0x00
+	*(uint8_t*)0x10000301 = 0x00
+	*(uint8_t*)0x10000302 = 0x00
+	*(uint8_t*)0x10000303 = 0x00
+	*(uint8_t*)0x10000304 = 0x00
+	*(uint8_t*)0x10000305 = 0x00
+	*(uint8_t*)0x10000306 = 0x00
+	*(uint8_t*)0x10000307 = 0x00
+	*(uint8_t*)0x10000308 = 0x00
+	*(uint8_t*)0x10000309 = 0x00
+	*(uint8_t*)0x1000030a = 0x00
+	*(uint8_t*)0x1000030b = 0x00
+	*(uint8_t*)0x1000030c = 0x00
+	*(uint8_t*)0x1000030d = 0x00
+	*(uint8_t*)0x1000030e = 0x00
+	*(uint8_t*)0x1000030f = 0x00
+	*(uint8_t*)0x10000310 = 0x02
+	*(uint8_t*)0x10000311 = 0x03
+	*(uint8_t*)0x10000312 = 0x00
+	*(uint8_t*)0x10000313 = 0x00
+	*(uint8_t*)0x10000314 = 0x00
+	*(uint8_t*)0x10000315 = 0x00
+	*(uint8_t*)0x10000316 = 0x00
+	*(uint8_t*)0x10000317 = 0x00
+	*(uint8_t*)0x10000318 = 0x00
+	*(uint8_t*)0x10000319 = 0x00
+	*(uint8_t*)0x1000031a = 0x00
+	*(uint8_t*)0x1000031b = 0x00
+	*(uint8_t*)0x1000031c = 0x00
+	*(uint8_t*)0x1000031d = 0x00
+	*(uint8_t*)0x1000031e = 0x00
+	*(uint8_t*)0x1000031f = 0x00
+	*(uint8_t*)0x10000320 = 0x00
+	*(uint8_t*)0x10000321 = 0x00
+	*(uint8_t*)0x10000322 = 0x00
+	*(uint8_t*)0x10000323 = 0x00
+	*(uint8_t*)0x10000324 = 0x00
+	*(uint8_t*)0x10000325 = 0x00
+	*(uint8_t*)0x10000326 = 0x00
+	*(uint8_t*)0x10000327 = 0x00
+	*(uint8_t*)0x10000328 = 0x01
+	*(uint8_t*)0x10000329 = 0x00
+	*(uint8_t*)0x1000032a = 0x00
+	*(uint8_t*)0x1000032b = 0x00
+	*(uint8_t*)0x1000032c = 0x00
+	*(uint8_t*)0x1000032d = 0x00
+	*(uint8_t*)0x1000032e = 0x00
+	*(uint8_t*)0x1000032f = 0x00
+	*(uint8_t*)0x10000330 = 0x00
+	*(uint8_t*)0x10000331 = 0x00
+	*(uint8_t*)0x10000332 = 0x00
+	*(uint8_t*)0x10000333 = 0x00
+	*(uint8_t*)0x10000334 = 0x00
+	*(uint8_t*)0x10000335 = 0x00
+	*(uint8_t*)0x10000336 = 0x00
+	*(uint8_t*)0x10000337 = 0x00
+	*(uint8_t*)0x10000338 = 0x00
+	*(uint8_t*)0x10000339 = 0x00
+	*(uint8_t*)0x1000033a = 0x00
+	*(uint8_t*)0x1000033b = 0x00
+	*(uint8_t*)0x1000033c = 0x00
+	*(uint8_t*)0x1000033d = 0x00
+	*(uint8_t*)0x1000033e = 0x00
+	*(uint8_t*)0x1000033f = 0x00
+	*(uint8_t*)0x10000340 = 0x00 // Tracks if EEPROM access is taking place
+	*(uint8_t*)0x10000341 = 0x00
+	*(uint8_t*)0x10000342 = 0x00
+	*(uint8_t*)0x10000343 = 0x00
+	*(uint8_t*)0x10000344 = 0x00
+	*(uint8_t*)0x10000345 = 0x00
+	*(uint8_t*)0x10000346 = 0x00
+	*(uint8_t*)0x10000347 = 0x00
+	*(uint8_t*)0x10000348 = 0x00
+	*(uint8_t*)0x10000349 = 0x00
+	*(uint8_t*)0x1000034a = 0x00
+	*(uint8_t*)0x1000034b = 0x00
+	*(uint8_t*)0x1000034c = 0x00
+	*(uint8_t*)0x1000034d = 0x00
+	*(uint8_t*)0x1000034e = 0x00
+	*(uint8_t*)0x1000034f = 0x00
+	*(uint8_t*)0x10000350 = 0x00
+	*(uint8_t*)0x10000351 = 0x00
+	*(uint8_t*)0x10000352 = 0x00
+	*(uint8_t*)0x10000353 = 0x00
+	*(uint8_t*)0x10000354 = 0x00
+	*(uint8_t*)0x10000355 = 0x00
+	*(uint8_t*)0x10000356 = 0x00
+	*(uint8_t*)0x10000357 = 0x00
+	*(uint8_t*)0x10000358 = 0x00
+	*(uint8_t*)0x10000359 = 0x00
+	*(uint8_t*)0x1000035a = 0x00
+	*(uint8_t*)0x1000035b = 0x00
+	*(uint8_t*)0x1000035c = 0x00
+	*(uint8_t*)0x1000035d = 0x01
+	*(uint8_t*)0x1000035e = 0x00
+	*(uint8_t*)0x1000035f = 0x00
+	*(uint8_t*)0x10000360 = 0x00
+	*(uint8_t*)0x10000361 = 0x00
+	*(uint8_t*)0x10000362 = 0x00
+	*(uint8_t*)0x10000363 = 0x00
+	*(uint8_t*)0x10000364 = 0x00
+	*(uint8_t*)0x10000365 = 0x00
+	*(uint8_t*)0x10000366 = 0x00
+	*(uint8_t*)0x10000367 = 0x00
+	*(uint8_t*)0x10000368 = 0x00
+	*(uint8_t*)0x10000369 = 0x00
+	*(uint8_t*)0x1000036a = 0x00
+	*(uint8_t*)0x1000036b = 0x00
+	*(uint8_t*)0x1000036c = 0x00
+	*(uint8_t*)0x1000036d = 0x00
+	*(uint8_t*)0x1000036e = 0x00
+	*(uint8_t*)0x1000036f = 0x00
+	*(uint8_t*)0x10000370 = 0x00
+	*(uint8_t*)0x10000371 = 0x00
+	*(uint8_t*)0x10000372 = 0x00
+	*(uint8_t*)0x10000373 = 0x00
+	*(uint8_t*)0x10000374 = 0x40
+	*(uint8_t*)0x10000375 = 0x11
+	*(uint8_t*)0x10000376 = 0x00
+	*(uint8_t*)0x10000377 = 0x10
+	*(uint8_t*)0x10000378 = 0x00
+	*(uint8_t*)0x10000379 = 0x00
+	*(uint8_t*)0x1000037a = 0x00
+	*(uint8_t*)0x1000037b = 0x00
+	*(uint8_t*)0x1000037c = 0x00
+	*(uint8_t*)0x1000037d = 0x00
+	*(uint8_t*)0x1000037e = 0x00
+	*(uint8_t*)0x1000037f = 0x00
+	*(uint8_t*)0x10000380 = 0x00
+	*(uint8_t*)0x10000381 = 0x00
+	*(uint8_t*)0x10000382 = 0x00
+	*(uint8_t*)0x10000383 = 0x00
+	*(uint8_t*)0x10000384 = 0x00
+	*(uint8_t*)0x10000385 = 0x00
+	*(uint8_t*)0x10000386 = 0x00
+	*(uint8_t*)0x10000387 = 0x00
+	*(uint8_t*)0x10000388 = 0x00
+	*(uint8_t*)0x10000389 = 0x00
+	*(uint8_t*)0x1000038a = 0x00
+	*(uint8_t*)0x1000038b = 0x00
+	*(uint8_t*)0x1000038c = 0x00
+	*(uint8_t*)0x1000038d = 0x00
+	*(uint8_t*)0x1000038e = 0x00
+	*(uint8_t*)0x1000038f = 0x00
+	*(uint8_t*)0x10000390 = 0x00
+	*(uint8_t*)0x10000391 = 0x00
+	*(uint8_t*)0x10000392 = 0x00
+	*(uint8_t*)0x10000393 = 0x00
+	*(uint8_t*)0x10000394 = 0x00
+	*(uint8_t*)0x10000395 = 0x00
+	*(uint8_t*)0x10000396 = 0x00
+	*(uint8_t*)0x10000397 = 0x00
+	*(uint8_t*)0x10000398 = 0x00
+	*(uint8_t*)0x10000399 = 0x00
+	*(uint8_t*)0x1000039a = 0x00
+	*(uint8_t*)0x1000039b = 0x00
+	*(uint8_t*)0x1000039c = 0x00
+	*(uint8_t*)0x1000039d = 0x00
+	*(uint8_t*)0x1000039e = 0x00
+	*(uint8_t*)0x1000039f = 0x00
+	*(uint8_t*)0x100003a0 = 0x00
+	*(uint8_t*)0x100003a1 = 0x00
+	*(uint8_t*)0x100003a2 = 0x00
+	*(uint8_t*)0x100003a3 = 0x00
+	*(uint8_t*)0x100003a4 = 0x00
+	*(uint8_t*)0x100003a5 = 0x00
+	*(uint8_t*)0x100003a6 = 0x00
+	*(uint8_t*)0x100003a7 = 0x00
+	*(uint8_t*)0x100003a8 = 0x00
+	*(uint8_t*)0x100003a9 = 0x00
+	*(uint8_t*)0x100003aa = 0x00
+	*(uint8_t*)0x100003ab = 0x00
+	*(uint8_t*)0x100003ac = 0x00
+	*(uint8_t*)0x100003ad = 0x00
+	*(uint8_t*)0x100003ae = 0x00
+	*(uint8_t*)0x100003af = 0x00
+	*(uint8_t*)0x100003b0 = 0x00
+	*(uint8_t*)0x100003b1 = 0x00
+	*(uint8_t*)0x100003b2 = 0x00
+	*(uint8_t*)0x100003b3 = 0x00
+	*(uint8_t*)0x100003b4 = 0x00
+	*(uint8_t*)0x100003b5 = 0x00
+	*(uint8_t*)0x100003b6 = 0x00
+	*(uint8_t*)0x100003b7 = 0x00
+	*(uint8_t*)0x100003b8 = 0xad
+	*(uint8_t*)0x100003b9 = 0xbe
+	*(uint8_t*)0x100003ba = 0x00
+	*(uint8_t*)0x100003bb = 0x00
+	*(uint8_t*)0x100003bc = 0x0e
+	*(uint8_t*)0x100003bd = 0x7b
+	*(uint8_t*)0x100003be = 0x22
+	*(uint8_t*)0x100003bf = 0x00
+	*(uint8_t*)0x100003c0 = 0x62
+	*(uint8_t*)0x100003c1 = 0x00
+	*(uint8_t*)0x100003c2 = 0xde
+	*(uint8_t*)0x100003c3 = 0x00
+	*(uint8_t*)0x100003c4 = 0x2a
+	*(uint8_t*)0x100003c5 = 0x01
+	*(uint8_t*)0x100003c6 = 0x58
+	*(uint8_t*)0x100003c7 = 0x01
+	*(uint8_t*)0x100003c8 = 0x7a
+	*(uint8_t*)0x100003c9 = 0x01
+	*(uint8_t*)0x100003ca = 0x96
+	*(uint8_t*)0x100003cb = 0x01
+	*(uint8_t*)0x100003cc = 0xdc
+	*(uint8_t*)0x100003cd = 0x01
+	*(uint8_t*)0x100003ce = 0xa0
+	*(uint8_t*)0x100003cf = 0x02
+	*(uint8_t*)0x100003d0 = 0xce
+	*(uint8_t*)0x100003d1 = 0x02
+	*(uint8_t*)0x100003d2 = 0xf6
+	*(uint8_t*)0x100003d3 = 0x02
+	*(uint8_t*)0x100003d4 = 0x18
+	*(uint8_t*)0x100003d5 = 0x03
+	*(uint8_t*)0x100003d6 = 0x4c
+	*(uint8_t*)0x100003d7 = 0x03
+	*(uint8_t*)0x100003d8 = 0x6e
+	*(uint8_t*)0x100003d9 = 0x03
+	*(uint8_t*)0x100003da = 0x05
+	*(uint8_t*)0x100003db = 0x00
+	*(uint8_t*)0x100003dc = 0x05
+	*(uint8_t*)0x100003dd = 0x00
+	*(uint8_t*)0x100003de = 0x5e
+	*(uint8_t*)0x100003df = 0x00
+	*(uint8_t*)0x100003e0 = 0x17
+	*(uint8_t*)0x100003e1 = 0x04
+	*(uint8_t*)0x100003e2 = 0x88
+	*(uint8_t*)0x100003e3 = 0x00
+	*(uint8_t*)0x100003e4 = 0x7f
+	*(uint8_t*)0x100003e5 = 0x00
+	*(uint8_t*)0x100003e6 = 0x97
+	*(uint8_t*)0x100003e7 = 0x04
+	*(uint8_t*)0x100003e8 = 0x88
+	*(uint8_t*)0x100003e9 = 0x00
+	*(uint8_t*)0x100003ea = 0x00
+	*(uint8_t*)0x100003eb = 0x00
+	*(uint8_t*)0x100003ec = 0x00
+	*(uint8_t*)0x100003ed = 0x00
+	*(uint8_t*)0x100003ee = 0x01
+	*(uint8_t*)0x100003ef = 0x00
+	*(uint8_t*)0x100003f0 = 0x33
+	*(uint8_t*)0x100003f1 = 0x00
+	*(uint8_t*)0x100003f2 = 0x27
+	*(uint8_t*)0x100003f3 = 0x05
+	*(uint8_t*)0x100003f4 = 0x88
+	*(uint8_t*)0x100003f5 = 0x00
+	*(uint8_t*)0x100003f6 = 0x4f
+	*(uint8_t*)0x100003f7 = 0x00
+	*(uint8_t*)0x100003f8 = 0x75
+	*(uint8_t*)0x100003f9 = 0x05
+	*(uint8_t*)0x100003fa = 0xc7
+	*(uint8_t*)0x100003fb = 0x00
+	*(uint8_t*)0x100003fc = 0x54
+	*(uint8_t*)0x100003fd = 0x00
+	*(uint8_t*)0x100003fe = 0x75
+	*(uint8_t*)0x100003ff = 0x05
+	*(uint8_t*)0x10000400 = 0x88
+	*(uint8_t*)0x10000401 = 0x00
+	*(uint8_t*)0x10000402 = 0x7b
+	*(uint8_t*)0x10000403 = 0x00
+	*(uint8_t*)0x10000404 = 0xe0
+	*(uint8_t*)0x10000405 = 0x06
+	*(uint8_t*)0x10000406 = 0x88
+	*(uint8_t*)0x10000407 = 0x00
+	*(uint8_t*)0x10000408 = 0x00
+	*(uint8_t*)0x10000409 = 0x00
+	*(uint8_t*)0x1000040a = 0x00
+	*(uint8_t*)0x1000040b = 0x00
+	*(uint8_t*)0x1000040c = 0x01
+	*(uint8_t*)0x1000040d = 0x00
+	*(uint8_t*)0x1000040e = 0x33
+	*(uint8_t*)0x1000040f = 0x00
+	*(uint8_t*)0x10000410 = 0x20
+	*(uint8_t*)0x10000411 = 0x06
+	*(uint8_t*)0x10000412 = 0x88
+	*(uint8_t*)0x10000413 = 0x00
+	*(uint8_t*)0x10000414 = 0x4f
+	*(uint8_t*)0x10000415 = 0x00
+	*(uint8_t*)0x10000416 = 0xe0
+	*(uint8_t*)0x10000417 = 0x06
+	*(uint8_t*)0x10000418 = 0xc7
+	*(uint8_t*)0x10000419 = 0x00
+	*(uint8_t*)0x1000041a = 0x0a
+	*(uint8_t*)0x1000041b = 0x00
+	*(uint8_t*)0x1000041c = 0x0a
+	*(uint8_t*)0x1000041d = 0x00
+	*(uint8_t*)0x1000041e = 0x71
+	*(uint8_t*)0x1000041f = 0x00
+	*(uint8_t*)0x10000420 = 0x75
+	*(uint8_t*)0x10000421 = 0x05
+	*(uint8_t*)0x10000422 = 0x22
+	*(uint8_t*)0x10000423 = 0x00
+	*(uint8_t*)0x10000424 = 0x5c
+	*(uint8_t*)0x10000425 = 0x00
+	*(uint8_t*)0x10000426 = 0x27
+	*(uint8_t*)0x10000427 = 0x05
+	*(uint8_t*)0x10000428 = 0x22
+	*(uint8_t*)0x10000429 = 0x00
+	*(uint8_t*)0x1000042a = 0x51
+	*(uint8_t*)0x1000042b = 0x00
+	*(uint8_t*)0x1000042c = 0xdd
+	*(uint8_t*)0x1000042d = 0x04
+	*(uint8_t*)0x1000042e = 0x22
+	*(uint8_t*)0x1000042f = 0x00
+	*(uint8_t*)0x10000430 = 0x43
+	*(uint8_t*)0x10000431 = 0x00
+	*(uint8_t*)0x10000432 = 0x17
+	*(uint8_t*)0x10000433 = 0x04
+	*(uint8_t*)0x10000434 = 0x22
+	*(uint8_t*)0x10000435 = 0x00
+	*(uint8_t*)0x10000436 = 0x3b
+	*(uint8_t*)0x10000437 = 0x00
+	*(uint8_t*)0x10000438 = 0xa4
+	*(uint8_t*)0x10000439 = 0x03
+	*(uint8_t*)0x1000043a = 0x22
+	*(uint8_t*)0x1000043b = 0x00
+	*(uint8_t*)0x1000043c = 0x33
+	*(uint8_t*)0x1000043d = 0x00
+	*(uint8_t*)0x1000043e = 0x17
+	*(uint8_t*)0x1000043f = 0x04
+	*(uint8_t*)0x10000440 = 0x22
+	*(uint8_t*)0x10000441 = 0x00
+	*(uint8_t*)0x10000442 = 0x00
+	*(uint8_t*)0x10000443 = 0x00
+	*(uint8_t*)0x10000444 = 0x00
+	*(uint8_t*)0x10000445 = 0x00
+	*(uint8_t*)0x10000446 = 0x01
+	*(uint8_t*)0x10000447 = 0x00
+	*(uint8_t*)0x10000448 = 0x2c
+	*(uint8_t*)0x10000449 = 0x00
+	*(uint8_t*)0x1000044a = 0xdd
+	*(uint8_t*)0x1000044b = 0x04
+	*(uint8_t*)0x1000044c = 0x22
+	*(uint8_t*)0x1000044d = 0x00
+	*(uint8_t*)0x1000044e = 0x26
+	*(uint8_t*)0x1000044f = 0x00
+	*(uint8_t*)0x10000450 = 0x27
+	*(uint8_t*)0x10000451 = 0x05
+	*(uint8_t*)0x10000452 = 0x22
+	*(uint8_t*)0x10000453 = 0x00
+	*(uint8_t*)0x10000454 = 0x21
+	*(uint8_t*)0x10000455 = 0x00
+	*(uint8_t*)0x10000456 = 0x75
+	*(uint8_t*)0x10000457 = 0x05
+	*(uint8_t*)0x10000458 = 0x22
+	*(uint8_t*)0x10000459 = 0x00
+	*(uint8_t*)0x1000045a = 0x71
+	*(uint8_t*)0x1000045b = 0x00
+	*(uint8_t*)0x1000045c = 0xe0
+	*(uint8_t*)0x1000045d = 0x06
+	*(uint8_t*)0x1000045e = 0x22
+	*(uint8_t*)0x1000045f = 0x00
+	*(uint8_t*)0x10000460 = 0x5c
+	*(uint8_t*)0x10000461 = 0x00
+	*(uint8_t*)0x10000462 = 0x20
+	*(uint8_t*)0x10000463 = 0x06
+	*(uint8_t*)0x10000464 = 0x22
+	*(uint8_t*)0x10000465 = 0x00
+	*(uint8_t*)0x10000466 = 0x51
+	*(uint8_t*)0x10000467 = 0x00
+	*(uint8_t*)0x10000468 = 0x75
+	*(uint8_t*)0x10000469 = 0x05
+	*(uint8_t*)0x1000046a = 0x22
+	*(uint8_t*)0x1000046b = 0x00
+	*(uint8_t*)0x1000046c = 0x43
+	*(uint8_t*)0x1000046d = 0x00
+	*(uint8_t*)0x1000046e = 0x27
+	*(uint8_t*)0x1000046f = 0x05
+	*(uint8_t*)0x10000470 = 0x22
+	*(uint8_t*)0x10000471 = 0x00
+	*(uint8_t*)0x10000472 = 0x3b
+	*(uint8_t*)0x10000473 = 0x00
+	*(uint8_t*)0x10000474 = 0x97
+	*(uint8_t*)0x10000475 = 0x04
+	*(uint8_t*)0x10000476 = 0x22
+	*(uint8_t*)0x10000477 = 0x00
+	*(uint8_t*)0x10000478 = 0x33
+	*(uint8_t*)0x10000479 = 0x00
+	*(uint8_t*)0x1000047a = 0x27
+	*(uint8_t*)0x1000047b = 0x05
+	*(uint8_t*)0x1000047c = 0x22
+	*(uint8_t*)0x1000047d = 0x00
+	*(uint8_t*)0x1000047e = 0x00
+	*(uint8_t*)0x1000047f = 0x00
+	*(uint8_t*)0x10000480 = 0x00
+	*(uint8_t*)0x10000481 = 0x00
+	*(uint8_t*)0x10000482 = 0x01
+	*(uint8_t*)0x10000483 = 0x00
+	*(uint8_t*)0x10000484 = 0x2c
+	*(uint8_t*)0x10000485 = 0x00
+	*(uint8_t*)0x10000486 = 0x75
+	*(uint8_t*)0x10000487 = 0x05
+	*(uint8_t*)0x10000488 = 0x22
+	*(uint8_t*)0x10000489 = 0x00
+	*(uint8_t*)0x1000048a = 0x26
+	*(uint8_t*)0x1000048b = 0x00
+	*(uint8_t*)0x1000048c = 0x20
+	*(uint8_t*)0x1000048d = 0x06
+	*(uint8_t*)0x1000048e = 0x22
+	*(uint8_t*)0x1000048f = 0x00
+	*(uint8_t*)0x10000490 = 0x21
+	*(uint8_t*)0x10000491 = 0x00
+	*(uint8_t*)0x10000492 = 0xe0
+	*(uint8_t*)0x10000493 = 0x06
+	*(uint8_t*)0x10000494 = 0x22
+	*(uint8_t*)0x10000495 = 0x00
+	*(uint8_t*)0x10000496 = 0x0a
+	*(uint8_t*)0x10000497 = 0x00
+	*(uint8_t*)0x10000498 = 0x02
+	*(uint8_t*)0x10000499 = 0x00
+	*(uint8_t*)0x1000049a = 0x60
+	*(uint8_t*)0x1000049b = 0x00
+	*(uint8_t*)0x1000049c = 0xc0
+	*(uint8_t*)0x1000049d = 0x0d
+	*(uint8_t*)0x1000049e = 0x2f
+	*(uint8_t*)0x1000049f = 0x00
+	*(uint8_t*)0x100004a0 = 0x00
+	*(uint8_t*)0x100004a1 = 0x00
+	*(uint8_t*)0x100004a2 = 0x00
+	*(uint8_t*)0x100004a3 = 0x00
+	*(uint8_t*)0x100004a4 = 0x16
+	*(uint8_t*)0x100004a5 = 0x00
+	*(uint8_t*)0x100004a6 = 0x7f
+	*(uint8_t*)0x100004a7 = 0x00
+	*(uint8_t*)0x100004a8 = 0x17
+	*(uint8_t*)0x100004a9 = 0x04
+	*(uint8_t*)0x100004aa = 0x41
+	*(uint8_t*)0x100004ab = 0x00
+	*(uint8_t*)0x100004ac = 0x00
+	*(uint8_t*)0x100004ad = 0x00
+	*(uint8_t*)0x100004ae = 0x00
+	*(uint8_t*)0x100004af = 0x00
+	*(uint8_t*)0x100004b0 = 0x03
+	*(uint8_t*)0x100004b1 = 0x00
+	*(uint8_t*)0x100004b2 = 0x7d
+	*(uint8_t*)0x100004b3 = 0x00
+	*(uint8_t*)0x100004b4 = 0xc0
+	*(uint8_t*)0x100004b5 = 0x0d
+	*(uint8_t*)0x100004b6 = 0x2c
+	*(uint8_t*)0x100004b7 = 0x00
+	*(uint8_t*)0x100004b8 = 0x00
+	*(uint8_t*)0x100004b9 = 0x00
+	*(uint8_t*)0x100004ba = 0x00
+	*(uint8_t*)0x100004bb = 0x00
+	*(uint8_t*)0x100004bc = 0x01
+	*(uint8_t*)0x100004bd = 0x00
+	*(uint8_t*)0x100004be = 0x00
+	*(uint8_t*)0x100004bf = 0x00
+	*(uint8_t*)0x100004c0 = 0x00
+	*(uint8_t*)0x100004c1 = 0x00
+	*(uint8_t*)0x100004c2 = 0x18
+	*(uint8_t*)0x100004c3 = 0x00
+	*(uint8_t*)0x100004c4 = 0x7b
+	*(uint8_t*)0x100004c5 = 0x00
+	*(uint8_t*)0x100004c6 = 0x17
+	*(uint8_t*)0x100004c7 = 0x04
+	*(uint8_t*)0x100004c8 = 0x48
+	*(uint8_t*)0x100004c9 = 0x00
+	*(uint8_t*)0x100004ca = 0x00
+	*(uint8_t*)0x100004cb = 0x00
+	*(uint8_t*)0x100004cc = 0x00
+	*(uint8_t*)0x100004cd = 0x00
+	*(uint8_t*)0x100004ce = 0x41
+	*(uint8_t*)0x100004cf = 0x00
+	*(uint8_t*)0x100004d0 = 0x75
+	*(uint8_t*)0x100004d1 = 0x00
+	*(uint8_t*)0x100004d2 = 0x17
+	*(uint8_t*)0x100004d3 = 0x04
+	*(uint8_t*)0x100004d4 = 0x3e
+	*(uint8_t*)0x100004d5 = 0x00
+	*(uint8_t*)0x100004d6 = 0x00
+	*(uint8_t*)0x100004d7 = 0x00
+	*(uint8_t*)0x100004d8 = 0x00
+	*(uint8_t*)0x100004d9 = 0x00
+	*(uint8_t*)0x100004da = 0x11
+	*(uint8_t*)0x100004db = 0x01
+	*(uint8_t*)0x100004dc = 0x7f
+	*(uint8_t*)0x100004dd = 0x00
+	*(uint8_t*)0x100004de = 0xc0
+	*(uint8_t*)0x100004df = 0x0d
+	*(uint8_t*)0x100004e0 = 0x32
+	*(uint8_t*)0x100004e1 = 0x00
+	*(uint8_t*)0x100004e2 = 0x05
+	*(uint8_t*)0x100004e3 = 0x00
+	*(uint8_t*)0x100004e4 = 0x02
+	*(uint8_t*)0x100004e5 = 0x00
+	*(uint8_t*)0x100004e6 = 0x5c
+	*(uint8_t*)0x100004e7 = 0x00
+	*(uint8_t*)0x100004e8 = 0xba
+	*(uint8_t*)0x100004e9 = 0x02
+	*(uint8_t*)0x100004ea = 0x88
+	*(uint8_t*)0x100004eb = 0x00
+	*(uint8_t*)0x100004ec = 0x00
+	*(uint8_t*)0x100004ed = 0x00
+	*(uint8_t*)0x100004ee = 0x00
+	*(uint8_t*)0x100004ef = 0x00
+	*(uint8_t*)0x100004f0 = 0x88
+	*(uint8_t*)0x100004f1 = 0x00
+	*(uint8_t*)0x100004f2 = 0x00
+	*(uint8_t*)0x100004f3 = 0x00
+	*(uint8_t*)0x100004f4 = 0x00
+	*(uint8_t*)0x100004f5 = 0x00
+	*(uint8_t*)0x100004f6 = 0x01
+	*(uint8_t*)0x100004f7 = 0x00
+	*(uint8_t*)0x100004f8 = 0x66
+	*(uint8_t*)0x100004f9 = 0x00
+	*(uint8_t*)0x100004fa = 0xba
+	*(uint8_t*)0x100004fb = 0x02
+	*(uint8_t*)0x100004fc = 0x88
+	*(uint8_t*)0x100004fd = 0x00
+	*(uint8_t*)0x100004fe = 0x76
+	*(uint8_t*)0x100004ff = 0x00
+	*(uint8_t*)0x10000500 = 0x17
+	*(uint8_t*)0x10000501 = 0x04
+	*(uint8_t*)0x10000502 = 0x18
+	*(uint8_t*)0x10000503 = 0x01
+	*(uint8_t*)0x10000504 = 0x00
+	*(uint8_t*)0x10000505 = 0x00
+	*(uint8_t*)0x10000506 = 0x00
+	*(uint8_t*)0x10000507 = 0x00
+	*(uint8_t*)0x10000508 = 0x99
+	*(uint8_t*)0x10000509 = 0x01
+	*(uint8_t*)0x1000050a = 0x38
+	*(uint8_t*)0x1000050b = 0x00
+	*(uint8_t*)0x1000050c = 0x75
+	*(uint8_t*)0x1000050d = 0x05
+	*(uint8_t*)0x1000050e = 0x19
+	*(uint8_t*)0x1000050f = 0x01
+	*(uint8_t*)0x10000510 = 0x02
+	*(uint8_t*)0x10000511 = 0x00
+	*(uint8_t*)0x10000512 = 0x03
+	*(uint8_t*)0x10000513 = 0x00
+	*(uint8_t*)0x10000514 = 0x40
+	*(uint8_t*)0x10000515 = 0x00
+	*(uint8_t*)0x10000516 = 0xba
+	*(uint8_t*)0x10000517 = 0x02
+	*(uint8_t*)0x10000518 = 0x99
+	*(uint8_t*)0x10000519 = 0x01
+	*(uint8_t*)0x1000051a = 0x56
+	*(uint8_t*)0x1000051b = 0x00
+	*(uint8_t*)0x1000051c = 0x17
+	*(uint8_t*)0x1000051d = 0x04
+	*(uint8_t*)0x1000051e = 0x44
+	*(uint8_t*)0x1000051f = 0x02
+	*(uint8_t*)0x10000520 = 0x00
+	*(uint8_t*)0x10000521 = 0x00
+	*(uint8_t*)0x10000522 = 0x00
+	*(uint8_t*)0x10000523 = 0x00
+	*(uint8_t*)0x10000524 = 0x11
+	*(uint8_t*)0x10000525 = 0x01
+	*(uint8_t*)0x10000526 = 0x46
+	*(uint8_t*)0x10000527 = 0x00
+	*(uint8_t*)0x10000528 = 0xa4
+	*(uint8_t*)0x10000529 = 0x03
+	*(uint8_t*)0x1000052a = 0x11
+	*(uint8_t*)0x1000052b = 0x01
+	*(uint8_t*)0x1000052c = 0x8e
+	*(uint8_t*)0x1000052d = 0x00
+	*(uint8_t*)0x1000052e = 0x75
+	*(uint8_t*)0x1000052f = 0x05
+	*(uint8_t*)0x10000530 = 0xbb
+	*(uint8_t*)0x10000531 = 0x01
+	*(uint8_t*)0x10000532 = 0x02
+	*(uint8_t*)0x10000533 = 0x00
+	*(uint8_t*)0x10000534 = 0x02
+	*(uint8_t*)0x10000535 = 0x00
+	*(uint8_t*)0x10000536 = 0x40
+	*(uint8_t*)0x10000537 = 0x00
+	*(uint8_t*)0x10000538 = 0x75
+	*(uint8_t*)0x10000539 = 0x05
+	*(uint8_t*)0x1000053a = 0x88
+	*(uint8_t*)0x1000053b = 0x00
+	*(uint8_t*)0x1000053c = 0xc8
+	*(uint8_t*)0x1000053d = 0x00
+	*(uint8_t*)0x1000053e = 0x2d
+	*(uint8_t*)0x1000053f = 0x08
+	*(uint8_t*)0x10000540 = 0x62
+	*(uint8_t*)0x10000541 = 0x00
+	*(uint8_t*)0x10000542 = 0x00
+	*(uint8_t*)0x10000543 = 0x00
+	*(uint8_t*)0x10000544 = 0x00
+	*(uint8_t*)0x10000545 = 0x00
+	*(uint8_t*)0x10000546 = 0x44
+	*(uint8_t*)0x10000547 = 0x00
+	*(uint8_t*)0x10000548 = 0x7a
+	*(uint8_t*)0x10000549 = 0x00
+	*(uint8_t*)0x1000054a = 0xe0
+	*(uint8_t*)0x1000054b = 0x06
+	*(uint8_t*)0x1000054c = 0xa5
+	*(uint8_t*)0x1000054d = 0x00
+	*(uint8_t*)0x1000054e = 0x06
+	*(uint8_t*)0x1000054f = 0x00
+	*(uint8_t*)0x10000550 = 0x05
+	*(uint8_t*)0x10000551 = 0x00
+	*(uint8_t*)0x10000552 = 0x5e
+	*(uint8_t*)0x10000553 = 0x00
+	*(uint8_t*)0x10000554 = 0x17
+	*(uint8_t*)0x10000555 = 0x04
+	*(uint8_t*)0x10000556 = 0xaa
+	*(uint8_t*)0x10000557 = 0x00
+	*(uint8_t*)0x10000558 = 0x00
+	*(uint8_t*)0x10000559 = 0x00
+	*(uint8_t*)0x1000055a = 0x00
+	*(uint8_t*)0x1000055b = 0x00
+	*(uint8_t*)0x1000055c = 0x66
+	*(uint8_t*)0x1000055d = 0x00
+	*(uint8_t*)0x1000055e = 0x00
+	*(uint8_t*)0x1000055f = 0x00
+	*(uint8_t*)0x10000560 = 0x00
+	*(uint8_t*)0x10000561 = 0x00
+	*(uint8_t*)0x10000562 = 0x01
+	*(uint8_t*)0x10000563 = 0x00
+	*(uint8_t*)0x10000564 = 0x4b
+	*(uint8_t*)0x10000565 = 0x00
+	*(uint8_t*)0x10000566 = 0x70
+	*(uint8_t*)0x10000567 = 0x03
+	*(uint8_t*)0x10000568 = 0x66
+	*(uint8_t*)0x10000569 = 0x00
+	*(uint8_t*)0x1000056a = 0x00
+	*(uint8_t*)0x1000056b = 0x00
+	*(uint8_t*)0x1000056c = 0x00
+	*(uint8_t*)0x1000056d = 0x00
+	*(uint8_t*)0x1000056e = 0x22
+	*(uint8_t*)0x1000056f = 0x00
+	*(uint8_t*)0x10000570 = 0x7f
+	*(uint8_t*)0x10000571 = 0x00
+	*(uint8_t*)0x10000572 = 0x75
+	*(uint8_t*)0x10000573 = 0x05
+	*(uint8_t*)0x10000574 = 0x66
+	*(uint8_t*)0x10000575 = 0x00
+	*(uint8_t*)0x10000576 = 0x00
+	*(uint8_t*)0x10000577 = 0x00
+	*(uint8_t*)0x10000578 = 0x00
+	*(uint8_t*)0x10000579 = 0x00
+	*(uint8_t*)0x1000057a = 0x88
+	*(uint8_t*)0x1000057b = 0x00
+	*(uint8_t*)0x1000057c = 0x2e
+	*(uint8_t*)0x1000057d = 0x00
+	*(uint8_t*)0x1000057e = 0xba
+	*(uint8_t*)0x1000057f = 0x02
+	*(uint8_t*)0x10000580 = 0xaa
+	*(uint8_t*)0x10000581 = 0x00
+	*(uint8_t*)0x10000582 = 0x00
+	*(uint8_t*)0x10000583 = 0x00
+	*(uint8_t*)0x10000584 = 0x00
+	*(uint8_t*)0x10000585 = 0x00
+	*(uint8_t*)0x10000586 = 0x01
+	*(uint8_t*)0x10000587 = 0x00
+	*(uint8_t*)0x10000588 = 0x00
+	*(uint8_t*)0x10000589 = 0x00
+	*(uint8_t*)0x1000058a = 0x00
+	*(uint8_t*)0x1000058b = 0x00
+	*(uint8_t*)0x1000058c = 0x22
+	*(uint8_t*)0x1000058d = 0x00
+	*(uint8_t*)0x1000058e = 0x5e
+	*(uint8_t*)0x1000058f = 0x00
+	*(uint8_t*)0x10000590 = 0x17
+	*(uint8_t*)0x10000591 = 0x04
+	*(uint8_t*)0x10000592 = 0x66
+	*(uint8_t*)0x10000593 = 0x00
+	*(uint8_t*)0x10000594 = 0x04
+	*(uint8_t*)0x10000595 = 0x00
+	*(uint8_t*)0x10000596 = 0x1c
+	*(uint8_t*)0x10000597 = 0x00
+	*(uint8_t*)0x10000598 = 0x0e
+	*(uint8_t*)0x10000599 = 0x00
+	*(uint8_t*)0x1000059a = 0x5d
+	*(uint8_t*)0x1000059b = 0x01
+	*(uint8_t*)0x1000059c = 0x32
+	*(uint8_t*)0x1000059d = 0x03
+	*(uint8_t*)0x1000059e = 0x2a
+	*(uint8_t*)0x1000059f = 0x00
+	*(uint8_t*)0x100005a0 = 0x88
+	*(uint8_t*)0x100005a1 = 0x01
+	*(uint8_t*)0x100005a2 = 0x10
+	*(uint8_t*)0x100005a3 = 0x03
+	*(uint8_t*)0x100005a4 = 0x00
+	*(uint8_t*)0x100005a5 = 0x00
+	*(uint8_t*)0x100005a6 = 0x00
+	*(uint8_t*)0x100005a7 = 0x00
+	*(uint8_t*)0x100005a8 = 0x22
+	*(uint8_t*)0x100005a9 = 0x00
+	*(uint8_t*)0x100005aa = 0x32
+	*(uint8_t*)0x100005ab = 0x00
+	*(uint8_t*)0x100005ac = 0x0b
+	*(uint8_t*)0x100005ad = 0x02
+	*(uint8_t*)0x100005ae = 0x32
+	*(uint8_t*)0x100005af = 0x03
+	*(uint8_t*)0x100005b0 = 0x30
+	*(uint8_t*)0x100005b1 = 0x00
+	*(uint8_t*)0x100005b2 = 0xd2
+	*(uint8_t*)0x100005b3 = 0x01
+	*(uint8_t*)0x100005b4 = 0x5b
+	*(uint8_t*)0x100005b5 = 0x00
+	*(uint8_t*)0x100005b6 = 0x00
+	*(uint8_t*)0x100005b7 = 0x00
+	*(uint8_t*)0x100005b8 = 0x00
+	*(uint8_t*)0x100005b9 = 0x00
+	*(uint8_t*)0x100005ba = 0x0b
+	*(uint8_t*)0x100005bb = 0x00
+	*(uint8_t*)0x100005bc = 0x36
+	*(uint8_t*)0x100005bd = 0x00
+	*(uint8_t*)0x100005be = 0xb8
+	*(uint8_t*)0x100005bf = 0x01
+	*(uint8_t*)0x100005c0 = 0x84
+	*(uint8_t*)0x100005c1 = 0x00
+	*(uint8_t*)0x100005c2 = 0x00
+	*(uint8_t*)0x100005c3 = 0x00
+	*(uint8_t*)0x100005c4 = 0x00
+	*(uint8_t*)0x100005c5 = 0x00
+	*(uint8_t*)0x100005c6 = 0x05
+	*(uint8_t*)0x100005c7 = 0x00
+	*(uint8_t*)0x100005c8 = 0x3e
+	*(uint8_t*)0x100005c9 = 0x00
+	*(uint8_t*)0x100005ca = 0xd2
+	*(uint8_t*)0x100005cb = 0x01
+	*(uint8_t*)0x100005cc = 0x57
+	*(uint8_t*)0x100005cd = 0x00
+	*(uint8_t*)0x100005ce = 0x00
+	*(uint8_t*)0x100005cf = 0x00
+	*(uint8_t*)0x100005d0 = 0x00
+	*(uint8_t*)0x100005d1 = 0x00
+	*(uint8_t*)0x100005d2 = 0x0f
+	*(uint8_t*)0x100005d3 = 0x00
+	*(uint8_t*)0x100005d4 = 0x38
+	*(uint8_t*)0x100005d5 = 0x00
+	*(uint8_t*)0x100005d6 = 0xb8
+	*(uint8_t*)0x100005d7 = 0x01
+	*(uint8_t*)0x100005d8 = 0x83
+	*(uint8_t*)0x100005d9 = 0x00
+	*(uint8_t*)0x100005da = 0x00
+	*(uint8_t*)0x100005db = 0x00
+	*(uint8_t*)0x100005dc = 0x00
+	*(uint8_t*)0x100005dd = 0x00
+	*(uint8_t*)0x100005de = 0x06
+	*(uint8_t*)0x100005df = 0x00
+	*(uint8_t*)0x100005e0 = 0x46
+	*(uint8_t*)0x100005e1 = 0x00
+	*(uint8_t*)0x100005e2 = 0xd2
+	*(uint8_t*)0x100005e3 = 0x01
+	*(uint8_t*)0x100005e4 = 0x44
+	*(uint8_t*)0x100005e5 = 0x00
+	*(uint8_t*)0x100005e6 = 0x00
+	*(uint8_t*)0x100005e7 = 0x00
+	*(uint8_t*)0x100005e8 = 0x00
+	*(uint8_t*)0x100005e9 = 0x00
+	*(uint8_t*)0x100005ea = 0x11
+	*(uint8_t*)0x100005eb = 0x01
+	*(uint8_t*)0x100005ec = 0x58
+	*(uint8_t*)0x100005ed = 0x00
+	*(uint8_t*)0x100005ee = 0x4b
+	*(uint8_t*)0x100005ef = 0x02
+	*(uint8_t*)0x100005f0 = 0x66
+	*(uint8_t*)0x100005f1 = 0x00
+	*(uint8_t*)0x100005f2 = 0x4c
+	*(uint8_t*)0x100005f3 = 0x00
+	*(uint8_t*)0x100005f4 = 0x0b
+	*(uint8_t*)0x100005f5 = 0x02
+	*(uint8_t*)0x100005f6 = 0x84
+	*(uint8_t*)0x100005f7 = 0x00
+	*(uint8_t*)0x100005f8 = 0x00
+	*(uint8_t*)0x100005f9 = 0x00
+	*(uint8_t*)0x100005fa = 0x00
+	*(uint8_t*)0x100005fb = 0x00
+	*(uint8_t*)0x100005fc = 0x05
+	*(uint8_t*)0x100005fd = 0x00
+	*(uint8_t*)0x100005fe = 0x52
+	*(uint8_t*)0x100005ff = 0x00
+	*(uint8_t*)0x10000600 = 0x4b
+	*(uint8_t*)0x10000601 = 0x02
+	*(uint8_t*)0x10000602 = 0x66
+	*(uint8_t*)0x10000603 = 0x00
+	*(uint8_t*)0x10000604 = 0x48
+	*(uint8_t*)0x10000605 = 0x00
+	*(uint8_t*)0x10000606 = 0x0b
+	*(uint8_t*)0x10000607 = 0x02
+	*(uint8_t*)0x10000608 = 0x83
+	*(uint8_t*)0x10000609 = 0x00
+	*(uint8_t*)0x1000060a = 0x00
+	*(uint8_t*)0x1000060b = 0x00
+	*(uint8_t*)0x1000060c = 0x00
+	*(uint8_t*)0x1000060d = 0x00
+	*(uint8_t*)0x1000060e = 0x06
+	*(uint8_t*)0x1000060f = 0x00
+	*(uint8_t*)0x10000610 = 0x4e
+	*(uint8_t*)0x10000611 = 0x00
+	*(uint8_t*)0x10000612 = 0x4b
+	*(uint8_t*)0x10000613 = 0x02
+	*(uint8_t*)0x10000614 = 0x44
+	*(uint8_t*)0x10000615 = 0x00
+	*(uint8_t*)0x10000616 = 0x00
+	*(uint8_t*)0x10000617 = 0x00
+	*(uint8_t*)0x10000618 = 0x00
+	*(uint8_t*)0x10000619 = 0x00
+	*(uint8_t*)0x1000061a = 0x01
+	*(uint8_t*)0x1000061b = 0x00
+	*(uint8_t*)0x1000061c = 0x00
+	*(uint8_t*)0x1000061d = 0x00
+	*(uint8_t*)0x1000061e = 0x00
+	*(uint8_t*)0x1000061f = 0x00
+	*(uint8_t*)0x10000620 = 0x11
+	*(uint8_t*)0x10000621 = 0x01
+	*(uint8_t*)0x10000622 = 0x66
+	*(uint8_t*)0x10000623 = 0x00
+	*(uint8_t*)0x10000624 = 0xba
+	*(uint8_t*)0x10000625 = 0x02
+	*(uint8_t*)0x10000626 = 0x66
+	*(uint8_t*)0x10000627 = 0x00
+	*(uint8_t*)0x10000628 = 0x00
+	*(uint8_t*)0x10000629 = 0x00
+	*(uint8_t*)0x1000062a = 0x00
+	*(uint8_t*)0x1000062b = 0x00
+	*(uint8_t*)0x1000062c = 0x01
+	*(uint8_t*)0x1000062d = 0x00
+	*(uint8_t*)0x1000062e = 0x82
+	*(uint8_t*)0x1000062f = 0x00
+	*(uint8_t*)0x10000630 = 0x93
+	*(uint8_t*)0x10000631 = 0x02
+	*(uint8_t*)0x10000632 = 0x85
+	*(uint8_t*)0x10000633 = 0x00
+	*(uint8_t*)0x10000634 = 0x00
+	*(uint8_t*)0x10000635 = 0x00
+	*(uint8_t*)0x10000636 = 0x00
+	*(uint8_t*)0x10000637 = 0x00
+	*(uint8_t*)0x10000638 = 0x03
+	*(uint8_t*)0x10000639 = 0x00
+	*(uint8_t*)0x1000063a = 0x7c
+	*(uint8_t*)0x1000063b = 0x00
+	*(uint8_t*)0x1000063c = 0xba
+	*(uint8_t*)0x1000063d = 0x02
+	*(uint8_t*)0x1000063e = 0x66
+	*(uint8_t*)0x1000063f = 0x00
+	*(uint8_t*)0x10000640 = 0x90
+	*(uint8_t*)0x10000641 = 0x00
+	*(uint8_t*)0x10000642 = 0x93
+	*(uint8_t*)0x10000643 = 0x02
+	*(uint8_t*)0x10000644 = 0x80
+	*(uint8_t*)0x10000645 = 0x00
+	*(uint8_t*)0x10000646 = 0x00
+	*(uint8_t*)0x10000647 = 0x00
+	*(uint8_t*)0x10000648 = 0x00
+	*(uint8_t*)0x10000649 = 0x00
+	*(uint8_t*)0x1000064a = 0x01
+	*(uint8_t*)0x1000064b = 0x00
+	*(uint8_t*)0x1000064c = 0x00
+	*(uint8_t*)0x1000064d = 0x00
+	*(uint8_t*)0x1000064e = 0x00
+	*(uint8_t*)0x1000064f = 0x00
+	*(uint8_t*)0x10000650 = 0x08
+	*(uint8_t*)0x10000651 = 0x00
+	*(uint8_t*)0x10000652 = 0xaa
+	*(uint8_t*)0x10000653 = 0x00
+	*(uint8_t*)0x10000654 = 0xba
+	*(uint8_t*)0x10000655 = 0x02
+	*(uint8_t*)0x10000656 = 0x55
+	*(uint8_t*)0x10000657 = 0x01
+	*(uint8_t*)0x10000658 = 0x07
+	*(uint8_t*)0x10000659 = 0x00
+	*(uint8_t*)0x1000065a = 0x00
+	*(uint8_t*)0x1000065b = 0x00
+	*(uint8_t*)0x1000065c = 0x7f
+	*(uint8_t*)0x1000065d = 0x00
+	*(uint8_t*)0x1000065e = 0x75
+	*(uint8_t*)0x1000065f = 0x05
+	*(uint8_t*)0x10000660 = 0x32
+	*(uint8_t*)0x10000661 = 0x00
+	*(uint8_t*)0x10000662 = 0x00
+	*(uint8_t*)0x10000663 = 0x00
+	*(uint8_t*)0x10000664 = 0x00
+	*(uint8_t*)0x10000665 = 0x00
+	*(uint8_t*)0x10000666 = 0x2f
+	*(uint8_t*)0x10000667 = 0x00
+	*(uint8_t*)0x10000668 = 0x7f
+	*(uint8_t*)0x10000669 = 0x00
+	*(uint8_t*)0x1000066a = 0x97
+	*(uint8_t*)0x1000066b = 0x04
+	*(uint8_t*)0x1000066c = 0x3d
+	*(uint8_t*)0x1000066d = 0x00
+	*(uint8_t*)0x1000066e = 0x00
+	*(uint8_t*)0x1000066f = 0x00
+	*(uint8_t*)0x10000670 = 0x00
+	*(uint8_t*)0x10000671 = 0x00
+	*(uint8_t*)0x10000672 = 0x34
+	*(uint8_t*)0x10000673 = 0x00
+	*(uint8_t*)0x10000674 = 0x78
+	*(uint8_t*)0x10000675 = 0x00
+	*(uint8_t*)0x10000676 = 0x75
+	*(uint8_t*)0x10000677 = 0x05
+	*(uint8_t*)0x10000678 = 0x39
+	*(uint8_t*)0x10000679 = 0x00
+	*(uint8_t*)0x1000067a = 0x00
+	*(uint8_t*)0x1000067b = 0x00
+	*(uint8_t*)0x1000067c = 0x00
+	*(uint8_t*)0x1000067d = 0x00
+	*(uint8_t*)0x1000067e = 0x43
+	*(uint8_t*)0x1000067f = 0x00
+	*(uint8_t*)0x10000680 = 0x7f
+	*(uint8_t*)0x10000681 = 0x00
+	*(uint8_t*)0x10000682 = 0x97
+	*(uint8_t*)0x10000683 = 0x04
+	*(uint8_t*)0x10000684 = 0x46
+	*(uint8_t*)0x10000685 = 0x00
+	*(uint8_t*)0x10000686 = 0x03
+	*(uint8_t*)0x10000687 = 0x00
+	*(uint8_t*)0x10000688 = 0x03
+	*(uint8_t*)0x10000689 = 0x00
+	*(uint8_t*)0x1000068a = 0x46
+	*(uint8_t*)0x1000068b = 0x00
+	*(uint8_t*)0x1000068c = 0x93
+	*(uint8_t*)0x1000068d = 0x02
+	*(uint8_t*)0x1000068e = 0x8b
+	*(uint8_t*)0x1000068f = 0x00
+	*(uint8_t*)0x10000690 = 0x00
+	*(uint8_t*)0x10000691 = 0x00
+	*(uint8_t*)0x10000692 = 0x00
+	*(uint8_t*)0x10000693 = 0x00
+	*(uint8_t*)0x10000694 = 0x20
+	*(uint8_t*)0x10000695 = 0x00
+	*(uint8_t*)0x10000696 = 0x5a
+	*(uint8_t*)0x10000697 = 0x00
+	*(uint8_t*)0x10000698 = 0x93
+	*(uint8_t*)0x10000699 = 0x02
+	*(uint8_t*)0x1000069a = 0xaa
+	*(uint8_t*)0x1000069b = 0x00
+	*(uint8_t*)0x1000069c = 0x52
+	*(uint8_t*)0x1000069d = 0x00
+	*(uint8_t*)0x1000069e = 0xba
+	*(uint8_t*)0x1000069f = 0x02
+	*(uint8_t*)0x100006a0 = 0x8b
+	*(uint8_t*)0x100006a1 = 0x00
+	*(uint8_t*)0x100006a2 = 0x00
+	*(uint8_t*)0x100006a3 = 0x00
+	*(uint8_t*)0x100006a4 = 0x00
+	*(uint8_t*)0x100006a5 = 0x00
+	*(uint8_t*)0x100006a6 = 0x20
+	*(uint8_t*)0x100006a7 = 0x00
+	*(uint8_t*)0x100006a8 = 0x46
+	*(uint8_t*)0x100006a9 = 0x00
+	*(uint8_t*)0x100006aa = 0xba
+	*(uint8_t*)0x100006ab = 0x02
+	*(uint8_t*)0x100006ac = 0x9e
+	*(uint8_t*)0x100006ad = 0x00
+	*(uint8_t*)0x100006ae = 0x02
+	*(uint8_t*)0x100006af = 0x00
+	*(uint8_t*)0x100006b0 = 0x03
+	*(uint8_t*)0x100006b1 = 0x00
+	*(uint8_t*)0x100006b2 = 0x47
+	*(uint8_t*)0x100006b3 = 0x00
+	*(uint8_t*)0x100006b4 = 0x75
+	*(uint8_t*)0x100006b5 = 0x05
+	*(uint8_t*)0x100006b6 = 0x11
+	*(uint8_t*)0x100006b7 = 0x01
+	*(uint8_t*)0x100006b8 = 0x32
+	*(uint8_t*)0x100006b9 = 0x00
+	*(uint8_t*)0x100006ba = 0x70
+	*(uint8_t*)0x100006bb = 0x03
+	*(uint8_t*)0x100006bc = 0x11
+	*(uint8_t*)0x100006bd = 0x01
+	*(uint8_t*)0x100006be = 0x26
+	*(uint8_t*)0x100006bf = 0x00
+	*(uint8_t*)0x100006c0 = 0xe0
+	*(uint8_t*)0x100006c1 = 0x06
+	*(uint8_t*)0x100006c2 = 0x88
+	*(uint8_t*)0x100006c3 = 0x00
+	*(uint8_t*)0x100006c4 = 0x22
+	*(uint8_t*)0x100006c5 = 0x00
+	*(uint8_t*)0x100006c6 = 0x17
+	*(uint8_t*)0x100006c7 = 0x04
+	*(uint8_t*)0x100006c8 = 0x11
+	*(uint8_t*)0x100006c9 = 0x01
+	*(uint8_t*)0x100006ca = 0x33
+	*(uint8_t*)0x100006cb = 0x00
+	*(uint8_t*)0x100006cc = 0xba
+	*(uint8_t*)0x100006cd = 0x02
+	*(uint8_t*)0x100006ce = 0x88
+	*(uint8_t*)0x100006cf = 0x00
+	*(uint8_t*)0x100006d0 = 0x05
+	*(uint8_t*)0x100006d1 = 0x00
+	*(uint8_t*)0x100006d2 = 0x03
+	*(uint8_t*)0x100006d3 = 0x00
+	*(uint8_t*)0x100006d4 = 0x5e
+	*(uint8_t*)0x100006d5 = 0x00
+	*(uint8_t*)0x100006d6 = 0x17
+	*(uint8_t*)0x100006d7 = 0x04
+	*(uint8_t*)0x100006d8 = 0x88
+	*(uint8_t*)0x100006d9 = 0x00
+	*(uint8_t*)0x100006da = 0x7f
+	*(uint8_t*)0x100006db = 0x00
+	*(uint8_t*)0x100006dc = 0xa4
+	*(uint8_t*)0x100006dd = 0x03
+	*(uint8_t*)0x100006de = 0x88
+	*(uint8_t*)0x100006df = 0x00
+	*(uint8_t*)0x100006e0 = 0x00
+	*(uint8_t*)0x100006e1 = 0x00
+	*(uint8_t*)0x100006e2 = 0x00
+	*(uint8_t*)0x100006e3 = 0x00
+	*(uint8_t*)0x100006e4 = 0x01
+	*(uint8_t*)0x100006e5 = 0x00
+	*(uint8_t*)0x100006e6 = 0x33
+	*(uint8_t*)0x100006e7 = 0x00
+	*(uint8_t*)0x100006e8 = 0x70
+	*(uint8_t*)0x100006e9 = 0x03
+	*(uint8_t*)0x100006ea = 0x88
+	*(uint8_t*)0x100006eb = 0x00
+	*(uint8_t*)0x100006ec = 0x4f
+	*(uint8_t*)0x100006ed = 0x00
+	*(uint8_t*)0x100006ee = 0xba
+	*(uint8_t*)0x100006ef = 0x02
+	*(uint8_t*)0x100006f0 = 0xc7
+	*(uint8_t*)0x100006f1 = 0x00
+	*(uint8_t*)0x100006f2 = 0x00
+	*(uint8_t*)0x100006f3 = 0x00
+	*(uint8_t*)0x100006f4 = 0x00
+	*(uint8_t*)0x100006f5 = 0x00
+	*(uint8_t*)0x100006f6 = 0x11
+	*(uint8_t*)0x100006f7 = 0x01
+	*(uint8_t*)0x100006f8 = 0x54
+	*(uint8_t*)0x100006f9 = 0x00
+	*(uint8_t*)0x100006fa = 0x75
+	*(uint8_t*)0x100006fb = 0x05
+	*(uint8_t*)0x100006fc = 0x88
+	*(uint8_t*)0x100006fd = 0x00
+	*(uint8_t*)0x100006fe = 0x7b
+	*(uint8_t*)0x100006ff = 0x00
+	*(uint8_t*)0x10000700 = 0xe0
+	*(uint8_t*)0x10000701 = 0x06
+	*(uint8_t*)0x10000702 = 0xcd
+	*(uint8_t*)0x10000703 = 0x00
+	*(uint8_t*)0x10000704 = 0x05
+	*(uint8_t*)0x10000705 = 0x00
+	*(uint8_t*)0x10000706 = 0x00
+	*(uint8_t*)0x10000707 = 0x00
+	*(uint8_t*)0x10000708 = 0x64
+	*(uint8_t*)0x10000709 = 0x00
+	*(uint8_t*)0x1000070a = 0x20
+	*(uint8_t*)0x1000070b = 0x06
+	*(uint8_t*)0x1000070c = 0xc8
+	*(uint8_t*)0x1000070d = 0x00
+	*(uint8_t*)0x1000070e = 0xc8
+	*(uint8_t*)0x1000070f = 0x00
+	*(uint8_t*)0x10000710 = 0xc8
+	*(uint8_t*)0x10000711 = 0x05
+	*(uint8_t*)0x10000712 = 0xc8
+	*(uint8_t*)0x10000713 = 0x00
+	*(uint8_t*)0x10000714 = 0x64
+	*(uint8_t*)0x10000715 = 0x00
+	*(uint8_t*)0x10000716 = 0x27
+	*(uint8_t*)0x10000717 = 0x05
+	*(uint8_t*)0x10000718 = 0xc8
+	*(uint8_t*)0x10000719 = 0x00
+	*(uint8_t*)0x1000071a = 0xc8
+	*(uint8_t*)0x1000071b = 0x00
+	*(uint8_t*)0x1000071c = 0x27
+	*(uint8_t*)0x1000071d = 0x05
+	*(uint8_t*)0x1000071e = 0xc8
+	*(uint8_t*)0x1000071f = 0x00
+	*(uint8_t*)0x10000720 = 0x64
+	*(uint8_t*)0x10000721 = 0x00
+	*(uint8_t*)0x10000722 = 0xc8
+	*(uint8_t*)0x10000723 = 0x05
+	*(uint8_t*)0x10000724 = 0xd6
+	*(uint8_t*)0x10000725 = 0x00
+	*(uint8_t*)0x10000726 = 0x0b
+	*(uint8_t*)0x10000727 = 0x00
+	*(uint8_t*)0x10000728 = 0x0b
+	*(uint8_t*)0x10000729 = 0x00
+	*(uint8_t*)0x1000072a = 0x00
+	*(uint8_t*)0x1000072b = 0x00
+	*(uint8_t*)0x1000072c = 0x00
+	*(uint8_t*)0x1000072d = 0x00
+	*(uint8_t*)0x1000072e = 0x04
+	*(uint8_t*)0x1000072f = 0x00
+	*(uint8_t*)0x10000730 = 0x56
+	*(uint8_t*)0x10000731 = 0x00
+	*(uint8_t*)0x10000732 = 0xdc
+	*(uint8_t*)0x10000733 = 0x03
+	*(uint8_t*)0x10000734 = 0xc6
+	*(uint8_t*)0x10000735 = 0x00
+	*(uint8_t*)0x10000736 = 0x00
+	*(uint8_t*)0x10000737 = 0x00
+	*(uint8_t*)0x10000738 = 0x00
+	*(uint8_t*)0x10000739 = 0x00
+	*(uint8_t*)0x1000073a = 0x04
+	*(uint8_t*)0x1000073b = 0x00
+	*(uint8_t*)0x1000073c = 0x5b
+	*(uint8_t*)0x1000073d = 0x00
+	*(uint8_t*)0x1000073e = 0xa4
+	*(uint8_t*)0x1000073f = 0x03
+	*(uint8_t*)0x10000740 = 0xce
+	*(uint8_t*)0x10000741 = 0x00
+	*(uint8_t*)0x10000742 = 0x00
+	*(uint8_t*)0x10000743 = 0x00
+	*(uint8_t*)0x10000744 = 0x00
+	*(uint8_t*)0x10000745 = 0x00
+	*(uint8_t*)0x10000746 = 0x01
+	*(uint8_t*)0x10000747 = 0x00
+	*(uint8_t*)0x10000748 = 0x00
+	*(uint8_t*)0x10000749 = 0x00
+	*(uint8_t*)0x1000074a = 0x00
+	*(uint8_t*)0x1000074b = 0x00
+	*(uint8_t*)0x1000074c = 0x06
+	*(uint8_t*)0x1000074d = 0x00
+	*(uint8_t*)0x1000074e = 0x5b
+	*(uint8_t*)0x1000074f = 0x00
+	*(uint8_t*)0x10000750 = 0x70
+	*(uint8_t*)0x10000751 = 0x03
+	*(uint8_t*)0x10000752 = 0xce
+	*(uint8_t*)0x10000753 = 0x00
+	*(uint8_t*)0x10000754 = 0x00
+	*(uint8_t*)0x10000755 = 0x00
+	*(uint8_t*)0x10000756 = 0x00
+	*(uint8_t*)0x10000757 = 0x00
+	*(uint8_t*)0x10000758 = 0x03
+	*(uint8_t*)0x10000759 = 0x00
+	*(uint8_t*)0x1000075a = 0x3b
+	*(uint8_t*)0x1000075b = 0x00
+	*(uint8_t*)0x1000075c = 0x20
+	*(uint8_t*)0x1000075d = 0x06
+	*(uint8_t*)0x1000075e = 0xc1
+	*(uint8_t*)0x1000075f = 0x00
+	*(uint8_t*)0x10000760 = 0x00
+	*(uint8_t*)0x10000761 = 0x00
+	*(uint8_t*)0x10000762 = 0x00
+	*(uint8_t*)0x10000763 = 0x00
+	*(uint8_t*)0x10000764 = 0x02
+	*(uint8_t*)0x10000765 = 0x00
+	*(uint8_t*)0x10000766 = 0x61
+	*(uint8_t*)0x10000767 = 0x00
+	*(uint8_t*)0x10000768 = 0x93
+	*(uint8_t*)0x10000769 = 0x02
+	*(uint8_t*)0x1000076a = 0xd7
+	*(uint8_t*)0x1000076b = 0x00
+	*(uint8_t*)0x1000076c = 0x00
+	*(uint8_t*)0x1000076d = 0x00
+	*(uint8_t*)0x1000076e = 0x00
+	*(uint8_t*)0x1000076f = 0x00
+	*(uint8_t*)0x10000770 = 0x06
+	*(uint8_t*)0x10000771 = 0x00
+	*(uint8_t*)0x10000772 = 0x39
+	*(uint8_t*)0x10000773 = 0x00
+	*(uint8_t*)0x10000774 = 0xb8
+	*(uint8_t*)0x10000775 = 0x07
+	*(uint8_t*)0x10000776 = 0xc5
+	*(uint8_t*)0x10000777 = 0x00
+	*(uint8_t*)0x10000778 = 0x00
+	*(uint8_t*)0x10000779 = 0x00
+	*(uint8_t*)0x1000077a = 0x00
+	*(uint8_t*)0x1000077b = 0x00
+	*(uint8_t*)0x1000077c = 0x05
+	*(uint8_t*)0x1000077d = 0x00
+	*(uint8_t*)0x1000077e = 0x32
+	*(uint8_t*)0x1000077f = 0x00
+	*(uint8_t*)0x10000780 = 0x49
+	*(uint8_t*)0x10000781 = 0x07
+	*(uint8_t*)0x10000782 = 0xce
+	*(uint8_t*)0x10000783 = 0x00
+	*(uint8_t*)0x10000784 = 0x00
+	*(uint8_t*)0x10000785 = 0x00
+	*(uint8_t*)0x10000786 = 0x00
+	*(uint8_t*)0x10000787 = 0x00
+	*(uint8_t*)0x10000788 = 0x01
+	*(uint8_t*)0x10000789 = 0x00
+	*(uint8_t*)0x1000078a = 0x00
+	*(uint8_t*)0x1000078b = 0x00
+	*(uint8_t*)0x1000078c = 0x00
+	*(uint8_t*)0x1000078d = 0x00
+	*(uint8_t*)0x1000078e = 0x04
+	*(uint8_t*)0x1000078f = 0x00
+	*(uint8_t*)0x10000790 = 0x3f
+	*(uint8_t*)0x10000791 = 0x00
+	*(uint8_t*)0x10000792 = 0xe0
+	*(uint8_t*)0x10000793 = 0x06
+	*(uint8_t*)0x10000794 = 0xc8
+	*(uint8_t*)0x10000795 = 0x00
+	*(uint8_t*)0x10000796 = 0x00
+	*(uint8_t*)0x10000797 = 0x00
+	*(uint8_t*)0x10000798 = 0x00
+	*(uint8_t*)0x10000799 = 0x00
+	*(uint8_t*)0x1000079a = 0x0a
+	*(uint8_t*)0x1000079b = 0x00
+	*(uint8_t*)0x1000079c = 0x5b
+	*(uint8_t*)0x1000079d = 0x00
+	*(uint8_t*)0x1000079e = 0x10
+	*(uint8_t*)0x1000079f = 0x03
+	*(uint8_t*)0x100007a0 = 0xbf
+	*(uint8_t*)0x100007a1 = 0x00
+	*(uint8_t*)0x100007a2 = 0x00
+	*(uint8_t*)0x100007a3 = 0x00
+	*(uint8_t*)0x100007a4 = 0x00
+	*(uint8_t*)0x100007a5 = 0x00
+	*(uint8_t*)0x100007a6 = 0x09
+	*(uint8_t*)0x100007a7 = 0x00
+	*(uint8_t*)0x100007a8 = 0x35
+	*(uint8_t*)0x100007a9 = 0x00
+	*(uint8_t*)0x100007aa = 0x27
+	*(uint8_t*)0x100007ab = 0x05
+	*(uint8_t*)0x100007ac = 0xd5
+	*(uint8_t*)0x100007ad = 0x00
+	*(uint8_t*)0x100007ae = 0x00
+	*(uint8_t*)0x100007af = 0x00
+	*(uint8_t*)0x100007b0 = 0x00
+	*(uint8_t*)0x100007b1 = 0x00
+	*(uint8_t*)0x100007b2 = 0x00
+	*(uint8_t*)0x100007b3 = 0x00
+	*(uint8_t*)0x100007b4 = 0x00
+	*(uint8_t*)0x100007b5 = 0x00
+	*(uint8_t*)0x100007b6 = 0x00
+	*(uint8_t*)0x100007b7 = 0x00
+	*(uint8_t*)0x100007b8 = 0x60
+	*(uint8_t*)0x100007b9 = 0xf1
+	*(uint8_t*)0x100007ba = 0x00
+	*(uint8_t*)0x100007bb = 0x00
+	*(uint8_t*)0x100007bc = 0x7e
+	*(uint8_t*)0x100007bd = 0xf1
+	*(uint8_t*)0x100007be = 0x00
+	*(uint8_t*)0x100007bf = 0x00
+	*(uint8_t*)0x100007c0 = 0x00
+	*(uint8_t*)0x100007c1 = 0x00
+	*(uint8_t*)0x100007c2 = 0x00
+	*(uint8_t*)0x100007c3 = 0x00
+	*(uint8_t*)0x100007c4 = 0x00
+	*(uint8_t*)0x100007c5 = 0x00
+	*(uint8_t*)0x100007c6 = 0x00
+	*(uint8_t*)0x100007c7 = 0x00
+	*(uint8_t*)0x100007c8 = 0x00
+	*(uint8_t*)0x100007c9 = 0x00
+	*(uint8_t*)0x100007ca = 0x00
+	*(uint8_t*)0x100007cb = 0x00
+	*(uint8_t*)0x100007cc = 0x00
+	*(uint8_t*)0x100007cd = 0x00
+	*(uint8_t*)0x100007ce = 0x00
+	*(uint8_t*)0x100007cf = 0x00
+	*(uint8_t*)0x100007d0 = 0x00
+	*(uint8_t*)0x100007d1 = 0x00
+	*(uint8_t*)0x100007d2 = 0x00
+	*(uint8_t*)0x100007d3 = 0x00
+	*(uint8_t*)0x100007d4 = 0x00
+	*(uint8_t*)0x100007d5 = 0x00
+	*(uint8_t*)0x100007d6 = 0x00
+	*(uint8_t*)0x100007d7 = 0x00
+	*(uint8_t*)0x100007d8 = 0x00
+	*(uint8_t*)0x100007d9 = 0x00
+	*(uint8_t*)0x100007da = 0x00
+	*(uint8_t*)0x100007db = 0x00
+	*(uint8_t*)0x100007dc = 0x00
+	*(uint8_t*)0x100007dd = 0x00
+	*(uint8_t*)0x100007de = 0x00
+	*(uint8_t*)0x100007df = 0x00
+	*(uint8_t*)0x100007e0 = 0x8c
+	*(uint8_t*)0x100007e1 = 0xf1
+	*(uint8_t*)0x100007e2 = 0x00
+	*(uint8_t*)0x100007e3 = 0x00
+	*(uint8_t*)0x100007e4 = 0x00
+	*(uint8_t*)0x100007e5 = 0x00
+	*(uint8_t*)0x100007e6 = 0x00
+	*(uint8_t*)0x100007e7 = 0x00
+
+
+	// Firmware Offset(s): 
+	//	0x00002a7e - 0x00002a7e
+	//	0x000029f6 - 0x000029fa
+	//	0x000029ec - 0x000029f4
+	//	0x0000c2cc - 0x0000c2cc
+
+	// Control logic to exit SRAM0 heap init above
+
+
+	// Firmware Offset(s): 
+	//	0x0000c2ce - 0x0000c2d8
+
+	// SRAM1 initialization
+	*(uint32_t*)0x20000000 = 0x0000ffff;
+	*(uint32_t*)0x20000004 = 0x00016400	
+	*(uint32_t*)0x20000008 = 0x00001400
+	*(uint32_t*)0x2000000c = 0x00000000
+	*(uint32_t*)0x20000010 = 0x27100000
+	*(uint32_t*)0x20000014 = 0x00000000
+	*(uint32_t*)0x20000018 = 0x00000000
+	*(uint32_t*)0x2000001c = 0x00000000
+	*(uint32_t*)0x20000020 = 0x00000000
+	*(uint32_t*)0x20000024 = 0x00000000
+	*(uint32_t*)0x20000028 = 0x00000000
+	*(uint32_t*)0x2000002c = 0x00000000
+	*(uint32_t*)0x20000030 = 0x00000000
+	*(uint32_t*)0x20000034 = 0x00000000
+	*(uint32_t*)0x20000038 = 0x00000000
+	*(uint32_t*)0x2000003c = 0x00000000
+	*(uint32_t*)0x20000040 = 0x00000000
+	*(uint32_t*)0x20000044 = 0x00000000
+	*(uint32_t*)0x20000048 = 0x00000000
+	*(uint32_t*)0x2000004c = 0x00000000
+	*(uint32_t*)0x20000050 = 0x00000000
+	*(uint32_t*)0x20000054 = 0x00000000
+	*(uint32_t*)0x2000005c = 0x00000000
+	*(uint32_t*)0x20000060 = 0x00000000
+	*(uint32_t*)0x20000064 = 0x00000000
+	*(uint32_t*)0x20000068 = 0x00000000
+	*(uint32_t*)0x2000006c = 0x00000000
+	*(uint32_t*)0x20000070 = 0x00000000
+	*(uint32_t*)0x20000074 = 0x00000000
+	*(uint32_t*)0x20000078 = 0x00000000
+
+
+	// Firmware Offset(s): 
+	//	0x000029f6 - 0x000029fa
+	//	0x000029ec - 0x000029f4
+	//	0x0000c2dc - 0x0000c2de
+	//	0x0000c2e0 - 0x0000c2e8
+
+	// SRAM0 initialization
+	*(uint32_t*)0x100000c4 = 0x00000000
+	*(uint32_t*)0x100000c8 = 0x00000000
+	*(uint32_t*)0x100000cc = 0x00000000
+	*(uint32_t*)0x100000d0 = 0x00000000
+	*(uint32_t*)0x100000d4 = 0x00000000
+	*(uint32_t*)0x100000d8 = 0x00000000
+	*(uint32_t*)0x100000dc = 0x00000000
+	*(uint32_t*)0x100000e0 = 0x00000000
+	*(uint32_t*)0x100000e4 = 0x00000000
+	*(uint32_t*)0x100000e8 = 0x00000000
+	*(uint32_t*)0x100000ec = 0x00000000
+	*(uint32_t*)0x100000f0 = 0x00000000
+
+
+	// Firmware Offset(s): 
+	//	0x000029f6 - 0x000029fa
+	//	0x000029ec - 0x000029f4
+	//	0x0000c2dc - 0x0000c2de
+	//	0x0000c2e0 - 0x0000c2e8
+
+	// SRAM0 initialization
+	write 0's to 0x100007e8 to 0x10001fc4 with 32-bit writes
+
+
+	// Firmware Offset(s): 
+	//	0x000029f6 - 0x000029fa
+	//	0x000029ec - 0x000029f4
+	//	0x0000c2dc - 0x0000c2de
+	//	0x0000c2e0 - 0x0000c2e8
+
+	// SRAM1 initialization
+	write 0's to 0x2000007c to 0x2000030c with 32-bit writes
+
+
+	// Firmware Offset(s): 
+	//	0x000029f6 - 0x000029fc
+	//	0x000020c8 - 0x000020ca
+	//	0x0000d778 - 0x0000d778
+	//	0x00009cfc - 0x00009cfe
+	//	0x00004174 - 0x00004176
+
+	// Steps to back away from memory filling logics (i.e. stack pops, etc.)
+
+
+	// Firmware Offset(s): 
+	//	0x00004130 - 0x0000414a
+
+	//	Check that Main clock source select register is set to PLL output
+	val = *(uint32_t*)0x40048070;
+
+	if (val != 3) {
+		// TODO: UNKNOWN PATHS
+		//	Jump to 0x00004150 for IRC Oscillator
+		//	Jump to 0x00004154 for PLL input
+		//	Jump to 0x0000415a for Watchdown oscillator
+		//	Execute 0x0000414e if none of the above
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x000041b0 - 0x000041b2
+	//	0x00004188 - 0x00004194
+
+	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+	val = *(uint32_t*)0x40048040;
+	if (val != 1) {
+		// TODO: UNKNOWN PATHS 
+		//	Branch to 0x0000419a if val == 0
+		//	Execute 0x00004196 if val != 0 && val != 1
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x0000419e - 0x000041a2
+	//	0x000041b6 - 0x000041bc
+	//	0x00004168 - 0x00004172
+	//	0x000041c0 - 0x000041c0
+	//	0x0000414e - 0x0000414e
+	//	0x0000417a - 0x0000417e
+	//	0x000020ec - 0x000020f8
+	//	0x0000210e - 0x00002114
+	//	0x000020fa - 0x00002100
+	//	0x00002102 - 0x00002116
+	//	0x00004182 - 0x00004182
+	//	0x00009d06 - 0x00009d06
+	//	0x0000d77c - 0x0000d77c
+
+	// Read System PLL control register
+	reg0 = *(uint32_t*)0x40048008;
+	// Isolate MSEL (feedback divider value)
+	reg0 &= 0x1f;
+
+	// Read System clock divider register
+	reg1 = *(uint32_t*)0x40048078;
+
+	// And then a long series of loops based on the values read above
+	//  Looks like a delay based on PLL and system clock settings
+
+	// Store these result to SRAM0 value
+	*(uint32_t*)0x100000a4 = 0x02dc6c00;
+
+
+	// Firmware Offset(s): 
+	//	0x00009c50 - 0x00009c56
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 0;
+	reg0 = 0x15;
+
+	reg2 = 0xff;
+
+	// Read Interrupt Priority Register 5
+	reg3 = (*uint32_t*)0xe000e414;
+
+	// Isolate interrupt priority for SSP0 and set to highest (0)
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009c5a - 0x00009c5e
+	//	0x000072dc - 0x00007304
+
+	reg1 = 0;
+	reg0 = 0xFFFFFFFF;
+	
+	reg3 = reg0;
+	reg2 = 0xff000000;
+
+	// Used to count shifts for reg1 and reg2
+	reg3 >>= 27; // 0x18
+
+	// Read Interrupt Control and State Register (ICSR)
+	reg3 = *(uint32_t*)0xe000ed04;
+
+	// Set lower 24 bits, but these are all RO... Not sure why this is happening...
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009c62 - 0x00009c66
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 1;
+	reg0 = 0x14;
+
+	...
+	reg2 = 0xFF;
+	reg1 = 0x40;
+
+	// Read Interrupt Priority Register 5
+	reg3 = *(uint32_t*)0xe000e414;
+
+	// Isolate interrupt priority for SSP0 and set to 1, one below highest 
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+	
+	
+	// Firmware Offset(s): 
+	//	0x00009c6a - 0x00009c6e
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 1;
+	reg0 = 0xe;
+
+	...
+	reg2 = 0x00ff0000;
+	reg1 = 0x00400000;
+
+	// Read Interrupt Priority Register 3
+	reg3 = *(uint32_t*)0xe000e40c;
+
+	// Isolate interrupt priority for SSP1 and set to 1, one below highest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009c72 - 0x00009c76
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 1;
+	reg0 = 0x12;
+
+	...
+	reg2 = 0x00ff0000;
+	reg1 = 0x00400000;
+
+	// Read Interrupt Priority Register 4
+	reg3 = *(uint32_t*)0xe000e410;
+
+	// Isolate interrupt priority for CT32B0 and set to 1, one below highest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009c7a - 0x00009c7e
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 1;
+	reg0 = 0x16;
+
+	...
+	reg2 = 0x00ff0000;
+	reg1 = 0x00400000;
+
+	// Read Interrupt Priority Register 5
+	reg3 = *(uint32_t*)0xe000e414;
+
+	// Isolate interrupt priority for USB_IRQ and set to 1, one below highest 
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009c82 - 0x00009c86
+	//	0x000072dc - 0x00007304
+
+	reg1 = 1;
+	reg0 = 0xFFFFFFFE;
+	
+	..
+	reg2 = 0x00ff0000;
+	reg1 = 0x00400000;
+
+	// Read System Handler Priority Register 3 (SHPR3)
+	reg3 = *(uint32_t*)0xe000ed20;
+
+	// Set PRI_14 Priority of system handler 14, PendSV to 1, one below highest 
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009c8a - 0x00009c8e
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 2;
+	reg0 = 0x10;
+
+	...
+	reg2 = 0x000000ff;
+	reg1 = 0x00000080;
+
+	// Read Interrupt Priority Register 4
+	reg3 = *(uint32_t*)0xe000e410;
+
+	// Isolate interrupt priority for CT16B0 and set to 2, one above lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009c92 - 0x00009c96
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 2;
+	reg0 = 0x11;
+
+	...
+	reg2 = 0x0000ff00;
+	reg1 = 0x00008000;
+
+	// Read Interrupt Priority Register 4
+	reg3 = *(uint32_t*)0xe000e410;
+
+	// Isolate interrupt priority for CT16B1 and set to 2, one above lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009c9a - 0x00009c9e
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 2;
+	reg0 = 0x13;
+
+	...
+	reg2 = 0xff000000;
+	reg1 = 0x80000000;
+
+	// Read Interrupt Priority Register 4
+	reg3 = *(uint32_t*)0xe000e410;
+
+	// Isolate interrupt priority for CT32B1 and set to 2, one above lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009ca2 - 0x00009ca6
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 2;
+	reg0 = 0x18;
+
+	...
+	reg2 = 0x000000ff;
+	reg1 = 0x00000080;
+
+	// Read Interrupt Priority Register 4
+	reg3 = *(uint32_t*)0xe000e418;
+
+	// Isolate interrupt priority for ADC and set to 2, one above lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009caa - 0x00009cae
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 2;
+	reg0 = 0xf;
+
+	...
+	reg2 = 0xff000000;
+	reg1 = 0x80000000;
+
+	// Read Interrupt Priority Register 3
+	reg3 = *(uint32_t*)0xe000e40c;
+
+	// Isolate interrupt priority for I2C0 and set to 2, one above lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009cb2 - 0x00009cb6
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 3;
+	reg0 = 0x0;
+
+	...
+	reg2 = 0x000000ff;
+	reg1 = 0x000000c0;
+
+	// Read Interrupt Priority Register 0
+	reg3 = *(uint32_t*)0xe000e400;
+
+	// Isolate interrupt priority for PIN_INT0 and set to 3, lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009cba - 0x00009cbe
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 3;
+	reg0 = 0x1;
+
+	...
+	reg2 = 0x0000ff00;
+	reg1 = 0x0000c000;
+
+	// Read Interrupt Priority Register 0
+	reg3 = *(uint32_t*)0xe000e400;
+
+	// Isolate interrupt priority for PIN_INT1 and set to 3, lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009cc2 - 0x00009cc6
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 3;
+	reg0 = 0x2;
+
+	...
+	reg2 = 0x00ff0000;
+	reg1 = 0x00c00000;
+
+	// Read Interrupt Priority Register 0
+	reg3 = *(uint32_t*)0xe000e400;
+
+	// Isolate interrupt priority for PIN_INT2 and set to 3, lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009cca - 0x00009cce
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 3;
+	reg0 = 0x3;
+
+	...
+	reg2 = 0xff000000;
+	reg1 = 0xc0000000;
+
+	// Read Interrupt Priority Register 0
+	reg3 = *(uint32_t*)0xe000e400;
+
+	// Isolate interrupt priority for PIN_INT3 and set to 3, lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009cd2 - 0x00009cd6
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 3;
+	reg0 = 0x4;
+
+	...
+	reg2 = 0x000000ff;
+	reg1 = 0x000000c0;
+
+	// Read Interrupt Priority Register 1
+	reg3 = *(uint32_t*)0xe000e404;
+
+	// Isolate interrupt priority for PIN_INT4 and set to 3, lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009cda - 0x00009cde
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 3;
+	reg0 = 0x5;
+
+	...
+	reg2 = 0x0000ff00;
+	reg1 = 0x0000c000;
+
+	// Read Interrupt Priority Register 1
+	reg3 = *(uint32_t*)0xe000e404;
+
+	// Isolate interrupt priority for PIN_INT5 and set to 3, lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009ce2 - 0x00009ce6
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 3;
+	reg0 = 0x6;
+
+	...
+	reg2 = 0x00ff0000;
+	reg1 = 0x00c00000;
+
+	// Read Interrupt Priority Register 1
+	reg3 = *(uint32_t*)0xe000e404;
+
+	// Isolate interrupt priority for PIN_INT6 and set to 3, lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009cea - 0x00009cee
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 3;
+	reg0 = 0x7;
+
+	...
+	reg2 = 0xff000000;
+	reg1 = 0xc0000000;
+
+	// Read Interrupt Priority Register 1
+	reg3 = *(uint32_t*)0xe000e404;
+
+	// Isolate interrupt priority for PIN_INT7 and set to 3, lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009cf2 - 0x00009cf6
+	//	0x000072dc - 0x000072ec
+	//	0x00007306 - 0x00007316
+
+	reg1 = 3;
+	reg0 = 0x8;
+
+	...
+	reg2 = 0x000000ff;
+	reg1 = 0x000000c0;
+
+	// Read Interrupt Priority Register 2
+	reg3 = *(uint32_t*)0xe000e408;
+
+	// Isolate interrupt priority for GINT0 (GPIO GROUP0) and set to 3, lowest
+	reg3 &= ~reg2;
+	reg3 |= reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009cfa - 0x00009cfa
+	//	0x0000d780 - 0x0000d780
+	//	0x0000a0d8 - 0x0000a0f4
+
+	// Initialize more heap space in SRAM0
+	*(uint32_t*)0x10000818 = 0x00000000;
+	*(uint32_t*)0x1000081c = 0x00000000;
+	*(uint32_t*)0x10000820 = 0x00000000;
+	*(uint32_t*)0x10000824 = 0x00000000;
+	*(uint32_t*)0x10000828 = 0x00000000;
+	*(uint32_t*)0x1000082c = 0x00000000;
+	*(uint32_t*)0x10000830 = 0x00000000;
+	*(uint32_t*)0x10000834 = 0x00000000;
+	*(uint32_t*)0x10000838 = 0x00000000;
+	*(uint32_t*)0x1000083c = 0x00000000;
+	*(uint32_t*)0x10000840 = 0x00000000;
+	*(uint32_t*)0x10000844 = 0x00000000;
+	*(uint32_t*)0x10000848 = 0x00000000;
+	*(uint32_t*)0x1000084c = 0x00000000;
+	*(uint32_t*)0x10000850 = 0x00000000;
+	*(uint32_t*)0x10000854 = 0x00000000;
+
+
+	// Firmware Offset(s): 
+	//	0x0000a0f6 - 0x0000a0f6
+	//	0x0000d784 - 0x0000d784
+	//	0x00005644 - 0x00005648
+	//	0x00004108 - 0x00004114
+
+	// Enables clock for I/O configuration block via System clock control register
+	reg2 = *(uint32_t*)0x40048080;
+	reg2 |= 0x00010000;
+	*(uint32_t*)0x40048080 = reg2;
+
+
+	// Firmware Offset(s): 
+	//	0x0000564c - 0x00005650
+	//	0x00004224 - 0x0000422e
+
+	// Enables clock for 16-bit counter/timer 0 via System clock control register
+	reg1 = *(uint32_t*)0x40048080;
+	reg1 |= 0x00000040;
+	*(uint32_t*)0x40048080 = reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00005654 - 0x00005656
+	//	0x00004108 - 0x00004114
+
+	// Enables clock to GPIO Pin interrupts register via System clock control register
+	reg2 = *(uint32_t*)0x40048080;
+	reg2 |= 0x00080000;
+	*(uint32_t*)0x40048080 = reg2;
+
+
+	// Firmware Offset(s): 
+	//	0x0000565a - 0x0000565a
+	//	0x0000d788 - 0x0000d788
+	//	0x00002ba0 - 0x00002ba8
+	//	0x00003fd0 - 0x00003fd8
+	//	0x0000452c - 0x00004540
+
+	// Power ADC via Power configuration register
+	reg1 = *(uint32_t*)0x40048238;
+	reg1 &= 0x000005ff;
+	reg1 &= ~0x00000010;
+	reg1 |= 0x0000e800;
+	*(uint32_t*)0x40048238 = reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00003fdc - 0x00003ffa
+
+	// Enables clock for ADC via System clock control register
+	reg1 = *(uint32_t*)0x40048080;
+	reg1 |= 0x00002000;
+	*(uint32_t*)0x40048080 = reg1;
+
+	// Disable all A/D interrupts via A/D Interrupt Enable Register
+	*(uint32_t*)0x4001c00c = 0x00000000	
+
+
+	// Firmware Offset(s): 
+	//	0x0000d0e8 - 0x0000d0f0
+	//	0x00004174 - 0x00004176
+	//	0x00004130 - 0x0000414a
+
+	//	Check that Main clock source select register is set to PLL output
+	val = *(uint32_t*)0x40048070;
+
+	if (val != 3) {
+		// TODO: UNKNOWN PATHS
+		//	Jump to 0x00004150 for IRC Oscillator
+		//	Jump to 0x00004154 for PLL input
+		//	Jump to 0x0000415a for Watchdown oscillator
+		//	Execute 0x0000414e if none of the above
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x00004188 - 0x00004194
+
+	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+	val = *(uint32_t*)0x40048040;
+	if (val != 1) {
+		// TODO: UNKNOWN PATHS 
+		//	Branch to 0x0000419a if val == 0
+		//	Execute 0x00004196 if val != 0 && val != 1
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x0000419e - 0x000041a2
+	//	0x000041b6 - 0x000041bc
+	//	0x00004168 - 0x00004172
+	//	0x000041c0 - 0x000041c0
+	//	0x0000414e - 0x0000414e
+	//	0x0000417a - 0x0000417e
+	//	0x000020ec - 0x000020f8
+	//	0x0000210e - 0x00002114
+	//	0x000020fa - 0x00002100
+	//	0x00002102 - 0x00002116
+	//	0x00004182 - 0x00004182
+
+	// Read System PLL control register
+	reg0 = *(uint32_t*)0x40048008;
+	// Isolate MSEL (feedback divider value)
+	reg0 &= 0x1f;
+
+	// Read System clock divider register
+	reg1 = *(uint32_t*)0x40048078;
+
+	// And then a long series of loops based on the values read above
+	//  Looks like a delay based on PLL and system clock settings
+
+
+	// Firmware Offset(s): 
+	//	0x0000d0f4 - 0x0000d0f6
+	//	0x0000d0fc - 0x0000d106
+	//	0x000020ec - 0x000020f8
+	//	0x0000210e - 0x00002114
+	// 	0x000020fa - 0x00002100
+	//	0x00002116 - 0x00002116
+
+	// Some big loop calculating some values, possibly related to above
+
+
+	// Firmware Offset(s): 
+	//	0x0000d10a - 0x0000d10e
+	//	0x00003ffe - 0x0000400c
+	//	0x00002bac - 0x00002bb8
+
+	// A/D Control Register
+	//	Set CLKDIV to 11 (This divides APB/PCLK)
+	//	TODO: Not sure why bit 21 is set '1' this should be a reserved bit and only 0 written...
+	*(uint32_t*)0x4001c000 = 0x00200a00;
+
+
+	// Firmware Offset(s): 
+	//	0x0000404c - 0x00004066
+
+	// Read A/D Control Register, but ends up stored on stack for now?
+	reg6 = *(uint32_t*)0x4001c000;
+
+
+	// Firmware Offset(s): 
+	//	0x0000d0e8 - 0x0000d0f0
+	//	0x00004174 - 0x00004176
+	//	0x00004130 - 0x0000414a
+
+	//	Check that Main clock source select register is set to PLL output
+	val = *(uint32_t*)0x40048070;
+
+	if (val != 3) {
+		// TODO: UNKNOWN PATHS
+		//	Jump to 0x00004150 for IRC Oscillator
+		//	Jump to 0x00004154 for PLL input
+		//	Jump to 0x0000415a for Watchdown oscillator
+		//	Execute 0x0000414e if none of the above
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x000041b0 - 0x000041b2
+	//	0x00004188 - 0x00004194
+
+	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+	val = *(uint32_t*)0x40048040;
+	if (val != 1) {
+		// TODO: UNKNOWN PATHS 
+		//	Branch to 0x0000419a if val == 0
+		//	Execute 0x00004196 if val != 0 && val != 1
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x0000419e - 0x000041a2
+	//	0x000041b6 - 0x000041bc
+	//	0x00004168 - 0x00004172
+	//	0x000041c0 - 0x000041c0
+	//	0x0000414e - 0x0000414e
+	//	0x0000417a - 0x0000417e
+	//	0x000020ec - 0x000020f8
+	//	0x0000210e - 0x00002114
+	//	0x000020fa - 0x00002100
+	//	0x00002102 - 0x00002116
+	//	0x00004182 - 0x00004182
+
+	// Read System PLL control register
+	reg0 = *(uint32_t*)0x40048008;
+	// Isolate MSEL (feedback divider value)
+	reg0 &= 0x1f;
+
+	// Read System clock divider register
+	reg1 = *(uint32_t*)0x40048078;
+
+	// And then a long series of loops based on the values read above
+	//  Looks like a delay based on PLL and system clock settings
+
+
+	// Firmware Offset(s): 
+	//	0x0000d0f4 - 0x0000d0fa
+	//	0x0000d100 - 0x0000d106
+	//	0x000020ec - 0x000020f8
+	//	0x0000210e - 0x00002114
+	// 	0x000020fa - 0x00002100
+	//	0x00002116 - 0x00002116
+
+	// Some big loop calculating some values, possibly related to above
+
+
+	// Firmware Offset(s): 
+	//	0x0000d10a - 0x0000d10e
+	//	0x0000406a - 0x00004078
+	//	0x00002bbc - 0x00002bc2
+
+	// Note: this is pretty much same code above for last access of this register, but executes different code space...
+	//	Guessing this is superfluous code from some NXP library or something
+
+	// A/D Control Register
+	//	Set CLKDIV to 11 (This divides APB/PCLK)
+	//	TODO: Not sure why bit 21 is set '1' this should be a reserved bit and only 0 written...
+	*(uint32_t*)0x4001c000 = 0x00200a00;
+
+
+	// Firmware Offset(s): 
+	//	0x00004080 - 0x0000409c
+	//	0x0000e6e8 - 0x0000e6f6
+
+	reg1 = 0;
+
+	// A/D Control Register
+	reg2 = *(uint32_t*)0x4001c000;
+	// Clear START (clearing clearing PDN to 0?)
+	reg2 &= ~0x07000000;
+	reg1 |= reg2;
+	*(uint32_t*)0x4001c000 = reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x000040a0 - 0x000040a0
+	//	0x00002bc6 - 0x00002bce
+
+	// Set a value in SRAM0 (heap?) 
+	*(uint8_t*)0x10000012 = 0x00;
+
+
+	// Firmware Offset(s): 
+	//	0x000040b8 - 0x000040c4 
+	
+	// TODO: did I miss something above... Why was ADC enabled, and is now being disabled...?
+
+	// Disable ADC clock via System clock control register 
+	reg2 = *(uint32_t*)0x40048080;
+	reg2 &= ~0x00002000;
+	*(uint32_t*)0x40048080 = reg2;
+
+
+	// Firmware Offset(s): 
+	//	0x00002bd2 - 0x00002bd2
+	//	0x0000d78c - 0x0000d78c
+	//	0x00006644 - 0x0000664c
+	//	0x000051c4 - 0x000051d8
+
+	// Read SRAM0 value (think this is some clock in MHZ as sim value comes out to 48000000)
+	reg1 = *(uint32_t*)0x100000a4;
+	// reg1 val is then shifted to right by 10 and stored on the stack... (computes to 46875)
+
+
+	// Firmware Offset(s): 
+	//	0x00005d10 - 0x00005d1c
+	//	0x00009b4c - 0x00009b56
+	//	0x00005d20 - 0x00005d26
+
+	// Setup command_param for EEPROM read via IAP command
+	*0x10001f78 = 0x0000003e // Command code (62)
+	*0x10001f7c = 0x00000000 // Param0: EEPROM Address
+	*0x10001f80 = 0x100009b4 // Param1: RAM Address 
+	*0x10001f84 = 0x00000084 // Param2: Number of bytes to be read (132)
+	*0x10001f88 = 0x0000b71b // Param3: System Clock Frequency 
+
+	// This means that 0x100009b4 - 0x10000a37 will store first 0x84 bytes of EEPROM
+
+	// Mark EEPROM access is taking place
+	reg1 = *(uint8_t*)0x10000340;
+	reg1 += 1;
+	*(uint8_t*)0x10000340 = reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x1fff1ff0 - ...
+	//	...        - 0x1fff1ff6
+
+	// boot ROM code for executing IAB command
+	iap_entry(command_param = 0x10001f78, status_result = 0x10001f8c);
+
+
+	// Firmware Offset(s): 
+	//	0x00005d28 - 0x00005d28
+	//	0x00009b70 - 0x00009b80
+
+	// Mark EEPROM access is taking place
+	reg1 = *(uint8_t*)0x10000340;
+	reg1 -= 1;
+	*(uint8_t*)0x10000340 = reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00005d2c - 0x00006658
+
+
+}
+
+/**
+ * There reaches a point in the init code (i.e. execution starting from the RESET
+ *  entry point as defined in the Vector Table) in which the hw version read 
+ *  from EEPROM causes a significant branch in the code. I am calling everything
+ *  after this branch point phase2, and creating different functions to 
+ *  encapsulate what has been decomposed depending on what hw version was read.
+ *
+ * This function captures the path of reading a hw version of 0.
+ *
+ * This path I decomposed before properly aquiring EEPROM data. This is kept 
+ *  mostly for the sake of having already put the work in. It most likely will 
+ *  not actually be useful at this point.
+ *
+ * \return None.
+ */
+void init_phase2_hw_0() 
+{
         // Entry Num: 60118 - 60140
         // Step Num: 46409 - 46423
 	// Firmware Offset(s): 
@@ -4642,7 +4743,7 @@ void init()
 		//	0x00000f42 - 0x00000f48
 		//	0x00000f4e - 0x00000f4e
 
-	//TODO: who else would set heap address 0x10000200??
+		//TODO: who else would set heap address 0x10000200??
 		uint8_t reg0 = *0x10000200;
 		if (reg0 != 0){
 			// TODO: UNKNOWN PATH execute instruction 0x00000f4a
@@ -4714,13 +4815,13 @@ void init()
 		//  the fact that TODO
 		// 	0x00000f52 - 0x00000f54
 
-//TODO: need to organize this loop. Below is my understanding of what is going on:
-//	wfi is called
-//	if CT32B1 interrupt occurs this causes a heap space variable (0x100007e4 - 0x100007e7) to be incremented
-//	However, this variable can be incremented (seemingly) forever with no affect
-//	My thought is that clues lies in simulating other exceptions (i.e. USB IRQ, PendSV, SysTick, SVCall)
-//	FOCUS: Where are the following heap addresses modified? 0x10000200, 0x10000244, 0x1000025d
-//	ALSO: Keep an eye out for where 0x100007e4 - 0x100007e7 is read and may cause system to shutdown if it gets greater than some value or something
+		//TODO: need to organize this loop. Below is my understanding of what is going on:
+		//	wfi is called
+		//	if CT32B1 interrupt occurs this causes a heap space variable (0x100007e4 - 0x100007e7) to be incremented
+		//	However, this variable can be incremented (seemingly) forever with no affect
+		//	My thought is that clues lies in simulating other exceptions (i.e. USB IRQ, PendSV, SysTick, SVCall)
+		//	FOCUS: Where are the following heap addresses modified? 0x10000200, 0x10000244, 0x1000025d
+		//	ALSO: Keep an eye out for where 0x100007e4 - 0x100007e7 is read and may cause system to shutdown if it gets greater than some value or something
 	}
 
 	//TODO: Remember to pay attention to branches/paths simulation does and does not take.
@@ -4808,7 +4909,8 @@ ErrorCode_t HID_SetReport( USBD_HANDLE_T hHid, USB_SETUP_PACKET* pSetup, uint8_t
  *  • masked or prevented from activation by any other exception
  *  • preempted by any exception other than Reset.
  */
-void NMI(){
+void NMI()
+{
 	// Entry point as defined by Vector Table
 	// Firmware Offset(s): 
 	// 	0x000000ec - 0x000000f0
@@ -4822,7 +4924,8 @@ void NMI(){
  *  exception processing. HardFaults have a fixed priority of -1, meaning they 
  *  have higher priority than any exception with configurable priority.
  */
-void HardFault(){
+void HardFault()
+{
 	// Entry point as defined by Vector Table
 	// Firmware Offset(s): 
 	// 	0x000000f4 - 0x000000f8
@@ -4838,7 +4941,8 @@ void HardFault(){
  * A supervisor call (SVC) is an exception that is triggered by the SVC instruction. 
  *  In an OS environment, applications can use SVC instructions to access OS kernel functions and device drivers.
  */
-void SVCall(){
+void SVCall()
+{
 	// Entry point as defined by Vector Table
 	// Firmware Offset(s): 
 	// 	0x000000fc - 0x00000100
@@ -4851,7 +4955,8 @@ void SVCall(){
  * PendSV is an interrupt-driven request for system-level service. In an OS 
  *  environment, use PendSV for context switching when no other exception is active.
  */
-void PendSV(){
+void PendSV()
+{
 	volatile uint32_t* reg32 = NULL;
 	uint32_t val = 0;
 
@@ -4913,7 +5018,8 @@ void PendSV(){
  *  zero. Software can also generate a SysTick exception. In an OS environment, 
  *  the processor can use this exception as system tick.
  */
-void SysTick(){
+void SysTick()
+{
 	volatile uint32_t* reg32 = NULL;
 	uint32_t val = 0;
 
@@ -5085,7 +5191,8 @@ void Interrupt_19_CT32B1()
 /**
  * TODO: Simulate this?
  */
-void Interrupt_21_USART(){
+void Interrupt_21_USART()
+{
 
 	// Entry point as defined by Vector Table
 	// Firmware Offset(s): 
@@ -5096,7 +5203,8 @@ void Interrupt_21_USART(){
 /**
  * This interrupt is called in relation to USB interrupts.
  */
-void Interrupt_22_USB_IRQ(){
+void Interrupt_22_USB_IRQ()
+{
 
 	volatile uint32_t* reg32 = NULL;
 	uint32_t val = 0;
@@ -5180,78 +5288,39 @@ void Interrupt_22_USB_IRQ(){
 //TODO: dig more into ISR function call? Could this be calling some other handler function potentially?
 }
 
+/*******************************************************************************
+   Below are remaining entry points from vector table that do not have
+    function yet. These will be simulated on an as needed basis.
 
-/**
+   See Exceptions section in README.md for details on simulating exceptions
 
-TODO: save this info in some useful way to reference later?
-
-See IRQ section in vcf_wired_controller_d0g_57bf5c10.bin.md for details on simulating exceptions
-
-000040:  0000 0121     Vector Table     IRQ0
-000044:  0000 0129     Vector Table     IRQ1
-000048:  0000 0131     Vector Table     IRQ2
-00004c:  0000 0139     Vector Table     IRQ3
-000050:  0000 0141     Vector Table     IRQ4
-000054:  0000 0149     Vector Table     IRQ5
-000058:  0000 0151     Vector Table     IRQ6
-00005c:  0000 0159     Vector Table     IRQ7
-000060:  0000 0161     Vector Table     IRQ8
-000064:  0000 0169     Vector Table     IRQ9
-000068:  0000 0171     Vector Table     IRQ10
-00006c:  0000 0179     Vector Table     IRQ11
-000070:  0000 0179     Vector Table     IRQ12
-000074:  0000 0189     Vector Table     IRQ13
-000078:  0000 0191     Vector Table     IRQ14
-00007c:  0000 0199     Vector Table     IRQ15
-000080:  0000 01a1     Vector Table     IRQ16
-000084:  0000 01a9     Vector Table     IRQ17
-000088:  0000 01b1     Vector Table     IRQ18
-000090:  0000 01cd     Vector Table     IRQ20
-00009c:  0000 01fd     Vector Table     IRQ23
-0000a0:  0000 0205     Vector Table     IRQ24
-0000a4:  0000 020d     Vector Table     IRQ25
-0000a8:  0000 0215     Vector Table     IRQ26
-0000ac:  0000 021d     Vector Table     IRQ27
-0000b0:  0000 0225     Vector Table     IRQ28
-0000b4:  0000 022d     Vector Table     IRQ29
-0000b8:  0000 0235     Vector Table     IRQ30
-0000bc:  0000 023d     Vector Table     IRQ31
-
-*/
-
-
-/**
- * RAM LAYOUT: This sectionis set aside to track and define different parts of RAM, etc.
-
-// Stack counts down from 0x10002000 
-
-USBD_HID_INIT_PARAM_T
-0x10001b50
-...
-0x10001b68
-
-0x10001bc8
-
-0x10001bdc
-
-
-// Heap counts up from 0x10000000
-
-0x10000208 Pointer to USB device configuration descriptor when device is operating in full and high speed modes.
-
-0x10000211 Pointer to the HID interface descriptor within the descriptor array (\em high_speed_desc) passed to Init() through \ref USB_CORE_DESCS_T structure.
-
-0x10000234 USB_HID_REPORT_T*
-//TODO: size and contents of USB_HID_REPORT_T
-
-0x10000250 incremented/decrement before/after cps. Has to do with disabling interrupts (I think)
-
-0x200040b8 - USBD_HANDLE_T - Handle to the USB device stack
-//TODO: size and content of USBD_HANDLE_T
-
-0x20004340 -  USB HID Base memory location from where the stack can allocate data and buffers
-...
-0x20004800
-
- *
- */
+	000040:  0000 0121     Vector Table     IRQ0
+	000044:  0000 0129     Vector Table     IRQ1
+	000048:  0000 0131     Vector Table     IRQ2
+	00004c:  0000 0139     Vector Table     IRQ3
+	000050:  0000 0141     Vector Table     IRQ4
+	000054:  0000 0149     Vector Table     IRQ5
+	000058:  0000 0151     Vector Table     IRQ6
+	00005c:  0000 0159     Vector Table     IRQ7
+	000060:  0000 0161     Vector Table     IRQ8
+	000064:  0000 0169     Vector Table     IRQ9
+	000068:  0000 0171     Vector Table     IRQ10
+	00006c:  0000 0179     Vector Table     IRQ11
+	000070:  0000 0179     Vector Table     IRQ12
+	000074:  0000 0189     Vector Table     IRQ13
+	000078:  0000 0191     Vector Table     IRQ14
+	00007c:  0000 0199     Vector Table     IRQ15
+	000080:  0000 01a1     Vector Table     IRQ16
+	000084:  0000 01a9     Vector Table     IRQ17
+	000088:  0000 01b1     Vector Table     IRQ18
+	000090:  0000 01cd     Vector Table     IRQ20
+	00009c:  0000 01fd     Vector Table     IRQ23
+	0000a0:  0000 0205     Vector Table     IRQ24
+	0000a4:  0000 020d     Vector Table     IRQ25
+	0000a8:  0000 0215     Vector Table     IRQ26
+	0000ac:  0000 021d     Vector Table     IRQ27
+	0000b0:  0000 0225     Vector Table     IRQ28
+	0000b4:  0000 022d     Vector Table     IRQ29
+	0000b8:  0000 0235     Vector Table     IRQ30
+	0000bc:  0000 023d     Vector Table     IRQ31
+*******************************************************************************/
