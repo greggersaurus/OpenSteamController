@@ -48,11 +48,45 @@
 # Begin: Simulation Run Configuration Variables.                               #
 #                                                                              #
 
-# 32-bit word read from EEPROM byte offset 0x000 (lower 16-bits seem to be magic word)
-set $eeprom_0x000 = 0x0005a55a
+# 32-bit word read from EEPROM byte offset 0xXXX:
 
-# 32-bit word read from EEPROM byte offset 0x004 (Board Revision)
-set $eeprom_0x004 = 0x0000000a
+# Upper 16-bits are checked in sim... but what do they mean...?
+# Lower 16-bits seem to be magic word:
+set $eeprom_0x000 = 0x0005a55a 
+# Board Revision:
+set $eeprom_0x004 = 0x0000000a 
+set $eeprom_0x008 = 0x00000000 
+set $eeprom_0x00C = 0x34354D50 
+set $eeprom_0x010 = 0x44323037 
+set $eeprom_0x014 = 0x00003241 
+set $eeprom_0x018 = 0x00000000 
+set $eeprom_0x01C = 0x35354346 
+set $eeprom_0x020 = 0x44333231 
+set $eeprom_0x024 = 0x00004431 
+set $eeprom_0x028 = 0x00000000 
+set $eeprom_0x02C = 0x9C5D1040 
+set $eeprom_0x030 = 0x000000C0 
+set $eeprom_0x034 = 0x00000000 
+set $eeprom_0x038 = 0x00000000 
+set $eeprom_0x03C = 0x00000000 
+set $eeprom_0x040 = 0x00000000 
+set $eeprom_0x044 = 0x00000000 
+set $eeprom_0x048 = 0x00000000 
+set $eeprom_0x04C = 0x00000000 
+set $eeprom_0x050 = 0x00000000 
+set $eeprom_0x054 = 0x00000000 
+set $eeprom_0x058 = 0x00000000 
+set $eeprom_0x05C = 0x00000000 
+set $eeprom_0x060 = 0x00000000 
+set $eeprom_0x064 = 0x00000000 
+set $eeprom_0x068 = 0x00000000 
+set $eeprom_0x06C = 0x00000000 
+set $eeprom_0x070 = 0x00000000 
+# Byte 1 = power-off jingle index, Byte 0 = power-on jingle index:
+set $eeprom_0x074 = 0xFFFF0A00 
+set $eeprom_0x078 = 0xFF050903 
+set $eeprom_0x07C = 0xFFFFFFFF 
+set $eeprom_0x080 = 0xFFFFFFFF 
 
 # 32-bit word read from EEPROM byte offset 0x500 (TODO: purpose? Think this 
 #	might affect use of watchdog somehow, but need to verify...)
@@ -204,6 +238,52 @@ continue
 
 # Fill in memory with what should have been read from EEPROM address offset 0
 set {int}0x10001c08 = $eeprom_0x500
+
+# Remove watchpoint
+delete 
+
+
+# Setup watchpoint for instruction immediately after reading 0x84 bytes from
+#  offset 0x0 of EEPROM, after basic init and power up
+watch $pc == 0x00005d28
+
+# Execute until watchpoint
+continue
+
+# Fill in memory with what should have been read from EEPROM address offset 0
+set {int}0x100009b4 = $eeprom_0x000
+set {int}0x100009b8 = $eeprom_0x004
+set {int}0x100009bc = $eeprom_0x008
+set {int}0x100009c0 = $eeprom_0x00C
+set {int}0x100009c4 = $eeprom_0x010
+set {int}0x100009c8 = $eeprom_0x014
+set {int}0x100009cc = $eeprom_0x018
+set {int}0x100009d0 = $eeprom_0x01C
+set {int}0x100009d4 = $eeprom_0x020
+set {int}0x100009d8 = $eeprom_0x024
+set {int}0x100009dc = $eeprom_0x028
+set {int}0x100009e0 = $eeprom_0x02C
+set {int}0x100009e4 = $eeprom_0x030
+set {int}0x100009e8 = $eeprom_0x034
+set {int}0x100009ec = $eeprom_0x038
+set {int}0x100009f0 = $eeprom_0x03C
+set {int}0x100009f4 = $eeprom_0x040
+set {int}0x100009f8 = $eeprom_0x044
+set {int}0x100009fc = $eeprom_0x048
+set {int}0x10000a00 = $eeprom_0x04C
+set {int}0x10000a04 = $eeprom_0x050
+set {int}0x10000a08 = $eeprom_0x054
+set {int}0x10000a0c = $eeprom_0x058
+set {int}0x10000a10 = $eeprom_0x05C
+set {int}0x10000a14 = $eeprom_0x060
+set {int}0x10000a18 = $eeprom_0x064
+set {int}0x10000a1c = $eeprom_0x068
+set {int}0x10000a20 = $eeprom_0x06C
+set {int}0x10000a24 = $eeprom_0x070
+set {int}0x10000a28 = $eeprom_0x074
+set {int}0x10000a2c = $eeprom_0x078
+set {int}0x10000a30 = $eeprom_0x07C
+set {int}0x10000a34 = $eeprom_0x080
 
 # Remove watchpoint
 delete 
