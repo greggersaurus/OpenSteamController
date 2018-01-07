@@ -54,9 +54,15 @@
 
 	0x10000340 (uint8_t) - Tracks if EEPROM access is taking place
 
+	0x10000350 (uint32_t) - (const USBD_API_T *)LPC_ROM_API->usbdApiBase
+	0x10000354 (uint32_t) - USBD_HANDLE_T
+	... TODO: how big is USBD_HANDLE_T??
+
 	0x100009b4 (uint32_t) - Start of 0x84 bytes of EEPROM data from EEPROM offset 0
 	...
 	0x10000a34 (uint32_t) - End of 0x84 bytes of EEPROM data from EEPROM offset 0
+
+	0x100007b4 (uint32_t) - 
 
 
   init phase2 hw version 0:
@@ -3869,10 +3875,456 @@ void init_phase2_hw_not0()
 
 
 	// Firmware Offset(s): 
-	//	0x000091c2 - 
+	//	0x000091c2 - 0x000091d2
+	//	0x0000218c - 0x00002194
+	//	0x000021a2 - 0x000021ac
+	//	0x000021ae - 0x000021ae
+
+	// Read hardcoded values and write to SRAM0
+	*(uint8_t*)0x1000172f = 0x00
+	*(uint8_t*)0x10001730 = 0x01
+	*(uint8_t*)0x10001731 = 0x00
+	*(uint8_t*)0x10001732 = 0x01
+	*(uint8_t*)0x10001733 = 0x01
+	*(uint8_t*)0x10001734 = 0x01
+	*(uint8_t*)0x10001735 = 0x09
+	*(uint8_t*)0x10001736 = 0x00
+	*(uint8_t*)0x10001737 = 0x29
+	*(uint8_t*)0x10001738 = 0x0b
+	*(uint8_t*)0x10001739 = 0x00
+	*(uint8_t*)0x1000173a = 0x2b
+	*(uint8_t*)0x1000173b = 0x16
+	*(uint8_t*)0x1000173c = 0x00
+	*(uint8_t*)0x1000173d = 0x52
+	*(uint8_t*)0x1000173e = 0x18
+	*(uint8_t*)0x1000173f = 0x00
+	*(uint8_t*)0x10001740 = 0x4f
+	*(uint8_t*)0x10001741 = 0x1a
+	*(uint8_t*)0x10001742 = 0x00
+	*(uint8_t*)0x10001743 = 0x51
+	*(uint8_t*)0x10001744 = 0x1c
+	*(uint8_t*)0x10001745 = 0x00
+	*(uint8_t*)0x10001746 = 0x50
+	*(uint8_t*)0x10001747 = 0x05
+	*(uint8_t*)0x10001748 = 0x00
+	*(uint8_t*)0x10001749 = 0x28
+	*(uint8_t*)0x1000174a = 0x03
+	*(uint8_t*)0x1000174b = 0x00
+	*(uint8_t*)0x1000174c = 0x29
+	*(uint8_t*)0x1000174d = 0x10
+	*(uint8_t*)0x1000174e = 0x00
+	*(uint8_t*)0x1000174f = 0x52
+	*(uint8_t*)0x10001750 = 0x11
+	*(uint8_t*)0x10001751 = 0x00
+	*(uint8_t*)0x10001752 = 0x4f
+	*(uint8_t*)0x10001753 = 0x13
+	*(uint8_t*)0x10001754 = 0x00
+	*(uint8_t*)0x10001755 = 0x51
+	*(uint8_t*)0x10001756 = 0x12
+	*(uint8_t*)0x10001757 = 0x00
+	*(uint8_t*)0x10001758 = 0x50
 
 
+	// Firmware Offset(s): 
+	//	0x000091d6 - 0x000091dc
+	//	0x00009194 - 0x00009194
+
+	// Increment some value in SRAM0 (TODO: still not sure on purpose for this...)
+	*(uint32_t*)0x100007b4 += 0x0000000e
+
+
+	// Firmware Offset(s): 
+	//	0x00006d54 - 0x00006d5a
+	//	0x000021be - 0x000021c0
+	//	0x000021b0 - 0x000021b2
+	//	0x000021b4 - 0x000021ba
+	//	0x000021bc - 0x000021bc
+
+	// Zero out some more of SRAM0 	
+	*(uint8_t*)0x10001700 = 0x00
+	*(uint8_t*)0x10001701 = 0x00
+	*(uint8_t*)0x10001702 = 0x00
+	*(uint8_t*)0x10001703 = 0x00
+	*(uint8_t*)0x10001704 = 0x00
+	*(uint8_t*)0x10001705 = 0x00
+	*(uint8_t*)0x10001706 = 0x00
+	*(uint8_t*)0x10001707 = 0x00
+	*(uint8_t*)0x10001708 = 0x00
+	*(uint8_t*)0x10001709 = 0x00
+	*(uint8_t*)0x1000170a = 0x00
+	*(uint8_t*)0x1000170b = 0x00
+	*(uint8_t*)0x1000170c = 0x00
+	*(uint8_t*)0x1000170d = 0x00
+	*(uint8_t*)0x1000170e = 0x00
+	*(uint8_t*)0x1000170f = 0x00
+	*(uint8_t*)0x10001710 = 0x00
+	*(uint8_t*)0x10001711 = 0x00
+	*(uint8_t*)0x10001712 = 0x00
+	*(uint8_t*)0x10001713 = 0x00
+	*(uint8_t*)0x10001714 = 0x00
+	*(uint8_t*)0x10001715 = 0x00
+	*(uint8_t*)0x10001716 = 0x00
+	*(uint8_t*)0x10001717 = 0x00
+	*(uint8_t*)0x10001718 = 0x00
+	*(uint8_t*)0x10001719 = 0x00
+	*(uint8_t*)0x1000171a = 0x00
+	*(uint8_t*)0x1000171b = 0x00
+	*(uint8_t*)0x1000171c = 0x00
+	*(uint8_t*)0x1000171d = 0x00
+	*(uint8_t*)0x1000171e = 0x00
+	*(uint8_t*)0x1000171f = 0x00
+	*(uint8_t*)0x10001720 = 0x00
+	*(uint8_t*)0x10001721 = 0x00
+	*(uint8_t*)0x10001722 = 0x00
+	*(uint8_t*)0x10001723 = 0x00
+	*(uint8_t*)0x10001724 = 0x00
+	*(uint8_t*)0x10001725 = 0x00
+	*(uint8_t*)0x10001726 = 0x00
+	*(uint8_t*)0x10001727 = 0x00
+	*(uint8_t*)0x10001728 = 0x00
+	*(uint8_t*)0x10001729 = 0x00
+	*(uint8_t*)0x1000172a = 0x00
+	*(uint8_t*)0x1000172b = 0x00
+	*(uint8_t*)0x1000172c = 0x00
+	*(uint8_t*)0x1000172d = 0x00
+	*(uint8_t*)0x1000172e = 0x00
+
+
+	// Firmware Offset(s): 
+	//	0x00006d5e - 0x00006d5e
+	//	0x00009198 - 0x0000919c
+	//	0x00006d94 - 0x00006d9a
+	//	0x00006db2 - 0x00006db6
+	//	0x00006d9c - 0x00006da6
+	//	0x00006db8 - 0x00006db8
+
+	// Read a series of hardcoded values and accumulate some sums...
+	...
+	Reg4 = 0x00000027
+	Reg3 = 0x0000ed03
+
+
+	// Firmware Offset(s): 
+	//	0x000091a0 - 0x000091a0
+	//	0x0000d798 - 0x0000d79c
+	//	0x00004f20 - 0x00004f26
+
+	// Set an SRAM1 value
+	*(uint32_t*)0x20000078 = 0x0000ed06
+
+
+	// Firmware Offset(s): 
+	//	0x00004f30 - 0x00004f48
+	//	0x00004f4a - 0x00004f4a
+
+	// Set some SRAM1 values based on hardcoded values
+	*(uint16_t*)0x20000248 = 0x0008
+
+	*(uint16_t*)0x2000024a = 0x0003
+	*(uint16_t*)0x2000024c = 0x0159
+	*(uint16_t*)0x2000024e = 0x04b0
+	*(uint16_t*)0x20000250 = 0x0000
+	*(uint16_t*)0x20000252 = 0x0000
+	*(uint16_t*)0x20000254 = 0x0000
+	*(uint16_t*)0x20000256 = 0x0003
+	*(uint16_t*)0x20000258 = 0x0000
+	*(uint16_t*)0x2000025a = 0x0001
+	*(uint16_t*)0x2000025c = 0x1b58
+	*(uint16_t*)0x2000025e = 0x0006
+	*(uint16_t*)0x20000260 = 0x0005
+	*(uint16_t*)0x20000262 = 0x0064
+	*(uint16_t*)0x20000264 = 0x0032
+	*(uint16_t*)0x20000266 = 0x039b
+	*(uint16_t*)0x20000268 = 0x017e
+	*(uint16_t*)0x2000026a = 0x0002
+	*(uint16_t*)0x2000026c = 0x1f40
+	*(uint16_t*)0x2000026e = 0xf830
+	*(uint16_t*)0x20000270 = 0xf254
+	*(uint16_t*)0x20000272 = 0x0005
+	*(uint16_t*)0x20000274 = 0x0002
+	*(uint16_t*)0x20000276 = 0x0002
+	*(uint16_t*)0x20000278 = 0x000f
+	*(uint16_t*)0x2000027a = 0x0fa0
+	*(uint16_t*)0x2000027c = 0x0000
+	*(uint16_t*)0x2000027e = 0x6b6c
+	*(uint16_t*)0x20000280 = 0xf830
+	*(uint16_t*)0x20000282 = 0xf254
+	*(uint16_t*)0x20000284 = 0x0000
+	*(uint16_t*)0x20000286 = 0x2ee0
+	*(uint16_t*)0x20000288 = 0x0001
+	*(uint16_t*)0x2000028a = 0x0fa0
+	*(uint16_t*)0x2000028c = 0x00c8
+	*(uint16_t*)0x2000028e = 0x0000
+	*(uint16_t*)0x20000290 = 0x0000
+	*(uint16_t*)0x20000292 = 0x012c
+	*(uint16_t*)0x20000294 = 0x0032
+	*(uint16_t*)0x20000296 = 0x0000
+	*(uint16_t*)0x20000298 = 0x0014
+	*(uint16_t*)0x2000029a = 0x0258
+	*(uint16_t*)0x2000029c = 0x0000
+	*(uint16_t*)0x2000029e = 0x0000
+	*(uint16_t*)0x200002a0 = 0x0064
+	*(uint16_t*)0x200002a2 = 0x0064
+	*(uint16_t*)0x200002a4 = 0x0000
+	*(uint16_t*)0x200002a6 = 0x0000
+	*(uint16_t*)0x200002a8 = 0x0000
+	*(uint16_t*)0x200002aa = 0x0002
+	*(uint16_t*)0x200002ac = 0x0708
+	*(uint16_t*)0x200002ae = 0x0000
+	*(uint16_t*)0x200002b0 = 0x0000
+	*(uint16_t*)0x200002b2 = 0x0000
+	*(uint16_t*)0x200002b4 = 0x0000
+	*(uint16_t*)0x200002b6 = 0x0000
+	*(uint16_t*)0x200002b8 = 0x0000
+	*(uint16_t*)0x200002ba = 0x0000
+	*(uint16_t*)0x200002bc = 0x0000
+	*(uint16_t*)0x200002be = 0x0000
+
+
+	// Firmware Offset(s): 
+	//	0x00004f2a - 0x00004f2a
+	//	0x0000d7a0 - 0x0000d7a0
+	//	0x000076c4 - 0x000076cc
+	//	0x0000d7a4 - 0x0000d7a4
+
+	// Clear some SRAM0 values
+	*(uint32_t*)0x100010d4 = 0x00000000
+	*(uint32_t*)0x100010d8 = 0x00000000
+
+
+	// Firmware Offset(s): 
+	//	0x00003060 - 0x00003066
+	//	0x0000b7c8 - 0x0000b7d8
+	//	0x00004200 - 0x0000420e
+
+	// Set USB clock source to USB PLL out via USB clock source select register
+	*(uint32_t*)0x400480c0 = 0x00000000	
+	// Indicate No change for Enable USB clock source update via USB clock source update enable register
+	*(uint32_t*)0x400480c4 = 0x00000000
+	// Indicate Update clock source for Enable USB clock source update via USB clock source update enable register
+	*(uint32_t*)0x400480c4 = 0x00000001
+	// Set USB clock divider values to Divide by 1 via USB clock divider register
+	*(uint32_t*)0x400480c8 = 0x00000001
+
+
+	// Firmware Offset(s): 
+	//	0x0000b7dc - 0x0000b7de
+	//	0x0000452c - 0x00004540
+
+	// Power USB PLL and USB transceiver via Power configuration register 
+	reg1 = *(uint32_t*)0x40048238
+	reg1 &= 0x000005ff
+	reg1 &= ~0x00000500
+	reg1 |= 0x0000e800	
+	*(uint32_t*)0x40048238 = reg1
+
+
+	// Firmware Offset(s): 
+	//	0x0000b7e2 - 0x0000b7ee
+
+	// Verify USB PLL is locked via USB PLL status register
+	do {
+		reg1 = (*uint32_t*)0x40048014
+	} while (!reg1);
+	
+
+	// Firmware Offset(s): 
+	//	0x0000411c - 0x00004128
+	
+	// Enable clock to the USB register interface via System clock control register
+	reg2 = *(uint32_t*)0x40048080;
+	reg2 |= 0x00004000;
+	*(uint32_t*)0x40048080 = reg2;
+	
+
+	// Firmware Offset(s): 
+	//	0x0000b7f2 - 0x0000b7f4
+	//	0x0000411c - 0x00004128
+
+	// Enable USB SRAM block at address 0x2000 4000 via System clock control register
+	reg2 = *(uint32_t*)0x40048080;
+	reg2 |= 0x08000000;
+	*(uint32_t*)0x40048080 = reg2;
+	
+
+	// Firmware Offset(s): 
+	//	0x0000b7f8 - 0x0000b800
+	//	0x000043a4 - 0x000043a8
+	//	0x000043b0 - 0x000043b2
+
+	// Set PIO_3 to function as USB_VBUS and enable pull-down resistor
+	*(uint32_t*)0x4004400c = 0x00000009;
+	
+
+	// Firmware Offset(s): 
+	//	0x0000b804 - 0x0000b80c
+	//	0x000043a4 - 0x000043a8
+	//	0x000043b0 - 0x000043b2
+
+	// Set PIO_6 to function as not(USB_CONNECT)
+	*(uint32_t*)0x40044018 = 0x00000001;
+	
+
+	// Firmware Offset(s): 
+	//	0x0000b810 - 0x0000b810
+	//	0x0000306a - 0x00003078
+
+	// Access boot ROM to get (const USBD_API_T *)LPC_ROM_API->usbdApiBase
+	reg0 = *(uint32_t*)0x1fff1ff8; // = 0x1fff1eb8
+	reg1 = *(uint32_t*)reg0; // = 0x1fff1f24
+	*(uint32_t*)0x10000350 = reg1;
+	
+
+	// Firmware Offset(s): 
+	//	0x000021be - 0x000021c0
+	//	0x000021b0 - 0x000021b2
+	//	0x000021b4 - 0x000021ba
+	//	0x000021bc - 0x000021bc
+
+	// Clear some SRAM0 values (stack?)
+	*(uint8_t*)0x10001f60 = 0x00
+	*(uint8_t*)0x10001f61 = 0x00
+	*(uint8_t*)0x10001f62 = 0x00
+	*(uint8_t*)0x10001f63 = 0x00
+	*(uint8_t*)0x10001f64 = 0x00
+	*(uint8_t*)0x10001f65 = 0x00
+	*(uint8_t*)0x10001f66 = 0x00
+	*(uint8_t*)0x10001f67 = 0x00
+	*(uint8_t*)0x10001f68 = 0x00
+	*(uint8_t*)0x10001f69 = 0x00
+	*(uint8_t*)0x10001f6a = 0x00
+	*(uint8_t*)0x10001f6b = 0x00
+	*(uint8_t*)0x10001f6c = 0x00
+	*(uint8_t*)0x10001f6d = 0x00
+	*(uint8_t*)0x10001f6e = 0x00
+	*(uint8_t*)0x10001f6f = 0x00
+	*(uint8_t*)0x10001f70 = 0x00
+	*(uint8_t*)0x10001f71 = 0x00
+	*(uint8_t*)0x10001f72 = 0x00
+	*(uint8_t*)0x10001f73 = 0x00
+	*(uint8_t*)0x10001f74 = 0x00
+	*(uint8_t*)0x10001f75 = 0x00
+	*(uint8_t*)0x10001f76 = 0x00
+	*(uint8_t*)0x10001f77 = 0x00
+	*(uint8_t*)0x10001f78 = 0x00
+	*(uint8_t*)0x10001f79 = 0x00
+	*(uint8_t*)0x10001f7a = 0x00
+	*(uint8_t*)0x10001f7b = 0x00
+	*(uint8_t*)0x10001f7c = 0x00
+	*(uint8_t*)0x10001f7d = 0x00
+	*(uint8_t*)0x10001f7e = 0x00
+	*(uint8_t*)0x10001f7f = 0x00
+	*(uint8_t*)0x10001f80 = 0x00
+	*(uint8_t*)0x10001f81 = 0x00
+	*(uint8_t*)0x10001f82 = 0x00
+	*(uint8_t*)0x10001f83 = 0x00
+	*(uint8_t*)0x10001f84 = 0x00
+	*(uint8_t*)0x10001f85 = 0x00
+	*(uint8_t*)0x10001f86 = 0x00
+	*(uint8_t*)0x10001f87 = 0x00
+	*(uint8_t*)0x10001f88 = 0x00
+	*(uint8_t*)0x10001f89 = 0x00
+	*(uint8_t*)0x10001f8a = 0x00
+	*(uint8_t*)0x10001f8b = 0x00
+	*(uint8_t*)0x10001f8c = 0x00
+	*(uint8_t*)0x10001f8d = 0x00
+	*(uint8_t*)0x10001f8e = 0x00
+	*(uint8_t*)0x10001f8f = 0x00
+	*(uint8_t*)0x10001f90 = 0x00
+	*(uint8_t*)0x10001f91 = 0x00
+	*(uint8_t*)0x10001f92 = 0x00
+	*(uint8_t*)0x10001f93 = 0x00
+	*(uint8_t*)0x10001f94 = 0x00
+	*(uint8_t*)0x10001f95 = 0x00
+	*(uint8_t*)0x10001f96 = 0x00
+	*(uint8_t*)0x10001f97 = 0x00
+	*(uint8_t*)0x10001f98 = 0x00
+	*(uint8_t*)0x10001f99 = 0x00
+	*(uint8_t*)0x10001f9a = 0x00
+	*(uint8_t*)0x10001f9b = 0x00
+	*(uint8_t*)0x10001f9c = 0x00
+	*(uint8_t*)0x10001f9d = 0x00
+	*(uint8_t*)0x10001f9e = 0x00
+	*(uint8_t*)0x10001f9f = 0x00
+	*(uint8_t*)0x10001fa0 = 0x00
+	*(uint8_t*)0x10001fa1 = 0x00
+	*(uint8_t*)0x10001fa2 = 0x00
+	*(uint8_t*)0x10001fa3 = 0x00
+
+
+	// Firmware Offset(s): 
+	//	0x0000307c - 0x000030bc
+
+	// Fill in USBD_API_INIT_PARAM_T
+	*(uint32_t*)0x10001f60 = 0x40080000 // usb_reg_base - USB device controller's base register address
+	*(uint32_t*)0x10001f64 = 0x20004000// mem_base - Base memory location from where the stack can allocate
+		// data and buffers. \note The memory address set in this field
+		// should be accessible by USB DMA controller. Also this value
+		// should be aligned on 2048 byte boundary 
+	*(uint32_t*)0x10001f68 = 0x00000800 // mem_size - The size of memory buffer which stack can use.       
+                      // \note The \em mem_size should be greater than the size    
+                      // returned by USBD_HW_API::GetMemSize() routine
+	*(uint32_t*)0x10001f6C = 0x00000005 // max_num_ep - max number of endpoints supported by the USB device  
+                      // controller instance (specified by \em usb_reg_base field) 
+                      // to which this instance of stack is attached.
+
+	*(uint32_t*)0x10001f70 = 0x00008d8b // USB_Reset_Event - USB Device Events Callback Function
+	*(uint32_t*)0x10001f74 = 0x0000995d // USB_Suspend_Event - USB Device Events Callback Function
+	*(uint32_t*)0x10001f78 = 0x00008de5 // USB_Resume_Event - USB Device Events Callback Function
+	*(uint32_t*)0x10001f7C = 0x00000000 // reserved_sbz 
+
+	*(uint32_t*)0x10001f80 = 0x00000000 // USB_SOF_Event - USB Device Events Callback Function
+	*(uint32_t*)0x10001f84 = 0x00000000 // USB_WakeUpCfg 
+	*(uint32_t*)0x10001f88 = 0x00000000 // USB_Power_Event
+	*(uint32_t*)0x10001f8C = 0x00000000 // USB_Error_Event
+
+	*(uint32_t*)0x10001f90 = 0x00004e59 // USB_Configure_Event
+	*(uint32_t*)0x10001f94 = 0x00000000 // USB_Interface_Event
+	*(uint32_t*)0x10001f98 = 0x00000000 // USB_Feature_Event
+	*(uint32_t*)0x10001f9C = 0x00000000 // Reserved for future use, should be set to 0
+
+	*(uint32_t*)0x10001fA0 = 0x00000000 // Reserved for future use, should be set to 0
+
+	// Fill in USB_CORE_DESCS_T
+	*(uint32_t*)0x10001fa4 = 0x0000ef14 // device_desc - Pointer to USB device descriptor
+	*(uint32_t*)0x10001fa8 = 0x0000ef86 // string_desc - Pointer to array of USB string descriptors
+	*(uint32_t*)0x10001fac = 0x0000ef28 // full_speed_desc - Pointer to USB device configuration descriptor 
+                            // when device is operating in full speed mode
+	*(uint32_t*)0x10001fb0 = 0x0000ef28 // high_speed_desc - Pointer to USB device configuration descriptor 
+                            // when device is operating in high speed mode. For  
+                            // full-speed only implementation this pointer should
+                            // be same as full_speed_desc.
+	*(uint32_t*)0x10001fb4 = 0x00000000 // device_qualifier; /**< Pointer to USB device qualifier descriptor. For
+                            // full-speed only implementation this pointer should
+                            // be set to null (0).
+
+	reg0 = *(uint32_t*)0x1fff1f24; // = 0x1fff1f80
+	reg3 = *(uint32_t)0x1fff1f84; // = 0x1fff351d
+
+	reg0 = 0x10000354;
+	reg1 = 0x10001fa4;
+	reg2 = 0x10001f60;
+
+
+	// Firmware Offset(s): 
+	//	0x1fff351c - ...
+	//	...        - 0x1fff35ce
+
+	// \param[in,out] phUsb Pointer to the USB device stack handle of type USBD_HANDLE_T.
+	// \param[in]  pDesc Structure containing pointers to various descriptor arrays needed by the stack.
+	// 		  These descriptors are reported to USB host as part of enumerations process.
+	// \param[in]  param Structure containing USB device stack initialization parameters.
+	// \return Returns \ref ErrorCode_t type to indicate success or error condition.
+	// 	\retval LPC_OK(0) On success                                      
+	// 	\retval ERR_USBD_BAD_MEM_BUF(0x0004000b) When insufficient memory buffer is passed or memory
+        //                                    is not aligned on 2048 boundary.
+	USBD_HW_API->Init(USBD_HANDLE_T* phUsb = 0x10000354, USB_CORE_DESCS_T* pDesc = 0x10001fa4, USBD_API_INIT_PARAM_T* param = 0x10001f60)
+
+
+	// Firmware Offset(s): 
+	//	0x000030be - 
 }
+
 
 /**
  * There reaches a point in the init code (i.e. execution starting from the RESET
