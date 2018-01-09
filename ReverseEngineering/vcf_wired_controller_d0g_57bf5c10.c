@@ -50,19 +50,29 @@
 
   init phase2 hw version not 0:
 
+	0x10000080 (uint16_t) - USB_HID_REPORT_T->len
+	0x10000082 (uint16_t) - USB_HID_REPORT_T->idle_time + USB_HID_REPORT_T->__pad?
+	0x10000084 (uint32_t) - USB_HID_REPORT_T->desc?
+	0x10000088 (uint32_t) - USB_HID_REPORT_T->desc?
+
+
 	0x100000a4 (uint32_t) - System Clock Frequency (CCLK) in MHz. (48000000 is calcualted and stored here).
 
 	0x10000340 (uint8_t) - Tracks if EEPROM access is taking place
 
+	0x1000034c (uint32_t) - USBD_HANDLE_T (is typedef void*)
+
 	0x10000350 (uint32_t) - (const USBD_API_T *)LPC_ROM_API->usbdApiBase
-	0x10000354 (uint32_t) - USBD_HANDLE_T
-	... TODO: how big is USBD_HANDLE_T??
+	0x10000354 (uint32_t) - Tracks bottom of USB stack, as devices/eps are added (i.e. mem_base after init functions)
+	0x10000358 (uint32_t) - mem_size from last USBD init call 
 
 	0x100009b4 (uint32_t) - Start of 0x84 bytes of EEPROM data from EEPROM offset 0
 	...
 	0x10000a34 (uint32_t) - End of 0x84 bytes of EEPROM data from EEPROM offset 0
 
 	0x100007b4 (uint32_t) - 
+	
+	0x100010b4 (uint32_t) - Checked if is zero after USB init.
 
 
   init phase2 hw version 0:
@@ -4301,7 +4311,7 @@ void init_phase2_hw_not0()
 	reg0 = *(uint32_t*)0x1fff1f24; // = 0x1fff1f80
 	reg3 = *(uint32_t)0x1fff1f84; // = 0x1fff351d
 
-	reg0 = 0x10000354;
+	reg0 = 0x1000034c;
 	reg1 = 0x10001fa4;
 	reg2 = 0x10001f60;
 
@@ -4318,11 +4328,233 @@ void init_phase2_hw_not0()
 	// 	\retval LPC_OK(0) On success                                      
 	// 	\retval ERR_USBD_BAD_MEM_BUF(0x0004000b) When insufficient memory buffer is passed or memory
         //                                    is not aligned on 2048 boundary.
-	USBD_HW_API->Init(USBD_HANDLE_T* phUsb = 0x10000354, USB_CORE_DESCS_T* pDesc = 0x10001fa4, USBD_API_INIT_PARAM_T* param = 0x10001f60)
+	retval = USBD_HW_API->Init(USBD_HANDLE_T* phUsb = 0x1000034c, USB_CORE_DESCS_T* pDesc = 0x10001fa4, USBD_API_INIT_PARAM_T* param = 0x10001f60)
 
 
 	// Firmware Offset(s): 
-	//	0x000030be - 
+	//	0x000030be - 0x000030c0
+	//	0x000030c2 - 0x000030dc
+
+	// Check that USBD_HW_API->Init() return value is LPC_OK(0)
+	if (retval != LPC_OK) {
+		//	UNKNOWN PATHS branch to 0x000030d4 
+	}
+
+	// Read USBD_API_INIT_PARAM_T->mem_size
+	reg0 = *(uint32_t*)0x10001f68;
+	*(uint32_t*)0x10000358 = reg0;
+
+	// Track how much of stack space is left for when next USB device/ep is added
+	*(uint32_t*)0x10000354 = 0x20004800 - reg0;
+
+	// Enable interrupt 22 (USB_IRQ) via Interrupt Set-enable Register
+	*(uint32_t*)0xe000e100 = 0x00400000;
+
+
+	// Firmware Offset(s): 
+	//	0x000055e8 - 0x000055f2
+	//	0x00005434 - 0x0000543e
+	//	0x00005448 - 0x00005448
+
+	reg2 = *(uint32_t)0x100010b4;
+	if (reg2 != 0) {
+		// UNKNOWN PATHS execute 0x00005440
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x000055f6 - 0x00005600
+	//	0x0000454c - 0x0000455a
+
+	// Some math to calculate which pin interrupt to enable
+	reg1 = *(uint32_t*)0x10001f3c;
+	reg1 *= 0x18;
+	reg1 += reg2;
+	...
+
+	// Set PIO_3 (USB_VBUS) as INTPIN via Pin interrupt select register PINTSEL0
+	//	Interrupt to react to USB cable being plugged in most likely
+	*(uint32_t*)0x40048178 = 0x00000003;
+
+
+	// Firmware Offset(s): 
+	//	0x00005604 - 0x00005616
+
+	// Set PSTAT (clear rising- and falling-edge detection for this pin (PIO_3?)) via Pin interrupt status register
+	*(uint32_t*)0x4004c024 = 0x00000001;
+	// Set SETENRL (Enable rising edge or level interrupt (for PIO_3?)) via Pin interrupt level (rising edge) interrupt set register	
+	*(uint32_t*)0x4004c008 = 0x00000001;
+
+
+	// Firmware Offset(s): 
+	//	0x000044f8 - 0x00004504
+
+	// Enable PINT0 via Interrupt wake-up enable register 0
+	reg2 = *(uint32_t*)0x40048204;
+	reg2 |= 1;
+	*(uint32_t*)0x40048204 = reg2;
+
+
+	// Firmware Offset(s): 
+	//	0x0000561a - 0x00005630
+	//	0x000030e0 - 0x000030e2
+	//	0x0000d7a8 - 0x0000d7a8
+
+	// Set with hardcoded value now that USB has started to occur?
+	*(uint32_t*)0x100010b4 = 0x0000a87d
+
+	// Remove pending state an interrupt 0 (PINT0) via Interrupt Clear-pending Register
+	*(uint32_t*)0xe000e280 = 0x00000001;
+	// Enable interrupt 0 (PINT0) via Interrupt Set-enable Register
+	*(uint32_t*)0xe000e100 = 0x00000001;
+
+
+	// Firmware Offset(s): 
+	//	0x00006534 - 0x00006554
+
+	// Set some SRAM0 value
+	*(uint32_t*)0x10000088 = 0x00000000;
+	*(uint32_t*)0x1000008c = 0x00000000;
+	// USB_HID_REPORT_T
+	*(uint16_t*)0x10000080 = 0x0041;
+	*(uint16_t*)0x10000082 = 0x0000;
+	*(uint32_t*)0x10000084 = 0x0000eeaa;
+
+
+	// Firmware Offset(s): 
+	//	0x000021be - 0x000021c0
+	//	0x000021b0 - 0x000021b2
+	//	0x000021b4 - 0x000021ba
+	//	0x000021bc - 0x000021bc
+
+	// Clear some SRAM0 values
+	*(uint8_t*)0x10001f88 = 0x00
+	*(uint8_t*)0x10001f89 = 0x00
+	*(uint8_t*)0x10001f8a = 0x00
+	*(uint8_t*)0x10001f8b = 0x00
+	*(uint8_t*)0x10001f8c = 0x00
+	*(uint8_t*)0x10001f8d = 0x00
+	*(uint8_t*)0x10001f8e = 0x00
+	*(uint8_t*)0x10001f8f = 0x00
+	*(uint8_t*)0x10001f90 = 0x00
+	*(uint8_t*)0x10001f91 = 0x00
+	*(uint8_t*)0x10001f92 = 0x00
+	*(uint8_t*)0x10001f93 = 0x00
+	*(uint8_t*)0x10001f94 = 0x00
+	*(uint8_t*)0x10001f95 = 0x00
+	*(uint8_t*)0x10001f96 = 0x00
+	*(uint8_t*)0x10001f97 = 0x00
+	*(uint8_t*)0x10001f98 = 0x00
+	*(uint8_t*)0x10001f99 = 0x00
+	*(uint8_t*)0x10001f9a = 0x00
+	*(uint8_t*)0x10001f9b = 0x00
+	*(uint8_t*)0x10001f9c = 0x00
+	*(uint8_t*)0x10001f9d = 0x00
+	*(uint8_t*)0x10001f9e = 0x00
+	*(uint8_t*)0x10001f9f = 0x00
+	*(uint8_t*)0x10001fa0 = 0x00
+	*(uint8_t*)0x10001fa1 = 0x00
+	*(uint8_t*)0x10001fa2 = 0x00
+	*(uint8_t*)0x10001fa3 = 0x00
+	*(uint8_t*)0x10001fa4 = 0x00
+	*(uint8_t*)0x10001fa5 = 0x00
+	*(uint8_t*)0x10001fa6 = 0x00
+	*(uint8_t*)0x10001fa7 = 0x00
+	*(uint8_t*)0x10001fa8 = 0x00
+	*(uint8_t*)0x10001fa9 = 0x00
+	*(uint8_t*)0x10001faa = 0x00
+	*(uint8_t*)0x10001fab = 0x00
+	*(uint8_t*)0x10001fac = 0x00
+	*(uint8_t*)0x10001fad = 0x00
+	*(uint8_t*)0x10001fae = 0x00
+	*(uint8_t*)0x10001faf = 0x00
+	*(uint8_t*)0x10001fb0 = 0x00
+	*(uint8_t*)0x10001fb1 = 0x00
+	*(uint8_t*)0x10001fb2 = 0x00
+	*(uint8_t*)0x10001fb3 = 0x00
+	*(uint8_t*)0x10001fb4 = 0x00
+	*(uint8_t*)0x10001fb5 = 0x00
+	*(uint8_t*)0x10001fb6 = 0x00
+	*(uint8_t*)0x10001fb7 = 0x00
+	*(uint8_t*)0x10001fb8 = 0x00
+	*(uint8_t*)0x10001fb9 = 0x00
+	*(uint8_t*)0x10001fba = 0x00
+	*(uint8_t*)0x10001fbb = 0x00
+	*(uint8_t*)0x10001fbc = 0x00
+	*(uint8_t*)0x10001fbd = 0x00
+	*(uint8_t*)0x10001fbe = 0x00
+	*(uint8_t*)0x10001fbf = 0x00
+
+
+	// Firmware Offset(s): 
+	//	0x00006558 - 0x00006568
+	//	0x0000300c - 0x0000301a
+	//	0x00003022 - 0x00003042
+
+	// USBD_HID_INIT_PARAM_T
+	*(uint32_t*)0x10001f88 = *(uint32_t*)0x10000354; // = 0x200044c0 // mem_base - Base memory location from where the stack can allocate
+                      // data and buffers. \note The memory address set in this field
+                      // should be accessible by USB DMA controller. Also this value
+                      // should be aligned on 4 byte boundary
+	*(uint32_t*)0x10001f8c = *(uint32_t*)0x10000358; // = 0x00000340 // mem_size - The size of memory buffer which stack can use.       
+                      // \note The \em mem_size should be greater than the size    
+                      // returned by USBD_HID_API::GetMemSize() routine.
+	*(uint32_t*)0x10001f90 = 0x00000001; // max_reports - Number of HID reports supported by this instance    
+                      // of HID class driver
+	*(uint32_t*)0x10001f94 = 0x0000ef31; // intf_desc - Pointer to the HID interface descriptor within the   
+                      // descriptor array (\em high_speed_desc) passed to Init()   
+                      // through \ref USB_CORE_DESCS_T structure.
+	*(uint32_t*)0x10001f98 = 0x10000080; // report_dataa - Pointer to an array of HID report descriptor
+                      // data structure (\ref USB_HID_REPORT_T). The number
+                      // of elements in the array should be same a \em max_reports
+                      // value. The stack uses this array to respond to 
+                      // requests received for various HID report descriptor
+                      // information. \note This array should be of global scope
+	*(uint32_t*)0x10001f9c = 0x00005a91; // HID_GetReport
+	*(uint32_t*)0x10001fa0 = 0x0000951d; // HID_SetReport
+
+	reg0 = *(uint32_t*)0x10000350; // = 0x1fff1f24	
+	reg0 = *(uint32_t*)0x1fff1f34; // = 0x1fff1f78 // *(uing32_t*)(reg0 + 0x10)???
+	reg2 = *(uint32_t*)0x1fff1f7c; // = 0x1fff2cfd // *(uint32_t*)(reg0 + 4)???
+	
+	reg0 = (uint32_t*)0x1000034c; // 0x20004118
+	reg1 = 0x10001f88;
+
+
+	// Firmware Offset(s): 
+	//	0x1fff2cfc - ...
+	//	...        - 0x1fff2cee
+
+	// \param[in] hUsb Handle to the USB device stack.                           
+	// \param[in, out] param Structure containing HID function driver module     
+	//     initialization parameters.                                            
+	// \return Returns \ref ErrorCode_t type to indicate success or error condition.
+	// 	\retval LPC_OK On success                                         
+	// 	\retval ERR_USBD_BAD_MEM_BUF  Memory buffer passed is not 4-byte  
+	// 	    aligned or smaller than required.                             
+	// 	\retval ERR_API_INVALID_PARAM2 Either HID_GetReport() or HID_SetReport()
+	// 	    callback are not defined.                                     
+	// 	\retval ERR_USBD_BAD_DESC  HID_HID_DESCRIPTOR_TYPE is not defined 
+	// 	    immediately after interface descriptor.                       
+	// 	\retval ERR_USBD_BAD_INTF_DESC  Wrong interface descriptor is passed. 
+	// 	\retval ERR_USBD_BAD_EP_DESC  Wrong endpoint descriptor is passed. 
+	USBD_HID_API_T->init(USBD_HANDLE_T hUsb = 0x20004118, USBD_HID_INIT_PARAM_T* param = 0x10001f88)
+
+
+	// Firmware Offset(s): 
+	//	0x00003044 - 0x0000304c
+	//	0x0000656c - 0x0000656e
+	//	0x0000d7ac - 0x0000d7ac
+
+	// Update mem_base after USBD_HID_API_T->init()
+	*(uint32_t*)0x10000354 = *(uint32_t*)0x10001f88; // = 0x200044f0
+	// Update mem_size after USBD_HID_API_T->init()
+	*(uint32_t*)0x10000358 = *(uint32_t*)0x10001f8c; // = 0x00000310
+
+
+	// Firmware Offset(s): 
+	//	0x00007268 - 
+
 }
 
 
