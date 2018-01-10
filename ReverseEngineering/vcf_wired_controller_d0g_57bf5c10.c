@@ -50,18 +50,103 @@
 
   init phase2 hw version not 0:
 
-	0x10000080 (uint16_t) - EPA? USB_HID_REPORT_T->len
-	0x10000082 (uint8_t)  - EPA? USB_HID_REPORT_T->idle_time 
-	0x10000083 (uint8_t)  - EPA? USB_HID_REPORT_T->__pad
-	0x10000084 (uint32_t) - EPA? USB_HID_REPORT_T->desc (of type uint8_t*)
-	0x10000088 (uint32_t) - EPA? related??
-	0x1000008C (uint32_t) - EPA? related??
+	USB_HID0 HID Report Descriptor (len 0x41):
+	0x0000eeaa - 0x0000eeea
+		 HID_UsagePage(HID_USAGE_PAGE_GENERIC)
+		 HID_Usage(HID_USAGE_GENERIC_KEYBOARD)
+		 HID_ReportCount(1)
+		 HID_Collection(HID_Application)
+		 HID_UsagePage(HID_USAGE_PAGE_KEYBOARD)
+		 HID_UsageMin(224)
+		 HID_UsageMax(231)
+		 HID_LogicalMin(0)
+		 HID_LogicalMax(1)
+		 HID_ReportSize(1)
+		 HID_ReportCount(8)
+		 HID_Input(HID_Variable) // 0x02
+		 HID_ReportCount(1)
+		 HID_ReportSize(8)
+		 HID_Input(HID_Constant) // 0x01
+		 HID_ReportCount(5)
+		 HID_ReportSize(1)
+		 HID_UsagePage(HID_USAGE_PAGE_LED)
+		 HID_UsageMin(1)
+		 HID_UsageMax(5)
+		 HID_Output(HID_Variable)
+		 HID_ReportCount(1)
+		 HID_ReportSize(3)
+		 HID_Output(HID_Constant)
+		 HID_ReportCount(6)
+		 HID_ReportSize(8)
+		 HID_LogicalMin(0)
+		 HID_LogicalMax(101)
+		 HID_UsagePage(HID_USAGE_PAGE_KEYBOARD)
+		 HID_UsageMin(0)
+		 HID_UsageMax(101)
+		 HID_Input(HID_Data) // 0x00
+		 HID_EndCollection
+	
+	USB_HID1 HID Report Descriptor (len 0x34):
+	0x0000ee74 - 0x0000eea7
+		HID_UsagePage(HID_USAGE_PAGE_GENERIC)
+		HID_Usage(HID_USAGE_GENERIC_MOUSE)
+		HID_Collection(HID_Application)
+		HID_Usage(HID_USAGE_GENERIC_POINTER)
+		HID_Collection(HID_Physical)
+		HID_UsagePage(HID_USAGE_PAGE_BUTTON)
+		HID_UsageMin(1)
+		HID_UsageMax(5)
+		HID_LogicalMin(0)
+		HID_LogicalMax(1)
+		HID_ReportCount(5)
+		HID_ReportSize(1)
+		HID_Input(HID_Variable) // 0x02
+		HID_ReportCount(1)
+		HID_ReportSize(3)
+		HID_Input(HID_Constant) // 0x01
+		HID_UsagePage(HID_USAGE_PAGE_GENERIC)
+		HID_Usage(HID_USAGE_GENERIC_X)
+		HID_Usage(HID_USAGE_GENERIC_Y)
+		HID_Usage(HID_USAGE_GENERIC_WHEEL)
+		HID_LogicalMin(-127)
+		HID_LogicalMax(127)
+		HID_ReportSize(8)
+		HID_ReportCount(3)
+		HID_Input(HID_Relative | HID_Variable) // 0x06
+		HID_EndCollection
+
+	USB_HID2 HID Report Descriptor (len 0x21):
+	0x0000eeee - 0x0000ef0e
+		HID_UsagePageVendor(HID_USAGE_PAGE_UNDEFINED)
+		HID_Usage(HID_USAGE_GENERIC_POINTER)
+		HID_Collection(HID_Application)
+		HID_LogicalMin(0)
+		HID_LogicalMaxS(255)
+		HID_ReportSize(8)
+		HID_ReportCount(64)
+		HID_Usage(HID_USAGE_GENERIC_POINTER)
+		HID_Input(HID_Variable) // 0x02
+		HID_ReportCount(64)
+		HID_Usage(HID_USAGE_GENERIC_POINTER)
+		HID_Output(HID_Variable) // 0x02
+		HID_ReportSize(64)
+		HID_Output(HID_Constant) // 0x01
+		HID_Feature(HID_Variable) // 0x02
+		HID_EndCollection
+
+
+	0x10000080 (uint16_t) - USB_HID0 USB_HID_REPORT_T->len
+	0x10000082 (uint8_t)  - USB_HID0 USB_HID_REPORT_T->idle_time 
+	0x10000083 (uint8_t)  - USB_HID0 USB_HID_REPORT_T->__pad
+	0x10000084 (uint32_t) - USB_HID0 USB_HID_REPORT_T->desc (of type uint8_t*)
+	0x10000088 (uint32_t) - USB_HID0 related??
+	0x1000008C (uint32_t) - USB_HID0 related??
 
 	0x100000a4 (uint32_t) - System Clock Frequency (CCLK) in MHz. (48000000 is calcualted and stored here).
 
-	0x100002c8 (uint32_t) - EPC? Related?
+	0x100002c8 (uint32_t) - USB_HID2 Related?
 
-	0x10000338 (uint32_t) - EPC? Related?
+	0x10000338 (uint32_t) - USB_HID2 Related?
 	0x10000340 (uint8_t)  - Tracks if EEPROM access is taking place
 
 	0x1000034c (uint32_t) - USBD_HANDLE_T (is typedef void*)
@@ -70,18 +155,18 @@
 	0x10000354 (uint32_t) - Tracks bottom of USB stack, as devices/eps are added (i.e. mem_base after init functions)
 	0x10000358 (uint32_t) - mem_size from last USBD init call 
 
-	0x10000364 (uint32_t) - EPB? Related?
-	0x10000368 (uint16_t) - EPB? USB_HID_REPORT_T->len
-	0x1000036a (uint8_t)  - EPB? USB_HID_REPORT_T->idle_time 
-	0x1000036b (uint8_t)  - EPB? USB_HID_REPORT_T->__pad
-	0x1000036c (uint32_t) - EPB? USB_HID_REPORT_T->desc (of type uint8_t*)
+	0x10000364 (uint32_t) - USB_HID1 Related?
+	0x10000368 (uint16_t) - USB_HID1 USB_HID_REPORT_T->len
+	0x1000036a (uint8_t)  - USB_HID1 USB_HID_REPORT_T->idle_time 
+	0x1000036b (uint8_t)  - USB_HID1 USB_HID_REPORT_T->__pad
+	0x1000036c (uint32_t) - USB_HID1 USB_HID_REPORT_T->desc (of type uint8_t*)
 
-	0x10000380 (uint32_t) - EPC? Related?
+	0x10000380 (uint32_t) - USB_HID2 Related?
 
-	0x10000390 (uint16_t) - EPC? USB_HID_REPORT_T->len
-	0x10000392 (uint8_t)  - EPC? USB_HID_REPORT_T->idle_time 
-	0x10000393 (uint8_t)  - EPC? USB_HID_REPORT_T->__pad
-	0x10000394 (uint32_t) - EPC? USB_HID_REPORT_T->desc (of type uint8_t*)
+	0x10000390 (uint16_t) - USB_HID2 USB_HID_REPORT_T->len
+	0x10000392 (uint8_t)  - USB_HID2 USB_HID_REPORT_T->idle_time 
+	0x10000393 (uint8_t)  - USB_HID2 USB_HID_REPORT_T->__pad
+	0x10000394 (uint32_t) - USB_HID2 USB_HID_REPORT_T->desc (of type uint8_t*)
 
 	0x100009b4 (uint32_t) - Start of 0x84 bytes of EEPROM data from EEPROM offset 0
 	...
@@ -4511,6 +4596,8 @@ void init_phase2_hw_not0()
 	//	0x0000300c - 0x0000301a
 	//	0x00003022 - 0x00003042
 
+	// Designating this USB_HID0 (appears as genric keyboard with Steam driver):
+
 	// USBD_HID_INIT_PARAM_T
 	*(uint32_t*)0x10001f88 = *(uint32_t*)0x10000354; // = 0x200044c0 // mem_base - Base memory location from where the stack can allocate
                       // data and buffers. \note The memory address set in this field
@@ -4576,7 +4663,7 @@ void init_phase2_hw_not0()
 	//	0x00007268 - 0x00007286
 
 	*(uint32_t*)0x10000364 = 0x00000000
-	// USB_HID_REPORT_T??
+	// USB_HID_REPORT_T
 	*(uint16_t*)0x10000368 = 0x0034;
 	*(uint8_t*)0x1000036a = 0x00;
 	*(uint32_t*)0x1000036c = 0x0000ee74;
@@ -4651,6 +4738,8 @@ void init_phase2_hw_not0()
 	//	0x0000728a - 0x0000729c
 	//	0x0000300c - 0x0000301a
 	//	0x00003022 - 0x00003042
+
+	// Designating this USB_HID1 (appears as generic mouse with Steam driver):
 
 	// USBD_HID_INIT_PARAM_T
 	*(uint32_t*)0x10001f88 = *(uint32_t*)0x10000354; // = 0x200044f0 // mem_base - Base memory location from where the stack can allocate
@@ -4875,6 +4964,8 @@ void init_phase2_hw_not0()
 	//	0x00006088 - 0x0000609c
 	//	0x0000300c - 0x0000301a
 	//	0x00003022 - 0x00003042
+
+	// Designating this USB_HID2 (interface to haptics??):
 
 	// USBD_HID_INIT_PARAM_T
 	*(uint32_t*)0x10001f80 = *(uint32_t*)0x10000354; // = 0x20004520 // mem_base - Base memory location from where the stack can allocate
