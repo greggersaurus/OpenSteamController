@@ -43,3 +43,23 @@ A project can be imported into LPCXpresso by selecting:
  File -> Import -> General -> Existing Project into Workspace -> Select root directory
 
 Run Project -> Build All to compile.
+
+# TODO
+
+This is a running list of items I would like to prioritize and not lose track
+ of.
+
+1. READMEs for lpcexpresso projects
+    1. Details on where lpc project came from
+    2. Intention and requirements (i.e. lpc project) for SteamControllerDevKit project
+1. Command for LED control
+    1. Check sim and replicate idea of using counters to create PWM
+2. Command for communication with haptics
+    1. It seems SPI may be the interface
+    2. [Sample Interface Code](https://github.com/cirque-corp/Cirque_Pinnacle_1CA027) to use as starting point?
+3. Command for communication with gyro sensor
+4. Command for monitoring controller state
+    1. Button states
+    2. Gyro info?
+    3. Haptic sensor info (i.e. x,y touch location)?
+5. Command for communications with radio chip?
