@@ -9,16 +9,10 @@ The work in this directory focuses on deconstructing the firmware and hardware
 This section details some basic information gathered about the Steam Controller
  and its processors.
 
-## [How to Manually Load Firmware](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
-
-* From powered down state, hold right trigger while connecting via USB
-    * Mount "CRP DISABLD" will appear
-    * Load new firmware binary with command "cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin"
-    * eject "CRP DISABLD"
-
 ## [Teardown of Steam Controller](https://www.ifixit.com/Teardown/Steam+Controller+Teardown/52578)
 
 * Pictures show main processor is LPC11U37F/501
+* TODO: list other processors (i.e. wireless comms chip, gyro, haptics chip)
 
 ## [NXP LPC11U37FBD64/501 Specifics](https://www.nxp.com/part/LPC11U37FBD64?lang_cd=en)
 
@@ -242,3 +236,25 @@ Have not need to look into this much yet.
 
 See [Luna_maiboard_V000456-00_rev3_pinout.xlsx](./Luna_maiboard_V000456-00_rev3_pinout.xlsx) 
  for details on the pinouts of the main chips on the Luna mainboard V000456-00 rev3 hardware.
+
+# TODO
+
+This section is a running list of priorities to focus on in hopes of reaching
+ goal of modifying haptics jingle. This will be updated as tasks are completed
+ and more knowledge is gained about the Steam Controller.
+
+1. Modify gdbCmdFile with all default register settings and re-run sim and compare if it's any different than what we currently have
+2. Verify communication with haptics occurs via SPI (SSP1?) from LPC11U37F
+    1. It seems SPI is interface enabled on haptics (ohmed out ~470K resistor between pins 12 and pin 13 on Cirque 1CA027). 
+    2. Simulate Get/Set report for HID to see how/what it sends to haptics and if SSP0/1 is being used.
+    3. Why is there no SSP1 setup if that is how communications to haptics are occurring? 
+    4. Are clocks enabled for SSP0/1 in sim? 
+    5. Stay cautious that this might be the wrong path here...
+3. Update [Luna_maiboard_V000456-00_rev3_pinout.xlsx](./Luna_maiboard_V000456-00_rev3_pinout.xlsx)
+    1. Convert to md file and use tables instead of xlsx?
+4. Compare EEPROM dumps between two controllers
+5. List more details about hardware 
+    1. Other processors (i.e. wireless comms chip, gyro, haptics chip)
+6. Split this doc into several READMEs focusing on different processors? Or on different concepts (i.e. simulating v.s. processor details)?
+    1. I think this doc is getting too long...
+7. How is communication occurring with radio chip?
