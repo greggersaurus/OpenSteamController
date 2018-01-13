@@ -14,7 +14,7 @@ See [Luna_maiboard_V000456-00_rev3.md](./Luna_maiboard_V000456-00_rev3.md)
 
 # Understanding the Software
 
-See [LPC11U37_Software.md](./LPC11U37_Software.md) for information regarding
+See [LPC11U37F_Software.md](./LPC11U37F_Software.md) for information regarding
  the software running on the LPC11U37 main/master processor.
 
 
