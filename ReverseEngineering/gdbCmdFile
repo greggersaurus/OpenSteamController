@@ -31,7 +31,6 @@
 ###############################################################################
 
 #TODO: Can we add local gdb variables for defining behavior: 
-#	more EEPROM values (i.e. hw version (0x10000258))
 #	USB cable present (PIO0_3 will read 1 if cable is present)
 #	brown out detect (0x40048030)
 #	simulating interrupt(s)
@@ -99,43 +98,242 @@ layout reg
 target remote localhost:3333
 
 
-# USART/SMART CARD Register Settings (base offset 0x40008000):
-
-# Set USART Divisor Latch Register (when DLAB = 0) 0x40008004 to 0 (reset value)
-set {int}0x40008004 = 0
-# Set USART Line Control Register 0x4000800c to 0x00000000 (reset value)
-set {int}0x4000800c = 0
-# Set Line Status Register (Read Only) 0x40008014 to 0x00000060 (reset value)
-set {int}0x40008014 = 0x0060 
+#------------------------------------------------------------------------------#
 
 
-# 16-bit Counter/Timer 1 Register Settings (base offset 0x40010000):
+# Default register settings according to User Manaul UM10462:
 
-# Set Timer Control Register 0x40010004 to 0 (reset value)
-set {int}0x40010004 = 0
-# Set Time Counter Register 0x40010008 to 0 (reset value)
-set {int}0x40010008 = 0
-# Set Match Control Register 0x40010014 to 0 (reset value)
-set {int}0x40010014 = 0
-# Set PWM Control Register 0x40010074 to 0 (reset value)
-set {int}0x40010074 = 0
+# Default register settings for system control block (base address 0x4004 8000)
+set {int}0x40048000 = 0x02
+set {int}0x40048028 = 0x080
+set {int}0x40048030 = 0x3
+set {int}0x40048040 = 0x1
+set {int}0x40048044 = 0x1
+set {int}0x40048074 = 0x1
+set {int}0x40048078 = 0x1
+set {int}0x40048080 = 0x3F
+# set {int}0x40048100 = User Dependent TODO: need this to be non-zero?
+# set {int}0x40048104 = User Dependent TODO: need this to be non-zero?
+set {int}0x40048170 = 0x10
+set {int}0x4004819C = 0x1
+set {int}0x40048230 = 0xFFFF
+set {int}0x40048234 = 0xEDF0
+set {int}0x40048238 = 0xEDD0
+# set {int}0x400483F4 = Part Dependent TODO: need this to be non-zero?
+
+# Default register settings for I/O configuration (base address 0x4004 4000)
+set {int}0x40044000 = 0x00000090
+set {int}0x40044004 = 0x00000090
+set {int}0x40044008 = 0x00000090
+set {int}0x4004400C = 0x00000090
+set {int}0x40044010 = 0x00000080
+set {int}0x40044014 = 0x00000080
+set {int}0x40044018 = 0x00000090
+set {int}0x4004401C = 0x00000090
+set {int}0x40044020 = 0x00000090
+set {int}0x40044024 = 0x00000090
+set {int}0x40044028 = 0x00000090
+set {int}0x4004402C = 0x00000090
+set {int}0x40044030 = 0x00000090
+set {int}0x40044034 = 0x00000090
+set {int}0x40044038 = 0x00000090
+set {int}0x4004403C = 0x00000090
+set {int}0x40044040 = 0x00000090
+set {int}0x40044044 = 0x00000090
+set {int}0x40044048 = 0x00000090
+set {int}0x4004404C = 0x00000090
+set {int}0x40044050 = 0x00000090
+set {int}0x40044054 = 0x00000090
+set {int}0x40044058 = 0x00000090
+set {int}0x4004405C = 0x00000090
+set {int}0x40044060 = 0x00000090
+set {int}0x40044064 = 0x00000090
+set {int}0x40044068 = 0x00000090
+set {int}0x4004406C = 0x00000090
+set {int}0x40044070 = 0x00000090
+set {int}0x40044074 = 0x00000090
+set {int}0x40044078 = 0x00000090
+set {int}0x4004407C = 0x00000090
+set {int}0x40044080 = 0x00000090
+set {int}0x40044084 = 0x00000090
+set {int}0x40044088 = 0x00000090
+set {int}0x4004408C = 0x00000090
+set {int}0x40044090 = 0x00000090
+set {int}0x40044094 = 0x00000090
+set {int}0x40044098 = 0x00000090
+set {int}0x4004409C = 0x00000090
+set {int}0x400440A0 = 0x00000090
+set {int}0x400440A4 = 0x00000090
+set {int}0x400440A8 = 0x00000090
+set {int}0x400440AC = 0x00000090
+set {int}0x400440B0 = 0x00000090
+set {int}0x400440B4 = 0x00000090
+set {int}0x400440B8 = 0x00000090
+set {int}0x400440BC = 0x00000090
+set {int}0x400440C0 = 0x00000090
+set {int}0x400440C4 = 0x00000090
+set {int}0x400440C8 = 0x00000090
+set {int}0x400440CC = 0x00000090
+set {int}0x400440D0 = 0x00000090
+set {int}0x400440D4 = 0x00000090
+set {int}0x400440DC = 0x00000090
+
+# Default register settings for GPIO GROUP0 interrupt (base address 0x4005 C000)
+set {int}0x4005C020 = 0xFFFFFFFF
+set {int}0x4005C024 = 0xFFFFFFFF
+
+# Default register settings for GPIO GROUP1 interrupt (base address 0x4006 0000)
+set {int}0x40060020 = 0xFFFFFFFF
+set {int}0x40060024 = 0xFFFFFFFF
+
+# Default register settings for GPIO port (base address 0x5000 0000)
+# set {char}0x50000000 = pin state TODO: Should this be non-zero?
+# set {char}0x50000001 = pin state TODO: Should this be non-zero?
+# set {char}0x50000002 = pin state TODO: Should this be non-zero?
+# set {char}0x50000003 = pin state TODO: Should this be non-zero?
+# set {char}0x50000004 = pin state TODO: Should this be non-zero?
+# set {char}0x50000005 = pin state TODO: Should this be non-zero?
+# set {char}0x50000006 = pin state TODO: Should this be non-zero?
+# set {char}0x50000007 = pin state TODO: Should this be non-zero?
+# set {char}0x50000008 = pin state TODO: Should this be non-zero?
+# set {char}0x50000009 = pin state TODO: Should this be non-zero?
+# set {char}0x5000000A = pin state TODO: Should this be non-zero?
+# set {char}0x5000000B = pin state TODO: Should this be non-zero?
+# set {char}0x5000000C = pin state TODO: Should this be non-zero?
+# set {char}0x5000000D = pin state TODO: Should this be non-zero?
+# set {char}0x5000000E = pin state TODO: Should this be non-zero?
+# set {char}0x5000000F = pin state TODO: Should this be non-zero?
+# set {char}0x50000010 = pin state TODO: Should this be non-zero?
+# set {char}0x50000011 = pin state TODO: Should this be non-zero?
+# set {char}0x50000012 = pin state TODO: Should this be non-zero?
+# set {char}0x50000013 = pin state TODO: Should this be non-zero?
+# set {char}0x50000014 = pin state TODO: Should this be non-zero?
+# set {char}0x50000015 = pin state TODO: Should this be non-zero?
+# set {char}0x50000016 = pin state TODO: Should this be non-zero?
+# set {char}0x50000017 = pin state TODO: Should this be non-zero?
+# set {char}0x50000018 = pin state TODO: Should this be non-zero?
+# set {char}0x50000020 = pin state TODO: Should this be non-zero?
+# set {char}0x50000021 = pin state TODO: Should this be non-zero?
+# set {char}0x50000022 = pin state TODO: Should this be non-zero?
+# set {char}0x50000023 = pin state TODO: Should this be non-zero?
+# set {char}0x50000024 = pin state TODO: Should this be non-zero?
+# set {char}0x50000025 = pin state TODO: Should this be non-zero?
+# set {char}0x50000026 = pin state TODO: Should this be non-zero?
+# set {char}0x50000027 = pin state TODO: Should this be non-zero?
+# set {char}0x50000028 = pin state TODO: Should this be non-zero?
+# set {char}0x50000029 = pin state TODO: Should this be non-zero?
+# set {char}0x5000002A = pin state TODO: Should this be non-zero?
+# set {char}0x5000002B = pin state TODO: Should this be non-zero?
+# set {char}0x5000002C = pin state TODO: Should this be non-zero?
+# set {char}0x5000002D = pin state TODO: Should this be non-zero?
+# set {char}0x5000002E = pin state TODO: Should this be non-zero?
+# set {char}0x5000002F = pin state TODO: Should this be non-zero?
+# set {char}0x5000002F = pin state TODO: Should this be non-zero?
+# set {int}0x50001000 = pin state TODO: Should this be non-zero?
+# set {int}0x50001004 = pin state TODO: Should this be non-zero?
+# set {int}0x50001008 = pin state TODO: Should this be non-zero?
+# set {int}0x5000100C = pin state TODO: Should this be non-zero?
+# set {int}0x50001010 = pin state TODO: Should this be non-zero?
+# set {int}0x50001014 = pin state TODO: Should this be non-zero?
+# set {int}0x50001018 = pin state TODO: Should this be non-zero?
+# set {int}0x5000101C = pin state TODO: Should this be non-zero?
+# set {int}0x50001020 = pin state TODO: Should this be non-zero?
+# set {int}0x50001024 = pin state TODO: Should this be non-zero?
+# set {int}0x50001028 = pin state TODO: Should this be non-zero?
+# set {int}0x5000102C = pin state TODO: Should this be non-zero?
+# set {int}0x50001030 = pin state TODO: Should this be non-zero?
+# set {int}0x50001034 = pin state TODO: Should this be non-zero?
+# set {int}0x50001038 = pin state TODO: Should this be non-zero?
+# set {int}0x5000103C = pin state TODO: Should this be non-zero?
+# set {int}0x50001040 = pin state TODO: Should this be non-zero?
+# set {int}0x50001044 = pin state TODO: Should this be non-zero?
+# set {int}0x50001048 = pin state TODO: Should this be non-zero?
+# set {int}0x5000104C = pin state TODO: Should this be non-zero?
+# set {int}0x50001050 = pin state TODO: Should this be non-zero?
+# set {int}0x50001054 = pin state TODO: Should this be non-zero?
+# set {int}0x50001058 = pin state TODO: Should this be non-zero?
+# set {int}0x5000105C = pin state TODO: Should this be non-zero?
+# set {int}0x50001060 = pin state TODO: Should this be non-zero?
+# set {int}0x50001080 = pin state TODO: Should this be non-zero?
+# set {int}0x50001084 = pin state TODO: Should this be non-zero?
+# set {int}0x50001088 = pin state TODO: Should this be non-zero?
+# set {int}0x5000108C = pin state TODO: Should this be non-zero?
+# set {int}0x50001090 = pin state TODO: Should this be non-zero?
+# set {int}0x50001094 = pin state TODO: Should this be non-zero?
+# set {int}0x50001098 = pin state TODO: Should this be non-zero?
+# set {int}0x5000109C = pin state TODO: Should this be non-zero?
+# set {int}0x500010A0 = pin state TODO: Should this be non-zero?
+# set {int}0x500010A4 = pin state TODO: Should this be non-zero?
+# set {int}0x500010A8 = pin state TODO: Should this be non-zero?
+# set {int}0x500010AC = pin state TODO: Should this be non-zero?
+# set {int}0x500010B0 = pin state TODO: Should this be non-zero?
+# set {int}0x500010B4 = pin state TODO: Should this be non-zero?
+# set {int}0x500010B8 = pin state TODO: Should this be non-zero?
+# set {int}0x500010BC = pin state TODO: Should this be non-zero?
+# set {int}0x500010C0 = pin state TODO: Should this be non-zero?
+# set {int}0x500010C4 = pin state TODO: Should this be non-zero?
+# set {int}0x500010C8 = pin state TODO: Should this be non-zero?
+# set {int}0x500010CC = pin state TODO: Should this be non-zero?
+# set {int}0x500010D0 = pin state TODO: Should this be non-zero?
+# set {int}0x500010D4 = pin state TODO: Should this be non-zero?
+# set {int}0x500010D8 = pin state TODO: Should this be non-zero?
+# set {int}0x500010DC = pin state TODO: Should this be non-zero?
+# set {int}0x500010E0 = pin state TODO: Should this be non-zero?
+# set {int}0x500010E4 = pin state TODO: Should this be non-zero?
+# set {int}0x500010E8 = pin state TODO: Should this be non-zero?
+# set {int}0x500010EC = pin state TODO: Should this be non-zero?
+# set {int}0x500010F0 = pin state TODO: Should this be non-zero?
+# set {int}0x500010F4 = pin state TODO: Should this be non-zero?
+# set {int}0x500010F8 = pin state TODO: Should this be non-zero?
+# set {int}0x500010FC = pin state TODO: Should this be non-zero?
+# set {int}0x50002100 = pin state TODO: Should this be non-zero?
+# set {int}0x50002104 = pin state TODO: Should this be non-zero?
+# set {int}0x50002180 = pin state TODO: Should this be non-zero?
+# set {int}0x50002184 = pin state TODO: Should this be non-zero?
+
+# Default register settings for USB (base address: 0x4008 0000)
+set {int}0x40080000 = 0x00000800
+
+# Default register settings for USART (base address: 0x4000 8000)
+# set {int}0x40008000 = TODO: reset value is 0x1 if DLAB=1
+set {int}0x40008008 = 0x01
+set {int}0x40008014 = 0x60
+set {int}0x40008028 = 0x10
+set {int}0x4000802C = 0xF0
+set {int}0x40008030 = 0x80
+
+# Default register settings for SSP/SPI0 (base address 0x4004 0000)
+set {int}0x4004000C = 0x00000003
+set {int}0x40040018 = 0x00000008
+
+# Default register settings for SSP/SPI1 (base address 0x4005 8000)
+set {int}0x4005800C = 0x00000003
+set {int}0x40058018 = 0x00000008
+
+# Default register settings for I2C (base address 0x4000 0000)
+set {int}0x40000000 = 0x00
+set {int}0x40000004 = 0xF8
+set {int}0x40000010 = 0x04
+set {int}0x40000014 = 0x04
+
+# Default register settings for Watchdog timer (base address 0x4000 4000)
+set {int}0x40004004 = 0xFF
+set {int}0x4000400C = 0xFF
+set {int}0x40004018 = 0xFFFFFF
+
+# Default register settings for SysTick timer (base address 0xE000 E000)
+set {int}0xE000E01C = 0x4
+
+# Default register settings for ADC (base address 0x4001 C000)
+set {int}0x4001C00C = 0x00000100
 
 
-# 32-bit Counter/Timer 1 Register Settings (base offset 0x40018000):
-
-# Set Timer Control Register 0x40018004 to 0 (reset value)
-set {int}0x40018004 = 0
-# Set Match Control Register 0x40018014 to 0 (reset value)
-set {int}0x40018014 = 0
+#------------------------------------------------------------------------------#
 
 
-# PMU Register Settings (base offset 0x40038000):
+# Non-default register settings required for simulation to progress:
 
-# Set General purpose register 0 0x40038004 to 0x00000000 (reset value)
-set {int}0x40038004 = 0
-
-
-# Flash/EEPROM Controller Register Settings (base offset 0x4003C000):
+# Flash/EEPROM Controller Non-Default Register Settings (base offset 0x4003C000):
 
 # Set Flash configuration register 0x4003c010 to 0x00000002 (reset value)
 set {int}0x4003c010 = 2
@@ -147,66 +345,22 @@ set {int}0x4003c010 = 2
 set {int}0x4003cfe0 = 0xFFFFFFFF
 
 
-# System Control Register Settings (base offset 0x40048000):
+# System Control Non-Default Register Settings (base offset 0x40048000):
 
-# Set System memory remap register 0x40048000 to 0x00000002 (reset value)
-set {int}0x40048000 = 2
-# Set System PLL contro register 0x40048008 to 0x00000000 (reset value)
-set {int}0x40048008 = 0
 # Set System PLL status register 0x4004800c to 0x00000001 (indicates System PLL is locked)
 set {int}0x4004800c = 1 
 # Set USB PLL status register 0x40048014 to 0x00000001 (indicates USB PLL is locked)
 set {int}0x40048014 = 1
-# Set System reset status register 0x40048030 to 0x00000003 (reset value)
-set {int}0x40048030 = 3
-# Set System PLL clock source register 0x40048040 to 0x00000001 (reset value)
-set {int}0x40048040 = 1
-# Set System PLL clock source update register 0x40048044 to 0x00000001 (reset value)
-set {int}0x40048044 = 1
-# Set Main clock source select register 0x40048070 to 0x00000000 (reset value)
-set {int}0x40048070 = 0
-# Set Main clock source update enable register 0x40048074 to 0x00000001 (reset value)
-set {int}0x40048074 = 1
-# Set System clock divider register 0x40048078 to 0x00000001 (reset value)
-set {int}0x40048078 = 1
-# Set Sytem clock control register 0x40048080 to 0x0000003F (reset value)
-set {int}0x40048080 = 0x3F
-# Set IRQ Latency register 0x40048170 to 0x00000010 (reset value)
-set {int}0x40048170 = 0x10
-# Set USB block status register 0x4004819C to 0x00000001 (reset value)
-set {int}0x4004819C = 1
-# Set Deep-sleep mode configuration register 0x40048230 to 0x0000FFFF (reset value)
-set {int}0x40048230 = 0xFFFF
-# Set Wake-up configuration register 0x40048234 to 0x0000EDFO (reset value)
-set {int}0x40048234 = 0xEDF0
-# Set Power configuration register 0x40048238 to 0x0000EDDO (reset value)
-set {int}0x40048238 = 0xEDD0
 
 
-# USB Register Settings (base offset 0x40080000):
-
-# Set USB Device Command/Status register 0x40080000 to 0x00000800 (reset value)
-set {int}0x40080000 = 0x0800
-
-
-# GPIO Register Settings (base offset 0x50000000):
-
-# Set GPIO port byte pin register 0x50000003 to 0x00000000 (values of P0_3, P0_4, P0_5 and P0_6)
-set {int}0x50000003 = 0
-# Set GPIO direction port 1 register 0x50002004 to 0x00000000 (reset value)
-set {int}0x50002004 = 0
-
-
-# Private Peripheral Bus Register Settings (base offset 0xE0000000):
-
-# Set Input Priority Register 5 0xe000e414 to 0x00000000 (reset value)
-set {int}0xe000e414 = 0
-# Set System Handler Priority Register 3 0xe000ed20 to 0x00000000 (reset value)
-set {int}0xe000ed20 = 0
+#------------------------------------------------------------------------------#
 
 
 # Fill boot ROM with binary downloaded from LPC11U37
 restore LPC11U3x16kBbootROM.bin binary 0x1fff0000
+
+
+#------------------------------------------------------------------------------#
 
 
 # Setup watchpoint for instruction immediately before checking values first
@@ -224,6 +378,9 @@ set {int}0x10000258 = $eeprom_0x004
 delete 
 
 
+#------------------------------------------------------------------------------#
+
+
 # Setup watchpoint for instruction immediately before checking values first
 #  read from EEPROM offset 0x500 (TODO: purpose of this data?)
 watch $pc == 0x000015be
@@ -236,6 +393,9 @@ set {int}0x10001c08 = $eeprom_0x500
 
 # Remove watchpoint
 delete 
+
+
+#------------------------------------------------------------------------------#
 
 
 # Setup watchpoint for instruction immediately after reading 0x84 bytes from
@@ -284,6 +444,9 @@ set {int}0x10000a34 = $eeprom_0x080
 delete 
 
 
+#------------------------------------------------------------------------------#
+
+
 # Set watch point for 16-bit Timer 1 (CT16B1) Timer Counter register
 #  In path for controller not connected to USB cable, CT16B1 is used to count
 #  timeout waiting for wireless to connect. The value of the time is set to
@@ -291,7 +454,7 @@ delete
 #  before continuing.
 watch *(int*)0x40010008
 
-# Start execution
+# Execute until watchpoint
 continue
 
 # Assumption is we have broken for watch on CT16B1 Timer Counter register
@@ -300,6 +463,10 @@ set {int}0x40010008 = 0
 
 # Remove watchpoint
 delete 
+
+
+#------------------------------------------------------------------------------#
+
 
 # Resume execution (execution will break on wfi that pinkySim cannot handle)
 continue
