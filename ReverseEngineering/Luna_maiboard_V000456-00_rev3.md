@@ -22,72 +22,72 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 
 ## Pinout
 
-| Pin Number 	| Datasheet Name	| Pin Function	| Notes 	|
-|--------------:|-----------------------|---------------|---------------|
-|             1 | PIO1_0                |               | Analog joystick click button |
-|             2 | PIO1_25               |               | |
-|             3 | PIO1_19               |               | |
-|             4 | PIO0_0/nRESET         |               | |
-|             5 | PIO0_1                |               | |
-|             6 | PIO1_7                |               | |
-|             7 | V<sub>SS</sub>        | V<sub>SS</sub>| |
-|             8 | XTALIN                |               | |
-|             9 | XTALOUT               |               | |
-|            10 | V<sub>DD</sub>        | V<sub>DD</sub>| |
-|            11 | PIO0_20               |               | |
-|            12 | PIO1_10               |               | |
-|            13 | PIO0_2                |               | |
-|            14 | PIO1_26               |               | |
-|            15 | PIO1_27               |               | |
-|            16 | PIO1_4                |               | | 
-|            17 | PIO1_1                |               | |
-|            18 | PIO1_20               |               | |
-|            19 | PIO0_3                | USB_VBUS      | Read on startup to tell is USB cable is plugged in. |
-|            20 | PIO0_4                | I2C SCL       | Connected to MPU-6500 I2C SCL |
-|            21 | PIO0_5                | I2C SDA       | Connected to MPU-6500 I2C SDA |
-|            22 | PIO0_21               | CT16B1_MAT0   | Control Steam Button LED (LED1) |
-|            23 | PIO1_17               | RXD (USART)   | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 21 |
-|            24 | PIO1_23               |               | Connected to MPU-6500 Pin 12 (INT) |
-|            25 | USB_DM                |               | |
-|            26 | USB_DP                |               | |
-|            27 | PIO1_24               |               | |
-|            28 | PIO1_18               | TXD (USART)   | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
+| Pin Number 	| Datasheet Name	| Pin Function	   | Notes 	|
+|--------------:|-----------------------|------------------|---------------|
+|             1 | PIO1_0                |                  | Analog joystick click button |
+|             2 | PIO1_25               |                  | S14 - Left inner grip button |
+|             3 | PIO1_19               |                  | |
+|             4 | PIO0_0/nRESET         |                  | |
+|             5 | PIO0_1                |                  | |
+|             6 | PIO1_7                |                  | |
+|             7 | V<sub>SS</sub>        | V<sub>SS</sub>   | V<sub>SS</sub> |
+|             8 | XTALIN                |                  | |
+|             9 | XTALOUT               |                  | |
+|            10 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
+|            11 | PIO0_20               |                  | |
+|            12 | PIO1_10               |                  | |
+|            13 | PIO0_2                |                  | |
+|            14 | PIO1_26               |                  | S2 - Left trackpad click |
+|            15 | PIO1_27               |                  | S3 - LT (Left trigger digital) |
+|            16 | PIO1_4                |                  | S8 - LB (Left bumper) | 
+|            17 | PIO1_1                |                  | |
+|            18 | PIO1_20               |                  | S17 - FRONT_L (Front left arrow button) |
+|            19 | PIO0_3                | USB_VBUS         | Read on startup to tell is USB cable is plugged in. |
+|            20 | PIO0_4                | I2C SCL          | Connected to MPU-6500 I2C SCL |
+|            21 | PIO0_5                | I2C SDA          | Connected to MPU-6500 I2C SDA |
+|            22 | PIO0_21               | CT16B1_MAT0      | Control Steam Button LED (LED1) |
+|            23 | PIO1_17               | RXD (USART)      | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 21 |
+|            24 | PIO1_23               |                  | Connected to MPU-6500 Pin 12 (INT) |
+|            25 | USB_DM                |                  | |
+|            26 | USB_DP                |                  | |
+|            27 | PIO1_24               |                  | |
+|            28 | PIO1_18               | TXD (USART)      | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
 |            29 | PIO0_6                | not(USB_CONNECT) | |
-|            30 | PIO0_7                |               | |
-|            31 | PIO1_28               |               | |
-|            32 | PIO1_5                |               | |
-|            33 | V<sub>DD</sub>        | V<sub>DD</sub>| |
-|            34 | PIO1_2                |               | | 
-|            35 | PIO1_21               | MISO1 (SSP1)  | Connected to MISO on Right Haptic and Left Haptic |
-|            36 | PIO0_8                |               | |
-|            37 | PIO0_9                |               | |
-|            38 | SWCLK/PIO0_10         |               | |
-|            39 | PIO1_8                |               | |
-|            40 | PIO0_22               |               | |
-|            41 | PIO1_29               |               | |
-|            42 | TDI/PIO0_11           |               | |
-|            43 | PIO1_11               |               | S9/Y Button |
-|            44 | TMS/PIO0_12           |               | |
-|            45 | TDO/PIO0_13           |               | |
-|            46 | nTRST/PIO0_14         |               | |
-|            47 | PIO1_13               |               | RT/Right Trigger Digital |
-|            48 | V<sub>DD</sub>        | V<sub>DD</sub>| |
-|            49 | PIO1_14               |               | |
-|            50 | PIO1_3                |               | |
-|            51 | PIO1_22               |               | |
-|            52 | SWDIO/PIO0_15         |               | |
-|            53 | PIO0_16               |               | | 
-|            54 | V<sub>SS</sub>        | V<sub>SS</sub>| |
-|            55 | PIO1_9                |               | |
-|            56 | PIO0_23               |               | |
-|            57 | PIO1_15               |               | |
-|            58 | V<sub>DD</sub>        | V<sub>DD</sub>| |
-|            59 | PIO1_12               |               | |
-|            60 | PIO0_17               |               | |
-|            61 | PIO0_18               |               | | 
-|            62 | PIO0_19               |               | |
-|            63 | PIO1_16               |               | Connected to DR on Left Haptic |
-|            64 | PIO1_6                |               | Connected to SS on left haptic (Chip Sel?) |
+|            30 | PIO0_7                |                  | |
+|            31 | PIO1_28               |                  | |
+|            32 | PIO1_5                |                  | |
+|            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
+|            34 | PIO1_2                |                  | S19 - FRONT_F (Front right arrow button) | 
+|            35 | PIO1_21               |                  | S5 - Right trackpad click  |
+|            36 | PIO0_8                | MISO0 (SSP0)     | Connected to MISO on Right Haptic and Left Haptic |
+|            37 | PIO0_9                | MOSI0 (SSP0)?    | Connected to MISO on Right Haptic and Left Haptic |
+|            38 | SWCLK/PIO0_10         | SWCLK?           | Connected to DEBUG interface for LPC11U37F |
+|            39 | PIO1_8                |                  | |
+|            40 | PIO0_22               |                  | |
+|            41 | PIO1_29               | SCK0 (SSP0)?     | Connected to SCLK on Right Haptic and Left Haptic? |
+|            42 | TDI/PIO0_11           |                  | |
+|            43 | PIO1_11               |                  | S9 - Y Button |
+|            44 | TMS/PIO0_12           |                  | |
+|            45 | TDO/PIO0_13           |                  | |
+|            46 | nTRST/PIO0_14         |                  | |
+|            47 | PIO1_13               |                  | S6 - RT (Right trigger digital) |
+|            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
+|            49 | PIO1_14               |                  | S10 - RB (Right bumper) |
+|            50 | PIO1_3                |                  | S16 - Right inner grip button | 
+|            51 | PIO1_22               |                  | S4 - B Button |
+|            52 | SWDIO/PIO0_15         | SWDIO?           | Connected to DEBUG interface for LPC11U37F |
+|            53 | PIO0_16               |                  | | 
+|            54 | V<sub>SS</sub>        | V<sub>SS</sub>   | V<sub>SS</sub> |
+|            55 | PIO1_9                |                  | S7 - X Button |
+|            56 | PIO0_23               |                  | |
+|            57 | PIO1_15               |                  | |
+|            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
+|            59 | PIO1_12               |                  | |
+|            60 | PIO0_17               |                  | S1 - A Button |
+|            61 | PIO0_18               |                  | | 
+|            62 | PIO0_19               |                  | |
+|            63 | PIO1_16               |                  | Connected to DR on Left Haptic |
+|            64 | PIO1_6                |                  | Connected to SS on left haptic (Chip Sel?) |
 
 
 # MPU-6500
