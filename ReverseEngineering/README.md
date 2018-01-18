@@ -29,8 +29,8 @@ This section is a running list of priorities to focus on in hopes of reaching
 2. Finish decoding sim straightforward sim
     1. Decode intf_desc at 0x0000ef63?? (worth anything or does lsusb just dump this anyway...?)
 3. Run and decode other paths
-    2. Interrupts (Note that GPREG1 is set to 1 in init2()...)
-    3. Callbacks
+    1. Interrupts (Note that GPREG1 is set to 1 in init2()...)
+    2. Callbacks
         1. USB_Configure_Event at 0x00004e59
         2. HID_GetReport at 0x00005af1
         3. HID_SetReport at 0x00009565
