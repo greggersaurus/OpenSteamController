@@ -182,7 +182,7 @@
 
   init phase2 hw version 0:
 
-	TODO: Even both with cleaning up and improving this?
+	TODO: Even bother with cleaning up and improving this?
 
 	0x10000208 Pointer to USB device configuration descriptor when device is operating in full and high speed modes.
 
@@ -1147,7 +1147,7 @@ void init_phase2_hw_not0()
 	// Firmware Offset(s): 
 	//	0x000007a0 - 0x000007a8
 
-	// Set GPREG1 to 0
+	// Set GPREG1 to 1
 	reg32 = (volatile uint32_t*)0x40038008;
 	*reg32 = 1;
 
