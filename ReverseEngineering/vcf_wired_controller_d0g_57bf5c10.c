@@ -142,6 +142,8 @@
 	0x10000088 (uint32_t) - USB_HID0 related??
 	0x1000008C (uint32_t) - USB_HID0 related??
 
+	0x10000094 (uint32_t) - Hardware/Board Revision (copy of value read from EEPROM) (though only lowest 8 bits is used for compare...)
+
 	0x100000a4 (uint32_t) - System Clock Frequency (CCLK) in MHz. (48000000 is calcualted and stored here).
 
 	0x100002c8 (uint32_t) - USB_HID2 Related?
@@ -167,6 +169,23 @@
 	0x10000392 (uint8_t)  - USB_HID2 USB_HID_REPORT_T->idle_time 
 	0x10000393 (uint8_t)  - USB_HID2 USB_HID_REPORT_T->__pad
 	0x10000394 (uint32_t) - USB_HID2 USB_HID_REPORT_T->desc (of type uint8_t*)
+
+	0x10000924 (uint8_t)  -
+	0x10000925 (uint8_t)  -
+
+	0x1000092a (uint8_t)  -
+	0x1000092b (uint8_t)  -
+
+	0x10000953 (uint8_t)  -
+	0x10000954 (uint8_t)  -
+	0x10000955 (uint8_t)  -
+	0x10000956 (uint8_t)  -
+
+	0x10000959 (uint8_t)  -
+	0x10000960 (uint8_t)  -
+	0x10000961 (uint8_t)  -
+	0x10000962 (uint8_t)  -
+
 
 	0x100009b4 (uint32_t) - Start of 0x84 bytes of EEPROM data from EEPROM offset 0
 	...
@@ -5037,7 +5056,113 @@ void init_phase2_hw_not0()
 
 	// Firmware Offset(s): 
 	//	0x0000521c - 0x00005220
-	//	0x0000452c - 
+	//	0x0000452c - 0x00004540
+
+	// Power BOD power-down via Power configuration register 
+	reg1 = *(uint32_t*)0x40048238
+	reg1 &= 0x000005ff
+	reg1 &= ~0x00000008
+	reg1 |= 0x0000e800	
+	*(uint32_t*)0x40048238 = reg1
+
+
+	// Firmware Offset(s): 
+	//	0x00005224 - 0x00005238
+
+	// Set BOD reset level to Level 2 (The reset assertion threshold voltage is 2.35 V; the reset de-assertion threshold voltage is 2.43 V)
+	//  and BOD interrupt level to Level 1 (he interrupt assertion threshold voltage is 2.22 V; the interrupt de-assertion threshold voltage is 2.35 V)
+	//  via BOD control register (BODCTRL)
+	*(uint32_t*)0x40048150 = 0x00000006;
+
+	// Clear Status of the Brown-out detect reset via System reset status register (SYSRSTSTAT)
+	*(uint32_t*)0x40048030 = 0x00000008;
+
+	// Enable COD reset function via via BOD control register (BODCTRL)
+	reg1 = *(uint32_t*)0x40048150;
+	reg1 |= 0x00000010;
+	*(uint32_t*)0x40048150 = reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00005d96 - 0x00005d98
+	//	0x000065e4 - 0x000065ea
+
+	// Save hardware/board revision (read from EEPROM) and copy to new variable
+	reg1 = *(uint32_t*)0x100009b8; // 0xa
+	*(uint32_t*)0x10000094 = reg1;
+
+
+	// Firmware Offset(s): 
+	//	0x00005d9c - 0x00005d9c
+	//	0x00009204 - 0x00009206
+	//	0x000056f0 - 0x000056f4
+	//	0x0000920a - 0x00009210
+
+	reg0 = *(uint8_t*)0x10000094;
+	if (reg0 < 8) {
+		// UNKNOWN PATHS branch to 0x00009212 if hw revision is < 8
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x00009214 - 0x00009218
+	//	0x00007980 - 0x00007994
+
+	// SRAM0 initialization
+	*(uint8_t*)0x10000953 = 1;
+	*(uint8_t*)0x10000954 = 0xd;
+
+	*(uint8_t*)0x10000924 = 1;
+
+
+	// Firmware Offset(s): 
+	//	0x0000921c - 0x00009222
+	//	0x00007980 - 0x00007994
+
+	// SRAM0 initialization
+	*(uint8_t*)0x10000955 = 1;
+	*(uint8_t*)0x10000956 = 0x1b;
+
+	*(uint8_t*)0x10000925 = 1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009226 - 0x00009226
+	//	0x000056f0 - 0x000056f4
+	//	0x0000922a - 0x00009230
+
+	reg0 = *(uint8_t*)0x10000094;
+	if (reg0 < 8) {
+		// UNKNOWN PATHS branch to 0x00009232 if hw revision is < 8
+	}
+
+
+	// Firmware Offset(s): 
+	//	0x00009244 - 0x00009246
+	//	0x0000924c - 0x0000924e
+	//	0x00007980 - 0x00007994
+
+	// SRAM0 initialization
+	*(uint8_t*)0x1000095f = 1;
+	*(uint8_t*)0x10000960 = 0xe;
+
+	*(uint8_t*)0x1000092a = 1;
+
+
+	// Firmware Offset(s): 
+	//	0x00009252 - 0x00009258
+	//	0x00007980 - 0x00007994
+
+	// SRAM0 initialization
+	*(uint8_t*)0x10000961 = 1;
+	*(uint8_t*)0x10000962 = 0x4;
+
+	*(uint8_t*)0xe000092b = 1;
+
+
+	// Firmware Offset(s): 
+	//	0x0000925c - 0x0000925c
+	//	0x000056f0 - 
 }
 
 /**
