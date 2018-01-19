@@ -24,9 +24,7 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
-1. Verify straightforward sim is on the correct path
-    1. Modify something and make sure it works on HW
-2. Finish decoding sim straightforward sim
+1. Finish decoding sim straightforward sim
     1. Decode intf_desc at 0x0000ef63?? (worth anything or does lsusb just dump this anyway...?)
 3. Run and decode other paths
     1. Interrupts (Note that GPREG1 is set to 1 in init2()...)
@@ -40,7 +38,9 @@ This section is a running list of priorities to focus on in hopes of reaching
     3. Why is there no SSP0/1 setup if that is how communications to haptics are occurring? 
     4. Are clocks enabled for SSP0/1 in sim? 
     5. Stay cautious that this might be the wrong path here...
-6. Compare EEPROM dumps between two controllers
+6. Decompose EEPROM dumps
+    1. Captured from two different controllers to isolate some differences
+    2. Change settings to isolate other differences
 7. List more details about hardware [Luna_maiboard_V000456-00_rev3.md](./Luna_maiboard_V000456-00_rev3.md)
     1. Other processors (i.e. wireless comms chip, gyro, haptics chip)
     2. See if we can get information on each pin (focus on LPC chip)
