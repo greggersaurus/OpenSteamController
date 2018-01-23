@@ -26,10 +26,13 @@ This is the primary method used for simulating the firmware and deconstructing
 
 * Note: Need to build pinkySim specifically with command "make pinkySim" as building unit tests fails...
     * TODO: get to bottom of this.
+* Note: cloning is also messy for me. See updated README for details how I needed to do this on my dev system...
+    * TODO: get to bottom of this.
 * ARMv6-M Thumb instruction simulator.
 * I have forked this repo and am working on custom functionality geared specfically towards the Steam Controller reverse engineering effort.
     * Logging (--logExe chipType)
         * Creates csv log of all instructions and memory accesses executed during simulation.
+        * Creates C log of actions, which allows seconday way of visualizing simulation.
         * Currently "LPC11U37" is the only supported chip type
     * Disassembly
         * TODO: Worth spending time on option to out asm after running simulation? (will only cover instructions that were executed during sim)
@@ -42,7 +45,8 @@ This is the primary method used for simulating the firmware and deconstructing
 The following command launches the emulator with the proper memory map for the 
  LPC11U37F501, has the emulator halt on the first instruction to execute after
  reset and instructs pinkySim to log all instructions executed to a file named
- exeLog{timestmap}.csv.
+ exeLog{timestmap}.csv. exeLog{timestmap}.c is also created, which makes a simple
+ attempt at a C-like decomposition of the simulated actions. 
 
 * ./pinkySim --breakOnStart --logExe LPC11U37 --flash 0 131072 --ram 268435456 8192 --ram 536805376 16384 --ram 536870912 2048 --ram 536887296 2048 --ram 1073741824 16384 --ram 1073758208 16384 --ram 1073774592 16384 --ram 1073790976 16384 --ram 1073807360 16384 --ram 1073823744 16384 --ram 1073840128 16384 --ram 1073856512 16384 --ram 1073971200 16384 --ram 1073987584 16384 --ram 1074003968 16384 --ram 1074020352 16384 --ram 1074036736 16384 --ram 1074053120 16384 --ram 1074102272 16384 --ram 1074118656 16384 --ram 1074135040 16384 --ram 1074266112 16384 --ram 1342177280 16484 --ram 3758096384 1048576 firmware.bin
     * Note: --ram 536805376 16384 --flash, but since we need to fill this ROM with the boot ROM code via gdb, this needs to be writable
