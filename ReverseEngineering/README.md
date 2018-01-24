@@ -33,10 +33,8 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. USB_Configure_Event at 0x00004e59
         1. HID_GetReport at 0x00005af1
         1. HID_SetReport at 0x00009565
-1. Can we (continue to ) make pinkySim logging better 
-    1. Update RevEng documentation
-    1. Add details on each register (at least name? but maybe what changed since last write/access?)
-    1. Add diffs when writing a register (i.e. what was it before write, so we can quickly see bits getting set, etc.)
+1. Can we (continue to) make pinkySim logging better 
+    1. Add details on each register (at least name? but maybe also bit information?)
 1. Verify communication with haptics occurs via SPI (SSP0?) from LPC11U37F
     1. It seems SPI is interface enabled on haptics (ohmed out ~470K resistor between pins 12 and pin 13 on Cirque 1CA027). 
     1. Simulate Get/Set report for HID to see how/what it sends to haptics and if SSP0/1 is being used.
