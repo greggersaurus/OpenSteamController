@@ -151,9 +151,13 @@
 
 	0x10000254 (uint32_t) - 
 
-	0x100002b0 (uint8_t)  - ?? Check for posible branch... Sign extended
+	0x100002ac (uint8_t)  - ?? Check for possible branch... Though value was set not long being check...
+	0x100002ad (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_10)
+	0x100002ae (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_10)
 
-	0x100002b2 (uint8_t)  - Value of PIO0_2 after Reading 0 and setting to 1
+	0x100002b0 (uint8_t)  - ?? Check for possible branch... Sign extended
+
+	0x100002b2 (uint8_t)  - Inverse of value of PIO0_2 after Reading 0 and setting to 1
 
 	0x100002c8 (uint32_t) - USB_HID2 Related?
 
@@ -203,6 +207,7 @@
 	0x100007b4 (uint32_t) - 
 	
 	0x100010b4 (uint32_t) - Checked if is zero after USB init.
+	0x100010b8 (uint32_t) - Checked if is zero for possible branching path...
 
 	0x10001140 (uint16_t) -
 	0x10001142 (uint8_t)  - 
@@ -5863,13 +5868,324 @@ void init_phase2_hw_not0()
 
 					// Branch from 0x00007c5a to 0x00004214 (Set LR to 0x00007c5f)
 
-					// Check status of GPIO: P0_2 PBYTE
-//TODO: what is this GPIO connected to in hw?
-					// Compute 0x00000000 - 0x00000000 for compare
-					if (*(uint8_t*)0x50000002 - 0x00000000) is NOT Equal, Z == 1
+					// At 0x00004220 branching to 0x00007c5f (reg14)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000006)
+					*(uint8_t*)0x100002b2 = *(uint8_t*)0x50000002 ^ 0x00000001; // = 0x01 (modified bits = 0x01)
+
+					// Branch from 0x00007c6c to 0x00005544 (Set LR to 0x00007c71)
+
 					{
-						// UNKOWN PATH execute 0x0000421e
+						// Save reg0 to Stack at 0x10001f7c (Value saved is 0x00000000)
+						// Save reg1 to Stack at 0x10001f80 (Value saved is 0x00000002)
+						// Save reg2 to Stack at 0x10001f84 (Value saved is 0x00007355)
+						// Save reg3 to Stack at 0x10001f88 (Value saved is 0x00000000)
+						// Save reg4 to Stack at 0x10001f8c (Value saved is 0x100002ac)
+						// Save reg5 to Stack at 0x10001f90 (Value saved is 0x00000000)
+						// Save reg6 to Stack at 0x10001f94 (Value saved is 0x00010074)
+						// Save reg7 to Stack at 0x10001f98 (Value saved is 0x00000000)
+						// Save reg14 to Stack at 0x10001f9c (Value saved is 0x00007c71)
+						// Stack Pointer updated to 0x10001f7c
+
+
+						// Branch from 0x0000554e to 0x00005434 (Set LR to 0x00005553)
+
+						// Compute 0x0000a87d - 0x00000000 for compare
+						if (*(uint32_t*)0x100010b4 - 0x00000000) is Equal, Z == 1
+						{
+							// UNKOWN PATH execute 0x00005448
+						}
+
+						// Compute 0x00000000 - 0x00000000 for compare
+						if (*(uint32_t*)0x100010b8 - 0x00000000) is NOT Equal, Z == 1
+						{
+							// UNKOWN PATH execute 0x00005440
+						}
+
+						// At 0x00005448 branching to 0x00005553 (reg14)
+
+						// Branch from 0x0000555c to 0x0000454c (Set LR to 0x00005561)
+
+						// Setup GPIO interrupt 1 for PIO0_2
+						// MemWrite system control: PINTSEL1 (address was computed as reg0 + 0x00000038)
+						*(uint32_t*)0x4004817c = 0x00000018 * *(uint8_t*)0x100002b0 + *(uint8_t*)0x100002b1; // = 0x00000002 (modified bits = 0x00000002)
+
+						// At 0x0000455a branching to 0x00005561 (reg14)
+
+						// Clear rising/falling edge detection for PIO0_2 via PINT1
+						// MemWrite GPIO interrupts: IST (address was computed as reg1 + 0x00000024)
+						*(uint32_t*)0x4004c024 = 0x00000002; // = 0x00000002 (modified bits = 0x00000003)
+
+						// Select falling edge interrupt for PIO0_2 via PINT1
+						// MemWrite GPIO interrupts: SIENF (address was computed as reg1 + 0x00000014)
+						*(uint32_t*)0x4004c014 = 0x00000002; // = 0x00000002 (modified bits = 0x00000002)
+
+						// MemWrite 8 kB SRAM0 (address was computed as reg1 + reg0)
+						*(uint32_t*)0x100010b8 = 0x00007355 (modified bits = 0x00007355)
+
+						// Clear any pending interrupts for PIO0_2 via PINT1
+						// MemWrite NVIC: ICPR0 (address was computed as reg0 + 0x00000000)
+						*(uint32_t*)0xe000e280 = 0x00000002; // = 0x00000002 (modified bits = 0x00000003)
+
+						// Enable interrupts for PIO0_2 via PINT1
+						// MemWrite NVIC: ISER0 (address was computed as reg0 + 0x00000000)
+						*(uint32_t*)0xe000e100 = 0x00000002; // = 0x00000002 (modified bits = 0x00000003)
+
 					}
+					// Restore reg4 from Stack at 0x10001f8c (Value saved was 0x100002ac)
+					// Restore reg5 from Stack at 0x10001f90 (Value saved was 0x00000000)
+					// Restore reg6 from Stack at 0x10001f94 (Value saved was 0x00010074)
+					// Restore reg7 from Stack at 0x10001f98 (Value saved was 0x00000000)
+					// Restore PC from Stack at 0x10001f9c (Value saved was 0x00007c71)
+					// Stack Pointer updated to 0x10001fa0
+
+				}
+				// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x00000001)
+				// Restore PC from Stack at 0x10001fa4 (Value saved was 0x000094b5)
+				// Stack Pointer updated to 0x10001fa8
+
+				// Branching from PC = 0x000094b4 to PC = 0x000094be
+
+				reg4 = 0x10001fa8 + 4*bitCount(fields.registers); // = 0x10001fb4
+
+				// Branch from 0x000094d0 to 0x0000bb38 (Set LR to 0x000094d5)
+
+				{
+					// Save reg4 to Stack at 0x10001f94 (Value saved is 0x10001fb4)
+					// Save reg5 to Stack at 0x10001f98 (Value saved is 0x00000000)
+					// Save reg6 to Stack at 0x10001f9c (Value saved is 0x00010074)
+					// Save reg7 to Stack at 0x10001fa0 (Value saved is 0x00000000)
+					// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x000094d5)
+					// Stack Pointer updated to 0x10001f94
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000008)
+					*(uint32_t*)0x100010b0 = 0x000e1000 (modified bits = 0x000e1000)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000003)
+					*(uint8_t*)0x100010ab = 0x11 (modified bits = 0x11)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000002)
+					*(uint8_t*)0x100010aa = 0x01 (modified bits = 0x01)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000005)
+					*(uint8_t*)0x100010ad = 0x12 (modified bits = 0x12)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000004)
+					*(uint8_t*)0x100010ac = 0x01 (modified bits = 0x01)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000000)
+					*(uint8_t*)0x100010a8 = 0x01 (modified bits = 0x01)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000001)
+					*(uint8_t*)0x100010a9 = 0x05 (modified bits = 0x05)
+
+				}
+				// Restore reg4 from Stack at 0x10001f94 (Value saved was 0x10001fb4)
+				// Restore reg5 from Stack at 0x10001f98 (Value saved was 0x00000000)
+				// Restore reg6 from Stack at 0x10001f9c (Value saved was 0x00010074)
+				// Restore reg7 from Stack at 0x10001fa0 (Value saved was 0x00000000)
+				// Restore PC from Stack at 0x10001fa4 (Value saved was 0x000094d5)
+				// Stack Pointer updated to 0x10001fa8
+
+				// Branch from 0x000094d4 to 0x000056f0 (Set LR to 0x000094d9)
+
+				// At 0x000056f4 branching to 0x000094d9 (reg14)
+
+				// Check HW Version
+				// Compute 0x0000000a - 0x00000007 for compare
+				if (*(uint8_t*)0x10000094 - 0x00000007) is Carry clear, C == 0
+				{
+					// UNKOWN PATH execute 0x000094ec
+				}
+
+				// Branch from 0x000094e0 to 0x0000ba88 (Set LR to 0x000094e5)
+
+				// MemWrite 8 kB SRAM0 (address was computed as reg2 + 0x00000000)
+				*(uint8_t*)0x10000060 = 0x01 (modified bits = 0xfe)
+
+				// MemWrite 8 kB SRAM0 (address was computed as reg2 + 0x00000001)
+				*(uint8_t*)0x10000061 = 0x18 (modified bits = 0xe7)
+
+				// At 0x0000ba8e branching to 0x000094e5 (reg14)
+
+				// Branch from 0x000094e8 to 0x0000ba7c (Set LR to 0x000094ed)
+
+				// MemWrite 8 kB SRAM0 (address was computed as reg2 + 0x00000002)
+				*(uint8_t*)0x10000062 = 0x01 (modified bits = 0xfe)
+
+				// MemWrite 8 kB SRAM0 (address was computed as reg2 + 0x00000003)
+				*(uint8_t*)0x10000063 = 0x08 (modified bits = 0xf7)
+
+				// At 0x0000ba82 branching to 0x000094ed (reg14)
+
+				// Branch from 0x000094f2 to 0x00004fdc (Set LR to 0x000094f7)
+
+				{
+					// Save reg4 to Stack at 0x10001f98 (Value saved is 0x10001fb4)
+					// Save reg5 to Stack at 0x10001f9c (Value saved is 0x00000000)
+					// Save reg6 to Stack at 0x10001fa0 (Value saved is 0x00010074)
+					// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x000094f7)
+					// Stack Pointer updated to 0x10001f98
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg3 + reg2)
+					*(uint8_t*)0x10000008 = 0x01 (modified bits = 0x01)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg2 + 0x00000001)
+					*(uint8_t*)0x10000009 = 0x0000001c; // = 0x1c (modified bits = 0x1c)
+
+					// Branch from 0x00004ff4 to 0x00005508 (Set LR to 0x00004ff9)
+
+					{
+						// Save reg4 to Stack at 0x10001f90 (Value saved is 0x0000001c)
+						// Save reg14 to Stack at 0x10001f94 (Value saved is 0x00004ff9)
+						// Stack Pointer updated to 0x10001f90
+
+						// Branch from 0x0000553a to 0x000043a4 (Set LR to 0x0000553f)
+
+						// Set MODE to inactive (from default Pull-up resistor) for PIO1_28
+						// MemWrite IOCON: PIO1_28 (address was computed as reg0 + 0x00000060)
+						*(uint32_t*)0x400440d0 = 0x00000080 (modified bits = 0x00000010)
+
+						// At 0x000043ae branching to 0x0000553f (reg14)
+
+					}
+					// Restore reg4 from Stack at 0x10001f90 (Value saved was 0x0000001c)
+					// Restore PC from Stack at 0x10001f94 (Value saved was 0x00004ff9)
+					// Stack Pointer updated to 0x10001f98
+
+					// Load P1_28 output value to be 0
+					// MemWrite GPIO: P1_28 PBYTE (address was computed as reg2 + reg1)
+					*(uint8_t*)0x5000003c = 0x00 (modified bits = 0x00)
+
+					// Set P1_28 to output
+					// MemWrite GPIO: DIR1 (address was computed as reg0 + 0x00000000)
+					*(uint32_t*)0x50002004 = *(uint32_t*)0x50002004 | 0x10000000; // = 0x10000480 (modified bits = 0x10000000)
+
+				}
+				// Restore reg4 from Stack at 0x10001f98 (Value saved was 0x10001fb4)
+				// Restore reg5 from Stack at 0x10001f9c (Value saved was 0x00000000)
+				// Restore reg6 from Stack at 0x10001fa0 (Value saved was 0x00010074)
+				// Restore PC from Stack at 0x10001fa4 (Value saved was 0x000094f7)
+				// Stack Pointer updated to 0x10001fa8
+
+				// Branch from 0x000094fc to 0x00004fdc (Set LR to 0x00009501)
+
+				{
+					// Save reg4 to Stack at 0x10001f98 (Value saved is 0x10001fb4)
+					// Save reg5 to Stack at 0x10001f9c (Value saved is 0x00000000)
+					// Save reg6 to Stack at 0x10001fa0 (Value saved is 0x00010074)
+					// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x00009501)
+					// Stack Pointer updated to 0x10001f98
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg3 + reg2)
+					*(uint8_t*)0x1000000a = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg2 + 0x00000001)
+					*(uint8_t*)0x1000000b = 0x07 (modified bits = 0x07)
+
+					// Branch from 0x00004ff4 to 0x00005508 (Set LR to 0x00004ff9)
+
+					{
+						// Save reg4 to Stack at 0x10001f90 (Value saved is 0x00000007)
+						// Save reg14 to Stack at 0x10001f94 (Value saved is 0x00004ff9)
+						// Stack Pointer updated to 0x10001f90
+
+						// Branch from 0x0000553a to 0x000043a4 (Set LR to 0x0000553f)
+
+						// Set MODE to inactive (from pull-up resistor enabled) for PIO0_7
+						// MemWrite IOCON: PIO0_7 (address was computed as reg0 + reg2)
+						*(uint32_t*)0x4004401c = 0x00000080; // = 0x00000080 (modified bits = 0x00000010)
+
+						// At 0x000043b2 branching to 0x0000553f (reg14)
+
+					}
+					// Restore reg4 from Stack at 0x10001f90 (Value saved was 0x00000007)
+					// Restore PC from Stack at 0x10001f94 (Value saved was 0x00004ff9)
+					// Stack Pointer updated to 0x10001f98
+
+					// Drive PIO0_7 with output value of 0
+					// MemWrite GPIO: P0_7 PBYTE (address was computed as reg2 + reg1)
+					*(uint8_t*)0x50000007 = 0x00 (modified bits = 0x00)
+
+					// Set PIO0_7 to output mode
+					// MemWrite GPIO: DIR0 (address was computed as reg0 + 0x00000000)
+					*(uint32_t*)0x50002000 = *(uint32_t*)0x50002000 | 0x00000080; // = 0x00080080 (modified bits = 0x00000080)
+
+				}
+				// Restore reg4 from Stack at 0x10001f98 (Value saved was 0x10001fb4)
+				// Restore reg5 from Stack at 0x10001f9c (Value saved was 0x00000000)
+				// Restore reg6 from Stack at 0x10001fa0 (Value saved was 0x00010074)
+				// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00009501)
+				// Stack Pointer updated to 0x10001fa8
+
+				// Branch from 0x00009500 to 0x000056f0 (Set LR to 0x00009505)
+
+				// At 0x000056f4 branching to 0x00009505 (reg14)
+
+				// Check hardware version
+				// Compute 0x0000000a - 0x00000008 for compare
+				if (*(uint8_t*)0x10000094 - 0x00000008) is NOT Not equal, Z == 0
+				{
+					// UNKOWN PATH execute 0x00009508
+				}
+
+			}
+			// Restore reg1 from Stack at 0x10001fa8 (Value saved was 0x00000012)
+			// Restore reg2 from Stack at 0x10001fac (Value saved was 0x00000001)
+			// Restore reg3 from Stack at 0x10001fb0 (Value saved was 0x00000005)
+			// Restore reg4 from Stack at 0x10001fb4 (Value saved was 0x00010074)
+			// Restore reg5 from Stack at 0x10001fb8 (Value saved was 0x00000001)
+			// Restore PC from Stack at 0x10001fbc (Value saved was 0x00005da1)
+			// Stack Pointer updated to 0x10001fc0
+
+			// Branch from 0x00005da0 to 0x00007af0 (Set LR to 0x00005da5)
+
+			{
+				// Save reg3 to Stack at 0x10001fa8 (Value saved is 0x00000005)
+				// Save reg4 to Stack at 0x10001fac (Value saved is 0x00010074)
+				// Save reg5 to Stack at 0x10001fb0 (Value saved is 0x00000001)
+				// Save reg6 to Stack at 0x10001fb4 (Value saved is 0x00010074)
+				// Save reg7 to Stack at 0x10001fb8 (Value saved is 0x00000000)
+				// Save reg14 to Stack at 0x10001fbc (Value saved is 0x00005da5)
+				// Stack Pointer updated to 0x10001fa8
+
+				// The next part is a little messy (i.e. regN still remains in some lines)
+				//  This is showing how SRAM0 values are being used to compute that PIO1_10 is the desired GPIO to control here
+
+				// MemRead 8 kB SRAM0 (address was computed as reg4 + reg0)
+				// Compute 0x00000001 - 0x00000000 for compare
+				if ((int32_t)(*(int8_t*)0x100002ac) - 0x00000000) is Signed less than, N != V
+				{
+					// UNKOWN PATH execute 0x00007b2e
+				}
+
+				// MemRead 8 kB SRAM0 (address was computed as reg4 + reg0)
+				// 0x50000020 = 0x00000020 + 0x50000000
+				reg3 = (uint32_t)(uint32_t)(int32_t)(*(int8_t*)0x100002ac) << 24 >> 19 + 0x50000000;
+
+				// Drive output value for GPIO1_10 to logic low
+				// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000002)
+				// MemWrite GPIO: P1_10 PBYTE (address was computed as reg3 + reg2)
+				*(uint8_t*)0x5000002a = *(uint8_t*)0x100002ae ^ 0x00000001; // = 0x00 (modified bits = 0x00)
+
+				// MemRead 8 kB SRAM0 (address was computed as reg4 + reg0)
+
+				// 0x50002004 = 0x50000004 + 0x00002000
+				reg2 = (uint32_t)((uint32_t)(int32_t)(*(int8_t*)0x100002ac) << 24) >> 22 + 0x50000000 + 0x00002000;
+
+				// MemRead GPIO: DIR1 (address was computed as reg2 + 0x00000000)
+				reg3 = *(uint32_t*)0x50002004; // = 0x10000480
+
+				// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000001)
+				// 0x00000400 = 0x00000001 << 0x0000000a (Carry Out = 0x00000000)
+				reg6 = (uint32_t)0x00000001 << *(uint8_t*)0x100002ad;
+
+				// 0x10000480 = 0x10000480 | 0x00000400;
+				reg3 = reg3 | reg6;
+
+				// Set GPIO1_10 direction to output (though it was already set to outpu during earlier init)
+				// MemWrite GPIO: DIR1 (address was computed as reg2 + 0x00000000)
+				*(uint32_t*)0x50002004 = reg3; // = 0x10000480 (modified bits = 0x00000000)
 
 
 }

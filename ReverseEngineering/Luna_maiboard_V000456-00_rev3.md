@@ -35,8 +35,8 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |             9 | XTALOUT               |                  | |
 |            10 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
 |            11 | PIO0_20               |                  | |
-|            12 | PIO1_10               |                  | |
-|            13 | PIO0_2                |                  | |
+|            12 | PIO1_10               |                  | Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up...  |
+|            13 | PIO0_2                |                  | Interrupt (PINT1) setup to monitor if this changes |
 |            14 | PIO1_26               |                  | S2 - Left trackpad click |
 |            15 | PIO1_27               |                  | S3 - LT (Left trigger digital) |
 |            16 | PIO1_4                |                  | S8 - LB (Left bumper) | 
@@ -53,8 +53,8 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            27 | PIO1_24               |                  | |
 |            28 | PIO1_18               | TXD (USART)      | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
 |            29 | PIO0_6                | not(USB_CONNECT) | |
-|            30 | PIO0_7                |                  | |
-|            31 | PIO1_28               |                  | |
+|            30 | PIO0_7                |                  | Set as output GPIO and driven low (during init) |
+|            31 | PIO1_28               |                  | Set as output GPIO and driven low (during init) |
 |            32 | PIO1_5                |                  | |
 |            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
 |            34 | PIO1_2                |                  | S19 - FRONT_F (Front right arrow button) | 
