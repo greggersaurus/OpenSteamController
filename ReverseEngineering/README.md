@@ -47,6 +47,7 @@ This section is a running list of priorities to focus on in hopes of reaching
     1. What is purpose of PIO1_28? Driven as output low during init.
     1. Can we get better idea for  PIO1_10? Know it has to do with powering up the board approriately and maybe BOD...
     1. How is PIO0_22 routed? This is configured to act as AD6...
+    1. How is PIO1_1 routed? This is driven as output high during init.
 1. Verify communication with haptics occurs via SPI (SSP0?) from LPC11U37F
     1. It seems SPI is interface enabled on haptics (ohmed out ~470K resistor between pins 12 and pin 13 on Cirque 1CA027). 
     1. Simulate Get/Set report for HID to see how/what it sends to haptics and if SSP0/1 is being used.

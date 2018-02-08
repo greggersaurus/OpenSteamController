@@ -153,16 +153,25 @@
 
 	0x10000254 (uint32_t) - 
 
-	0x100002ac (uint8_t)  - ?? Check for possible branch... Though value was set not long being check...
+	0x100002ac (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_10)
 	0x100002ad (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_10)
 	0x100002ae (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_10)
-	0x100002af (uint8_t)  - Used for calculating which GPIO to control in init (GPIO ...
+	0x100002af (uint8_t)  - Storage location for which AD pin is to be sampled, etc.
 
 	0x100002b0 (uint8_t)  - ?? Check for possible branch... Sign extended
 
 	0x100002b2 (uint8_t)  - Inverse of value of PIO0_2 after Reading 0 and setting to 1
 
+	0x100002ba (uint16_t) - 
+
 	0x100002c8 (uint32_t) - USB_HID2 Related?
+
+	0x100002d0 (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_1)
+	0x100002d1 (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_1)
+
+	0x10000fb0 (uint32_t) - Begin array storing something related to AD input (configuration?)
+	...
+	0x10000fc8 (uint32_t) - Some configuration related to AD6
 
 	0x10000338 (uint32_t) - USB_HID2 Related?
 	0x10000340 (uint8_t)  - Tracks if EEPROM access is taking place
@@ -6308,6 +6317,153 @@ void init_phase2_hw_not0()
 				// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00007b3f)
 				// Stack Pointer updated to 0x10001fa8
 				
+				// Branch from 0x00007b42 to 0x00002c40 (Set LR to 0x00007b47)
+
+				// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000003)
+				// 0x00000018 = 0x00000006 << 2 (Carry Out = 0x00000000)
+				reg0 = (uint32_t)(*(uint8_t*)0x100002af) << 2;
+
+				// MemWrite 8 kB SRAM0 (address was computed as reg2 + reg0)
+				*(uint32_t*)0x10000fc8 = 0x00003bf5; // = 0x00003bf5 (modified bits = 0x00003bf5)
+
+				// At 0x00002c46 branching to 0x00007b47 (reg14)
+
+			}
+			// Restore reg3 from Stack at 0x10001fa8 (Value saved was 0x00000005)
+			// Restore reg4 from Stack at 0x10001fac (Value saved was 0x00010074)
+			// Restore reg5 from Stack at 0x10001fb0 (Value saved was 0x00000001)
+			// Restore reg6 from Stack at 0x10001fb4 (Value saved was 0x00010074)
+			// Restore reg7 from Stack at 0x10001fb8 (Value saved was 0x00000000)
+			// Restore PC from Stack at 0x10001fbc (Value saved was 0x00005da5)
+			// Stack Pointer updated to 0x10001fc0
+
+			// Branch from 0x00005da4 to 0x00007b70 (Set LR to 0x00005da9)
+
+			{
+				// Save reg4 to Stack at 0x10001fb8 (Value saved is 0x00010074)
+				// Save reg14 to Stack at 0x10001fbc (Value saved is 0x00005da9)
+				// Stack Pointer updated to 0x10001fb8
+
+				// Branch from 0x00007b7a to 0x00004214 (Set LR to 0x00007b7f)
+
+				// Check if USB cable is plugged in
+				// MemRead GPIO: P0_3 PBYTE (address was computed as reg0 + reg2)
+				// Compute 0x00000000 - 0x00000000 for compare
+				if (*(uint8_t*)0x50000003 - 0x00000000) is NOT Equal, Z == 1
+				{
+					// UNKOWN PATH execute 0x0000421e
+				}
+
+				// At 0x00004220 branching to 0x00007b7f (reg14)
+
+			}
+			// Restore reg4 from Stack at 0x10001fb8 (Value saved was 0x00010074)
+			// Restore PC from Stack at 0x10001fbc (Value saved was 0x00005da9)
+			// Stack Pointer updated to 0x10001fc0
+
+			// Check if USB cable is connected
+			// MemRead GPIO: P0_3 PBYTE (address was computed as reg0 + reg2)
+			// Compute 0x00000000 - 0x00000000 for compare
+			if (*(uint8_t*)0x50000003 - 0x00000000) is NOT Equal, Z == 1
+			{
+				// UNKOWN PATH execute 0x00005dac
+			}
+
+			// Branching from PC = 0x00005dcc to PC = 0x00005dae
+
+			// Branch from 0x00005dae to 0x00007b98 (Set LR to 0x00005db3)
+
+			{
+				// Save reg4 to Stack at 0x10001fb8 (Value saved is 0x00010074)
+				// Save reg14 to Stack at 0x10001fbc (Value saved is 0x00005db3)
+				// Stack Pointer updated to 0x10001fb8
+
+				// MemRead 8 kB SRAM0 (address was computed as reg1 + 0x00000002)
+				// Compute 0x00000001 - 0x00000000 for compare
+				if (*(uint8_t*)0x100002ae - 0x00000000) is Equal, Z == 1
+				{
+					// UNKOWN PATH execute 0x00007bae
+				}
+
+				// MemRead 8 kB SRAM0 (address was computed as reg1 + 0x00000000)
+				// 0x50000020 = 0x00000020 + 0x50000000
+				reg1 = (uint32_t)*(uint8_t*)0x100002ac << 5 + 0x50000000;
+
+				// MemWrite GPIO: P1_10 PBYTE (address was computed as reg1 + reg2)
+				*(uint8_t*)0x5000002a = 0x00 (modified bits = 0x00)
+
+			}
+			// Restore reg4 from Stack at 0x10001fb8 (Value saved was 0x00010074)
+			// Restore PC from Stack at 0x10001fbc (Value saved was 0x00005db3)
+			// Stack Pointer updated to 0x10001fc0
+
+			// Branch from 0x00005db6 to 0x00007c20 (Set LR to 0x00005dbb)
+
+			// MemWrite 8 kB SRAM0 (address was computed as reg1 + 0x0000000e)
+			*(uint16_t*)0x100002ba = 0x07d0 (modified bits = 0x0f1a)
+
+			// At 0x00007c24 branching to 0x00005dbb (reg14)
+
+			// Branch from 0x00005dba to 0x00005b44 (Set LR to 0x00005dbf)
+
+			{
+				// Save reg4 to Stack at 0x10001fb0 (Value saved is 0x00010074)
+				// Save reg5 to Stack at 0x10001fb4 (Value saved is 0x00000001)
+				// Save reg6 to Stack at 0x10001fb8 (Value saved is 0x00010074)
+				// Save reg14 to Stack at 0x10001fbc (Value saved is 0x00005dbf)
+				// Stack Pointer updated to 0x10001fb0
+
+				// MemRead 8 kB SRAM0 (address was computed as reg1 + reg2)
+				// Compute 0x00000001 - 0x00000000 for compare
+				if ((int32_t)(*(int8_t*)0x100002d0) - 0x00000000) is Signed less than, N != V
+				{
+					// UNKOWN PATH execute 0x00005b88
+				}
+
+				// MemRead 8 kB SRAM0 (address was computed as reg1 + reg0)
+				// Compute 0x00000001 - 0x00000000 for compare
+				if ((int32_t)(*(int8_t*)0x100002d1) - 0x00000000) is Signed less than, N != V
+				{
+					// UNKOWN PATH execute 0x00005b88
+				}
+
+				// MemRead 8 kB SRAM0 (address was computed as reg1 + reg2)
+				// 0x50000020 = 0x00000020 + 0x50000000
+				reg4 = (uint32_t)((uint32_t)(int32_t)(*(int8_t*)0x100002d0) << 24) >> 19 + 0x50000000;
+
+				// MemWrite GPIO: P1_1 PBYTE (address was computed as reg4 + reg3)
+				*(uint8_t*)0x50000021 = 0x01 (modified bits = 0x01)
+
+				// MemRead 8 kB SRAM0 (address was computed as reg1 + reg2)
+				// 0x50002004 = 0x50000004 + 0x00002000
+				reg1 = (uint32_t)((uint32_t)(int32_t)(*(int8_t*)0x100002d0) << 24) >> 22 + 0x50000000 + 0x00002000;
+
+				// Set PIO1_1 to output GPIO
+				// MemRead 8 kB SRAM0 (address was computed as reg1 + reg0)
+				// MemRead GPIO: DIR1 (address was computed as reg1 + 0x00000000)
+				// MemWrite GPIO: DIR1 (address was computed as reg1 + 0x00000000)
+				*(uint32_t*)0x50002004 = *(uint32_t*)0x50002004 | ((uint32_t)0x00000001 << (int32_t)(*(int8_t*)0x100002d1)); // = 0x10000482 (modified bits = 0x00000002)
+
+				// Branch from 0x00005b84 to 0x00005508 (Set LR to 0x00005b89)
+
+				{
+					// Save reg4 to Stack at 0x10001fa8 (Value saved is 0x00000002)
+					// Save reg14 to Stack at 0x10001fac (Value saved is 0x00005b89)
+					// Stack Pointer updated to 0x10001fa8
+
+					// Branch from 0x0000553a to 0x000043a4 (Set LR to 0x0000553f)
+
+					// Change MODE from default to no pull-down/pull-up resistor
+					// MemWrite IOCON: PIO1_1 (address was computed as reg0 + 0x00000060)
+					*(uint32_t*)0x40044064 = 0x00000080 (modified bits = 0x00000010)
+
+					// At 0x000043ae branching to 0x0000553f (reg14)
+
+				}
+				// Restore reg4 from Stack at 0x10001fa8 (Value saved was 0x00000002)
+				// Restore PC from Stack at 0x10001fac (Value saved was 0x00005b89)
+				// Stack Pointer updated to 0x10001fb0
+
 
 }
 
