@@ -65,10 +65,10 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            39 | PIO1_8                |                  | |
 |            40 | PIO0_22               | AD6              | Setup to function as AD6 during init |
 |            41 | PIO1_29               | SCK0 (SSP0)?     | Connected to SCLK on Right Haptic and Left Haptic? |
-|            42 | TDI/PIO0_11           |                  | |
+|            42 | TDI/PIO0_11           | TDI              | Pull-down resistor enabled |
 |            43 | PIO1_11               |                  | S9 - Y Button |
 |            44 | TMS/PIO0_12           |                  | |
-|            45 | TDO/PIO0_13           |                  | |
+|            45 | TDO/PIO0_13           | TDO              | Pull-down resistor enabled |
 |            46 | nTRST/PIO0_14         |                  | |
 |            47 | PIO1_13               |                  | S6 - RT (Right trigger digital) |
 |            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
