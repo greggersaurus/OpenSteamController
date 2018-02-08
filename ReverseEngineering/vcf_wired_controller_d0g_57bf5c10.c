@@ -135,6 +135,8 @@
 		HID_EndCollection
 
 
+	0x10000012 (uint8_t)  - Bits set and checked during init... I think relates this which AD pin is being used...
+
 	0x10000080 (uint16_t) - USB_HID0 USB_HID_REPORT_T->len
 	0x10000082 (uint8_t)  - USB_HID0 USB_HID_REPORT_T->idle_time 
 	0x10000083 (uint8_t)  - USB_HID0 USB_HID_REPORT_T->__pad
@@ -154,6 +156,7 @@
 	0x100002ac (uint8_t)  - ?? Check for possible branch... Though value was set not long being check...
 	0x100002ad (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_10)
 	0x100002ae (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_10)
+	0x100002af (uint8_t)  - Used for calculating which GPIO to control in init (GPIO ...
 
 	0x100002b0 (uint8_t)  - ?? Check for possible branch... Sign extended
 
@@ -6149,6 +6152,8 @@ void init_phase2_hw_not0()
 				// Save reg14 to Stack at 0x10001fbc (Value saved is 0x00005da5)
 				// Stack Pointer updated to 0x10001fa8
 
+
+
 				// The next part is a little messy (i.e. regN still remains in some lines)
 				//  This is showing how SRAM0 values are being used to compute that PIO1_10 is the desired GPIO to control here
 
@@ -6187,6 +6192,122 @@ void init_phase2_hw_not0()
 				// MemWrite GPIO: DIR1 (address was computed as reg2 + 0x00000000)
 				*(uint32_t*)0x50002004 = reg3; // = 0x10000480 (modified bits = 0x00000000)
 
+
+				
+				// Branch from 0x00007b2a to 0x00005508 (Set LR to 0x00007b2f)
+
+				{
+					// Save reg4 to Stack at 0x10001fa0 (Value saved is 0x100002ac)
+					// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x00007b2f)
+					// Stack Pointer updated to 0x10001fa0
+
+					// Branch from 0x0000553a to 0x000043a4 (Set LR to 0x0000553f)
+
+					// Change MODE to inactive (i.e. remove pull-down resistor setting)
+					// MemWrite IOCON: PIO1_10 (address was computed as reg0 + 0x00000060)
+					*(uint32_t*)0x40044088 = 0x00000080 (modified bits = 0x00000010)
+
+					// At 0x000043ae branching to 0x0000553f (reg14)
+
+				}
+				// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x100002ac)
+				// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00007b2f)
+				// Stack Pointer updated to 0x10001fa8
+
+				// MemRead 8 kB SRAM0 
+				// Compute 0x00000006 - 0x00000000 for compare
+				if ((int32_t)(*(int8_t*)0x100002af) - 0x00000000) is Signed less than, N != V
+				{
+					// UNKOWN PATH execute 0x00007b46
+				}
+
+				// Branch from 0x00007b3a to 0x00002a90 (Set LR to 0x00007b3f)
+
+				{
+					// Save reg3 to Stack at 0x10001f90 (Value saved is 0x00000080)
+					// Save reg4 to Stack at 0x10001f94 (Value saved is 0x100002ac)
+					// Save reg5 to Stack at 0x10001f98 (Value saved is 0x00000000)
+					// Save reg6 to Stack at 0x10001f9c (Value saved is 0x00000400)
+					// Save reg7 to Stack at 0x10001fa0 (Value saved is 0x50000000)
+					// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x00007b3f)
+					// Stack Pointer updated to 0x10001f90
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg2 + reg0)
+					*(uint32_t*)0x10000fa8 = 0x00003b49 (modified bits = 0x00003b49)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg6 + 0x00000002)
+					*(uint8_t*)0x10000012 = 0x00000040 | *(uint8_t*)0x10000012; // = 0x40 (modified bits = 0x40)
+
+					// Branch from 0x00002aaa to 0x000040f4 (Set LR to 0x00002aaf)
+
+					// Enable clock for ADC
+					// MemRead system control: SYSAHBCLKCTRL (address was computed as reg1 + 0x00000000)
+					// MemWrite system control: SYSAHBCLKCTRL (address was computed as reg1 + 0x00000000)
+					*(uint32_t*)0x40048080 = *(uint32_t*)0x40048080 | 0x00002000; // = 0x0c09607f (modified bits = 0x00002000)
+
+					// At 0x00004100 branching to 0x00002aaf (reg14)
+
+					// Disable all ADC related interrupts
+					// MemWrite ADC: INTEN (address was computed as reg7 + 0x0000000c)
+					*(uint32_t*)0x4001c00c = 0x00000000 (modified bits = 0x00000000)
+
+					// Branch from 0x00002ac6 to 0x000043a4 (Set LR to 0x00002acb)
+
+					// Set PIO0_22 pin function to AD6 (in analog input mode with no pull-up/pull-down resistor enabled)
+					// MemWrite IOCON: PIO0_22 (address was computed as reg0 + reg2)
+					*(uint32_t*)0x40044058 = 0x00000001 (modified bits = 0x00000091)
+
+					// At 0x000043b2 branching to 0x00002acb (reg14)
+
+					// Branch from 0x00002ad0 to 0x00003fb0 (Set LR to 0x00002ad5)
+
+					// Branching from PC = 0x00003fcc to PC = 0x00003fc6
+
+					// Select AD6 pin to sample and converted
+					// MemRead ADC: CR (address was computed as reg0 + 0x00000000)
+					// MemWrite ADC: CR (address was computed as reg0 + 0x00000000)
+					*(uint32_t*)0x4001c000 = *(uint32_t*)0x4001c000 | 0x00000040; // = 0x00200a40 (modified bits = 0x00000040)
+
+					// At 0x00003fc8 branching to 0x00002ad5 (reg14)
+
+					// MemRead 8 kB SRAM0 (address was computed as reg6 + 0x00000002)
+					// Compute 0x00000080 & 0x00000040 for compare
+					if (0x00000080 & *(uint8_t*)0x10000012) is NOT Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002ae2
+					}
+
+					// MemRead 8 kB SRAM0 (address was computed as reg6 + 0x00000002)
+					// Compute 0x00000040 & 0x00000040 for compare
+					if (0x00000040 & *(uint8_t*)0x10000012) is Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002aee
+					}
+
+					// Branching from PC = 0x0000402a to PC = 0x00004024
+
+					// Enable interrupt for conversion completion for AD6
+					// MemRead ADC: INTEN (address was computed as reg0 + 0x0000000c)
+					// MemWrite ADC: INTEN (address was computed as reg0 + 0x0000000c)
+					*(uint32_t*)0x4001c00c = *(uint32_t*)0x4001c00c | 0x00000040; // = 0x00000040 (modified bits = 0x00000040)
+
+					// At 0x00004026 branching to 0x00002aed (reg14)
+
+					// Branching from PC = 0x00002aec to PC = 0x00002af2
+
+					// Enable ADC interrupt
+					// MemWrite NVIC: ISER0 (address was computed as reg1 + 0x00000000)
+					*(uint32_t*)0xe000e100 = 0x01000000; // = 0x01000000 (modified bits = 0x01000002)
+
+				}
+				// Restore reg3 from Stack at 0x10001f90 (Value saved was 0x00000080)
+				// Restore reg4 from Stack at 0x10001f94 (Value saved was 0x100002ac)
+				// Restore reg5 from Stack at 0x10001f98 (Value saved was 0x00000000)
+				// Restore reg6 from Stack at 0x10001f9c (Value saved was 0x00000400)
+				// Restore reg7 from Stack at 0x10001fa0 (Value saved was 0x50000000)
+				// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00007b3f)
+				// Stack Pointer updated to 0x10001fa8
+				
 
 }
 

@@ -63,7 +63,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            37 | PIO0_9                | MOSI0 (SSP0)?    | Connected to MISO on Right Haptic and Left Haptic |
 |            38 | SWCLK/PIO0_10         | SWCLK?           | Connected to DEBUG interface for LPC11U37F |
 |            39 | PIO1_8                |                  | |
-|            40 | PIO0_22               |                  | |
+|            40 | PIO0_22               |                  | Setup to function as AD6 during init |
 |            41 | PIO1_29               | SCK0 (SSP0)?     | Connected to SCLK on Right Haptic and Left Haptic? |
 |            42 | TDI/PIO0_11           |                  | |
 |            43 | PIO1_11               |                  | S9 - Y Button |
