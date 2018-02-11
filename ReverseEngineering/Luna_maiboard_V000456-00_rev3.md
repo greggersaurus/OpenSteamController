@@ -82,9 +82,9 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            56 | PIO0_23               |                  | |
 |            57 | PIO1_15               |                  | |
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
-|            59 | PIO1_12               |                  | |
+|            59 | PIO1_12               | PIO1_12          | Read during init to check if it is logic low or not. |
 |            60 | PIO0_17               |                  | S1 - A Button |
-|            61 | PIO0_18               |                  | | 
+|            61 | PIO0_18               | PIO0_18          | Read during init to check if it is logic low or not. | 
 |            62 | PIO0_19               |                  | |
 |            63 | PIO1_16               |                  | Connected to DR on Left Haptic |
 |            64 | PIO1_6                |                  | Connected to SS on left haptic (Chip Sel?) |

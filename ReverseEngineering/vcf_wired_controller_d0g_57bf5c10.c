@@ -137,11 +137,18 @@
 
 	0x10000003 (uint8_t)  - 
 
+	0x10000010 (uint8_t)  - Presumably related to AD6 conversion complete (set in ADC interrupt?)
+
 	0x10000012 (uint8_t)  - Bits set and checked during init... I think relates this which AD pin is being used...
 
 	0x10000045 (uint8_t)  - Defines which PWM is to be enabled for counter (i.e. CT16B1)
 
 	0x10000047 (uint8_t)  - Related to MR0 value calculation
+	0x10000048 (uint16_t) - 
+
+	0x1000004a (uint16_t) - 
+	0x1000004c (uint16_t) - 
+	0x1000004e (uint16_t) - 
 
 	0x10000050 (uint32_t) - Set to value 0x40010000 (Base register offset of to CT16B1). Determines which counter/timer is being used for Steam Button LED?
 	0x10000054 (uint32_t) - 
@@ -160,6 +167,10 @@
 	0x10000200 (uint8_t)  - ?? Check for possible branching path...
 	0x10000201 (uint8_t)  - Defines which GPIO is being configured
 
+	0x10000203 (uint8_t)  - Defines which GPIO is being configured (PIO1_12)
+
+	0x10000205 (uint8_t)  - Defines which GPIO is being configured (PIO1_12)
+
 	0x10000254 (uint32_t) - 
 
 	0x100002ac (uint8_t)  - Used for calculating which GPIO to control in init (GPIO P1_10)
@@ -170,6 +181,7 @@
 	0x100002b0 (uint8_t)  - ?? Check for possible branch... Sign extended
 
 	0x100002b2 (uint8_t)  - Inverse of value of PIO0_2 after Reading 0 and setting to 1
+	0x100002b3 (uint8_t)  - Value of P0_18 during init
 
 	0x100002ba (uint16_t) - 
 
@@ -234,6 +246,15 @@
 	0x10000a34 (uint32_t) - End of 0x84 bytes of EEPROM data from EEPROM offset 0
 
 	0x100007b4 (uint32_t) - 
+
+	0x10000fb0 (uint32_t) - Read for possible branch after CT16B1 setup
+	0x10000fb4 (uint32_t) - Read for possible branch after CT16B1 setup
+	0x10000fb8 (uint32_t) - Read for possible branch after CT16B1 setup
+	0x10000fbc (uint32_t) - Read for possible branch after CT16B1 setup
+	0x10000fc0 (uint32_t) - Read for possible branch after CT16B1 setup
+	0x10000fc4 (uint32_t) - Read for possible branch after CT16B1 setup
+	0x10000fc8 (uint32_t) - Read for possible branch after CT16B1 setup (Relatest to AD6 I think...)
+	0x10000fcc (uint32_t) - Read for possible branch after CT16B1 setup?
 	
 	0x100010b4 (uint32_t) - Checked if is zero after USB init.
 	0x100010b8 (uint32_t) - Checked if is zero for possible branching path...
@@ -241,8 +262,6 @@
 	0x10001140 (uint16_t) -
 	0x10001142 (uint8_t)  - 
 	0x10001143 (uint8_t)  - 
-
-	0x10001fa8 (uint8_t)  - Related to MR0 value calulation
 
 	0x200002a0 (uint16_t) - Related to MR0 value calulation
 	0x200002a2 (uint16_t) - Related to MR0 value calulation
@@ -7071,6 +7090,427 @@ void init_phase2_hw_not0()
 					// Restore PC from Stack at 0x10001fa4 (Value saved was 0x0000a489)
 					// Stack Pointer updated to 0x10001fa8
 
+					// Branch from 0x0000a48a to 0x00007430 (Set LR to 0x0000a48f)
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000044 + 0x00000004)
+					*(uint16_t*)0x10000048 = 0x01f4 (modified bits = 0x0000)
+
+					// At 0x00007434 branching to 0x0000a48f (reg14)
+
+					// Branch from 0x0000a494 to 0x00007404 (Set LR to 0x0000a499)
+					// fnc(uint8_t arg0 = *(uint8_t*)0x10001fa9, uint32_t arg1 = 0x00000001)
+					{
+						// Save reg4 to Stack at 0x10001f98 (Value saved is 0x000001f4)
+						// Save reg5 to Stack at 0x10001f9c (Value saved is 0x00000001)
+						// Save reg6 to Stack at 0x10001fa0 (Value saved is 0x00010074)
+						// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x0000a499)
+						// Stack Pointer updated to 0x10001f98
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000044 + 0x0000000a)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000044 + 0x00000008)
+						*(uint16_t*)0x1000004c = *(uint16_t*)0x1000004e; // = 0x0000 (modified bits = 0x0000)
+
+						// Read value off stack
+						// MemRead 8 kB SRAM0 (address was computed as 0x10001fa8 + 0x00000001)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000044 + 0x00000006)
+						*(uint16_t*)0x1000004a = *(uint8_t*)0x10001fa9; // = 0x0000 (modified bits = 0x0000) arg0
+
+						// Branch from 0x00007410 to 0x00009aac (Set LR to 0x00007415)
+
+						// At 0x00009ab0 branching to 0x00007415 (reg14)
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000324 + 0x0000000c)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000044 + 0x00000014)
+						*(uint32_t*)0x10000058 = *(uint32_t*)0x10000330; // = 0x00000000 (modified bits = 0x00000000)
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000044 + 0x00000004)
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000324 + 0x0000000c)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000044 + 0x00000018)
+						*(uint32_t*)0x1000005c = *(uint32_t*)0x10000330 + *(uint16_t*)0x10000048; // = 0x000001f4 (modified bits = 0x000001f4)
+
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000044 + 0x00000000)
+						*(uint8_t*)0x10000044 = 0x01 (modified bits = 0x00) // arg1
+
+					}
+					// Restore reg4 from Stack at 0x10001f98 (Value saved was 0x000001f4)
+					// Restore reg5 from Stack at 0x10001f9c (Value saved was 0x00000001)
+					// Restore reg6 from Stack at 0x10001fa0 (Value saved was 0x00010074)
+					// Restore PC from Stack at 0x10001fa4 (Value saved was 0x0000a499)
+					// Stack Pointer updated to 0x10001fa8
+
+				}
+				// Restore reg3 from Stack at 0x10001fa8 (Value saved was 0x00000000)
+				// Restore reg4 from Stack at 0x10001fac (Value saved was 0x00000001)
+				// Restore reg5 from Stack at 0x10001fb0 (Value saved was 0x00000001)
+				// Restore PC from Stack at 0x10001fb4 (Value saved was 0x000098dd)
+				// Stack Pointer updated to 0x10001fb8
+
+			}
+			// Restore reg4 from Stack at 0x10001fb8 (Value saved was 0x00010074)
+			// Restore PC from Stack at 0x10001fbc (Value saved was 0x00005dd5)
+			// Stack Pointer updated to 0x10001fc0
+
+			// Branch from 0x00005dd6 to 0x0000a41c (Set LR to 0x00005ddb)
+
+			// MemWrite 2 kB SRAM1 (address was computed as 0x20000000 + 0x00000002)
+			*(uint8_t*)0x20000002 = 0x02 (modified bits = 0x02)
+
+			// At 0x0000a420 branching to 0x00005ddb (reg14)
+
+			// Branch from 0x00005dda to 0x00007b70 (Set LR to 0x00005ddf)
+			// uint8_t isUsbConnected()
+			{
+				// Save reg4 to Stack at 0x10001fb8 (Value saved is 0x00010074)
+				// Save reg14 to Stack at 0x10001fbc (Value saved is 0x00005ddf)
+				// Stack Pointer updated to 0x10001fb8
+
+				// Branch from 0x00007b7a to 0x00004214 (Set LR to 0x00007b7f)
+
+				// MemRead GPIO: P0_3 PBYTE (address was computed as 0x50000000 + 0x00000003)
+				reg0 = *(uint8_t*)0x50000003; // = 0x00000000
+
+				// Compute 0x00000000 - 0x00000000 for compare
+				if (reg0 - 0x00000000) is NOT Equal, Z == 1
+				{
+					// UNKOWN PATH execute 0x0000421e
+				}
+
+				// At 0x00004220 branching to 0x00007b7f (reg14)
+
+			}
+			// Restore reg4 from Stack at 0x10001fb8 (Value saved was 0x00010074)
+			// Restore PC from Stack at 0x10001fbc (Value saved was 0x00005ddf)
+			// Stack Pointer updated to 0x10001fc0
+
+			// Check if USB cable is connected
+			// Compute 0x00000000 - 0x00000000 for compare
+			if (isUsbConnected() - 0x00000000) is NOT Equal, Z == 1
+			{
+				// UNKOWN PATH execute 0x00005de2
+			}
+
+			// Branch from 0x00005e00 to 0x00002cf0 (Set LR to 0x00005e05)
+			// ... fnc()
+			{
+				// Save reg4 to Stack at 0x10001fb8 (Value saved is 0x00010074)
+				// Save reg14 to Stack at 0x10001fbc (Value saved is 0x00005e05)
+				// Stack Pointer updated to 0x10001fb8
+
+				// MemWrite 8 kB SRAM0 (address was computed as 0x10000010 + 0x00000001)
+				*(uint8_t*)0x10000011 = 0x01 (modified bits = 0x01)
+
+				// Branch from 0x00002cf8 to 0x00002d4c (Set LR to 0x00002cfd)
+				// void fnc()
+				{
+					// Save reg4 to Stack at 0x10001fa8 (Value saved is 0x10000010)
+					// Save reg5 to Stack at 0x10001fac (Value saved is 0x00000001)
+					// Save reg6 to Stack at 0x10001fb0 (Value saved is 0x00010074)
+					// Save reg14 to Stack at 0x10001fb4 (Value saved is 0x00002cfd)
+					// Stack Pointer updated to 0x10001fa8
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000010 + 0x00000000)
+					*(uint8_t*)0x10000010 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000010 + 0x00000008)
+					*(uint32_t*)0x10000018 = 0x00000000 (modified bits = 0x00000000)
+
+					// Branch from 0x00002d5a to 0x000021be (Set LR to 0x00002d5f)
+
+					// Branching from PC = 0x000021c0 to PC = 0x000021b0
+
+					// Branching from PC = 0x000021b2 to PC = 0x000021b8
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000f80 + 0x00000000)
+					*(uint8_t*)0x10000f80 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000f81 + 0x00000000)
+					*(uint8_t*)0x10000f81 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f82 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f83 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f84 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f85 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f86 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f87 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f88 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f89 = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f8a = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f8b = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f8c = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f8d = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f8e = 0x00 (modified bits = 0x00)
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+					*(uint8_t*)0x10000f8f = 0x00 (modified bits = 0x00)
+
+					// At 0x000021bc branching to 0x00002d5f (reg14)
+
+					// Branch from 0x00002d60 to 0x000040f4 (Set LR to 0x00002d65)
+
+					// Ensure that ADC clock is enabled
+					// MemRead system control: SYSAHBCLKCTRL (address was computed as 0x40048080 + 0x00000000)
+					// MemWrite system control: SYSAHBCLKCTRL (address was computed as 0x40048080 + 0x00000000)
+					*(uint32_t*)0x40048080 = *(uint32_t*)0x40048080 | 0x00002000; // = 0x0c09617f (modified bits = 0x00000000)
+
+					// At 0x00004100 branching to 0x00002d65 (reg14)
+
+					// Branch from 0x00002d64 to 0x00004cbc (Set LR to 0x00002d69)
+
+					/**
+					 * Read all ADC Data Registers to clear DONE bits.
+					 */
+					// void clrAllAdcDataRegs()
+					{
+						// Save reg3 to Stack at 0x10001fa0 (Value saved is 0x00002000)
+						// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x00002d69)
+						// Stack Pointer updated to 0x10001fa0
+
+						// MemRead ADC: DR0 (address was computed as 0x4001c000 + 0x00000010)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10001fa0 + 0x00000000)
+						*(uint16_t*)0x10001fa0 = *(uint32_t*)0x4001c010; // = 0x0000 (modified bits = 0x2000)
+
+						// MemRead ADC: DR1 (address was computed as 0x4001c004 + 0x00000010)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10001fa0 + 0x00000000)
+						*(uint16_t*)0x10001fa0 = *(uint32_t*)0x4001c014; // = 0x0000 (modified bits = 0x0000)
+
+						// MemRead ADC: DR2 (address was computed as 0x4001c008 + 0x00000010)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10001fa0 + 0x00000000)
+						*(uint16_t*)0x10001fa0 = *(uint32_t*)0x4001c018; // = 0x0000 (modified bits = 0x0000)
+
+						// MemRead ADC: DR3 (address was computed as 0x4001c00c + 0x00000010)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10001fa0 + 0x00000000)
+						*(uint16_t*)0x10001fa0 = *(uint32_t*)0x4001c01c; // = 0x0000 (modified bits = 0x0000)
+
+						// MemRead ADC: DR4 (address was computed as 0x4001c010 + 0x00000010)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10001fa0 + 0x00000000)
+						*(uint16_t*)0x10001fa0 = *(uint32_t*)0x4001c020; // = 0x0000 (modified bits = 0x0000)
+
+						// MemRead ADC: DR5 (address was computed as 0x4001c014 + 0x00000010)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10001fa0 + 0x00000000)
+						*(uint16_t*)0x10001fa0 = *(uint32_t*)0x4001c024; // = 0x0000 (modified bits = 0x0000)
+
+						// MemRead ADC: DR6 (address was computed as 0x4001c018 + 0x00000010)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10001fa0 + 0x00000000)
+						*(uint16_t*)0x10001fa0 = *(uint32_t*)0x4001c028; // = 0x0000 (modified bits = 0x0000)
+
+						// MemRead ADC: DR7 (address was computed as 0x4001c01c + 0x00000010)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10001fa0 + 0x00000000)
+						*(uint16_t*)0x10001fa0 = *(uint32_t*)0x4001c02c; // = 0x0000 (modified bits = 0x0000)
+					}
+					// Restore reg3 from Stack at 0x10001fa0 (Value saved was 0x00000000)
+					// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00002d69)
+					// Stack Pointer updated to 0x10001fa8
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000fb0 + 0x00000000)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint32_t*)0x10000fb0 - 0x00000000) is NOT Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002d76
+					}
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000fb0 + 0x00000004)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint32_t*)0x10000fb4 - 0x00000000) is NOT Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002d76
+					}
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000fb0 + 0x00000008)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint32_t*)0x10000fb8 - 0x00000000) is NOT Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002d76
+					}
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000fb0 + 0x0000000c)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint32_t*)0x10000fbc - 0x00000000) is NOT Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002d76
+					}
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000fb0 + 0x00000010)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint32_t*)0x10000fc0 - 0x00000000) is NOT Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002d76
+					}
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000fb0 + 0x00000014)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint32_t*)0x10000fc4 - 0x00000000) is NOT Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002d76
+					}
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000fb0 + 0x00000018)
+					// Compute 0x00003bf5 - 0x00000000 for compare
+					if (*(uint32_t*)0x10000fc8 - 0x00000000) is Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002d7a
+					}
+
+					// At 0x00002d78 branching to 0x00003bf5 (reg1). LR set to 0x00002d7a
+					// void fnc()
+					{
+						// Save reg4 to Stack at 0x10001fa0 (Value saved is 0x00000006)
+						// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x00002d7b)
+						// Stack Pointer updated to 0x10001fa0
+
+						// Branch from 0x00003bf8 to 0x0000705c (Set LR to 0x00003bfd)
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000203 + 0x00000000)
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000205 + 0x00000000)
+						// MemRead GPIO: P1_12 PBYTE (address was computed as (uint32_t)*(uint8_t*)0x10000203 << 5 + 0x50000000 + *(uint8_t*)0x10000205)
+						// Compute 0x00000000 - 0x00000000 for compare
+						if (*(uint8_t*)0x5000002c - 0x00000000) is NOT Equal, Z == 1
+						{
+							// UNKOWN PATH execute 0x00007074
+						}
+
+						// At 0x00007076 branching to 0x00003bfd (reg14)
+
+						// MemRead 128 kB on-chip flash (address encoded in instruction)
+						reg4 = *(uint32_t*)0x00003c14; // = 0x100002ac
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000203 + 0x00000000)
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000205 + 0x00000000)
+						// MemRead GPIO: P1_12 PBYTE (address was computed as (uint32_t)*(uint8_t*)0x10000203 << 5 + 0x50000000 + *(uint8_t*)0x10000205)
+						// Compute 0x00000000 - 0x00000000 for compare
+						if (*(uint8_t*)0x5000002c - 0x00000000) is Not equal, Z == 0
+						{
+							// UNKOWN PATH execute 0x00003c0c
+						}
+
+						// Branch from 0x00003c04 to 0x0000705c (Set LR to 0x00003c09)
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000203 + 0x00000001)
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000205 + 0x00000001)
+						// MemRead GPIO: P0_18 PBYTE (address was computed as ((uint32_t)*(uint8_t*)0x10000204 << 5) + 0x50000000 + *(uint8_t*)0x10000206)
+						// Compute 0x00000000 - 0x00000000 for compare
+						if (*(uint8_t*)0x50000012 - 0x00000000) is NOT Equal, Z == 1
+						{
+							// UNKOWN PATH execute 0x00007074
+						}
+
+						// At 0x00007076 branching to 0x00003c09 (reg14)
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000203 + 0x00000001)
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000205 + 0x00000001)
+						// MemRead GPIO: P0_18 PBYTE (address was computed as ((uint32_t)*(uint8_t*)0x10000204 << 5) + 0x50000000 + *(uint8_t*)0x10000206)
+						// Compute 0x00000000 - 0x00000000 for compare
+						if (*(uint8_t*)0x50000012 - 0x00000000) is NOT Equal, Z == 1
+						{
+							// UNKOWN PATH execute 0x00003c0c
+						}
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000203 + 0x00000001)
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000205 + 0x00000001)
+						// MemRead GPIO: P0_18 PBYTE (address was computed as ((uint32_t)*(uint8_t*)0x10000204 << 5) + 0x50000000 + *(uint8_t*)0x10000206)
+						// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000007)
+						*(uint8_t*)0x100002b3 = *(uint8_t*)0x50000012; // = 0x00 (modified bits = 0x00)
+
+					}
+					// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x00000006)
+					// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00002d7b)
+					// Stack Pointer updated to 0x10001fa8
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000fb0 + 0x0000001c)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint32_t*)0x10000fcc - 0x00000000) is NOT Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002d76
+					}
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000010 + 0x00000002)
+					// Compute 0x00000040 - 0x00000000 for compare
+					if (*(uint8_t*)0x10000012 - 0x00000000) is Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x00002d8e
+					}
+
+					// Branch from 0x00002d8a to 0x0000402c (Set LR to 0x00002d8f)
+					/**
+					 * \param arg0 = base address of ADC to control?
+					 * \param arg1 = enable ADC (in burst mode)?
+					 */
+					// void startAdcConversions(uint32_t arg0 (= 0x4001c000), uint32_t arg1 (= 0x00000001))
+					{
+						// Save reg4 to Stack at 0x10001f9c (Value saved is 0x00000008)
+						// Save reg5 to Stack at 0x10001fa0 (Value saved is 0x10000010)
+						// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x00002d8f)
+						// Stack Pointer updated to 0x10001f9c
+
+						// Branch from 0x00004034 to 0x0000e6e8 (Set LR to 0x00004039)
+
+						// Make sure an A/D conversion is not started right now
+						// MemRead ADC: CR (address was computed as (arg0) 0x4001c000 + 0x00000000)
+						// MemWrite ADC: CR (address was computed as (arg0) 0x4001c000 + 0x00000000)
+						*(uint32_t*)0x4001c000 = 0x00000000 | (*(uint32_t*)0x4001c000 & ~0x07000000); // = 0x00200a40 (modified bits = 0x00000000)
+
+						// At 0x0000e6f6 branching to 0x00004039 (reg14)
+
+						// Compute 0x00000001 - 0x00000000 for compare
+						if (arg1 - 0x00000000) is Equal, Z == 1
+						{
+							// UNKOWN PATH execute 0x00004048
+						}
+
+						// Set BURST to 1 and enable hardware scan mode (i.e. repeatedly start scanning AD6)
+						// MemRead ADC: CR (address was computed as (arg0) 0x4001c000 + 0x00000000)
+						// 0x00210a40 = 0x00200a40 | 0x00010000;
+						// MemWrite ADC: CR (address was computed as (arg0) 0x4001c000 + 0x00000000)
+						*(uint32_t*)0x4001c000 = *(uint32_t*)0x4001c000 | 0x00010000; // = 0x00210a40 (modified bits = 0x00010000)
+
+					}
+					// Restore reg4 from Stack at 0x10001f9c (Value saved was 0x00000008)
+					// Restore reg5 from Stack at 0x10001fa0 (Value saved was 0x10000010)
+					// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00002d8f)
+					// Stack Pointer updated to 0x10001fa8
+
+				}
+				// Restore reg4 from Stack at 0x10001fa8 (Value saved was 0x10000010)
+				// Restore reg5 from Stack at 0x10001fac (Value saved was 0x00000001)
+				// Restore reg6 from Stack at 0x10001fb0 (Value saved was 0x00010074)
+				// Restore PC from Stack at 0x10001fb4 (Value saved was 0x00002cfd)
+				// Stack Pointer updated to 0x10001fb8
+
+				// Branching from PC = 0x00002cfc to PC = 0x00002d00
+
+				// MemRead 8 kB SRAM0 (address was computed as 0x10000010 + 0x00000000)
+				// Compute 0x00000000 - 0x00000000 for compare
+				if (*(uint8_t*)0x10000010 - 0x00000000) is NOT Equal, Z == 1
+				{
+					// UNKOWN PATH execute 0x00002d06
+				}
+
+				// Wait for interrupt (i.e. ADC interrupt?) so we can check if value in 0x10000010 has changed...
+				__wfi
 }
 
 /**
