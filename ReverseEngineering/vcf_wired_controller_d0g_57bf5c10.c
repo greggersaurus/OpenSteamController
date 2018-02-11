@@ -135,11 +135,16 @@
 		HID_EndCollection
 
 
+	0x10000003 (uint8_t)  - 
+
 	0x10000012 (uint8_t)  - Bits set and checked during init... I think relates this which AD pin is being used...
 
-	0x10000045 (uint8_t)  - 
+	0x10000045 (uint8_t)  - Defines which PWM is to be enabled for counter (i.e. CT16B1)
 
-	0x10000050 (uint32_t) - Set to value 0x40010000... Related to CT16B1?
+	0x10000047 (uint8_t)  - Related to MR0 value calculation
+
+	0x10000050 (uint32_t) - Set to value 0x40010000 (Base register offset of to CT16B1). Determines which counter/timer is being used for Steam Button LED?
+	0x10000054 (uint32_t) - 
 
 	0x10000080 (uint16_t) - USB_HID0 USB_HID_REPORT_T->len
 	0x10000082 (uint8_t)  - USB_HID0 USB_HID_REPORT_T->idle_time 
@@ -236,6 +241,11 @@
 	0x10001140 (uint16_t) -
 	0x10001142 (uint8_t)  - 
 	0x10001143 (uint8_t)  - 
+
+	0x10001fa8 (uint8_t)  - Related to MR0 value calulation
+
+	0x200002a0 (uint16_t) - Related to MR0 value calulation
+	0x200002a2 (uint16_t) - Related to MR0 value calulation
 
   init phase2 hw version 0:
 
@@ -6632,6 +6642,434 @@ void init_phase2_hw_not0()
 
 				// Branch from 0x000098c8 to 0x00007388 (Set LR to 0x000098cd)
 
+				{
+					// Save reg4 to Stack at 0x10001fa8 (Value saved is 0x00000001)
+					// Save reg5 to Stack at 0x10001fac (Value saved is 0x00000001)
+					// Save reg6 to Stack at 0x10001fb0 (Value saved is 0x00010074)
+					// Save reg14 to Stack at 0x10001fb4 (Value saved is 0x000098cd)
+					// Stack Pointer updated to 0x10001fa8
+
+					// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000003)
+					*(uint8_t*)0x10000047 = 0x01 (modified bits = 0x01)
+
+					// Branch from 0x00007390 to 0x000045bc (Set LR to 0x00007395)
+
+					{
+						// Save reg4 to Stack at 0x10001fa0 (Value saved is 0x10000044)
+						// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x00007395)
+						// Stack Pointer updated to 0x10001fa0
+
+						// Branch from 0x000045be to 0x0000458c (Set LR to 0x000045c3)
+
+						// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+						// Compute 0x40010000 - 0x40018000 for compare
+						if (*(uint32_t*)0x10000050 - 0x40018000) is NOT Not equal, Z == 0
+						{
+							// UNKOWN PATH execute 0x00004592
+						}
+
+						// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+						// Compute 0x40010000 - 0x4000c000 for compare
+						if (*(uint32_t*)0x10000050 - 0x4000c000) is NOT Not equal, Z == 0
+						{
+							// UNKOWN PATH execute 0x0000459c
+						}
+
+						// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+						// Compute 0x40010000 - 0x40010000 for compare
+						if (*(uint32_t*)0x10000050 - 0x40010000) is Not equal, Z == 0
+						{
+							// UNKOWN PATH execute 0x000045aa
+						}
+
+						// At 0x000045a8 branching to 0x000045c3 (reg14)
+
+						// Enable clock for 16-bit counter/timer 1 CT16B1
+						// MemRead system control: SYSAHBCLKCTRL (address was computed as reg1 + 0x00000000)
+						// 0x0c09617f = 0x0c09607f | 0x00000100;
+						// MemWrite system control: SYSAHBCLKCTRL (address was computed as reg1 + 0x00000000)
+						*(uint32_t*)0x40048080 = *(uint32_t*)0x40048080 | 0x00000100; // = 0x0c09617f (modified bits = 0x00000100)
+
+					}
+					// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x10000044)
+					// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00007395)
+					// Stack Pointer updated to 0x10001fa8
+
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemWrite CT16B1: PR (address was computed as *(uint32_t*)0x10000050 + 0x0000000c)
+					*(uint32_t*)0x4001000c = 0x00000000 (modified bits = 0x00000000)
+
+					// PWM mode is enabled for CT16B1_MAT0
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000001)
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemRead CT16B1: PWMC (address was computed as *(uint32_t*)0x10000050 + 0x00000074)
+					// 0x00000001 = 0x00000000 | 0x00000001;
+					// MemWrite CT16B1: PWMC (address was computed as *(uint32_t*)0x10000050 + 0x00000074)
+					*(uint32_t*)0x40010074 = *(uint32_t*)0x40010074 | ((uint32_t)0x00000001 << (int32_t)(*(int8_t*)0x10000045)); // = 0x00000001 (modified bits = 0x00000001)
+
+					// Set match register 3 value (when Timer Counter value matches some action will be triggered automatically)
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemWrite CT16B1: MR3 (address was computed as *(uint32_t*)0x10000050 + 0x00000024)
+					*(uint32_t*)0x40010024 = 0x00000fff (modified bits = 0x00000fff)
+
+					// Set match register 1 value (when Timer Counter value matches some action will be triggered automatically)
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000001)
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemWrite CT16B1: MR0 (address was computed as (uint32_t)(int32_t)(*(int8_t*)0x10000045) << 2 + *(uint32_t*)0x10000050 + 0x00000018)
+					*(uint32_t*)0x40010018 = 0x00001000 (modified bits = 0x00001000)
+
+					// The TC will be reset if MR3 (0xFFF) matches it
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemRead CT16B1: MCR (address was computed as *(uint32_t*)0x10000050 + 0x00000014)
+					// 0x00000400 = 0x00000000 | 0x00000400;
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemWrite CT16B1: MCR (address was computed as *(uint32_t*)0x10000050 + 0x00000014)
+					*(uint32_t*)0x40010014 = *(uint32_t*)0x40010014 | 0x00000400; // = 0x00000400 (modified bits = 0x00000400)
+
+					// Branch from 0x000073be to 0x000045e4 (Set LR to 0x000073c3)
+
+					tcr_prev = *(uint32_t*)0x40010004
+
+					// Make sure counter is disabled
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemWrite CT16B1: TCR (address was computed as *(uint32_t*)0x10000050 + 0x00000004)
+					*(uint32_t*)0x40010004 = 0x00000000 (modified bits = 0x00000000)
+
+					// Set Timer Counter value to 1
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemWrite CT16B1: TC (address was computed as *(uint32_t*)0x10000050 + 0x00000008)
+					*(uint32_t*)0x40010008 = 0x00000001 (modified bits = 0x00000001)
+
+					// Reset the Timer Counter and Prescale Counter on the next positive edge of PCLK
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemWrite CT16B1: TCR (address was computed as *(uint32_t*)0x10000050 + 0x00000004)
+					*(uint32_t*)0x40010004 = 0x00000002 (modified bits = 0x00000002)
+
+					// Wait for TC to be reset (based on last instruction)
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemRead CT16B1: TC (address was computed as *(uint32_t*)0x10000050 + 0x00000008)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint32_t*)0x40010008 - 0x00000000) is Not equal, Z == 0
+					{
+						// UNKOWN PATH execute 0x000045f2
+					}
+
+					// Reestablish previous state of TCR (i.e. take counter out of reset)
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemRead CT16B1: TCR (address was computed as *(uint32_t*)0x10000050 + 0x00000004)
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemWrite CT16B1: TCR (address was computed as *(uint32_t*)0x10000050 + 0x00000004)
+					*(uint32_t*)0x40010004 = tcr_prev; // = 0x00000000 (modified bits = 0x00000002)
+
+					// At 0x000045fa branching to 0x000073c3 (reg14)
+
+					// Enable Timer Counter and Prescale Counter
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemRead CT16B1: TCR (address was computed as *(uint32_t*)0x10000050 + 0x00000004)
+					// 0x00000001 = 0x00000000 | 0x00000001;
+					// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x0000000c)
+					// MemWrite CT16B1: TCR (address was computed as *(uint32_t*)0x10000050 + 0x00000004)
+					*(uint32_t*)0x40010004 = *(uint32_t*)0x40010004 | 0x00000001; // = 0x00000001 (modified bits = 0x00000001)
+
+					// Branch from 0x000073ce to 0x0000a010 (Set LR to 0x000073d3)
+
+					{
+						// Save reg4 to Stack at 0x10001fa0 (Value saved is 0x10000044)
+						// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x000073d3)
+						// Stack Pointer updated to 0x10001fa0
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x00000001 + 0x0000000c)
+						// Compute 0x40010000 - 0x4000c000 for compare
+						if (*(uint32_t*)0x10000050 - 0x4000c000) is NOT Not equal, Z == 0
+						{
+							// UNKOWN PATH execute 0x0000a01a
+						}
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x00000001 + 0x0000000c)
+						// Compute 0x40010000 - 0x40010000 for compare
+						if (*(uint32_t*)0x10000050 - 0x40010000) is Not equal, Z == 0
+						{
+							// UNKOWN PATH execute 0x0000a052
+						}
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x00000001 + 0x00000001)
+						// Compute 0x00000000 - 0x00000000 for compare
+						if ((int32_t)(*(int8_t*)0x10000045) - 0x00000000) is NOT Equal, Z == 1
+						{
+							// UNKOWN PATH execute 0x0000a042
+						}
+
+						// Branching from PC = 0x0000a050 to PC = 0x0000a09c
+
+						// Branch from 0x0000a0bc to 0x000043a4 (Set LR to 0x0000a0c1)
+
+						// Set PIO0_21 pin function CT16B1_MAT0
+						// MemWrite IOCON: PIO0_21 (address was computed as 0x40044000 + 0x00000054)
+						*(uint32_t*)0x40044054 = 0x00000001 (modified bits = 0x00000091)
+
+						// At 0x000043b2 branching to 0x0000a0c1 (reg14)
+
+					}
+					// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x10000044)
+					// Restore PC from Stack at 0x10001fa4 (Value saved was 0x000073d3)
+					// Stack Pointer updated to 0x10001fa8
+
+				}
+				// Restore reg4 from Stack at 0x10001fa8 (Value saved was 0x00000001)
+				// Restore reg5 from Stack at 0x10001fac (Value saved was 0x00000001)
+				// Restore reg6 from Stack at 0x10001fb0 (Value saved was 0x00010074)
+				// Restore PC from Stack at 0x10001fb4 (Value saved was 0x000098cd)
+				// Stack Pointer updated to 0x10001fb8
+
+				// Branch from 0x000098ce to 0x000073f8 (Set LR to 0x000098d3)
+
+				// MemWrite 8 kB SRAM0 (address was computed as  0x10000044 + 0x00000010)
+				*(uint32_t*)0x10000054 = 0x0000a435; // = 0x0000a435 (modified bits = 0x0000a435)
+
+				// At 0x000073fc branching to 0x000098d3 (reg14)
+
+				// MemWrite 8 kB SRAM0 (address was computed as 0x10000002 + 0x00000001)
+				*(uint8_t*)0x10000003 = 0x00 (modified bits = 0x00)
+
+				// Branch from 0x000098d8 to 0x0000a434 (Set LR to 0x000098dd)
+
+				{
+					// Save reg3 to Stack at 0x10001fa8 (Value saved is 0x00000001)
+					// Save reg4 to Stack at 0x10001fac (Value saved is 0x00000001)
+					// Save reg5 to Stack at 0x10001fb0 (Value saved is 0x00000001)
+					// Save reg14 to Stack at 0x10001fb4 (Value saved is 0x000098dd)
+					// Stack Pointer updated to 0x10001fa8
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000002 + 0x00000003)
+					*(uint8_t*)0x10000005 = 0x01 (modified bits = 0x01)
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000002 + 0x00000003)
+					*(uint8_t*)0x10000005 = 0x00 (modified bits = 0x01)
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000002 + 0x00000000)
+					*(uint8_t*)0x10000002 = 0x01 (modified bits = 0x01)
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10001fa8 + 0x00000000)
+					*(uint16_t*)0x10001fa8 = 0x0000 (modified bits = 0x0001)
+
+					// Branch from 0x0000a484 to 0x00007368 (Set LR to 0x0000a489)
+
+					{
+						// Save reg4 to Stack at 0x10001fa0 (Value saved is 0x000001f4)
+						// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x0000a489)
+						// Stack Pointer updated to 0x10001fa0
+
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000044 + 0x00000006)
+						*(uint16_t*)0x1000004a = 0x0000 (modified bits = 0x0000)
+
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000044 + 0x0000000a)
+						*(uint16_t*)0x1000004e = 0x0000 (modified bits = 0x0000)
+
+						// Branch from 0x00007370 to 0x0000e65c (Set LR to 0x00007375)
+
+						// Function for calculating MR0 value. Input arg is *(uint8_t*)0x10001fa8
+						{
+							// Save reg4 to Stack at 0x10001f90 (Value saved is 0x10000044)
+							// Save reg5 to Stack at 0x10001f94 (Value saved is 0x00000001)
+							// Save reg6 to Stack at 0x10001f98 (Value saved is 0x00010074)
+							// Save reg14 to Stack at 0x10001f9c (Value saved is 0x00007375)
+							// Stack Pointer updated to 0x10001f90
+
+							// Branch from 0x0000e662 to 0x00004ec4 (Set LR to 0x0000e667)
+
+							// MemRead 2 kB SRAM1 (address was computed as reg1 + reg0)
+							reg0 = *(uint16_t*)0x200002a0; // = 0x00000064
+
+							// Branch from 0x0000e666 to 0x00002672 (Set LR to 0x0000e66b)
+
+							{
+								// Save reg4 to Stack at 0x10001f88 (Value saved is 0x10000044)
+								// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000e66b)
+								// Stack Pointer updated to 0x10001f88
+
+								// Branch from 0x0000267a to 0x0000281a (Set LR to 0x0000267f)
+
+								{
+									// Save reg4 to Stack at 0x10001f7c (Value saved is 0x10000044)
+									// Save reg5 to Stack at 0x10001f80 (Value saved is 0x00000001)
+									// Save reg6 to Stack at 0x10001f84 (Value saved is 0x00000000)
+									// Stack Pointer updated to 0x10001f7c
+
+								}
+								// Restore reg4 from Stack at 0x10001f7c (Value saved was 0x10000044)
+								// Restore reg5 from Stack at 0x10001f80 (Value saved was 0x00000001)
+								// Restore reg6 from Stack at 0x10001f84 (Value saved was 0x00000000)
+								// Stack Pointer updated to 0x10001f88
+
+								// At 0x00002874 branching to 0x0000267f (reg14)
+
+							}
+							// Restore reg4 from Stack at 0x10001f88 (Value saved was 0x10000044)
+							// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000e66b)
+							// Stack Pointer updated to 0x10001f90
+
+							// Branch from 0x0000e66e to 0x00002394 (Set LR to 0x0000e673)
+
+							{
+								// Save reg4 to Stack at 0x10001f80 (Value saved is 0x10000044)
+								// Save reg5 to Stack at 0x10001f84 (Value saved is 0x42c80000)
+								// Save reg6 to Stack at 0x10001f88 (Value saved is 0x00000000)
+								// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000e673)
+								// Stack Pointer updated to 0x10001f80
+
+								// Branching from PC = 0x000023cc to PC = 0x000023d0
+
+								// Branch from 0x0000240a to 0x0000280a (Set LR to 0x0000240f)
+
+								// At 0x00002818 branching to 0x0000240f (reg14)
+
+							}
+							// Restore reg4 from Stack at 0x10001f80 (Value saved was 0x10000044)
+							// Restore reg5 from Stack at 0x10001f84 (Value saved was 0x42c80000)
+							// Restore reg6 from Stack at 0x10001f88 (Value saved was 0x00000000)
+							// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000e673)
+							// Stack Pointer updated to 0x10001f90
+
+							// Branch from 0x0000e676 to 0x00004ec4 (Set LR to 0x0000e67b)
+
+							// MemRead 2 kB SRAM1 (address was computed as reg1 + reg0)
+							reg0 = *(uint16_t*)0x200002a2; // = 0x00000064
+
+							// At 0x00004ece branching to 0x0000e67b (reg14)
+
+							// Branch from 0x0000e67a to 0x00002672 (Set LR to 0x0000e67f)
+
+							{
+								// Save reg4 to Stack at 0x10001f88 (Value saved is 0x3f800000)
+								// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000e67f)
+								// Stack Pointer updated to 0x10001f88
+
+								// Branch from 0x0000267a to 0x0000281a (Set LR to 0x0000267f)
+
+								{
+									// Save reg4 to Stack at 0x10001f7c (Value saved is 0x3f800000)
+									// Save reg5 to Stack at 0x10001f80 (Value saved is 0x42c80000)
+									// Save reg6 to Stack at 0x10001f84 (Value saved is 0x00000000)
+									// Stack Pointer updated to 0x10001f7c
+
+								}
+								// Restore reg4 from Stack at 0x10001f7c (Value saved was 0x3f800000)
+								// Restore reg5 from Stack at 0x10001f80 (Value saved was 0x42c80000)
+								// Restore reg6 from Stack at 0x10001f84 (Value saved was 0x00000000)
+								// Stack Pointer updated to 0x10001f88
+
+								// At 0x00002874 branching to 0x0000267f (reg14)
+
+							}
+							// Restore reg4 from Stack at 0x10001f88 (Value saved was 0x3f800000)
+							// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000e67f)
+							// Stack Pointer updated to 0x10001f90
+
+							// Branch from 0x0000e680 to 0x00002394 (Set LR to 0x0000e685)
+
+							{
+								// Save reg4 to Stack at 0x10001f80 (Value saved is 0x3f800000)
+								// Save reg5 to Stack at 0x10001f84 (Value saved is 0x42c80000)
+								// Save reg6 to Stack at 0x10001f88 (Value saved is 0x00000000)
+								// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000e685)
+								// Stack Pointer updated to 0x10001f80
+
+								// Branching from PC = 0x000023cc to PC = 0x000023d0
+
+								// Branch from 0x0000240a to 0x0000280a (Set LR to 0x0000240f)
+
+								// At 0x00002818 branching to 0x0000240f (reg14)
+
+							}
+							// Restore reg4 from Stack at 0x10001f80 (Value saved was 0x3f800000)
+							// Restore reg5 from Stack at 0x10001f84 (Value saved was 0x42c80000)
+							// Restore reg6 from Stack at 0x10001f88 (Value saved was 0x00000000)
+							// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000e685)
+							// Stack Pointer updated to 0x10001f90
+
+							// Branch from 0x0000e688 to 0x00002672 (Set LR to 0x0000e68d)
+
+							{
+								// Save reg4 to Stack at 0x10001f88 (Value saved is 0x3f800000)
+								// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000e68d)
+								// Stack Pointer updated to 0x10001f88
+
+								// Branch from 0x0000267a to 0x0000281a (Set LR to 0x0000267f)
+
+								{
+									// Save reg4 to Stack at 0x10001f7c (Value saved is 0x3f800000)
+									// Save reg5 to Stack at 0x10001f80 (Value saved is 0x3f800000)
+									// Save reg6 to Stack at 0x10001f84 (Value saved is 0x00000000)
+									// Stack Pointer updated to 0x10001f7c
+
+								}
+								// Restore reg4 from Stack at 0x10001f7c (Value saved was 0x3f800000)
+								// Restore reg5 from Stack at 0x10001f80 (Value saved was 0x3f800000)
+								// Restore reg6 from Stack at 0x10001f84 (Value saved was 0x00000000)
+								// Stack Pointer updated to 0x10001f88
+
+								// At 0x00002874 branching to 0x0000267f (reg14)
+
+							}
+							// Restore reg4 from Stack at 0x10001f88 (Value saved was 0x3f800000)
+							// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000e68d)
+							// Stack Pointer updated to 0x10001f90
+
+							// Branch from 0x0000e68e to 0x0000231a (Set LR to 0x0000e693)
+
+							{
+								// Save reg4 to Stack at 0x10001f80 (Value saved is 0x3f800000)
+								// Save reg5 to Stack at 0x10001f84 (Value saved is 0x3f800000)
+								// Save reg6 to Stack at 0x10001f88 (Value saved is 0x00000000)
+								// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000e693)
+								// Stack Pointer updated to 0x10001f80
+
+							}
+							// Restore reg4 from Stack at 0x10001f80 (Value saved was 0x3f800000)
+							// Restore reg5 from Stack at 0x10001f84 (Value saved was 0x3f800000)
+							// Restore reg6 from Stack at 0x10001f88 (Value saved was 0x00000000)
+							// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000e693)
+							// Stack Pointer updated to 0x10001f90
+
+							// Branch from 0x0000e694 to 0x0000231a (Set LR to 0x0000e699)
+
+							{
+								// Save reg4 to Stack at 0x10001f80 (Value saved is 0x3f800000)
+								// Save reg5 to Stack at 0x10001f84 (Value saved is 0x3f800000)
+								// Save reg6 to Stack at 0x10001f88 (Value saved is 0x00000000)
+								// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000e699)
+								// Stack Pointer updated to 0x10001f80
+
+							}
+							// Restore reg4 from Stack at 0x10001f80 (Value saved was 0x3f800000)
+							// Restore reg5 from Stack at 0x10001f84 (Value saved was 0x3f800000)
+							// Restore reg6 from Stack at 0x10001f88 (Value saved was 0x00000000)
+							// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000e699)
+							// Stack Pointer updated to 0x10001f90
+
+							// Branch from 0x0000e698 to 0x00002680 (Set LR to 0x0000e69d)
+
+
+							// MemRead 8 kB SRAM0 (address was computed as reg2 + 0x00000003)
+							reg2 = *(uint8_t*)0x10000047; // = 0x00000001
+
+						}
+						// Restore reg4 from Stack at 0x10001f90 (Value saved was 0x10000044)
+						// Restore reg5 from Stack at 0x10001f94 (Value saved was 0x00000001)
+						// Restore reg6 from Stack at 0x10001f98 (Value saved was 0x00010074)
+						// Restore PC from Stack at 0x10001f9c (Value saved was 0x00007375)
+						// Stack Pointer updated to 0x10001fa0
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000044 + 0x00000001)
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000044 + 0x0000000c)
+						// 0x40010000 = 0x00000000 + 0x40010000
+						// MemWrite CT16B1: MR0 (address was computed as (uint32_t)(int32_t)(*(int8_t*)0x10000045 << 2 + *(uint32_t*)0x10000050 + 0x00000018)
+						*(uint32_t*)0x40010018 = reg0; // = 0x00000000 (modified bits = 0x00001000)
+
+					}
+					// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x000001f4)
+					// Restore PC from Stack at 0x10001fa4 (Value saved was 0x0000a489)
+					// Stack Pointer updated to 0x10001fa8
 
 }
 
