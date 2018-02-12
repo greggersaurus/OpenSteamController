@@ -35,12 +35,12 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |             9 | XTALOUT               |                  | |
 |            10 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
 |            11 | PIO0_20               |                  | |
-|            12 | PIO1_10               | PIO1_10          | Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up...  |
-|            13 | PIO0_2                | PIO0_2           | Interrupt (PINT1) setup to monitor if this changes |
+|            12 | PIO1_10               | PIO1_10          | Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up... (routed to pin ??(middle) on U10 on front of PCB) |
+|            13 | PIO0_2                | PIO0_2           | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to... TODO)|
 |            14 | PIO1_26               |                  | S2 - Left trackpad click |
 |            15 | PIO1_27               |                  | S3 - LT (Left trigger digital) |
 |            16 | PIO1_4                |                  | S8 - LB (Left bumper) | 
-|            17 | PIO1_1                | PIO1_1           | Set as output GPIO and driven high (during init) |
+|            17 | PIO1_1                | PIO1_1           | Set as output GPIO and driven high, during init. (Routes to R35 and R36 near gyro + accelerometer chip). RST related for Gyro + Accelerometer maybe?|
 |            18 | PIO1_20               |                  | S17 - FRONT_L (Front left arrow button) |
 |            19 | PIO0_3                | USB_VBUS         | Read on startup to tell is USB cable is plugged in. |
 |            20 | PIO0_4                | I2C SCL          | Connected to MPU-6500 I2C SCL |
@@ -53,8 +53,8 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            27 | PIO1_24               |                  | |
 |            28 | PIO1_18               | TXD (USART)      | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
 |            29 | PIO0_6                | not(USB_CONNECT) | |
-|            30 | PIO0_7                | PIO0_7           | Set as output GPIO and driven low (during init) |
-|            31 | PIO1_28               | PIO1_28          | Set as output GPIO and driven low (during init) |
+|            30 | PIO0_7                | PIO0_7           | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)) |
+|            31 | PIO1_28               | PIO1_28          | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)) |
 |            32 | PIO1_5                |                  | |
 |            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
 |            34 | PIO1_2                |                  | S19 - FRONT_F (Front right arrow button) | 
@@ -63,7 +63,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            37 | PIO0_9                | MOSI0 (SSP0)?    | Connected to MISO on Right Haptic and Left Haptic |
 |            38 | SWCLK/PIO0_10         | SWCLK?           | Connected to DEBUG interface for LPC11U37F |
 |            39 | PIO1_8                |                  | |
-|            40 | PIO0_22               | AD6              | Setup to function as AD6 during init |
+|            40 | PIO0_22               | AD6              | Setup to function as AD6 during init (trace leads to C6, continutes to R10 near power?) |
 |            41 | PIO1_29               | SCK0 (SSP0)?     | Connected to SCLK on Right Haptic and Left Haptic? |
 |            42 | TDI/PIO0_11           | TDI              | Pull-down resistor enabled |
 |            43 | PIO1_11               |                  | S9 - Y Button |
@@ -82,9 +82,9 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            56 | PIO0_23               |                  | |
 |            57 | PIO1_15               |                  | |
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
-|            59 | PIO1_12               | PIO1_12          | Read during init to check if it is logic low or not. |
+|            59 | PIO1_12               | PIO1_12          | Read during init to check if it is logic low or not. Connected to VDD on Haptics. |
 |            60 | PIO0_17               |                  | S1 - A Button |
-|            61 | PIO0_18               | PIO0_18          | Read during init to check if it is logic low or not. | 
+|            61 | PIO0_18               | PIO0_18          | Read during init to check if it is logic low or not. (trace leads to R43 on front of PCB) | 
 |            62 | PIO0_19               |                  | |
 |            63 | PIO1_16               |                  | Connected to DR on Left Haptic |
 |            64 | PIO1_6                |                  | Connected to SS on left haptic (Chip Sel?) |
