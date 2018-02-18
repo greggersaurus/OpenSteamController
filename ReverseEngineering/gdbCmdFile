@@ -189,7 +189,10 @@ set {int}0x40060024 = 0xFFFFFFFF
 # Default register settings for GPIO port (base address 0x5000 0000)
 # set {char}0x50000000 = pin state TODO: Should this be non-zero?
 # set {char}0x50000001 = pin state TODO: Should this be non-zero?
-# set {char}0x50000002 = pin state TODO: Should this be non-zero?
+
+# PIO0_2 is read during init. Interrupt setup to monitor state change.
+set {char}0x50000002 = 0
+
 # set {char}0x50000003 = pin state TODO: Should this be non-zero?
 # set {char}0x50000004 = pin state TODO: Should this be non-zero?
 # set {char}0x50000005 = pin state TODO: Should this be non-zero?
@@ -466,6 +469,36 @@ continue
 # Assumption is we have broken for watch on CT16B1 Timer Counter register
 #  Set back to zero to fake wrap around so code can continue
 set {int}0x40010008 = 0
+
+# Remove watchpoint
+delete 
+
+
+#------------------------------------------------------------------------------#
+
+
+# Setup watchpoint for wfi instruction.
+watch $pc ==  0x00002cfe
+
+# Execute until watchpoint
+continue
+
+# Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
+#  fired and was handled properly).
+
+# PIN_INT1 (Setup for state change on PIO0_2):
+# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
+#  interrupt. Vector Table entry is 0x00000129.
+#set $pc = 0x00000128
+#TODO: try making not destructive. See Fig 81 in UM10462 for what to save to stack, and update LR. 
+#  Then when we get back to PC of wfi we manually pop off stack. 
+# Is it worth it to try and automate this?
+
+# ADC Interrupt 
+# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
+#  interrupt. Vector Table entry is 0x00000205.
+#set $pc = 0x00000204
+#TODO: sim this.
 
 # Remove watchpoint
 delete 

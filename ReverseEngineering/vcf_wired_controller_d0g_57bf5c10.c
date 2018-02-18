@@ -166,7 +166,7 @@
 
 	0x10000200 (uint8_t)  - ?? Check for possible branching path...
 	0x10000201 (uint8_t)  - Defines which GPIO is being configured
-
+	0x10000202 (uint8_t)  - ?? Checked in function called in PINT1. 0x10000340 lock/semaphore incremented around access.
 	0x10000203 (uint8_t)  - Defines which GPIO is being configured (PIO1_12)
 
 	0x10000205 (uint8_t)  - Defines which GPIO is being configured (PIO1_12)
@@ -180,10 +180,11 @@
 
 	0x100002b0 (uint8_t)  - ?? Check for possible branch... Sign extended
 
-	0x100002b2 (uint8_t)  - Inverse of value of PIO0_2 after Reading 0 and setting to 1
-	0x100002b3 (uint8_t)  - Relates to value of PIO1_12 or PIO0_18 during init. If PIO1_12 is high, this is set to high. If PIO1_12 is low, this is set value of PIO0_18.
+	0x100002b2 (uint8_t)  - Related to value of PIO0_2. Possibly inverse of value of PIO0_2 in init? Set to high value in interrupt handler for PIO0_2 state change...
+	0x100002b3 (uint8_t)  - Related to value of PIO1_12 or PIO0_18 during init. If PIO1_12 is high, this is set to high. If PIO1_12 is low, this is set value of PIO0_18.
 
 	0x100002ba (uint16_t) - 
+	0x100002bc (uint32_t) - Function pointer. Called in PINT1.
 
 	0x100002c4 (uint32_t) - Incremented during init and use to set value at 0x10000dd8
 
@@ -196,14 +197,8 @@
 	0x100002d4 (uint8_t)  - Related to TDI_PIO0_11 setup
 	0x100002d5 (uint8_t)  - Related to TDO_PIO0_13 setup
 
-	0x10000dd8 (uint32_t) - Set with hardcoded value (write address based on value in 0x100002c4)
-
-	0x10000fb0 (uint32_t) - Begin array storing something related to AD input (configuration?)
-	...
-	0x10000fc8 (uint32_t) - Some configuration related to AD6
-
 	0x10000338 (uint32_t) - USB_HID2 Related?
-	0x10000340 (uint8_t)  - Tracks if EEPROM access is taking place
+	0x10000340 (uint8_t)  - Locking mechanism. Tracks if EEPROM access is taking place, and accessing other variables... Counting semaphore?
 
 	0x1000034c (uint32_t) - USBD_HANDLE_T (is typedef void*)
 
@@ -216,6 +211,10 @@
 	0x1000036a (uint8_t)  - USB_HID1 USB_HID_REPORT_T->idle_time 
 	0x1000036b (uint8_t)  - USB_HID1 USB_HID_REPORT_T->__pad
 	0x1000036c (uint32_t) - USB_HID1 USB_HID_REPORT_T->desc (of type uint8_t*)
+
+	0x10000373 (uint8_t)  - Set to 1 at end of PINT1. Indicates interrupt occurred?
+
+	0x1000037c (uint32_t) - Checked in PINT1. If 0 is set to 1 before exit...
 
 	0x10000380 (uint32_t) - USB_HID2 Related?
 
@@ -240,24 +239,25 @@
 	0x10000961 (uint8_t)  -
 	0x10000962 (uint8_t)  -
 
-
 	0x100009b4 (uint32_t) - Start of 0x84 bytes of EEPROM data from EEPROM offset 0
 	...
 	0x10000a34 (uint32_t) - End of 0x84 bytes of EEPROM data from EEPROM offset 0
 
-	0x100007b4 (uint32_t) - 
+	0x10000dd8 (uint32_t) - Set with hardcoded value (write address based on value in 0x100002c4)
 
-	0x10000fb0 (uint32_t) - Read for possible branch after CT16B1 setup
-	0x10000fb4 (uint32_t) - Read for possible branch after CT16B1 setup
-	0x10000fb8 (uint32_t) - Read for possible branch after CT16B1 setup
-	0x10000fbc (uint32_t) - Read for possible branch after CT16B1 setup
-	0x10000fc0 (uint32_t) - Read for possible branch after CT16B1 setup
-	0x10000fc4 (uint32_t) - Read for possible branch after CT16B1 setup
-	0x10000fc8 (uint32_t) - Read for possible branch after CT16B1 setup (Relatest to AD6 I think...)
+	0x10000fb0 (uint32_t) - Read for possible branch after CT16B1 setup. Related to AD0?
+	0x10000fb4 (uint32_t) - Read for possible branch after CT16B1 setup. Related to AD1?
+	0x10000fb8 (uint32_t) - Read for possible branch after CT16B1 setup. Related to AD2?
+	0x10000fbc (uint32_t) - Read for possible branch after CT16B1 setup. Related to AD3?
+	0x10000fc0 (uint32_t) - Read for possible branch after CT16B1 setup. Related to AD4?
+	0x10000fc4 (uint32_t) - Read for possible branch after CT16B1 setup. Related to AD5?
+	0x10000fc8 (uint32_t) - Read for possible branch after CT16B1 setup. Related to AD6?
 	0x10000fcc (uint32_t) - Read for possible branch after CT16B1 setup?
 	
 	0x100010b4 (uint32_t) - Checked if is zero after USB init.
-	0x100010b8 (uint32_t) - Checked if is zero for possible branching path...
+	0x100010b8 (uint32_t) - Function pointer. Branch to in PINT1. Most likely function for customer interrupt handling of PIO0_2 state changing.
+
+	0x100010d8 (uint32_t) - Cleared in PINT1, while 0x10000340 lock/semaphore is incremented.
 
 	0x10001140 (uint16_t) -
 	0x10001142 (uint8_t)  - 
@@ -5144,7 +5144,7 @@ void init_phase2_hw_not0()
 	// Clear Status of the Brown-out detect reset via System reset status register (SYSRSTSTAT)
 	*(uint32_t*)0x40048030 = 0x00000008;
 
-	// Enable COD reset function via via BOD control register (BODCTRL)
+	// Enable BOD reset function via via BOD control register (BODCTRL)
 	reg1 = *(uint32_t*)0x40048150;
 	reg1 |= 0x00000010;
 	*(uint32_t*)0x40048150 = reg1;
@@ -8927,6 +8927,200 @@ void SysTick()
 }
 
 /**
+ * PIN_INT1 (Setup for state change on PIO0_2):
+ * Vector Table entry is 0x00000129.
+ *
+ * Seems to be related to Brown Out Detection.
+ */
+void Interrupt_1_PIN_INT1() {
+	// MemRead 128 kB on-chip flash (address encoded in instruction)
+	reg0 = *(uint32_t*)0x00000274; // = 0x00002044
+
+	// MemRead 128 kB on-chip flash (address was computed as reg0 + 0x00000000)
+	reg0 = *(uint32_t*)0x00002044; // = 0x000053ef
+
+	// At 0x0000012c branching to 0x000053ef (reg0)
+	// void fnc()
+	{
+		// Save reg4 to Stack at 0x10001fb0 (Value saved is 0x10000010)
+		// Save reg14 to Stack at 0x10001fb4 (Value saved is 0x00004039)
+		// Stack Pointer updated to 0x10001fb0
+
+		// Branch from 0x000053f2 to 0x00005c00 (Set LR to 0x000053f7)
+
+		// MemWrite GPIO interrupts: IST (address was computed as 0x4004c000 + 0x00000024)
+		// Clear interrupt
+		*(uint32_t*)0x4004c024 = 0x00000002 (modified bits = 0x00000000)
+
+		// Compute 0x00007355 - 0x00000000 for compare
+		if (*(uint32_t*)0x100010b8 - 0x00000000) is Equal, Z == 1
+		{
+			// UNKOWN PATH execute 0x00005c14
+		}
+
+		// At 0x00005c12 branching to 0x00007355 (*(uint32_t*)0x100010b8)
+
+		// MemWrite 8 kB SRAM0 (address was computed as 0x100002ac + 0x00000006)
+		*(uint8_t*)0x100002b2 = 0x01 (modified bits = 0x00)
+
+		// Compute 0x000065a9 - 0x00000000 for compare
+		if (*(uint32_t*)0x100002bc - 0x00000000) is Equal, Z == 1
+		{
+			// UNKOWN PATH execute 0x00007362
+		}
+
+		// At 0x00007360 branching to 0x000065a9 (*(uint32_t*)0x100002bc)
+		// void fnc()	
+		{
+			// Save reg4 to Stack at 0x10001fa8 (Value saved is 0x10000010)
+			// Save reg14 to Stack at 0x10001fac (Value saved is 0x000053f7)
+			// Stack Pointer updated to 0x10001fa8
+
+			// Branch from 0x000065ac to 0x00006f60 (Set LR to 0x000065b1)
+			// void fnc(arg1 = 0)	
+			{
+				// Save reg4 to Stack at 0x10001f98 (Value saved is 0x10000010)
+				// Save reg5 to Stack at 0x10001f9c (Value saved is 0x00000001)
+				// Save reg6 to Stack at 0x10001fa0 (Value saved is 0x00010074)
+				// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x000065b1)
+				// Stack Pointer updated to 0x10001f98
+
+				// Branch from 0x00006f64 to 0x00009b4c (Set LR to 0x00006f69)
+
+				// MemRead 8 kB SRAM0 (address was computed as 0x10000340 + 0x00000000)
+				// MemWrite 8 kB SRAM0 (address was computed as 0x10000340 + 0x00000000)
+				*(uint8_t*)0x10000340 = *(uint8_t*)0x10000340 + 0x00000001; // = 0x01 (modified bits = 0x01)
+
+				// At 0x00009b56 branching to 0x00006f69 (reg14)
+
+				// MemRead 8 kB SRAM0 (address was computed as 0x10000200 + 0x00000002)
+				// Compute 0x00000000 - 0x00000000 for compare
+				if (arg0 - *(uint8_t*)0x10000202) is NOT Equal, Z == 1
+				{
+					// UNKOWN PATH execute 0x00006f70
+				}
+
+				// Branch from 0x00006f80 to 0x00009b70 (Set LR to 0x00006f85)
+
+				// MemRead 8 kB SRAM0 (address was computed as 0x10000340 + 0x00000000)
+				// MemWrite 8 kB SRAM0 (address was computed as 0x10000340 + 0x00000000)
+				*(uint8_t*)0x10000340 = ((uint32_t)((uint32_t)(*(uint8_t*)0x10000340 - 0x00000001) << 24) >> 24); // = 0x00 (modified bits = 0x01)
+
+				Not equal, Z == 0
+				{
+					// UNKOWN PATH execute 0x00009b80
+				}
+
+				// At 0x00009b80 branching to 0x00006f85 (reg14)
+
+			}
+			// Restore reg4 from Stack at 0x10001f98 (Value saved was 0x10000010)
+			// Restore reg5 from Stack at 0x10001f9c (Value saved was 0x00000001)
+			// Restore reg6 from Stack at 0x10001fa0 (Value saved was 0x00010074)
+			// Restore PC from Stack at 0x10001fa4 (Value saved was 0x000065b1)
+			// Stack Pointer updated to 0x10001fa8
+
+			// Branch from 0x000065b0 to 0x0000521c (Set LR to 0x000065b5)
+			// void fnc()	
+			{
+				// Save reg4 to Stack at 0x10001fa0 (Value saved is 0x10000010)
+				// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x000065b5)
+				// Stack Pointer updated to 0x10001fa0
+
+				// Branch from 0x00005220 to 0x0000452c (Set LR to 0x00005225)
+
+				// Ensure ADC is powered
+				// MemRead system control: PDRUNCFG (address was computed as 0x40048200 + 0x00000038)
+				// 0x0000e840 = 0x00000040 | 0x0000e800;
+				// MemWrite system control: PDRUNCFG (address was computed as 0x40048200 + 0x00000038)
+				*(uint32_t*)0x40048238 = ((*(uint32_t*)0x40048238 & 0x000005ff) & ~0x00000008) | 0x0000e800;; // = 0x0000e840 (modified bits = 0x00000000)
+
+				// At 0x00004540 branching to 0x00005225 (reg14)
+
+				// Disable BOD reset 
+				// MemWrite system control: BODCTRL (address was computed as 0x40048140 + 0x00000010)
+				*(uint32_t*)0x40048150 = 0x00000006 (modified bits = 0x00000010)
+
+				// Clear BOD reset detected 
+				// MemWrite system control: SYSRSTSTAT (address was computed as 0x40048000 + 0x00000030)
+				*(uint32_t*)0x40048030 = 0x00000008 (modified bits = 0x00000000)
+
+				// Enable BOD reset
+				// MemRead system control: BODCTRL (address was computed as 0x40048140 + 0x00000010)
+				// 0x00000016 = 0x00000006 | 0x00000010;
+				// MemWrite system control: BODCTRL (address was computed as 0x40048140 + 0x00000010)
+				*(uint32_t*)0x40048150 = *(uint32_t*)0x40048150 | 0x00000010; // = 0x00000016 (modified bits = 0x00000010)
+
+			}
+			// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x10000010)
+			// Restore PC from Stack at 0x10001fa4 (Value saved was 0x000065b5)
+			// Stack Pointer updated to 0x10001fa8
+
+			// Branch from 0x000065b4 to 0x000076ac (Set LR to 0x000065b9)
+			// void fnc()
+			{
+				// Save reg4 to Stack at 0x10001fa0 (Value saved is 0x10000010)
+				// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x000065b9)
+				// Stack Pointer updated to 0x10001fa0
+
+				// Branch from 0x000076ae to 0x00009b4c (Set LR to 0x000076b3)
+
+				// MemRead 8 kB SRAM0 (address was computed as 0x10000340 + 0x00000000)
+				// 0x00000001 = 0x00000000 + 0x00000001
+				// MemWrite 8 kB SRAM0 (address was computed as 0x10000340 + 0x00000000)
+				*(uint8_t*)0x10000340 = *(uint8_t*)0x10000340 + 0x00000001; // = 0x01 (modified bits = 0x01)
+
+				// At 0x00009b56 branching to 0x000076b3 (reg14)
+
+				// MemWrite 8 kB SRAM0 (address was computed as 0x100010d4 + 0x00000004)
+				*(uint32_t*)0x100010d8 = 0x00000000 (modified bits = 0x00000000)
+
+				// Branch from 0x000076b8 to 0x00009b70 (Set LR to 0x000076bd)
+
+				// MemRead 8 kB SRAM0 (address was computed as 0x10000340 + 0x00000000)
+				// MemWrite 8 kB SRAM0 (address was computed as 0x10000340 + 0x00000000)
+				*(uint8_t*)0x10000340 = (uint32_t)((uint32_t)(*(uint8_t*)0x10000340 - 0x00000001) << 24) >> 24; // = 0x00 (modified bits = 0x01)
+
+				Not equal, Z == 0
+				{
+					// UNKOWN PATH execute 0x00009b80
+				}
+
+				// At 0x00009b80 branching to 0x000076bd (reg14)
+
+			}
+			// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x10000010)
+			// Restore PC from Stack at 0x10001fa4 (Value saved was 0x000065b9)
+			// Stack Pointer updated to 0x10001fa8
+
+			// Branch from 0x000065ba to 0x0000b874 (Set LR to 0x000065bf)
+
+			// MemRead 8 kB SRAM0 (address was computed as 0x10000370 + 0x0000000c)
+			// Compute 0x00000000 - 0x00000000 for compare
+			if (*(uint32_t*)0x1000037c - 0x00000000) is NOT Equal, Z == 1
+			{
+				// UNKOWN PATH execute 0x0000b87c
+			}
+
+			// MemWrite 8 kB SRAM0 (address was computed as 0x10000370 + 0x00000003)
+			*(uint8_t*)0x10000373 = 0x01 (modified bits = 0x01)
+
+			// At 0x0000b886 branching to 0x000065bf (reg14)
+
+		}
+		// Restore reg4 from Stack at 0x10001fa8 (Value saved was 0x10000010)
+		// Restore PC from Stack at 0x10001fac (Value saved was 0x000053f7)
+		// Stack Pointer updated to 0x10001fb0
+
+	}
+	// Restore reg4 from Stack at 0x10001fb0 (Value saved was 0x10000010)
+	// Restore PC from Stack at 0x10001fb4 (Value saved was 0x00004039)
+	// Stack Pointer updated to 0x10001fb8
+
+	// PC is set to reg14 (LR) which was previously saved to stack. This is exit of IRQ.
+}
+
+/**
  * This is interrupt handler called when IRQ 19 triggers for 32-bit counter 1. 
  *  This was simulated multiple times to plot out several different paths. 
  */
@@ -9153,6 +9347,14 @@ void Interrupt_22_USB_IRQ()
 	 */                                                                           
 	USBD_HW_API->ISR(USBD_HANDLE_T hUsb = 0x200040b8);
 	//TODO: dig more into ISR function call? Could this be calling some other handler function potentially?
+}
+
+/**
+ * ADC interrupt to occur at end of A/D Converter end of conversion.
+ * Vector Table entry is 0x00000205.
+ */
+void Interrupt_24_ADC_Interrupt() {
+	//TODO
 }
 
 /*******************************************************************************

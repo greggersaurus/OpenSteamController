@@ -36,7 +36,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            10 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
 |            11 | PIO0_20               |                  | |
 |            12 | PIO1_10               | PIO1_10          | Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up... (routed to pin ??(middle) on U10 on front of PCB) |
-|            13 | PIO0_2                | PIO0_2           | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to... TODO)|
+|            13 | PIO0_2                | PIO0_2           | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to...). Seems to have something to do with Brown Out Detection. |
 |            14 | PIO1_26               |                  | S2 - Left trackpad click |
 |            15 | PIO1_27               |                  | S3 - LT (Left trigger digital) |
 |            16 | PIO1_4                |                  | S8 - LB (Left bumper) | 
