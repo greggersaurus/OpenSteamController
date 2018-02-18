@@ -29,7 +29,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |             3 | PIO1_19               |                  | |
 |             4 | PIO0_0/nRESET         |                  | |
 |             5 | PIO0_1                |                  | |
-|             6 | PIO1_7                |                  | |
+|             6 | PIO1_7                | PIO1_7           | Set as output GPIO and driven high during init (trace leads to... TODO)|
 |             7 | V<sub>SS</sub>        | V<sub>SS</sub>   | V<sub>SS</sub> |
 |             8 | XTALIN                |                  | |
 |             9 | XTALOUT               |                  | |
@@ -85,7 +85,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            59 | PIO1_12               | PIO1_12          | Read during init to check if it is logic low or not. Connected to VDD on Haptics. |
 |            60 | PIO0_17               |                  | S1 - A Button |
 |            61 | PIO0_18               | PIO0_18          | Read during init to check if it is logic low or not. (trace leads to R43 on front of PCB) | 
-|            62 | PIO0_19               |                  | |
+|            62 | PIO0_19               | PIO0_19          | Set as output during init and driven low. (trace leads to... TODO)|
 |            63 | PIO1_16               |                  | Connected to DR on Left Haptic |
 |            64 | PIO1_6                |                  | Connected to SS on left haptic (Chip Sel?) |
 

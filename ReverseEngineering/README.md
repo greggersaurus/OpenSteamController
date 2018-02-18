@@ -56,6 +56,11 @@ This section is a running list of priorities to focus on in hopes of reaching
 1. List more details about hardware [Luna_maiboard_V000456-00_rev3.md](./Luna_maiboard_V000456-00_rev3.md)
     1. Other processors (i.e. wireless comms chip, gyro, haptics chip)
     1. See if we can get information on each pin (focus on LPC chip)
+    1. Add In/Out configuration column for pins?
+    1. What is PIO1_7 connected to on hardware?
+        1. Ohm it out!
+    1. What is PIO0_19 connected to on hardware?
+        1. Ohm it out!
 1. Verify communication with haptics occurs via SPI (SSP0?) from LPC11U37F
     1. It seems SPI is interface enabled on haptics (ohmed out ~470K resistor between pins 12 and pin 13 on Cirque 1CA027). 
     1. Simulate Get/Set report for HID to see how/what it sends to haptics and if SSP0/1 is being used.
