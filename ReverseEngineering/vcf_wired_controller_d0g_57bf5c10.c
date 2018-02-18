@@ -181,7 +181,7 @@
 	0x100002b0 (uint8_t)  - ?? Check for possible branch... Sign extended
 
 	0x100002b2 (uint8_t)  - Inverse of value of PIO0_2 after Reading 0 and setting to 1
-	0x100002b3 (uint8_t)  - Value of P0_18 during init
+	0x100002b3 (uint8_t)  - Relates to value of PIO1_12 or PIO0_18 during init. If PIO1_12 is high, this is set to high. If PIO1_12 is low, this is set value of PIO0_18.
 
 	0x100002ba (uint16_t) - 
 

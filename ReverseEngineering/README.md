@@ -25,12 +25,6 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Asses hardware details that could be affecting sim paths which are not being checked
-    1. PIO1_12 is connected to Haptics VDD. This is read during init and checked to be low or not.
-        1. Simulate with high value 
-        1. Check on running controller what value is?
-    1. PIO0_18 is routed to R43 on front of PCB. This is read during init and checked to be low or not.
-        1. Simulate with high value and see what happens
-        1. Check on running controller what value is?
     1. PIO0_2 is routed to C56 and then onto... Value is checked and interrupt is setup for this to change...
         1. Simulate with high value and see what happens
         1. Check on running controller what value is?

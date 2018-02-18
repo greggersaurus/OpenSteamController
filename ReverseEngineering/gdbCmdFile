@@ -205,7 +205,10 @@ set {int}0x40060024 = 0xFFFFFFFF
 # set {char}0x5000000F = pin state TODO: Should this be non-zero?
 # set {char}0x50000010 = pin state TODO: Should this be non-zero?
 # set {char}0x50000011 = pin state TODO: Should this be non-zero?
-# set {char}0x50000012 = pin state TODO: Should this be non-zero?
+
+# PIO0_18 is read if PIO1_12 is low. RAM address 0x100002b3 set based on value.
+set {char}0x50000012 = 1
+
 # set {char}0x50000013 = pin state TODO: Should this be non-zero?
 # set {char}0x50000014 = pin state TODO: Should this be non-zero?
 # set {char}0x50000015 = pin state TODO: Should this be non-zero?
@@ -224,7 +227,10 @@ set {int}0x40060024 = 0xFFFFFFFF
 # set {char}0x50000029 = pin state TODO: Should this be non-zero?
 # set {char}0x5000002A = pin state TODO: Should this be non-zero?
 # set {char}0x5000002B = pin state TODO: Should this be non-zero?
-# set {char}0x5000002C = pin state TODO: Should this be non-zero?
+
+# PIO1_12 is connected to VDD for Haptics. RAM address 0x100002b3 set based on value.
+set {char}0x5000002C = 1
+
 # set {char}0x5000002D = pin state TODO: Should this be non-zero?
 # set {char}0x5000002E = pin state TODO: Should this be non-zero?
 # set {char}0x5000002F = pin state TODO: Should this be non-zero?
