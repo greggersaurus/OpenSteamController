@@ -486,19 +486,43 @@ continue
 # Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
 #  fired and was handled properly).
 
-# PIN_INT1 (Setup for state change on PIO0_2):
+##
+# PIN_INT1 (Setup for state change on PIO0_2) Execution:
 # NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
 #  interrupt. Vector Table entry is 0x00000129.
-#set $pc = 0x00000128
-#TODO: try making not destructive. See Fig 81 in UM10462 for what to save to stack, and update LR. 
-#  Then when we get back to PC of wfi we manually pop off stack. 
-# Is it worth it to try and automate this?
+##set $lr = $pc
+##set $pc = 0x00000128
+#TODO: Might want to try making not destructive (if need to simulate it or other
+#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
+#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
+##
 
-# ADC Interrupt 
+##
+# ADC Interrupt Execution:
 # NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
 #  interrupt. Vector Table entry is 0x00000205.
-#set $pc = 0x00000204
-#TODO: sim this.
+##set $lr = $pc
+##set $pc = 0x00000204
+##set {int}0x10000014 = 0x0000012d
+##set {int}0x10000018 = 0x00000007
+#TODO: Might want to try making not destructive (if need to simulate it or other
+#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
+#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
+## 
+
+##
+# Change states as though ADC interrupt ran as desired:
+# Set PC to move past wfi (as simulator cannot handle it)
+set $pc = 0x00002d00
+# Set ADC counter variables (should not really be needed once ISR has served its 
+#  purpose. But setting to final values just to be safe and accurate).
+set {int}0x10000014 = 0x0000012d
+set {int}0x10000018 = 0x00000007
+# Set flag to indciate ADC ISR has served its purpose and ADC is shutdown
+set {char}0x10000010 = 1
+# Set value of counter used to accumulate ADC values
+# TODO: Need to figure out what this value should be and how that affects sim...
+set {short}0x10000f8c = 0
 
 # Remove watchpoint
 delete 
