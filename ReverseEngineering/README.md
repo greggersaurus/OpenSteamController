@@ -26,6 +26,9 @@ This section is a running list of priorities to focus on in hopes of reaching
 
 1. Simulation to C Conversion
     1. Keep running straightforward sim now that we know how ADC ISR plays into it
+        1. Sim now gets to point where it loops on wfi...
+    1. Run straightforward sim with USB_VBUS present
+        1. Understand differences and that ignoring this is not a mistake...
     1. Run and decode non-straightforward paths
         1. Interrupts that have been enabled (Note that GPREG1 is set to 1 in init2()...)
             1. USB_IRQ 

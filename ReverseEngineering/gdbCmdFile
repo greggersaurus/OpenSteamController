@@ -193,7 +193,10 @@ set {int}0x40060024 = 0xFFFFFFFF
 # PIO0_2 is read during init. Interrupt setup to monitor state change.
 set {char}0x50000002 = 0
 
-# set {char}0x50000003 = pin state TODO: Should this be non-zero?
+# PIO0_3 is USB_VBUS and indiciates if there USB bus power (i.e.  don't need to
+#  use battery power?)
+set {char}0x50000003 = 0
+
 # set {char}0x50000004 = pin state TODO: Should this be non-zero?
 # set {char}0x50000005 = pin state TODO: Should this be non-zero?
 # set {char}0x50000006 = pin state TODO: Should this be non-zero?
@@ -457,10 +460,8 @@ delete
 
 
 # Set watch point for 16-bit Timer 1 (CT16B1) Timer Counter register
-#  In path for controller not connected to USB cable, CT16B1 is used to count
-#  timeout waiting for wireless to connect. The value of the time is set to
-#  when the timer is enabled and the code waits for the timer to wrap once
-#  before continuing.
+#  In path for controller not connected to USB cable, CT16B1 is used as PWM
+#   for Steam Controller Button LED.
 watch *(int*)0x40010008
 
 # Execute until watchpoint
@@ -477,55 +478,92 @@ delete
 #------------------------------------------------------------------------------#
 
 
-# Setup watchpoint for wfi instruction.
-watch $pc ==  0x00002cfe
+# Events change based on whether USB cable is connected (volatage present) or not
+if *(char*)0x50000003 == 0
 
-# Execute until watchpoint
-continue
 
-# Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
-#  fired and was handled properly).
+	#------------------------------------------------------------------------------#
 
-##
-# PIN_INT1 (Setup for state change on PIO0_2) Execution:
-# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
-#  interrupt. Vector Table entry is 0x00000129.
-##set $lr = $pc
-##set $pc = 0x00000128
-#TODO: Might want to try making not destructive (if need to simulate it or other
-#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
-#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
-##
 
-##
-# ADC Interrupt Execution:
-# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
-#  interrupt. Vector Table entry is 0x00000205.
-##set $lr = $pc
-##set $pc = 0x00000204
-##set {int}0x10000014 = 0x0000012d
-##set {int}0x10000018 = 0x00000007
-#TODO: Might want to try making not destructive (if need to simulate it or other
-#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
-#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
-## 
+	# Setup watchpoint for wfi instruction.
+	watch $pc ==  0x00002cfe
+	
+	# Execute until watchpoint
+	continue
+	
+	# Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
+	#  fired and was handled properly).
+	
+	##
+	# PIN_INT1 (Setup for state change on PIO0_2) Execution:
+	# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
+	#  interrupt. Vector Table entry is 0x00000129.
+	##set $lr = $pc
+	##set $pc = 0x00000128
+	#TODO: Might want to try making not destructive (if need to simulate it or other
+	#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
+	#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
+	##
+	
+	##
+	# ADC Interrupt Execution:
+	# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
+	#  interrupt. Vector Table entry is 0x00000205.
+	##set $lr = $pc
+	##set $pc = 0x00000204
+	##set {int}0x10000014 = 0x0000012d
+	##set {int}0x10000018 = 0x00000007
+	#TODO: Might want to try making not destructive (if need to simulate it or other
+	#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
+	#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
+	## 
+	
+	##
+	# Change states as though ADC interrupt ran as desired:
+	# Set PC to move past wfi (as simulator cannot handle it)
+	set $pc = 0x00002d00
+	# Set ADC counter variables (should not really be needed once ISR has served its 
+	#  purpose. But setting to final values just to be safe and accurate).
+	set {int}0x10000014 = 0x0000012d
+	set {int}0x10000018 = 0x00000007
+	# Set flag to indciate ADC ISR has served its purpose and ADC is shutdown
+	set {char}0x10000010 = 1
+	# Set value of counter used to accumulate ADC values
+	# TODO: Need to figure out what this value should be and how that affects sim...
+	set {short}0x10000f8c = 0
+	
+	# Remove watchpoint
+	delete 
 
-##
-# Change states as though ADC interrupt ran as desired:
-# Set PC to move past wfi (as simulator cannot handle it)
-set $pc = 0x00002d00
-# Set ADC counter variables (should not really be needed once ISR has served its 
-#  purpose. But setting to final values just to be safe and accurate).
-set {int}0x10000014 = 0x0000012d
-set {int}0x10000018 = 0x00000007
-# Set flag to indciate ADC ISR has served its purpose and ADC is shutdown
-set {char}0x10000010 = 1
-# Set value of counter used to accumulate ADC values
-# TODO: Need to figure out what this value should be and how that affects sim...
-set {short}0x10000f8c = 0
 
-# Remove watchpoint
-delete 
+	#------------------------------------------------------------------------------#
+
+
+else
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+	#  In path for controller not connected to USB cable, CT16B0 is used for ... TODO
+	watch *(int*)0x4000c008
+
+	# Execute until watchpoint
+	continue
+
+	# Assumption is we have broken for watch on CT16B1 Timer Counter register
+	#  Set back to zero to fake wrap around so code can continue
+	set {int}0x4000c008 = 0
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+end
 
 
 #------------------------------------------------------------------------------#
