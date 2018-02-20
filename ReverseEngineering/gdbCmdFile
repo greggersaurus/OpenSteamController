@@ -539,6 +539,14 @@ if *(char*)0x50000003 == 0
 	#------------------------------------------------------------------------------#
 
 
+	# Resume execution (execution will break on wfi that pinkySim cannot handle)
+	continue
+
+
+	#------------------------------------------------------------------------------#
+
+
+
 else
 
 
@@ -563,11 +571,11 @@ else
 	#------------------------------------------------------------------------------#
 
 
+	# Resume execution (execution will break on wfi that pinkySim cannot handle)
+	continue
+
+
+	#------------------------------------------------------------------------------#
+
+
 end
-
-
-#------------------------------------------------------------------------------#
-
-
-# Resume execution (execution will break on wfi that pinkySim cannot handle)
-continue
