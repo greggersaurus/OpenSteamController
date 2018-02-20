@@ -135,6 +135,9 @@
 		HID_EndCollection
 
 
+	0x10000000 (uint8_t)  - Checked if is 0 in init if USB_VBUS detected and set to 1 shortly after.
+	0x10000001 (uint8_t)  - Related to CT16B0 ISR?
+
 	0x10000003 (uint8_t)  - 
 
 	0x10000010 (uint8_t)  - Marks that desired number of ADC conversions have occurred via interrupt.
@@ -186,8 +189,10 @@
 	0x100002b2 (uint8_t)  - Related to value of PIO0_2. Possibly inverse of value of PIO0_2 in init? Set to high value in interrupt handler for PIO0_2 state change...
 	0x100002b3 (uint8_t)  - Related to value of PIO1_12 or PIO0_18 during init. If PIO1_12 is high, this is set to high. If PIO1_12 is low, this is set value of PIO0_18.
 
+	0x100002b8 (uint16_t) - Checked if is greater than or equal to 0x000005dc if PIO0_2=1 during boot... (and USB_VBUS=0, PIO0_18=1, PIO1_12=1)
 	0x100002ba (uint16_t) - 
 	0x100002bc (uint32_t) - Function pointer. Called in PINT1.
+
 
 	0x100002c4 (uint32_t) - Incremented during init and use to set value at 0x10000dd8
 
@@ -225,6 +230,10 @@
 	0x10000392 (uint8_t)  - USB_HID2 USB_HID_REPORT_T->idle_time 
 	0x10000393 (uint8_t)  - USB_HID2 USB_HID_REPORT_T->__pad
 	0x10000394 (uint32_t) - USB_HID2 USB_HID_REPORT_T->desc (of type uint8_t*)
+
+	0x100007e8 (uint32_t0 - Related to CT16B0 configuration...?
+
+	0x10000818 (uint32_t) - Related to CT16B0 configuration...?
 
 	0x10000924 (uint8_t)  -
 	0x10000925 (uint8_t)  -
@@ -7194,6 +7203,7 @@ void init_phase2_hw_not0()
 			if (isUsbConnected() - 0x00000000) is NOT Equal, Z == 1
 			{
 				// UNKOWN PATH execute 0x00005de2
+				usbConnectedInit();
 			}
 
 			// Branch from 0x00005e00 to 0x00002cf0 (Set LR to 0x00005e05)
@@ -7813,6 +7823,314 @@ void init_phase2_hw_not0()
 			// Stack Pointer updated to 0x10001fc0
 
 			__wfi
+}
+
+/**
+ * Function to separate logic for case of USB_VBUS detected. Other than changing
+ *  how PIO1_10 is driven this is where init majorly changes paths due to 
+ *  state of USB_VBUS
+ *
+ * TODO: may want to swap and make this main path with function call for USB_VBUS=0 case (if this path pans out better...)
+ */
+void usbConnectedInit() {
+
+			// Branch from 0x00005de4 to 0x0000a934 (Set LR to 0x00005de9)
+
+			{
+				// Save reg4 to Stack at 0x10001fb8 (Value saved is 0x00010074)
+				// Save reg14 to Stack at 0x10001fbc (Value saved is 0x00005de9)
+				// Stack Pointer updated to 0x10001fb8
+
+				// Branch from 0x0000a938 to 0x00009b5c (Set LR to 0x0000a93d)
+
+				// MemRead 128 kB on-chip flash (address encoded in instruction)
+				// MemRead 8 kB SRAM0 (address was computed as 0x100000a4 + 0x00000000)
+				reg0 = *(uint32_t*)0x100000a4; // = 0x02dc6c00
+
+				// At 0x00009b60 branching to 0x0000a93d (reg14)
+
+				reg1 = 0x000f4240
+
+				// Branch from 0x0000a93e to 0x000020ec (Set LR to 0x0000a943)
+				// int fnc(arg0 = System Clock Frequency (0x02dc6c00), arg1 = ?? (0x000f4240))
+				{
+					// Save reg4 to Stack at 0x10001fac (Value saved is 0x00000064)
+					// Save reg5 to Stack at 0x10001fb0 (Value saved is 0x00000001)
+					// Save reg14 to Stack at 0x10001fb4 (Value saved is 0x0000a943)
+					// Stack Pointer updated to 0x10001fac
+
+					// Branching from PC = 0x000020f8 to PC = 0x0000210e
+
+					// Compute 0x00000000 - 0x000f4240 for compare
+					if (((uint32_t)arg0 >> 0x0000001f) - arg1) is NOT Carry clear, C == 0
+					{
+						// UNKOWN PATH execute 0x00002102
+					}
+
+					// Compute 0x00000000 - 0x000f4240 for compare
+					if (((uint32_t)arg0 >> 0x0000001e) - arg1) is NOT Carry clear, C == 0
+					{
+						// UNKOWN PATH execute 0x00002102
+					}
+
+					...
+
+					// Compute 0x0016e360 - 0x000f4240 for compare
+					if ((uint32_t()arg0 >> 0x00000005) - arg1) is Carry clear, C == 0
+					{
+						// UNKOWN PATH execute 0x0000210e
+					}
+
+					// Compute 0x000f4240 - 0x000f4240 for compare
+					if (((uint32_t)(arg0 - ((uint32_t)arg1 << 0x00000005)) >> 0x00000004) - arg1) is Carry clear, C == 0
+					{
+						// UNKOWN PATH execute 0x0000210e
+					}
+
+					ret = 0x00000030
+
+					// Compute 0x00000000 - 0x000f4240 for compare
+					if (((uint32_t)((arg0 - ((uint32_t)arg1 << 0x00000005)) - ((uint32_t)arg1 << 0x00000004)) >> 0x00000003) - arg1) is NOT Carry clear, C == 0
+					{
+						// UNKOWN PATH execute 0x00002102
+					}
+
+					// Compute 0x00000000 - 0x000f4240 for compare
+					if (((uint32_t)((arg0 - ((uint32_t)arg1 << 0x00000005)) - ((uint32_t)arg1 << 0x00000004)) >> 0x00000002) - arg1) is NOT Carry clear, C == 0
+					{
+						// UNKOWN PATH execute 0x00002102
+					}
+
+					// Compute 0x00000000 - 0x000f4240 for compare
+					if (((uint32_t)((arg0 - ((uint32_t)arg1 << 0x00000005)) - ((uint32_t)arg1 << 0x00000004)) >> 0x00000001) - arg1) is NOT Carry clear, C == 0
+					{
+						// UNKOWN PATH execute 0x00002102
+					}
+
+					// Compute 0x00000000 - 0x000f4240 for compare
+					if (((uint32_t)((arg0 - ((uint32_t)arg1 << 0x00000005)) - ((uint32_t)arg1 << 0x00000004)) >> 0x00000000) - arg1) is NOT Carry clear, C == 0
+					{
+						// UNKOWN PATH execute 0x00002102
+					}
+				}
+				// Restore reg4 from Stack at 0x10001fac (Value saved was 0x00000064)
+				// Restore reg5 from Stack at 0x10001fb0 (Value saved was 0x00000001)
+				// Restore PC from Stack at 0x10001fb4 (Value saved was 0x0000a943)
+				// Stack Pointer updated to 0x10001fb8
+
+				// Compute something with return value, but then just destroy it???
+				// 0x000012c0 = 0x00000064 * 0x00000030;
+				reg0 = 0x00000064 * ret;
+
+				reg1 = 0x000012c0; // = zeroExtend16(fields.m)
+
+				reg0 = 0x00000000; // (fields.imm)
+
+				// Branch from 0x0000a948 to 0x00005174 (Set LR to 0x0000a94d)
+				// ?? fnc(arg0 ??, arg1 = (0x000012c0)
+				{
+					// Save reg0 to Stack at 0x10001f9c (Value saved is 0x00000000)
+					// Save reg1 to Stack at 0x10001fa0 (Value saved is 0x000012c0)
+					// Save reg4 to Stack at 0x10001fa4 (Value saved is 0x00000064)
+					// Save reg5 to Stack at 0x10001fa8 (Value saved is 0x00000001)
+					// Save reg6 to Stack at 0x10001fac (Value saved is 0x00010074)
+					// Save reg7 to Stack at 0x10001fb0 (Value saved is 0x00000000)
+					// Save reg14 to Stack at 0x10001fb4 (Value saved is 0x0000a94d)
+					// Stack Pointer updated to 0x10001f9c
+
+					reg13 = 0x10001f98; // = SP - 0x00000004
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000000 + 0x00000000)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint8_t*)0x10000000 - 0x00000000) is Not equal, Z == 0
+					{
+						// UNKOWN PATH execute 0x0000518a
+					}
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000000 + 0x00000000)
+					*(uint8_t*)0x10000000 = 0x01 (modified bits = 0x01)
+
+					// Branch from 0x00005186 to 0x0000600c (Set LR to 0x0000518b)
+
+					{
+						// Save reg4 to Stack at 0x10001f90 (Value saved is 0x10000000)
+						// Save reg14 to Stack at 0x10001f94 (Value saved is 0x0000518b)
+						// Stack Pointer updated to 0x10001f90
+
+						// Branch from 0x00006012 to 0x000045bc (Set LR to 0x00006017)
+
+						{
+							// Save reg4 to Stack at 0x10001f88 (Value saved is 0x4000c000)
+							// Save reg14 to Stack at 0x10001f8c (Value saved is 0x00006017)
+							// Stack Pointer updated to 0x10001f88
+
+							// Branch from 0x000045be to 0x0000458c (Set LR to 0x000045c3)
+
+							// At 0x0000459e branching to 0x000045c3 (reg14)
+
+							// Enables clock for 16-bit counter/timer 0
+							// MemRead system control: SYSAHBCLKCTRL (address was computed as 0x40048080 + 0x00000000)
+							// MemWrite system control: SYSAHBCLKCTRL (address was computed as 0x40048080 + 0x00000000)
+							*(uint32_t*)0x40048080 = *(uint32_t*)0x40048080 | 0x00000080; // = 0x0c0961ff (modified bits = 0x00000080)
+
+						}
+						// Restore reg4 from Stack at 0x10001f88 (Value saved was 0x4000c000)
+						// Restore PC from Stack at 0x10001f8c (Value saved was 0x00006017)
+						// Stack Pointer updated to 0x10001f90
+
+						// Stop on MR0: the TC and PC will be stopped and TCR[0] will be set to 0 if MR0 matches 0 the TC.
+						// MemRead CT16B0: MCR (address was computed as 0x4000c000 + 0x00000014)
+						// MemWrite CT16B0: MCR (address was computed as 0x4000c000 + 0x00000014)
+						*(uint32_t*)0x4000c014 = *(uint32_t*)0x4000c014 | 0x00000004; // = 0x00000004 (modified bits = 0x00000004)
+
+						// Clear interrupt pending for CT16B0
+						// MemWrite NVIC: ICPR0 (address was computed as = 0xe000e280 + 0x00000000)
+						*(uint32_t*)0xe000e280 = 0x00010000; // = 0x00010000 (modified bits = 0x00010002)
+
+						// Enable interrupt for CT16B0
+						// MemWrite NVIC: ISER0 (address was computed as 0xe000e100 + 0x00000000)
+						*(uint32_t*)0xe000e100 = 0x00010000; // = 0x00010000 (modified bits = 0x01010000)
+
+						// Interrupt on MR0: an interrupt is generated when MR0 matches the value in the TC.
+						// MemRead CT16B0: MCR (address was computed as 0x4000c000 + 0x00000014)
+						// MemWrite CT16B0: MCR (address was computed as 0x4000c000 + 0x00000014)
+						*(uint32_t*)0x4000c014 = *(uint32_t*)0x4000c014 | 0x00000001; // = 0x00000005 (modified bits = 0x00000001)
+
+						reg3 = 0x00000000
+
+						reg2 = 0x00009621
+
+						reg1 = 0x00000000
+
+						reg0 = 0x4000c000
+
+						// Branch from 0x00006038 to 0x0000a0fc (Set LR to 0x0000603d)
+						// void fnc(arg0, arg1, arg2, arg3)
+						{
+							// Save reg4 to Stack at 0x10001f80 (Value saved is 0x4000c000)
+							// Save reg5 to Stack at 0x10001f84 (Value saved is 0x00000001)
+							// Save reg6 to Stack at 0x10001f88 (Value saved is 0x00000001)
+							// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000603d)
+							// Stack Pointer updated to 0x10001f80
+
+							// Branch from 0x0000a104 to 0x000056fc (Set LR to 0x0000a109)
+
+							// Compute 0x4000c000 - 0x4000c000 for compare
+							if (arg0 - 0x4000c000) is Not equal, Z == 0
+							{
+								// UNKOWN PATH execute 0x00005706
+							}
+
+							// At 0x00005704 branching to 0x0000a109 (reg14)
+
+							// MemWrite 8 kB SRAM0 (address was computed as 0x10000818 + ((uint32_t)arg1 << 2))
+							*(uint32_t*)0x10000818 = arg2; // = 0x00009621 (modified bits = 0x00009621)
+
+							// MemWrite 8 kB SRAM0 (address was computed as 0x100007e8 + 0x00000000)
+							*(uint32_t*)0x100007e8 = arg3; // = 0x00000000 (modified bits = 0x00000000)
+
+						}
+						// Restore reg4 from Stack at 0x10001f80 (Value saved was 0x4000c000)
+						// Restore reg5 from Stack at 0x10001f84 (Value saved was 0x00000001)
+						// Restore reg6 from Stack at 0x10001f88 (Value saved was 0x00000001)
+						// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000603d)
+						// Stack Pointer updated to 0x10001f90
+
+						// Make sure counters are disabled
+						// MemRead CT16B0: TCR (address was computed as 0x4000c000 + 0x00000004)
+						// MemWrite CT16B0: TCR (address was computed as 0x4000c000 + 0x00000004)
+						*(uint32_t*)0x4000c004 = ((uint32_t)((uint32_t)(*(uint32_t*)0x4000c004) >> 1) << 1); // = 0x00000000 (modified bits = 0x00000000)
+
+					}
+					// Restore reg4 from Stack at 0x10001f90 (Value saved was 0x10000000)
+					// Restore PC from Stack at 0x10001f94 (Value saved was 0x0000518b)
+					// Stack Pointer updated to 0x10001f98
+
+					// MemWrite 8 kB SRAM0 (address was computed as 0x10000000 + 0x00000001)
+					*(uint8_t*)0x10000001 = 0x00 (modified bits = 0x00)
+
+					reg0 = 0x4000c000
+
+					// Branch from 0x00005192 to 0x000045bc (Set LR to 0x00005197)
+					// void fnc(arg0 = Ctrl register base)
+					{
+						// Save reg4 to Stack at 0x10001f90 (Value saved is 0x10000000)
+						// Save reg14 to Stack at 0x10001f94 (Value saved is 0x00005197)
+						// Stack Pointer updated to 0x10001f90
+
+						// Branch from 0x000045be to 0x0000458c (Set LR to 0x000045c3)
+
+						// At 0x0000459e branching to 0x000045c3 (reg14)
+
+						// Ensure clock for 16-bit counter/timer 0 is enabled
+						// MemRead system control: SYSAHBCLKCTRL (address was computed as 0x40048080 + 0x00000000)
+						// MemWrite system control: SYSAHBCLKCTRL (address was computed as 0x40048080 + 0x00000000)
+						*(uint32_t*)0x40048080 = *(uint32_t*)0x40048080 | 0x00000080; // = 0x0c0961ff (modified bits = 0x00000000)
+
+					}
+					// Restore reg4 from Stack at 0x10001f90 (Value saved was 0x10000000)
+					// Restore PC from Stack at 0x10001f94 (Value saved was 0x00005197)
+					// Stack Pointer updated to 0x10001f98
+
+					// Set Match register 0 (defines when CT16B0 interrupt will occur)
+					// MemWrite CT16B0: MR0 (address was computed as 0x4000c000 + 0x00000018)
+					*(uint32_t*)0x4000c018 = arg1; // = 0x000012c0 (modified bits = 0x000012c0)
+
+					// Some stack value (returned from function maybe?) defines Prescale Register value
+					// MemRead 8 kB SRAM0 (address was computed as reg16 + 0x00000004)
+					// MemWrite CT16B0: PR (address was computed as 0x4000c000 + 0x0000000c)
+					*(uint32_t*)0x4000c00c = *(uint32_t*)0x10001f9c; // = 0x00000000 (modified bits = 0x00000000)
+
+					// Branch from 0x0000519e to 0x000045e4 (Set LR to 0x000051a3)
+
+					// Save TCR
+					// MemRead CT16B0: TCR (address was computed as 0x4000c000 + 0x00000004)
+					tcr = *(uint32_t*)0x4000c004; // = 0x00000000
+
+					// Disable counters 
+					// MemWrite CT16B0: TCR (address was computed as 0x4000c000 + 0x00000004)
+					*(uint32_t*)0x4000c004 = 0x00000000; // = 0x00000000 (modified bits = 0x00000000)
+
+					// Set timer counter to 1
+					// MemWrite CT16B0: TC (address was computed as 0x4000c000 + 0x00000008)
+					*(uint32_t*)0x4000c008 = 0x00000001 (modified bits = 0x00000001)
+
+					// Reset timer counter and prescale counter
+					// MemWrite CT16B0: TCR (address was computed as 0x4000c000 + 0x00000004)
+					*(uint32_t*)0x4000c004 = 0x00000002 (modified bits = 0x00000002)
+
+					// Wait for timer counter to be reset
+					// MemRead CT16B0: TC (address was computed as 0x4000c000 + 0x00000008)
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (*(uint32_t*)0x4000c008 - 0x00000000) is Not equal, Z == 0
+					{
+						// UNKOWN PATH execute 0x000045f2
+					}
+
+					// Resestablish TCR 
+					// MemWrite CT16B0: TCR (address was computed as 0x4000c000 + 0x00000004)
+					*(uint32_t*)0x4000c004 = tcr ; // = 0x00000000 (modified bits = 0x00000002)
+
+					// At 0x000045fa branching to 0x000051a3 (reg14)
+
+					// Enable counters
+					// MemRead CT16B0: TCR (address was computed as 0x4000c000 + 0x00000004)
+					// MemWrite CT16B0: TCR (address was computed as 0x4000c000 + 0x00000004)
+					*(uint32_t*)0x4000c004 = *(uint32_t*)0x4000c004 | 0x00000001; // = 0x00000001 (modified bits = 0x00000001)
+
+					// Branching from PC = 0x000051a8 to PC = 0x000051ac
+
+					// MemRead 8 kB SRAM0 (address was computed as 0x10000000 + 0x00000001)
+					reg1 = *(uint8_t*)0x10000001; // = 0x00000000
+
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (reg1 - 0x00000000) is NOT Equal, Z == 1
+					{
+						// UNKOWN PATH execute 0x000051b2
+					}
+
+					__wfi
+
 }
 
 /**
@@ -9420,6 +9738,14 @@ void Interrupt_1_PIN_INT1() {
 	// Stack Pointer updated to 0x10001fb8
 
 	// PC is set to reg14 (LR) which was previously saved to stack. This is exit of IRQ.
+}
+
+/**
+ * CT16B0: An interrupt is generated when MR0 matches the value in the TC.
+ * Vector Table entry is 0x000001a1.
+ */
+void Interrupt_16_CT16B0() {
+//TODO
 }
 
 /**

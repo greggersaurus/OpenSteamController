@@ -195,7 +195,7 @@ set {char}0x50000002 = 0
 
 # PIO0_3 is USB_VBUS and indiciates if there USB bus power (i.e.  don't need to
 #  use battery power?)
-set {char}0x50000003 = 0
+set {char}0x50000003 = 1
 
 # set {char}0x50000004 = pin state TODO: Should this be non-zero?
 # set {char}0x50000005 = pin state TODO: Should this be non-zero?
@@ -511,7 +511,9 @@ if *(char*)0x50000003 == 0
 	#  interrupt. Vector Table entry is 0x00000205.
 	##set $lr = $pc
 	##set $pc = 0x00000204
+	# Counter for how many times interrupt fires initially
 	##set {int}0x10000014 = 0x0000012d
+	# Counter for how many times interrupt fires for accumulating ADC values
 	##set {int}0x10000018 = 0x00000007
 	#TODO: Might want to try making not destructive (if need to simulate it or other
 	#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
@@ -564,6 +566,40 @@ else
 	#  Set back to zero to fake wrap around so code can continue
 	set {int}0x4000c008 = 0
 
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Setup watchpoint for wfi instruction.
+	watch $pc == 0x000051aa
+	
+	# Execute until watchpoint
+	continue
+	
+	# Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
+	#  fired and was handled properly).
+	
+	##
+	# CT16B0: An interrupt is generated when MR0 matches the value in the TC.
+	# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
+	#  interrupt. Vector Table entry is 0x00000129.
+	##set $lr = $pc
+	##set $pc = 0x000001a0
+	#TODO: Might want to try making not destructive (if need to simulate it or other
+	#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
+	#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
+	##
+	
+	##
+	# Change states as though ADC interrupt ran as desired:
+	# Set PC to move past wfi (as simulator cannot handle it)
+	##!! set $pc = 0x000051ac
+	# Set ...
+	##!!
+	
 	# Remove watchpoint
 	delete 
 
