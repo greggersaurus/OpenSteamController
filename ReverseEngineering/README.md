@@ -25,15 +25,9 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Simulation to C Conversion
-    1. Run straightforward sim with different GPIO input value combinations (verify values with meter on running controller USB plugged and unplugged?)
-        1. PIO0_3/USB_VBUS
-            1. Is this low on booted controller with no USB cable?
-                1. Need to simulate CT16B0 to move forward...
-        1. PIO0_2 
-        1. PIO1_12
-        1. PIO0_18
-        1. PIO0_22/AD6
-            1. Modify RAM value that stores accumulated ADC read results
+    1. Contiune running straightforward sim (with USB_VBUS = 1)
+       1. Upcoming code has SSP/SPI initialization!
+           1. Confirm this matches up with what was previously ohmed out
     1. Run and decode non-straightforward paths
         1. Callbacks
             1. USB_Configure_Event at 0x00004e59

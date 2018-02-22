@@ -193,8 +193,10 @@ set {int}0x40060024 = 0xFFFFFFFF
 # PIO0_2 is read during init. Interrupt setup to monitor state change.
 set {char}0x50000002 = 0
 
-# PIO0_3 is USB_VBUS and indiciates if there USB bus power (i.e.  don't need to
-#  use battery power?)
+# PIO0_3 is USB_VBUS and indiciates if there USB bus power. Must be 1 for 
+#  system to boot properly. (Possibly some GPIO toggling causes this to be 
+#  powered if cable is not connected? Or there is some other path I don't
+#  understand).
 set {char}0x50000003 = 1
 
 # set {char}0x50000004 = pin state TODO: Should this be non-zero?
@@ -481,6 +483,9 @@ delete
 # Events change based on whether USB cable is connected (volatage present) or not
 if *(char*)0x50000003 == 0
 
+	# NOTE: We do not care about this path. This leads to infinite wfi loop as I think
+	#  the system is waiting for USB_VBUS to be powered when a GPIO is switched or
+	#  something or for system to power off to due brown out...?
 
 	#------------------------------------------------------------------------------#
 
@@ -543,6 +548,9 @@ if *(char*)0x50000003 == 0
 
 
 	# Resume execution (execution will break on wfi that pinkySim cannot handle)
+	#
+	# This ends in infinite wfi loop (presumably waiting for system to power down
+	#  because something is wrong with power supples, or brown out?)
 	continue
 
 
@@ -612,7 +620,7 @@ else
 	#------------------------------------------------------------------------------#
 
 
-	# Resume execution (execution will break on wfi that pinkySim cannot handle)
+	# Resume execution 
 	continue
 
 
