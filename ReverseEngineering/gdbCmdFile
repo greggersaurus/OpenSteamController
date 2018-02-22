@@ -533,6 +533,7 @@ if *(char*)0x50000003 == 0
 	# Set value of counter used to accumulate ADC values
 	# TODO: Need to figure out what this value should be and how that affects sim...
 	set {short}0x10000f8c = 0
+	## 
 	
 	# Remove watchpoint
 	delete 
@@ -588,6 +589,9 @@ else
 	#  interrupt. Vector Table entry is 0x00000129.
 	##set $lr = $pc
 	##set $pc = 0x000001a0
+	# Set Interrupt Register to indicate Interrupt flag for match channel 0
+	##set {int}0x4000c000 = 1
+	# TODO: Try adding watch for clearing IR once it's written? Or are we confident we have ISR mapped?
 	#TODO: Might want to try making not destructive (if need to simulate it or other
 	#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
 	#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
@@ -596,9 +600,10 @@ else
 	##
 	# Change states as though ADC interrupt ran as desired:
 	# Set PC to move past wfi (as simulator cannot handle it)
-	##!! set $pc = 0x000051ac
-	# Set ...
-	##!!
+	set $pc = 0x000051ac
+	# Set flag to indicate that ISR for CT16B0 has fired
+	set {char}0x10000001 = 1
+	##
 	
 	# Remove watchpoint
 	delete 
