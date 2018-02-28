@@ -59,12 +59,12 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
 |            34 | PIO1_2                |                  | S19 - FRONT_F (Front right arrow button) | 
 |            35 | PIO1_21               |                  | S5 - Right trackpad click  |
-|            36 | PIO0_8                | MISO0 (SSP0)?    | Connected to MISO on Right Haptic and Left Haptic |
-|            37 | PIO0_9                | MOSI0 (SSP0)?    | Connected to MISO on Right Haptic and Left Haptic |
+|            36 | PIO0_8                | MISO0            | Connected to MISO on Right Haptic and Left Haptic |
+|            37 | PIO0_9                | MOSI0            | Connected to MISO on Right Haptic and Left Haptic |
 |            38 | SWCLK/PIO0_10         | SWCLK?           | Connected to DEBUG interface for LPC11U37F |
 |            39 | PIO1_8                |                  | |
 |            40 | PIO0_22               | AD6              | Setup to function as AD6 during init (trace leads to C6, continutes to R10 near power?) |
-|            41 | PIO1_29               | SCK0 (SSP0)?     | Connected to SCLK on Right Haptic and Left Haptic? |
+|            41 | PIO1_29               | SCK0             | Connected to SCLK on Right Haptic and Left Haptic? |
 |            42 | TDI/PIO0_11           | TDI              | Pull-down resistor enabled |
 |            43 | PIO1_11               |                  | S9 - Y Button |
 |            44 | TMS/PIO0_12           |                  | |
