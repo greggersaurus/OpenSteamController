@@ -8518,6 +8518,233 @@ void init_phase2_hw_not0()
 						// Restore PC from Stack at 0x10001f9c (Value saved was 0x00008f81)
 						// Stack Pointer updated to 0x10001fa0
 
+						// Set SPI Clock Out Phase (CPHA) configuration option to 1
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000234 + 0x00000020)
+						// MemRead SSP/SPI0: Ctrl Reg 0 (address was computed as *(uint32_t*)0x10000254 + 0x00000000)
+						// 0x000000ef = 0x0000ef07 >> 8 (Carry Out = 0x00000000)
+						// 0x0000ef00 = 0x000000ef << 8 (Carry Out = 0x00000000)
+						// 0x0000ef07 = 0x0000ef00 | 0x00000007;
+						// 0x0000ef87 = 0x0000ef07 | 0x00000080;
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000234 + 0x00000020)
+						// MemWrite SSP/SPI0: Ctrl Reg 0 (address was computed as *(uint32_t*)0x10000254 + 0x00000000)
+						*(uint32_t*)0x40040000 = (((uint32_t)((uint32_t)*(uint32_t*)0x40040000 >> 8) << 8) | 0x00000007) | 0x00000080; // = 0x0000ef87 (modified bits = 0x00000080)
+
+						// Branch from 0x00008f94 to 0x000044ca (Set LR to 0x00008f99)
+
+						// Branching from PC = 0x000044d4 to PC = 0x000044da
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000234 + 0x00000020)
+						// 0x00000000 = 0x00000000 & ~0x00000004;
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000234 + 0x00000020)
+						// MemWrite SSP/SPI0: Ctrl Reg 1 (address was computed as *(uint32_t*)0x10000254 + 0x00000004)
+						*(uint32_t*)0x40040004 = *(uint32_t*)0x40040004 & ~0x00000004; // = 0x00000000 (modified bits = 0x00000000)
+
+						// At 0x000044dc branching to 0x00008f99 (reg14)
+
+						arg1 = 0x005b8d80
+
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000234 + 0x00000020)
+						arg0 = *(uint32_t*)0x10000254; // = 0x40040000
+
+						// Branch from 0x00008f9c to 0x0000445c (Set LR to 0x00008fa1)
+						// void setSpiClkRate(arg0 = sspCtrlRegBase (0x40040000), arg1 = SPI clock rate? (0x005b8d80))
+						{
+							// Save reg3 to Stack at 0x10001f88 (Value saved is 0x00000007)
+							// Save reg4 to Stack at 0x10001f8c (Value saved is 0x10000234)
+							// Save reg5 to Stack at 0x10001f90 (Value saved is 0x10000234)
+							// Save reg6 to Stack at 0x10001f94 (Value saved is 0x00010074)
+							// Save reg7 to Stack at 0x10001f98 (Value saved is 0x00000000)
+							// Save reg14 to Stack at 0x10001f9c (Value saved is 0x00008fa1)
+							// Stack Pointer updated to 0x10001f88
+
+							// Branch from 0x00004462 to 0x00004130 (Set LR to 0x00004467)
+							// int getSysClkFreq()
+							{
+								// Save reg4 to Stack at 0x10001f80 (Value saved is 0x10000234)
+								// Save reg14 to Stack at 0x10001f84 (Value saved is 0x00004467)
+								// Stack Pointer updated to 0x10001f80
+
+								// Check if main source clock is IRC Oscillator
+								// MemRead system control: MAINCLKSEL (address was computed as 0x40048040 + 0x00000030)
+								// 0xc0000000 = 0x00000003 << 30 (Carry Out = 0x00000000)
+								// 0x00000003 = 0xc0000000 >> 30 (Carry Out = 0x00000000)
+								if ((uint32_t)((uint32_t)*(uint32_t*)0x40048070 << 30) >> 30) Equal, Z == 1
+								{
+									// UNKOWN PATH execute 0x00004150
+								}
+
+								// Check if main source clock is PLL input
+								// MemRead system control: MAINCLKSEL (address was computed as 0x40048040 + 0x00000030)
+								// 0xc0000000 = 0x00000003 << 30 (Carry Out = 0x00000000)
+								// 0x00000003 = 0xc0000000 >> 30 (Carry Out = 0x00000000)
+								// Compute 0x00000003 - 0x00000001 for compare
+								if (((uint32_t)((uint32_t)*(uint32_t*)0x40048070 << 30) >> 30) - 0x00000001) is Equal, Z == 1
+								{
+									// UNKOWN PATH execute 0x00004154
+								}
+
+								// Check if main source clock is Watchdog oscillator
+								// MemRead system control: MAINCLKSEL (address was computed as 0x40048040 + 0x00000030)
+								// 0xc0000000 = 0x00000003 << 30 (Carry Out = 0x00000000)
+								// 0x00000003 = 0xc0000000 >> 30 (Carry Out = 0x00000000)
+								// Compute 0x00000003 - 0x00000002 for compare
+								if (((uint32_t)((uint32_t)*(uint32_t*)0x40048070 << 30) >> 30) - 0x00000002) is Equal, Z == 1
+								{
+									// UNKOWN PATH execute 0x0000415a
+								}
+
+								// Check if main source clock is Not PLL output
+								// MemRead system control: MAINCLKSEL (address was computed as 0x40048040 + 0x00000030)
+								// 0xc0000000 = 0x00000003 << 30 (Carry Out = 0x00000000)
+								// 0x00000003 = 0xc0000000 >> 30 (Carry Out = 0x00000000)
+								// Compute 0x00000003 - 0x00000003 for compare
+								if (((uint32_t)((uint32_t)*(uint32_t*)0x40048070 << 30) >> 30) - 0x00000003) is Not equal, Z == 0
+								{
+									// UNKOWN PATH execute 0x0000414e
+								}
+
+
+								// Branch from 0x0000414a to 0x000041b0 (Set LR to 0x0000414f)
+								// int calcSysClkFreq()	
+								{
+									// Save reg4 to Stack at 0x10001f78 (Value saved is 0x10000234)
+									// Save reg14 to Stack at 0x10001f7c (Value saved is 0x0000414f)
+									// Stack Pointer updated to 0x10001f78
+
+									// Branch from 0x000041b2 to 0x00004188 (Set LR to 0x000041b7)
+
+									// Check if System PLL clock source is IRC
+									// MemRead system control: SYSPLLCLKSEL (address was computed as 0x40048040 + 0x00000000)
+									// 0x40000000 = 0x00000001 << 30 (Carry Out = 0x00000000)
+									// 0x00000001 = 0x40000000 >> 30 (Carry Out = 0x00000000)
+									if ((uint32_t)((uint32_t)*(uint32_t*)0x40048040 << 30) >> 30) Equal, Z == 1
+									{
+										// UNKOWN PATH execute 0x0000419a
+									}
+
+									// Check if System PLL clock source is not Crystal Oscillator (SYSOSC)
+									// MemRead system control: SYSPLLCLKSEL (address was computed as 0x40048040 + 0x00000000)
+									// 0x40000000 = 0x00000001 << 30 (Carry Out = 0x00000000)
+									// 0x00000001 = 0x40000000 >> 30 (Carry Out = 0x00000000)
+									// Compute 0x00000001 - 0x00000001 for compare
+									if (((uint32_t)((uint32_t)*(uint32_t*)0x40048040 << 30) >> 30) - 0x00000001) is NOT Equal, Z == 1
+									{
+										// UNKOWN PATH execute 0x00004196
+									}
+
+									// At 0x000041a2 branching to 0x000041b7 (reg14)
+
+									// Branch from 0x000041bc to 0x00004168 (Set LR to 0x000041c1)
+
+									// MemRead system control: SYSPLLCTRL (address was computed as 0x40048000 + 0x00000008)
+									// 0x18000000 = 0x00000023 << 27 (Carry Out = 0x00000020)
+									// 0x00000003 = 0x18000000 >> 27 (Carry Out = 0x00000000)
+									// 0x00000004 = 0x00000003 + 0x00000001
+									// 0x02dc6c00 = 0x00000004 * 0x00b71b00;
+									sysClkFreq = (((uint32_t)((uint32_t)*(uint32_t*)0x40048008 << 27) >> 27) + 0x00000001) * 0x00b71b00;
+
+									// At 0x00004172 branching to 0x000041c1 (reg14)
+
+								}
+								// Restore reg4 from Stack at 0x10001f78 (Value saved was 0x10000234)
+								// Restore PC from Stack at 0x10001f7c (Value saved was 0x0000414f)
+								// Stack Pointer updated to 0x10001f80
+
+							}
+							// Restore reg4 from Stack at 0x10001f80 (Value saved was 0x10000234)
+							// Restore PC from Stack at 0x10001f84 (Value saved was 0x00004467)
+							// Stack Pointer updated to 0x10001f88
+
+							// Check if we are dealing with SSP0
+							// Compute 0x40040000 - 0x40040000 for compare
+							if (sspCtrlRegBase - 0x40040000) is Not equal, Z == 0
+							{
+								// UNKOWN PATH execute 0x00004472
+							}
+
+							// MemRead system control: SSP0CLKDIV (address was computed as reg1 + 0x00000014)
+							reg1 = *(uint32_t*)0x40048094; // = 0x00000001
+
+							// Branching from PC = 0x00004470 to PC = 0x00004474
+
+							// Some big loop for calculating clock register values. Not going to bother to convert to C any more than this...
+							for (...) {
+								// Branch from 0x00004474 to 0x000020ec (Set LR to 0x00004479)
+								//  fnc(arg0 = sysClkFreq, arg1 = SSP0CLKDIV)
+								{
+									// Save reg4 to Stack at 0x10001f6c (Value saved is 0x40040000)
+									// Save reg5 to Stack at 0x10001f70 (Value saved is 0x00000001)
+									// Save reg14 to Stack at 0x10001f74 (Value saved is 0x00004479)
+									// Stack Pointer updated to 0x10001f6c
+
+									sys_clk_freq = sysClkFreq;
+
+									retval = 0;
+								
+									for (int cnt = 0x20; cnt > 0; cnt--) {
+										if (((uint32_t)sys_clk_freq >> (cnt-1)) - SSP0CLKDIV) is NOT Carry clear, C == 0
+										{
+											sys_clk_freq -= ((uint32_t)SSP0CLKDIV << (cnt-1));
+
+											retval += ((uint32_t)0x00000001 << (cnt-1));
+										}
+									}
+								}
+								// Restore reg4 from Stack at 0x10001f6c (Value saved was 0x40040000)
+								// Restore reg5 from Stack at 0x10001f70 (Value saved was 0x00000001)
+								// Restore PC from Stack at 0x10001f74 (Value saved was 0x00004479)
+								// Stack Pointer updated to 0x10001f78
+
+								...
+							}
+
+							// Branch from 0x000044a4 to 0x000044b4 (Set LR to 0x000044a9)
+							// void setSspClockRegs(arg0 = sspCtrlRegBase (0x40040000), arg1 = scr (0x00000003), arg2 = clkPrescale (0x00000002))
+							{
+								// Save reg4 to Stack at 0x10001f80 (Value saved is 0x00000003)
+								// Save reg14 to Stack at 0x10001f84 (Value saved is 0x000044a9)
+								// Stack Pointer updated to 0x10001f80
+
+								// Set the Serial Clock Rate (SCR)
+								// MemRead SSP/SPI0: Ctrl Reg 0 (address was computed as sspCtrlRegBase + 0x00000000)
+								// 0x03000000 = 0x00000003 << 24 (Carry Out = 0x00000000)
+								// 0x00000300 = 0x03000000 >> 16 (Carry Out = 0x00000000)
+								// 0x00000087 = 0x0000ef87 & ~0x0000ff00;
+								// 0x00000387 = 0x00000300 | 0x00000087;
+								// MemWrite SSP/SPI0: Ctrl Reg 0 (address was computed as sspCtrlRegBase + 0x00000000)
+								*(uint32_t*)0x40040000 = ((uint32_t)((uint32_t)scr << 24) >> 16) | (*(uint32_t*)0x40040000 & ~0x0000ff00); // = 0x00000387 (modified bits = 0x0000ec00)
+
+								// Set the Clock Prescale Register
+								// MemWrite SSP/SPI0: Clk Prescale Reg (address was computed as sspCtrlRegBase + 0x00000010)
+								*(uint32_t*)0x40040010 = clkPrescale; // = 0x00000002 (modified bits = 0x00000000)
+
+							}
+							// Restore reg4 from Stack at 0x10001f80 (Value saved was 0x00000003)
+							// Restore PC from Stack at 0x10001f84 (Value saved was 0x000044a9)
+							// Stack Pointer updated to 0x10001f88
+
+						}
+						// Restore reg3 from Stack at 0x10001f88 (Value saved was 0x02dc6c00)
+						// Restore reg4 from Stack at 0x10001f8c (Value saved was 0x10000234)
+						// Restore reg5 from Stack at 0x10001f90 (Value saved was 0x10000234)
+						// Restore reg6 from Stack at 0x10001f94 (Value saved was 0x00010074)
+						// Restore reg7 from Stack at 0x10001f98 (Value saved was 0x00000000)
+						// Restore PC from Stack at 0x10001f9c (Value saved was 0x00008fa1)
+						// Stack Pointer updated to 0x10001fa0
+
+						// Enable the SPI controller
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000234 + 0x00000020)
+						// MemRead SSP/SPI0: Ctrl Reg 1 (address was computed as *(uint32_t*)0x10000254 + 0x00000004)
+						// 0x00000002 = 0x00000000 | 0x00000002;
+						// MemRead 8 kB SRAM0 (address was computed as 0x10000234 + 0x00000020)
+						// MemWrite SSP/SPI0: Ctrl Reg 1 (address was computed as *(uint32_t*)0x10000254 + 0x00000004)
+						*(uint32_t*)0x40040004 = *(uint32_t*)0x40040004 | 0x00000002; // = 0x00000002 (modified bits = 0x00000002)
+
+					}
+					// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x00010074)
+					// Restore PC from Stack at 0x10001fa4 (Value saved was 0x000048cb)
+					// Stack Pointer updated to 0x10001fa8
+
 }
 
 /**
