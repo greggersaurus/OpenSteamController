@@ -79,8 +79,8 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            53 | PIO0_16               |                  | | 
 |            54 | V<sub>SS</sub>        | V<sub>SS</sub>   | V<sub>SS</sub> |
 |            55 | PIO1_9                |                  | S7 - X Button |
-|            56 | PIO0_23               |                  | |
-|            57 | PIO1_15               |                  | |
+|            56 | PIO0_23               | PIO0_23          | Input with pull-down resistor enabled. Haptic SPI related? |
+|            57 | PIO1_15               | PIO1_15          | Output. Haptic SPI related? CS maybe? |
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
 |            59 | PIO1_12               | PIO1_12          | Read during init to check if it is logic low or not. (trace leads to VDD on Haptics). If low PIO0_18 is checked. |
 |            60 | PIO0_17               |                  | S1 - A Button |

@@ -28,6 +28,10 @@ This section is a running list of priorities to focus on in hopes of reaching
     1. Contiune running straightforward sim (with USB_VBUS = 1)
        1. Upcoming code has SSP/SPI initialization!
            1. Confirm this matches up with what was previously ohmed out
+               1. Ohm out PIO1_15
+               1. Ohm out PIO0_23
+           1. Command 0x83 and 0x2 are sent and then system waits for response
+               1. What is expected response? Find example code for haptics sensor?
     1. Run and decode non-straightforward paths
         1. Callbacks
             1. USB_Configure_Event at 0x00004e59
