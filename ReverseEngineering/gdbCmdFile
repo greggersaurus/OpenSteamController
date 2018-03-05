@@ -606,7 +606,7 @@ else
 	##
 	
 	##
-	# Change states as though ADC interrupt ran as desired:
+	# Change states as though CT16B0 interrupt ran as desired:
 	# Set PC to move past wfi (as simulator cannot handle it)
 	set $pc = 0x000051ac
 	# Set flag to indicate that ISR for CT16B0 has fired
@@ -620,7 +620,70 @@ else
 	#------------------------------------------------------------------------------#
 
 
-	# Resume execution 
+	# Handle SPI responses for Shutdown/Standby Command for Right Haptic
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Fill byte for 0x83 write command
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Fill byte for 0x02 register specification following write command 
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+	set {int}0x4004000C = 0x00000003
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+	
+# TODO: handle left haptic shutdown SPI command... so we can move past this to whatever is next...
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Resume execution until...?
 	continue
 
 
