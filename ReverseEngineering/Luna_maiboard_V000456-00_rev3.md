@@ -79,15 +79,15 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            53 | PIO0_16               |                  | | 
 |            54 | V<sub>SS</sub>        | V<sub>SS</sub>   | V<sub>SS</sub> |
 |            55 | PIO1_9                |                  | S7 - X Button |
-|            56 | PIO0_23               | PIO0_23          | Input with pull-down resistor enabled. Haptic SPI related? |
-|            57 | PIO1_15               | PIO1_15          | Chip Select/SS for Right Haptic |
+|            56 | PIO0_23               | PIO0_23          | Input with pull-down resistor enabled. Connected to Data Ready on Right Haptic? |
+|            57 | PIO1_15               | PIO1_15          | Chip Select/SS for Right Haptic (active low) |
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
 |            59 | PIO1_12               | PIO1_12          | Read during init to check if it is logic low or not. (trace leads to VDD on Haptics). If low PIO0_18 is checked. |
 |            60 | PIO0_17               |                  | S1 - A Button |
 |            61 | PIO0_18               | PIO0_18          | If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB). | 
 |            62 | PIO0_19               | PIO0_19          | Set as output during init and driven low. (trace leads to... TODO)|
-|            63 | PIO1_16               |                  | Connected to DR on Left Haptic |
-|            64 | PIO1_6                | PIO1_6           | Chip Select/SS for Left Haptic |
+|            63 | PIO1_16               | PIO1_16          | Input with pull-down resistor enabled. Connected to Data Ready on Left Haptic. |
+|            64 | PIO1_6                | PIO1_6           | Chip Select/SS for Left Haptic (active low) |
 
 
 # MPU-6500
