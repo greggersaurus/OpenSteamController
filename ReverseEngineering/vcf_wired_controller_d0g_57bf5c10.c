@@ -169,6 +169,12 @@
 	0x10000094 (uint32_t) - Hardware/Board Revision (copy of value read from EEPROM) (though only lowest 8 bits is used for compare...)
 
 	0x100000a4 (uint32_t) - System Clock Frequency (CCLK) in MHz. (48000000 is calcualted and stored here).
+	0x100000a8 (uint32_t) - I2C control register base address
+
+	0x100000b0 (uint32_t) - Related to I2C IRQ. Function pointer.
+
+	0x100000b8 (uint32_t) - Related to I2C IRQ? Pointer to some I2C struct?
+	0x100000bc (uint32_t) - Related to I2C IRQ? 
 
 	0x10000200 (uint8_t)  - ?? Check for possible branching path...
 	0x10000201 (uint8_t)  - Defines which GPIO is being configured
@@ -8689,7 +8695,7 @@ void init_phase2_hw_not0()
 							// Some big loop for calculating clock register values. Not going to bother to convert to C any more than this...
 							for (...) {
 								// Branch from 0x00004474 to 0x000020ec (Set LR to 0x00004479)
-								//  fnc(arg0 = sysClkFreq, arg1 = SSP0CLKDIV)
+								// int calcPeriodInClkCycles(arg0 = sysClkFreq, arg1 = SSP0CLKDIV)
 								{
 									// Save reg4 to Stack at 0x10001f6c (Value saved is 0x40040000)
 									// Save reg5 to Stack at 0x10001f70 (Value saved is 0x00000001)
@@ -9750,7 +9756,7 @@ void init_phase2_hw_not0()
 					// Stack Pointer updated to 0x10001fb0
 
 					// Branch from 0x00006a12 to 0x00005c8c (Set LR to 0x00006a17)
-
+					// void setupI2C(arg0 = ?? (0x00000069))
 					{
 						// Save reg4 to Stack at 0x10001fa8 (Value saved is 0x00010074)
 						// Save reg14 to Stack at 0x10001fac (Value saved is 0x00006a17)
@@ -9887,12 +9893,12 @@ void init_phase2_hw_not0()
 
 // START HERE 
 
-						reg1 = 0x00061a80
+						baudRate = 0x00061a80; //400000
 
 						reg0 = 0x00000000; // (fields.imm)
 
 						// Branch from 0x00005ce2 to 0x00004354 (Set LR to 0x00005ce7)
-						// void setI2CDataRate(arg0 = ?? (0), arg1 = freq?? (400000))
+						// void setI2CDataRate(arg0 = deviceSel?? (0), arg1 = baudRate (400000))
 						{
 							// Save reg4 to Stack at 0x10001f98 (Value saved is 0x40044000)
 							// Save reg5 to Stack at 0x10001f9c (Value saved is 0x00000001)
@@ -9900,965 +9906,53 @@ void init_phase2_hw_not0()
 							// Save reg14 to Stack at 0x10001fa4 (Value saved is 0x00005ce7)
 							// Stack Pointer updated to 0x10001f98
 
-							reg5 = reg1; // = 0x00061a80
-
 							reg4 = reg0; // = 0x00000000
 
 							// Branch from 0x0000435a to 0x00004130 (Set LR to 0x0000435f)
-
+							// int getSysClkFreq()
 							{
 								// Save reg4 to Stack at 0x10001f90 (Value saved is 0x00000000)
 								// Save reg14 to Stack at 0x10001f94 (Value saved is 0x0000435f)
 								// Stack Pointer updated to 0x10001f90
 
-								// MemRead 128 kB on-chip flash (address encoded in instruction)
-								reg1 = *(uint32_t*)0x00004160; // = 0x40048040
+								// Trimmed. See previous jump to 0x00004130 for details.
 
-								reg0 = 0x00000000; // (fields.imm)
-
-								// MemRead system control: MAINCLKSEL (address was computed as reg1 + 0x00000030)
-								reg1 = *(uint32_t*)0x40048070; // = 0x00000003
-
-								// 0xc0000000 = 0x00000003 << 30 (Carry Out = 0x00000000)
-								reg1 = (uint32_t)reg1 << 30;
-
-								// 0x00000003 = 0xc0000000 >> 30 (Carry Out = 0x00000000)
-								reg1 = (uint32_t)reg1 >> 30;
-
-								Equal, Z == 1
-								{
-									// UNKOWN PATH execute 0x00004150
-								}
-
-								// Compute 0x00000003 - 0x00000001 for compare
-								if (reg1 - 0x00000001) is Equal, Z == 1
-								{
-									// UNKOWN PATH execute 0x00004154
-								}
-
-								// Compute 0x00000003 - 0x00000002 for compare
-								if (reg1 - 0x00000002) is Equal, Z == 1
-								{
-									// UNKOWN PATH execute 0x0000415a
-								}
-
-								// Compute 0x00000003 - 0x00000003 for compare
-								if (reg1 - 0x00000003) is Not equal, Z == 0
-								{
-									// UNKOWN PATH execute 0x0000414e
-								}
-
-								// Branch from 0x0000414a to 0x000041b0 (Set LR to 0x0000414f)
-
-								{
-									// Save reg4 to Stack at 0x10001f88 (Value saved is 0x00000000)
-									// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000414f)
-									// Stack Pointer updated to 0x10001f88
-
-									// Branch from 0x000041b2 to 0x00004188 (Set LR to 0x000041b7)
-
-									// MemRead 128 kB on-chip flash (address encoded in instruction)
-									reg0 = *(uint32_t*)0x000041a4; // = 0x40048040
-
-									// MemRead system control: SYSPLLCLKSEL (address was computed as reg0 + 0x00000000)
-									reg0 = *(uint32_t*)0x40048040; // = 0x00000001
-
-									// 0x40000000 = 0x00000001 << 30 (Carry Out = 0x00000000)
-									reg0 = (uint32_t)reg0 << 30;
-
-									// 0x00000001 = 0x40000000 >> 30 (Carry Out = 0x00000000)
-									reg0 = (uint32_t)reg0 >> 30;
-
-									Equal, Z == 1
-									{
-										// UNKOWN PATH execute 0x0000419a
-									}
-
-									// Compute 0x00000001 - 0x00000001 for compare
-									if (reg0 - 0x00000001) is NOT Equal, Z == 1
-									{
-										// UNKOWN PATH execute 0x00004196
-									}
-
-									// MemRead 128 kB on-chip flash (address encoded in instruction)
-									reg0 = *(uint32_t*)0x000041ac; // = 0x0000ee70
-
-									// MemRead 128 kB on-chip flash (address was computed as reg0 + 0x00000000)
-									reg0 = *(uint32_t*)0x0000ee70; // = 0x00b71b00
-
-									// At 0x000041a2 branching to 0x000041b7 (reg14)
-
-									reg1 = reg0; // = 0x00b71b00
-
-									// MemRead 128 kB on-chip flash (address encoded in instruction)
-									reg0 = *(uint32_t*)0x000041c4; // = 0x40048000
-
-									// MemRead system control: SYSPLLCTRL (address was computed as reg0 + 0x00000008)
-									reg0 = *(uint32_t*)0x40048008; // = 0x00000023
-
-									// Branch from 0x000041bc to 0x00004168 (Set LR to 0x000041c1)
-
-									// 0x18000000 = 0x00000023 << 27 (Carry Out = 0x00000020)
-									reg2 = (uint32_t)reg0 << 27;
-
-									// 0x00000003 = 0x18000000 >> 27 (Carry Out = 0x00000000)
-									reg2 = (uint32_t)reg2 >> 27;
-
-									// 0x00000004 = 0x00000003 + 0x00000001
-									reg2 = reg2 + 0x00000001;
-
-									reg0 = reg1; // = 0x00b71b00
-
-									// 0x02dc6c00 = 0x00000004 * 0x00b71b00;
-									reg0 = reg2 * reg0;
-
-									// At 0x00004172 branching to 0x000041c1 (reg14)
-
-								}
-								// Restore reg4 from Stack at 0x10001f88 (Value saved was 0x00000000)
-								// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000414f)
-								// Stack Pointer updated to 0x10001f90
-
+								sys_clk_freq = 0x02dc6c00; // 48000000
 							}
 							// Restore reg4 from Stack at 0x10001f90 (Value saved was 0x00000000)
 							// Restore PC from Stack at 0x10001f94 (Value saved was 0x0000435f)
 							// Stack Pointer updated to 0x10001f98
 
-							reg1 = reg5; // = 0x00061a80
+							reg1 = baudRate; // = 0x00061a80
 
 							// Branch from 0x00004360 to 0x000020ec (Set LR to 0x00004365)
-
+							// int calcPeriodInClkCycles(arg0 = sysClkFreq, arg1 = desiredRate (400000))
 							{
 								// Save reg4 to Stack at 0x10001f8c (Value saved is 0x00000000)
 								// Save reg5 to Stack at 0x10001f90 (Value saved is 0x00061a80)
 								// Save reg14 to Stack at 0x10001f94 (Value saved is 0x00004365)
 								// Stack Pointer updated to 0x10001f8c
-
-								reg3 = reg1; // = 0x00061a80
-
-								reg1 = reg0; // = 0x02dc6c00
-
-								reg0 = 0x00000000; // (fields.imm)
-
-								reg2 = 0x00000020; // (fields.imm)
-
-								reg4 = 0x00000001; // (fields.imm)
-
-								// Branching from PC = 0x000020f8 to PC = 0x0000210e
-
-								reg5 = reg2; // = 0x00000020
-
-								// 0x0000001f = 0x00000020 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000020 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000000 = 0x02dc6c00 >> 0x0000001f (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000000 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000001f
-
-								// 0x0000001e = 0x0000001f - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000001f - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000000 = 0x02dc6c00 >> 0x0000001e (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000000 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000001e
-
-								// 0x0000001d = 0x0000001e - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000001e - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000000 = 0x02dc6c00 >> 0x0000001d (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000000 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000001d
-
-								// 0x0000001c = 0x0000001d - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000001d - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000000 = 0x02dc6c00 >> 0x0000001c (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000000 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000001c
-
-								// 0x0000001b = 0x0000001c - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000001c - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000000 = 0x02dc6c00 >> 0x0000001b (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000000 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000001b
-
-								// 0x0000001a = 0x0000001b - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000001b - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000000 = 0x02dc6c00 >> 0x0000001a (Carry Out = 0x02000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000000 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000001a
-
-								// 0x00000019 = 0x0000001a - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000001a - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000001 = 0x02dc6c00 >> 0x00000019 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000001 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000019
-
-								// 0x00000018 = 0x00000019 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000019 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000002 = 0x02dc6c00 >> 0x00000018 (Carry Out = 0x00800000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000002 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000018
-
-								// 0x00000017 = 0x00000018 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000018 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000005 = 0x02dc6c00 >> 0x00000017 (Carry Out = 0x00400000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000005 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000017
-
-								// 0x00000016 = 0x00000017 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000017 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x0000000b = 0x02dc6c00 >> 0x00000016 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x0000000b - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000016
-
-								// 0x00000015 = 0x00000016 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000016 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000016 = 0x02dc6c00 >> 0x00000015 (Carry Out = 0x00100000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000016 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000015
-
-								// 0x00000014 = 0x00000015 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000015 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x0000002d = 0x02dc6c00 >> 0x00000014 (Carry Out = 0x00080000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x0000002d - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000014
-
-								// 0x00000013 = 0x00000014 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000014 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x0000005b = 0x02dc6c00 >> 0x00000013 (Carry Out = 0x00040000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x0000005b - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000013
-
-								// 0x00000012 = 0x00000013 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000013 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x000000b7 = 0x02dc6c00 >> 0x00000012 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x000000b7 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000012
-
-								// 0x00000011 = 0x00000012 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000012 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x0000016e = 0x02dc6c00 >> 0x00000011 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x0000016e - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000011
-
-								// 0x00000010 = 0x00000011 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000011 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x000002dc = 0x02dc6c00 >> 0x00000010 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x000002dc - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000010
-
-								// 0x0000000f = 0x00000010 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000010 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x000005b8 = 0x02dc6c00 >> 0x0000000f (Carry Out = 0x00004000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x000005b8 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000000f
-
-								// 0x0000000e = 0x0000000f - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000000f - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00000b71 = 0x02dc6c00 >> 0x0000000e (Carry Out = 0x00002000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000b71 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000000e
-
-								// 0x0000000d = 0x0000000e - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000000e - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x000016e3 = 0x02dc6c00 >> 0x0000000d (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x000016e3 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000000d
-
-								// 0x0000000c = 0x0000000d - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000000d - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00002dc6 = 0x02dc6c00 >> 0x0000000c (Carry Out = 0x00000800)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00002dc6 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000000c
-
-								// 0x0000000b = 0x0000000c - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000000c - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00005b8d = 0x02dc6c00 >> 0x0000000b (Carry Out = 0x00000400)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00005b8d - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000000b
-
-								// 0x0000000a = 0x0000000b - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000000b - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x0000b71b = 0x02dc6c00 >> 0x0000000a (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x0000b71b - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x0000000a
-
-								// 0x00000009 = 0x0000000a - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x0000000a - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x00016e36 = 0x02dc6c00 >> 0x00000009 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00016e36 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000009
-
-								// 0x00000008 = 0x00000009 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000009 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x0002dc6c = 0x02dc6c00 >> 0x00000008 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x0002dc6c - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000008
-
-								// 0x00000007 = 0x00000008 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000008 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x0005b8d8 = 0x02dc6c00 >> 0x00000007 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x0005b8d8 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000007
-
-								// 0x00000006 = 0x00000007 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000007 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x02dc6c00
-
-								// 0x000b71b0 = 0x02dc6c00 >> 0x00000006 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x000b71b0 - 0x00061a80 for compare
-								if (reg5 - reg3) is Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x0000210e
-								}
-
-								reg5 = reg3; // = 0x00061a80
-
-								// 0x0186a000 = 0x00061a80 << 0x00000006 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 << reg2;
-
-								// 0x0155cc00 = 0x02dc6c00 - 0x0186a000
-								reg1 = reg1 - reg5;
-
-								reg5 = reg4; // = 0x00000001
-
-								// 0x00000040 = 0x00000001 << 0x00000006 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 << reg2;
-
-								// 0x00000040 = 0x00000000 + 0x00000040
-								reg0 = reg0 + reg5;
-
-								reg5 = reg2; // = 0x00000006
-
-								// 0x00000005 = 0x00000006 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000006 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x0155cc00
-
-								// 0x000aae60 = 0x0155cc00 >> 0x00000005 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x000aae60 - 0x00061a80 for compare
-								if (reg5 - reg3) is Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x0000210e
-								}
-
-								reg5 = reg3; // = 0x00061a80
-
-								// 0x00c35000 = 0x00061a80 << 0x00000005 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 << reg2;
-
-								// 0x00927c00 = 0x0155cc00 - 0x00c35000
-								reg1 = reg1 - reg5;
-
-								reg5 = reg4; // = 0x00000001
-
-								// 0x00000020 = 0x00000001 << 0x00000005 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 << reg2;
-
-								// 0x00000060 = 0x00000040 + 0x00000020
-								reg0 = reg0 + reg5;
-
-								reg5 = reg2; // = 0x00000005
-
-								// 0x00000004 = 0x00000005 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000005 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x00927c00
-
-								// 0x000927c0 = 0x00927c00 >> 0x00000004 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x000927c0 - 0x00061a80 for compare
-								if (reg5 - reg3) is Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x0000210e
-								}
-
-								reg5 = reg3; // = 0x00061a80
-
-								// 0x0061a800 = 0x00061a80 << 0x00000004 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 << reg2;
-
-								// 0x0030d400 = 0x00927c00 - 0x0061a800
-								reg1 = reg1 - reg5;
-
-								reg5 = reg4; // = 0x00000001
-
-								// 0x00000010 = 0x00000001 << 0x00000004 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 << reg2;
-
-								// 0x00000070 = 0x00000060 + 0x00000010
-								reg0 = reg0 + reg5;
-
-								reg5 = reg2; // = 0x00000004
-
-								// 0x00000003 = 0x00000004 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000004 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x0030d400
-
-								// 0x00061a80 = 0x0030d400 >> 0x00000003 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00061a80 - 0x00061a80 for compare
-								if (reg5 - reg3) is Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x0000210e
-								}
-
-								reg5 = reg3; // = 0x00061a80
-
-								// 0x0030d400 = 0x00061a80 << 0x00000003 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 << reg2;
-
-								// 0x00000000 = 0x0030d400 - 0x0030d400
-								reg1 = reg1 - reg5;
-
-								reg5 = reg4; // = 0x00000001
-
-								// 0x00000008 = 0x00000001 << 0x00000003 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 << reg2;
-
-								// 0x00000078 = 0x00000070 + 0x00000008
-								reg0 = reg0 + reg5;
-
-								reg5 = reg2; // = 0x00000003
-
-								// 0x00000002 = 0x00000003 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000003 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x00000000
-
-								// 0x00000000 = 0x00000000 >> 0x00000002 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000000 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000002
-
-								// 0x00000001 = 0x00000002 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000002 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x00000000
-
-								// 0x00000000 = 0x00000000 >> 0x00000001 (Carry Out = 0x00000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000000 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000001
-
-								// 0x00000000 = 0x00000001 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000001 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is NOT Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x00002116
-								}
-
-								reg5 = reg1; // = 0x00000000
-
-								// 0x00000000 = 0x00000000 >> 0x00000000 (Carry Out = 0x20000000)
-								reg5 = (uint32_t)reg5 >> reg2;
-
-								// Compute 0x00000000 - 0x00061a80 for compare
-								if (reg5 - reg3) is NOT Carry clear, C == 0
-								{
-									// UNKOWN PATH execute 0x00002102
-								}
-
-								reg5 = reg2; // = 0x00000000
-
-								// 0xffffffff = 0x00000000 - 0x00000001
-								reg2 = reg2 - 0x00000001;
-
-								// Compute 0x00000000 - 0x00000000 for compare
-								if (reg5 - 0x00000000) is Signed greater than, Z == 0 && N == V
-								{
-									// UNKOWN PATH execute 0x000020fa
-								}
-
+								
+								// Trimmed. See previous converion of jump to 0x000020ec for details.
 							}
 							// Restore reg4 from Stack at 0x10001f8c (Value saved was 0x00000000)
 							// Restore reg5 from Stack at 0x10001f90 (Value saved was 0x00061a80)
 							// Restore PC from Stack at 0x10001f94 (Value saved was 0x00004365)
 							// Stack Pointer updated to 0x10001f98
 
-							// 0x0000003c = 0x00000078 >> 1 (Carry Out = 0x00000000)
-							reg2 = (uint32_t)reg0 >> 1;
-
-							reg1 = 0x0000001c; // (fields.imm)
-
 							// 0x00000000 = 0x0000001c * 0x00000000;
-							reg4 = reg1 * reg4;
+							reg4 = 0x0000001c * reg4;
 
-							// MemRead 128 kB on-chip flash (address encoded in instruction)
-							reg1 = *(uint32_t*)0x0000437c; // = 0x100000a8
+							// MemRead 8 kB SRAM0 (address was computed as 0x100000a8 + reg4)
+							// MemWrite I2C: SCLH (address was computed as *(uint32_t*)0x100000a8 + 0x00000010)
+							*(uint32_t*)0x40000010 = ((uint32_t)period_in_cycles/2); // = 0x0000003c (modified bits = 0x00000038)
 
-							// MemRead 8 kB SRAM0 (address was computed as reg1 + reg4)
-							reg3 = *(uint32_t*)0x100000a8; // = 0x40000000
-
-							// MemWrite I2C: SCLH (address was computed as reg3 + 0x00000010)
-							*(uint32_t*)0x40000010 = reg2; // = 0x0000003c (modified bits = 0x00000038)
-
-							// MemRead 8 kB SRAM0 (address was computed as reg1 + reg4)
-							reg1 = *(uint32_t*)0x100000a8; // = 0x40000000
-
-							// MemRead I2C: SCLH (address was computed as reg1 + 0x00000010)
-							reg2 = *(uint32_t*)0x40000010; // = 0x0000003c
-
+							// MemRead 8 kB SRAM0 (address was computed as 0x100000a8 + reg4)
+							// MemRead I2C: SCLH (address was computed as *(uint32_t*)0x100000a8 + 0x00000010)
 							// 0x0000003c = 0x00000078 - 0x0000003c
-							reg0 = reg0 - reg2;
-
-							// MemWrite I2C: SCLL (address was computed as reg1 + 0x00000014)
-							*(uint32_t*)0x40000014 = reg0; // = 0x0000003c (modified bits = 0x00000038)
+							// MemRead 8 kB SRAM0 (address was computed as 0x100000a8 + reg4)
+							// MemWrite I2C: SCLL (address was computed as *(uint32_t*)0x100000a8 + 0x00000014)
+							*(uint32_t*)0x40000014 = period_in_cycles - *(uint32_t*)0x40000010; // = 0x0000003c (modified bits = 0x00000038)
 
 						}
 						// Restore reg4 from Stack at 0x10001f98 (Value saved was 0x40044000)
@@ -10867,79 +9961,47 @@ void init_phase2_hw_not0()
 						// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00005ce7)
 						// Stack Pointer updated to 0x10001fa8
 
-						// MemRead 128 kB on-chip flash (address encoded in instruction)
-						reg1 = *(uint32_t*)0x00005d08; // = 0x0000424d
-
-						reg0 = 0x00000000; // (fields.imm)
-
 						// Branch from 0x00005cea to 0x00004380 (Set LR to 0x00005cef)
 
-						reg2 = 0x0000001c; // (fields.imm)
-
-						// 0x00000000 = 0x0000001c * 0x00000000;
-						reg0 = reg2 * reg0;
-
-						// MemRead 128 kB on-chip flash (address encoded in instruction)
-						reg2 = *(uint32_t*)0x000043a0; // = 0x100000a8
-
-						// 0x100000a8 = 0x00000000 + 0x100000a8
-						reg0 = reg0 + reg2;
-
-						// MemRead 8 kB SRAM0 (address was computed as reg0 + 0x00000010)
-						reg2 = *(uint32_t*)0x100000b8; // = 0x00000000
-
+						// MemRead 8 kB SRAM0 (address was computed as 0x100000a8 + 0x00000010)
 						// Compute 0x00000000 - 0x00000000 for compare
-						if (reg2 - 0x00000000) is Not equal, Z == 0
+						if (*(uint32_t*)0x100000b8 - 0x00000000) is Not equal, Z == 0
 						{
 							// UNKOWN PATH execute 0x00004390
 						}
 
-						// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000008)
-						*(uint32_t*)0x100000b0 = reg1; // = 0x0000424d (modified bits = 0x00000000)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x100000a8 + 0x00000008)
+						*(uint32_t*)0x100000b0 = 0x0000424d (modified bits = 0x00000000)
 
-						// MemRead 8 kB SRAM0 (address was computed as reg0 + 0x00000008)
-						reg0 = *(uint32_t*)0x100000b0; // = 0x0000424d
-
+						// MemRead 8 kB SRAM0 (address was computed as 0x100000a8 + 0x00000008)
 						// Compute 0x0000424d - 0x0000424d for compare
-						if (reg0 - reg1) is Not equal, Z == 0
+						if (*(uint32_t*)0x100000b0 - 0x0000424d) is Not equal, Z == 0
 						{
 							// UNKOWN PATH execute 0x0000439a
 						}
 
-						reg0 = 0x00000001; // (fields.imm)
-
 						// At 0x00004398 branching to 0x00005cef (reg14)
 
-						reg0 = 0x00000001; // (fields.imm)
-
-						// MemRead 128 kB on-chip flash (address encoded in instruction)
-						reg1 = *(uint32_t*)0x00005d0c; // = 0xe000e100
-
-						// 0x00008000 = 0x00000001 << 15 (Carry Out = 0x00000000)
-						reg0 = (uint32_t)reg0 << 15;
-
-						// MemWrite NVIC: ISER0 (address was computed as reg1 + 0x00000000)
-						*(uint32_t*)0xe000e100 = reg0; // = 0x00008000 (modified bits = 0x00018000)
+						// Enable interrupt for I2C
+						// MemWrite NVIC: ISER0 (address was computed as 0xe000e100 + 0x00000000)
+						*(uint32_t*)0xe000e100 = 0x00008000; // = 0x00008000 (modified bits = 0x00018000)
 
 					}
 					// Restore reg4 from Stack at 0x10001fa8 (Value saved was 0x00010074)
 					// Restore PC from Stack at 0x10001fac (Value saved was 0x00006a17)
 					// Stack Pointer updated to 0x10001fb0
 
-					reg4 = 0x0000000a; // (fields.imm)
-
 					// Branching from PC = 0x00006a18 to PC = 0x00006a20
 
 					// 0x00000009 = 0x0000000a - 0x00000001
-					reg4 = reg4 - 0x00000001;
+					reg4 = 0x0000000a - 0x00000001;
 
 					Carry clear, C == 0
 					{
 						// UNKOWN PATH execute 0x00006a34
 					}
 
-					// MemRead 128 kB on-chip flash (address encoded in instruction)
-					reg3 = *(uint32_t*)0x00006a38; // = 0x0000e980
+					reg3 = 0x0000e980
 
 					reg2 = 0x00000001; // (fields.imm)
 
@@ -10948,7 +10010,7 @@ void init_phase2_hw_not0()
 					reg0 = 0x00000000; // (fields.imm)
 
 					// Branch from 0x00006a2c to 0x0000d6c4 (Set LR to 0x00006a31)
-
+					// ?? fnc(arg0 = ?? (ignored if arg2 is <0x39) (0), arg1 = ?? (0x6b), arg2 = ?? (1), arg3 = ?? (0x0000e980))	
 					{
 						// Save reg4 to Stack at 0x10001fa0 (Value saved is 0x00000009)
 						// Save reg5 to Stack at 0x10001fa4 (Value saved is 0x00000001)
@@ -10956,58 +10018,30 @@ void init_phase2_hw_not0()
 						// Save reg14 to Stack at 0x10001fac (Value saved is 0x00006a31)
 						// Stack Pointer updated to 0x10001fa0
 
-						reg6 = 0x00000000; // (fields.imm)
-
-						// 0xffffffff = ~0x00000000;
-						reg6 = ~reg6;
+						reg6 = 0xffffffff;
 
 						// Compute 0x00000001 - 0x0000003f for compare
-						if (reg2 - 0x0000003f) is Carry set, C == 1
+						if (arg2 - 0x0000003f) is Carry set, C == 1
 						{
 							// UNKOWN PATH execute 0x0000d710
 						}
 
-						// MemRead 128 kB on-chip flash (address encoded in instruction)
-						reg4 = *(uint32_t*)0x0000d718; // = 0x10000d80
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d80 + 0x00000010)
+						*(uint32_t*)0x10000d90 = 0x00000000 (modified bits = 0x00000000)
 
-						reg0 = 0x00000000; // (fields.imm)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d80 + 0x00000008)
+						*(uint32_t*)0x10000d88 = arg2 + 0x00000001; // = 0x00000002 (modified bits = 0x00000002)
 
-						// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000010)
-						*(uint32_t*)0x10000d90 = reg0; // = 0x00000000 (modified bits = 0x00000000)
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d80 + 0x00000004)
+						*(uint32_t*)0x10000d84 = 0x10000d98 (modified bits = 0x10000d98)
 
-						// 0x00000002 = 0x00000001 + 0x00000001
-						reg0 = reg2 + 0x00000001;
-
-						// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000008)
-						*(uint32_t*)0x10000d88 = reg0; // = 0x00000002 (modified bits = 0x00000002)
-
-						reg0 = reg4; // = 0x10000d80
-
-						// 0x10000d98 = 0x10000d80 + 0x00000018
-						reg0 = reg0 + 0x00000018
-
-						// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000004)
-						*(uint32_t*)0x10000d84 = reg0; // = 0x10000d98 (modified bits = 0x10000d98)
-
-						// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
-						*(uint8_t*)0x10000d98 = reg1; // = 0x6b (modified bits = 0x6b)
-
-						// 0x10000d99 = 0x10000d98 + 0x00000001
-						reg0 = reg0 + 0x00000001;
-
-						reg1 = reg3; // = 0x0000e980
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d98 + 0x00000000)
+						*(uint8_t*)0x10000d98 = arg1; // = 0x6b (modified bits = 0x6b)
 
 						// Branch from 0x0000d6e4 to 0x0000218c (Set LR to 0x0000d6e9)
 
-						reg3 = reg0; // = 0x10000d99
-
-						// 0x1000ed99 = 0x10000d99 | 0x0000e980;
-						reg3 = reg3 | reg1;
-
 						// 0x40000000 = 0x1000ed99 << 30 (Carry Out = 0x00000000)
-						reg3 = (uint32_t)reg3 << 30;
-
-						Equal, Z == 1
+						if (((uint32_t)(0x10000d99 | arg3) << 30)) Equal, Z == 1
 						{
 							// UNKOWN PATH execute 0x0000219c
 						}
@@ -11015,67 +10049,43 @@ void init_phase2_hw_not0()
 						// Branching from PC = 0x00002194 to PC = 0x000021aa
 
 						// 0x00000000 = 0x00000001 - 0x00000001
-						reg2 = reg2 - 0x00000001;
-
-						NOT Carry set, C == 1
+						if (arg2 - 0x00000001) NOT Carry set, C == 1
 						{
 							// UNKOWN PATH execute 0x000021ae
 						}
 
-						// MemRead 128 kB on-chip flash (address was computed as reg1 + 0x00000000)
-						reg3 = *(uint8_t*)0x0000e980; // = 0x00000040
-
-						// 0x0000e981 = 0x0000e980 + 0x00000001
-						reg1 = reg1 + 0x00000001;
-
-						// MemWrite 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
-						*(uint8_t*)0x10000d99 = reg3; // = 0x40 (modified bits = 0x40)
-
-						// 0x10000d9a = 0x10000d99 + 0x00000001
-						reg0 = reg0 + 0x00000001;
+						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d99 + 0x00000000)
+						*(uint8_t*)0x10000d99 = 0x40 (modified bits = 0x40)
 
 						// 0xffffffff = 0x00000000 - 0x00000001
-						reg2 = reg2 - 0x00000001;
-
-						Carry set, C == 1
+						if ((arg2 - 0x00000001) - 0x00000001) Carry set, C == 1
 						{
 							// UNKOWN PATH execute 0x000021a2
 						}
 
 						// At 0x000021ae branching to 0x0000d6e9 (reg14)
 
-						reg0 = 0x00000005; // (fields.imm)
-
 						// Branch from 0x0000d6ea to 0x000040e0 (Set LR to 0x0000d6ef)
 
-						// MemRead 128 kB on-chip flash (address encoded in instruction)
-						reg1 = *(uint32_t*)0x000040f0; // = 0x40048080
+						reg3 = 0x00000020
 
-						// MemRead system control: SYSAHBCLKCTRL (address was computed as reg1 + 0x00000000)
-						reg2 = *(uint32_t*)0x40048080; // = 0x0c09617f
-
-						reg3 = 0x00000001; // (fields.imm)
-
-						// 0x00000020 = 0x00000001 << 0x00000005 (Carry Out = 0x00000000)
-						reg3 = (uint32_t)reg3 << reg0;
-
+						// Make sure clock is enabled for I2C
+						// MemRead system control: SYSAHBCLKCTRL (address was computed as 0x40048080 + 0x00000000)
 						// 0x0c09617f = 0x0c09617f | 0x00000020;
-						reg2 = reg2 | reg3;
-
-						// MemWrite system control: SYSAHBCLKCTRL (address was computed as reg1 + 0x00000000)
-						*(uint32_t*)0x40048080 = reg2; // = 0x0c09617f (modified bits = 0x00000000)
+						// MemWrite system control: SYSAHBCLKCTRL (address was computed as 0x40048080 + 0x00000000)
+						*(uint32_t*)0x40048080 = *(uint32_t*)0x40048080 | 0x00000020; // = 0x0c09617f (modified bits = 0x00000000)
 
 						// At 0x000040ec branching to 0x0000d6ef (reg14)
 
 						reg4 = 0x00000000; // (fields.imm)
 
 						// MemRead 128 kB on-chip flash (address encoded in instruction)
-						reg1 = *(uint32_t*)0x0000d718; // = 0x10000d80
+						reg1 = 0x10000d80
 
 						reg0 = 0x00000000; // (fields.imm)
 
 						// Branch from 0x0000d6f4 to 0x000042f0 (Set LR to 0x0000d6f9)
-
+						// ?? fnc(arg0 = deviceSelect?? (0), arg1 = ?? pointer to struct that has been filled in... (0x10000d80))
 						{
 							// Save reg4 to Stack at 0x10001f90 (Value saved is 0x00000000)
 							// Save reg5 to Stack at 0x10001f94 (Value saved is 0x00000001)
@@ -11083,116 +10093,69 @@ void init_phase2_hw_not0()
 							// Save reg14 to Stack at 0x10001f9c (Value saved is 0x0000d6f9)
 							// Stack Pointer updated to 0x10001f90
 
-							reg5 = reg1; // = 0x10000d80
+							reg5 = arg1; // = 0x10000d80
 
-							reg6 = reg0; // = 0x00000000
-
-							reg0 = 0x0000001c; // (fields.imm)
-
-							// MemRead 128 kB on-chip flash (address encoded in instruction)
-							reg1 = *(uint32_t*)0x00004350; // = 0x100000a8
-
-							// 0x00000000 = 0x00000000 * 0x0000001c;
-							reg0 = reg6 * reg0;
+							reg6 = arg0; // = 0x00000000
 
 							// 0x100000a8 = 0x00000000 + 0x100000a8
-							reg4 = reg0 + reg1;
+							reg4 = ((arg0 * 0x0000001c) + 0x100000a8);
 
-							// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000008)
-							reg2 = *(uint32_t*)0x100000b0; // = 0x0000424d
-
-							reg1 = 0x00000003; // (fields.imm)
-
-							reg0 = reg6; // = 0x00000000
-
-							// At 0x00004304 branching to 0x0000424d (reg2). LR set to 0x00004306
-
-							reg2 = 0x0000001c; // (fields.imm)
-
-							// 0x00000000 = 0x0000001c * 0x00000000;
-							reg0 = reg2 * reg0;
-
-							// MemRead 128 kB on-chip flash (address encoded in instruction)
-							reg2 = *(uint32_t*)0x00004264; // = 0x100000a8
-
-							// 0x100000a8 = 0x00000000 + 0x100000a8
-							reg0 = reg0 + reg2;
+							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000008)
+							// At 0x00004304 branching to 0x0000424d (*(uint32_t*)0x100000b0). LR set to 0x00004306
 
 							// Compute 0x00000003 - 0x00000001 for compare
-							if (reg1 - 0x00000001) is NOT Not equal, Z == 0
+							if (0x00000003 - 0x00000001) is NOT Not equal, Z == 0
 							{
 								// UNKOWN PATH execute 0x00004258
 							}
 
 							// At 0x00004262 branching to 0x00004307 (reg14)
 
-							reg0 = 0x00000004; // (fields.imm)
+							// MemWrite 8 kB SRAM0 (address was computed as arg1 + 0x00000014)
+							*(uint8_t*)0x10000d94 = 0x04 (modified bits = 0x04)
 
-							// MemWrite 8 kB SRAM0 (address was computed as reg5 + 0x00000014)
-							*(uint8_t*)0x10000d94 = reg0; // = 0x04 (modified bits = 0x04)
+							// MemWrite 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000010)
+							*(uint32_t*)0x100000b8 = arg1; // = 0x10000d80 (modified bits = 0x10000d80)
 
-							// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000010)
-							*(uint32_t*)0x100000b8 = reg5; // = 0x10000d80 (modified bits = 0x10000d80)
-
-							// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000014)
-							reg0 = *(uint32_t*)0x100000bc; // = 0x00000000
-
+							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000014)
 							// Compute 0x00000000 - 0x00000000 for compare
-							if (reg0 - 0x00000000) is Not equal, Z == 0
+							if (*(uint32_t*)0x100000bc - 0x00000000) is Not equal, Z == 0
 							{
 								// UNKOWN PATH execute 0x0000431c
 							}
 
-							// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000000)
-							reg0 = *(uint32_t*)0x100000a8; // = 0x40000000
+							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000000)
+							// MemWrite I2C: CONCLR (address was computed as *(uint32_t*)0x100000a8 + 0x00000018)
+							*(uint32_t*)0x40000018 = 0x0000003c (modified bits = 0x00000050)
 
-							reg1 = 0x0000003c; // (fields.imm)
+							// Set START flag and I2C interface enable
+							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000000)
+							// MemWrite I2C: CONSET (address was computed as *(uint32_t*)0x100000a8 + 0x00000000)
+							*(uint32_t*)0x40000000 = 0x00000060 (modified bits = 0x00000060)
 
-							// MemWrite I2C: CONCLR (address was computed as reg0 + 0x00000018)
-							*(uint32_t*)0x40000018 = reg1; // = 0x0000003c (modified bits = 0x00000050)
+							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000008)
+							// At 0x00004322 branching to 0x0000424d (*(uint32_t*)0x100000b0). LR set to 0x00004324
 
-							reg1 = 0x00000060; // (fields.imm)
-
-							// MemWrite I2C: CONSET (address was computed as reg0 + 0x00000000)
-							*(uint32_t*)0x40000000 = reg1; // = 0x00000060 (modified bits = 0x00000060)
-
-							// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000008)
-							reg2 = *(uint32_t*)0x100000b0; // = 0x0000424d
-
-							reg1 = 0x00000001; // (fields.imm)
-
-							reg0 = reg6; // = 0x00000000
-
-							// At 0x00004322 branching to 0x0000424d (reg2). LR set to 0x00004324
-
-							reg2 = 0x0000001c; // (fields.imm)
-
-							// 0x00000000 = 0x0000001c * 0x00000000;
-							reg0 = reg2 * reg0;
-
-							// MemRead 128 kB on-chip flash (address encoded in instruction)
-							reg2 = *(uint32_t*)0x00004264; // = 0x100000a8
-
-							// 0x100000a8 = 0x00000000 + 0x100000a8
-							reg0 = reg0 + reg2;
+							reg2 = 0x100000a8
 
 							// Compute 0x00000001 - 0x00000001 for compare
-							if (reg1 - 0x00000001) is Not equal, Z == 0
+							if (0x00000001 - 0x00000001) is Not equal, Z == 0
 							{
 								// UNKOWN PATH execute 0x00004262
 							}
 
-							// MemRead 8 kB SRAM0 (address was computed as reg0 + 0x00000010)
-							reg0 = *(uint32_t*)0x100000b8; // = 0x10000d80
-
+							// MemRead 8 kB SRAM0 (address was computed as ((0x0000001c * arg0) + 0x100000a8) + 0x00000010)
 							// 0x10000d94 = 0x10000d80 + 0x00000014
-							reg0 = reg0 + 0x00000014
+							reg0 = (*(uint32_t*)0x100000b8 + 0x00000014)
 
-							// MemRead 8 kB SRAM0 (address was computed as reg0 + 0x00000000)
+							// MemRead 8 kB SRAM0 (address was computed as ((0x0000001c * arg0) + 0x100000a8) + 0x00000010)
+							// MemRead 8 kB SRAM0 (address was computed as (*(uint32_t*)0x100000b8 + 0x00000014) + 0x00000000)
 							reg1 = *(uint8_t*)0x10000d94; // = 0x00000004
 
+							// MemRead 8 kB SRAM0 (address was computed as ((0x0000001c * arg0) + 0x100000a8) + 0x00000010)
+							// MemRead 8 kB SRAM0 (address was computed as (*(uint32_t*)0x100000b8 + 0x00000014) + 0x00000000)
 							// Compute 0x00000004 - 0x00000004 for compare
-							if (reg1 - 0x00000004) is NOT Equal, Z == 1
+							if (*(uint8_t*)0x10000d94 - 0x00000004) is NOT Equal, Z == 1
 							{
 								// UNKOWN PATH execute 0x00004262
 							}
