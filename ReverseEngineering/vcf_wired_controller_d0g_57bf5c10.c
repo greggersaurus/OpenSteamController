@@ -9891,8 +9891,6 @@ void init_phase2_hw_not0()
 						// Restore PC from Stack at 0x10001fa4 (Value saved was 0x00005cdf)
 						// Stack Pointer updated to 0x10001fa8
 
-// START HERE 
-
 						baudRate = 0x00061a80; //400000
 
 						reg0 = 0x00000000; // (fields.imm)
@@ -11767,6 +11765,145 @@ void Interrupt_1_PIN_INT1() {
 	// Stack Pointer updated to 0x10001fb8
 
 	// PC is set to reg14 (LR) which was previously saved to stack. This is exit of IRQ.
+}
+
+/**
+ * I2C Interrupt occurrs ...TODO
+ * Vector Table entry is 0x00000199.
+ */
+void Interrupt_15_I2C_Interrupt() {
+	// MemRead 128 kB on-chip flash (address was computed as 0x0000207c + 0x00000000)
+	// At 0x0000019c branching to 0x00005c81 (*(uint32_t*)0x0000207c)
+
+	{
+		// Save reg4 to Stack at 0x10001f88 (Value saved is 0x100000a8)
+		// Save reg14 to Stack at 0x10001f8c (Value saved is 0x0000425c)
+		// Stack Pointer updated to 0x10001f88
+
+		reg0 = 0x00000000; // (fields.imm)
+
+		// Branch from 0x00005c84 to 0x000042c8 (Set LR to 0x00005c89)
+		void fnc(arg0 = 0)
+		{
+			// Save reg4 to Stack at 0x10001f78 (Value saved is 0x100000a8)
+			// Save reg5 to Stack at 0x10001f7c (Value saved is 0x10000d80)
+			// Save reg6 to Stack at 0x10001f80 (Value saved is 0x00000000)
+			// Save reg14 to Stack at 0x10001f84 (Value saved is 0x00005c89)
+			// Stack Pointer updated to 0x10001f78
+
+			reg6 = arg0; // = 0x00000000
+
+			// Branch from 0x000042da to 0x0000d5c8 (Set LR to 0x000042df)
+			// int fnc(ctrlRegBaseAddr = *(uint32_t*)0x100000a8; // = 0x40000000, i2cConfig = *(uint32_t*)0x100000b8; // = 0x10000d80)
+			{
+				// Save reg4 to Stack at 0x10001f6c (Value saved is 0x00000000)
+				// Save reg5 to Stack at 0x10001f70 (Value saved is 0x100000a8)
+				// Save reg14 to Stack at 0x10001f74 (Value saved is 0x000042df)
+				// Stack Pointer updated to 0x10001f6c
+
+				reg2 = 0x0000003c; // (fields.imm)
+
+				// MemRead I2C: STAT (address was computed as ctrlRegBaseAddr + 0x00000004)
+				// 0x000000f8 = 0x000000f8 & 0x000000f8
+				// 0x00000000 = 0x000000f8 << 29 (Carry Out = 0x00000008)
+				// 0x00000000 = 0x00000000 >> 29 (Carry Out = 0x00000000)
+				reg4 = (uint32_t)((uint32_t)(*(uint32_t*)0x40000004 & 0x000000f8) << 29) >> 29;
+
+				Not equal, Z == 0
+				{
+					// UNKOWN PATH execute 0x0000d65a
+				}
+
+
+				// Branch from 0x0000d5dc to 0x0000c114 (Set LR to 0x0000d5e1)
+
+				{
+					// Save reg4 to Stack at 0x10001f64 (Value saved is 0x0000001f)
+					// Save reg5 to Stack at 0x10001f68 (Value saved is 0x100000a8)
+					// Stack Pointer updated to 0x10001f64
+
+					reg4 = reg14; // = 0x0000d5e1
+
+					// 0x0000d5e0 = 0x0000d5e1 - 0x00000001
+					reg4 = reg4 - 0x00000001;
+
+					// MemRead 128 kB on-chip flash (address was computed as reg4 + 0x00000000)
+					reg5 = *(uint8_t*)0x0000d5e0; // = 0x0000000c
+
+					// 0x0000d5e1 = 0x0000d5e0 + 0x00000001
+					reg4 = reg4 + 0x00000001;
+
+					// MemRead I2C: STAT (address was computed as ctrlRegBaseAddr + 0x00000004)
+					// 0x0000001f = 0x000000f8 >> 3 (Carry Out = 0x00000000)
+					// 0x0000001f = 0x0000001f << 0 (Carry Out = 0x00000000)
+					// Compute 0x0000001f - 0x0000000c for compare
+					if (((uint32_t)((uint32_t)(*(uint32_t*)0x40000004 & 0x000000f8) >> 3) << 0) - reg5) is NOT Carry set, C == 1
+					{
+						// UNKOWN PATH execute 0x0000c122
+					}
+
+					// MemRead 128 kB on-chip flash (address was computed as reg4 + reg5)
+					reg3 = *(uint8_t*)0x0000d5ed; // = 0x0000003d
+
+					// 0x0000007a = 0x0000003d << 1 (Carry Out = 0x00000000)
+					reg3 = (uint32_t)reg3 << 1;
+
+					// 0x0000d65b = 0x0000d5e1 + 0x0000007a
+					reg3 = reg4 + reg3;
+
+				}
+				// Restore reg4 from Stack at 0x10001f64 (Value saved was 0x0000001f)
+				// Restore reg5 from Stack at 0x10001f68 (Value saved was 0x100000a8)
+				// Stack Pointer updated to 0x10001f6c
+
+				// At 0x0000c12c branching to 0x0000d65b (reg3)
+
+				// MemWrite I2C: CONSET (address was computed as ctrlRegBaseAddr + 0x00000000)
+				*(uint32_t*)0x40000000 = 0x0000003c ^ 0x0000003c; // = 0x00000000 (modified bits = 0x00000060)
+
+				// MemWrite I2C: CONCLR (address was computed as ctrlRegBaseAddr + 0x00000018)
+				*(uint32_t*)0x40000018 = 0x0000003c; // = 0x0000003c (modified bits = 0x00000000)
+
+				// MemRead 8 kB SRAM0 (address was computed as i2cConfig + 0x00000014)
+				reg0 = *(uint8_t*)0x10000d94; // = 0x00000004
+
+				Plus, positive or zero, N == 0
+				{
+					// UNKOWN PATH execute 0x0000d670
+				}
+
+				// MemRead 8 kB SRAM0 (address was computed as i2cConfig + 0x00000014)
+				// Compute 0x00000004 - 0x00000002 for compare
+				if (*(uint8_t*)0x10000d94 - 0x00000002) is Equal, Z == 1
+				{
+					// UNKOWN PATH execute 0x0000d678
+				}
+
+				reg0 = 0x00000001; // (fields.imm)
+
+			}
+			// Restore reg4 from Stack at 0x10001f6c (Value saved was 0x00000000)
+			// Restore reg5 from Stack at 0x10001f70 (Value saved was 0x100000a8)
+			// Restore PC from Stack at 0x10001f74 (Value saved was 0x000042df)
+			// Stack Pointer updated to 0x10001f78
+
+			// Compute 0x00000001 - 0x00000000 for compare
+			if (reg0 - 0x00000000) is NOT Not equal, Z == 0
+			{
+				// UNKOWN PATH execute 0x000042e2
+			}
+
+		}
+		// Restore reg4 from Stack at 0x10001f78 (Value saved was 0x100000a8)
+		// Restore reg5 from Stack at 0x10001f7c (Value saved was 0x10000d80)
+		// Restore reg6 from Stack at 0x10001f80 (Value saved was 0x00000000)
+		// Restore PC from Stack at 0x10001f84 (Value saved was 0x00005c89)
+		// Stack Pointer updated to 0x10001f88
+
+	}
+	// Restore reg4 from Stack at 0x10001f88 (Value saved was 0x100000a8)
+	// Restore PC from Stack at 0x10001f8c (Value saved was 0x0000425c)
+	// Stack Pointer updated to 0x10001f90
 }
 
 /**
