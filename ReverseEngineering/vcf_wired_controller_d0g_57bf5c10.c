@@ -173,7 +173,7 @@
 
 	0x100000b0 (uint32_t) - Related to I2C IRQ. Function pointer.
 
-	0x100000b8 (uint32_t) - Related to I2C IRQ? Pointer to some I2C struct?
+	0x100000b8 (uint32_t) - Related to I2C IRQ. Pointer to some I2C_XFER_T for current transfer.
 	0x100000bc (uint32_t) - Related to I2C IRQ? 
 
 	0x10000200 (uint8_t)  - ?? Check for possible branching path...
@@ -274,9 +274,17 @@
 	...
 	0x10000a34 (uint32_t) - End of 0x84 bytes of EEPROM data from EEPROM offset 0
 
-	0x10000d80 (??)       - Start related to I2C config?
-	...
-	0x10000d97 (??)       - Start related to I2C config?
+	0x10000d80 (uint8_t)  - I2C_XFER_T.slaveAddr // 7-bit I2C Slave address
+	0x10000d81 (uint8_t)  - I2C_XFER_T alignment_padding
+	0x10000d82 (uint8_t)  - I2C_XFER_T alignment_padding
+	0x10000d83 (uint8_t)  - I2C_XFER_T alignment_padding
+	0x10000d84 (uint8_t*) - I2C_XFER_T.txBuff // Pointer to array of bytes to be transmitted
+	0x10000d88 (uint32_t) - I2C_XFER_T.txSz // Number of bytes in transmit array, if 0 only receive transfer will be carried on
+	0x10000d8c (uint8_t*) - I2C_XFER_T.rxBuff // Pointer memory where bytes received from I2C be stored
+	0x10000d90 (uint32_t) - I2C_XFER_T.rxSz // Number of bytes to received, if 0 only transmission we be carried on
+	0x10000d94 (uint32_t) - I2C_XFER_T.status // Status of the current I2C transfer
+	0x10000d98 (uint8_t)  - I2C_XFER_T.txBuff[0]
+	0x10000d99 (uint8_t)  - I2C_XFER_T.txBuff[1]
 
 	0x10000dd8 (uint32_t) - Set with hardcoded value (write address based on value in 0x100002c4)
 
@@ -9746,17 +9754,17 @@ void init_phase2_hw_not0()
 					// UNKOWN PATH execute 0x00005fd8
 				}
 
-				reg0 = 0x00000069; // (fields.imm)
+				i2cSlaveAddr = 0x00000069; // (fields.imm)
 
 				// Branch from 0x00005fd2 to 0x00006a10 (Set LR to 0x00005fd7)
-
+				// ?? fnc(i2cSlaveAddr = 0x69)
 				{
 					// Save reg4 to Stack at 0x10001fb0 (Value saved is 0x00010074)
 					// Save reg14 to Stack at 0x10001fb4 (Value saved is 0x00005fd7)
 					// Stack Pointer updated to 0x10001fb0
 
 					// Branch from 0x00006a12 to 0x00005c8c (Set LR to 0x00006a17)
-					// void setupI2C(arg0 = ?? (0x00000069))
+					// void setupI2C(i2cSlaveAddr = 0x69)
 					{
 						// Save reg4 to Stack at 0x10001fa8 (Value saved is 0x00010074)
 						// Save reg14 to Stack at 0x10001fac (Value saved is 0x00006a17)
@@ -9768,6 +9776,7 @@ void init_phase2_hw_not0()
 
 						// Branching from PC = 0x000021b2 to PC = 0x000021b8
 
+						// Clear out struct I2C_XFER_T:
 						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d80 + 0x00000000)
 						*(uint8_t*)0x10000d80 = 0x00 (modified bits = 0x00)
 						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d81 + 0x00000000)
@@ -9819,8 +9828,9 @@ void init_phase2_hw_not0()
 
 						// At 0x000021bc branching to 0x00005c99 (reg14)
 
+						// Set I2C slave address in I2C_XFER_T for communicating with MPU-6500 Motion Tracking Device
 						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d80 + 0x00000000)
-						*(uint8_t*)0x10000d80 = reg0; // = 0x69 (modified bits = 0x69)
+						*(uint8_t*)0x10000d80 = i2cSlaveAddr; // = 0x69 (modified bits = 0x69)
 
 						// De-assert reset for I2C
 						// MemRead system control: PRESETCTRL (address was computed as 0x40048000 + 0x00000004)
@@ -10008,7 +10018,7 @@ void init_phase2_hw_not0()
 					reg0 = 0x00000000; // (fields.imm)
 
 					// Branch from 0x00006a2c to 0x0000d6c4 (Set LR to 0x00006a31)
-					// ?? fnc(arg0 = ?? (ignored if arg2 is <0x39) (0), arg1 = ?? (0x6b), arg2 = ?? (1), arg3 = ?? (0x0000e980))	
+					// ?? writeMpu6500Reg??(arg0 = ?? (ignored if arg2 is <0x3f) (0), i2cRegAddr = 0x6b, arg2 = ?? (1), arg3 = ?? (0x0000e980))	
 					{
 						// Save reg4 to Stack at 0x10001fa0 (Value saved is 0x00000009)
 						// Save reg5 to Stack at 0x10001fa4 (Value saved is 0x00000001)
@@ -10024,17 +10034,21 @@ void init_phase2_hw_not0()
 							// UNKOWN PATH execute 0x0000d710
 						}
 
+						// Set I2C_XFER_T.rxSz to 0, indicating only transmission will be carried out
 						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d80 + 0x00000010)
 						*(uint32_t*)0x10000d90 = 0x00000000 (modified bits = 0x00000000)
 
+						// Set I2C_XFER_T.txSz 
 						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d80 + 0x00000008)
 						*(uint32_t*)0x10000d88 = arg2 + 0x00000001; // = 0x00000002 (modified bits = 0x00000002)
-
+						
+						// Set I2C_XFER_T.txBuff
 						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d80 + 0x00000004)
 						*(uint32_t*)0x10000d84 = 0x10000d98 (modified bits = 0x10000d98)
 
+						// I2C_XFER_T.txBuff[0] = 0x6b (Write to reg PWR_MGMT_1)
 						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d98 + 0x00000000)
-						*(uint8_t*)0x10000d98 = arg1; // = 0x6b (modified bits = 0x6b)
+						*(uint8_t*)0x10000d98 = i2cRegAddr; // = 0x6b (modified bits = 0x6b)
 
 						// Branch from 0x0000d6e4 to 0x0000218c (Set LR to 0x0000d6e9)
 
@@ -10052,6 +10066,7 @@ void init_phase2_hw_not0()
 							// UNKOWN PATH execute 0x000021ae
 						}
 
+						// Set I2C_XFER_T.txBuff[1] = 0x40 (Put the MPU6500 into sleep mode)
 						// MemWrite 8 kB SRAM0 (address was computed as 0x10000d99 + 0x00000000)
 						*(uint8_t*)0x10000d99 = 0x40 (modified bits = 0x40)
 
@@ -10078,12 +10093,12 @@ void init_phase2_hw_not0()
 						reg4 = 0x00000000; // (fields.imm)
 
 						// MemRead 128 kB on-chip flash (address encoded in instruction)
-						reg1 = 0x10000d80
+						xfer = 0x10000d80
 
-						reg0 = 0x00000000; // (fields.imm)
+						i2cId = 0x00000000; // (fields.imm)
 
 						// Branch from 0x0000d6f4 to 0x000042f0 (Set LR to 0x0000d6f9)
-						// ?? fnc(arg0 = deviceSelect?? (0), arg1 = ?? pointer to struct that has been filled in... (0x10000d80))
+						// int Chip_I2C_MasterTransfer(I2C_ID_T i2cId = 0, I2C_XFER_T *xfer = 0x10000d80)
 						{
 							// Save reg4 to Stack at 0x10001f90 (Value saved is 0x00000000)
 							// Save reg5 to Stack at 0x10001f94 (Value saved is 0x00000001)
@@ -10091,14 +10106,14 @@ void init_phase2_hw_not0()
 							// Save reg14 to Stack at 0x10001f9c (Value saved is 0x0000d6f9)
 							// Stack Pointer updated to 0x10001f90
 
-							reg5 = arg1; // = 0x10000d80
+							reg5 = xfer; // = 0x10000d80
 
-							reg6 = arg0; // = 0x00000000
+							reg6 = i2cId; // = 0x00000000
 
 							// 0x100000a8 = 0x00000000 + 0x100000a8
-							reg4 = ((arg0 * 0x0000001c) + 0x100000a8);
+							reg4 = ((i2cId * 0x0000001c) + 0x100000a8);
 
-							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000008)
+							// MemRead 8 kB SRAM0 (address was computed as ((i2cId * 0x0000001c) + 0x100000a8) + 0x00000008)
 							// At 0x00004304 branching to 0x0000424d (*(uint32_t*)0x100000b0). LR set to 0x00004306
 
 							// Compute 0x00000003 - 0x00000001 for compare
@@ -10109,29 +10124,29 @@ void init_phase2_hw_not0()
 
 							// At 0x00004262 branching to 0x00004307 (reg14)
 
-							// MemWrite 8 kB SRAM0 (address was computed as arg1 + 0x00000014)
+							// MemWrite 8 kB SRAM0 (address was computed as xfer + 0x00000014)
 							*(uint8_t*)0x10000d94 = 0x04 (modified bits = 0x04)
 
-							// MemWrite 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000010)
-							*(uint32_t*)0x100000b8 = arg1; // = 0x10000d80 (modified bits = 0x10000d80)
+							// MemWrite 8 kB SRAM0 (address was computed as ((i2cId * 0x0000001c) + 0x100000a8) + 0x00000010)
+							*(uint32_t*)0x100000b8 = xfer; // = 0x10000d80 (modified bits = 0x10000d80)
 
-							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000014)
+							// MemRead 8 kB SRAM0 (address was computed as ((i2cId * 0x0000001c) + 0x100000a8) + 0x00000014)
 							// Compute 0x00000000 - 0x00000000 for compare
 							if (*(uint32_t*)0x100000bc - 0x00000000) is Not equal, Z == 0
 							{
 								// UNKOWN PATH execute 0x0000431c
 							}
 
-							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000000)
+							// MemRead 8 kB SRAM0 (address was computed as ((i2cId * 0x0000001c) + 0x100000a8) + 0x00000000)
 							// MemWrite I2C: CONCLR (address was computed as *(uint32_t*)0x100000a8 + 0x00000018)
 							*(uint32_t*)0x40000018 = 0x0000003c (modified bits = 0x00000050)
 
 							// Set START flag and I2C interface enable
-							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000000)
+							// MemRead 8 kB SRAM0 (address was computed as ((i2cId * 0x0000001c) + 0x100000a8) + 0x00000000)
 							// MemWrite I2C: CONSET (address was computed as *(uint32_t*)0x100000a8 + 0x00000000)
 							*(uint32_t*)0x40000000 = 0x00000060 (modified bits = 0x00000060)
 
-							// MemRead 8 kB SRAM0 (address was computed as ((arg0 * 0x0000001c) + 0x100000a8) + 0x00000008)
+							// MemRead 8 kB SRAM0 (address was computed as ((i2cId * 0x0000001c) + 0x100000a8) + 0x00000008)
 							// At 0x00004322 branching to 0x0000424d (*(uint32_t*)0x100000b0). LR set to 0x00004324
 
 							reg2 = 0x100000a8
@@ -10142,21 +10157,170 @@ void init_phase2_hw_not0()
 								// UNKOWN PATH execute 0x00004262
 							}
 
-							// MemRead 8 kB SRAM0 (address was computed as ((0x0000001c * arg0) + 0x100000a8) + 0x00000010)
+							// MemRead 8 kB SRAM0 (address was computed as ((0x0000001c * i2cId) + 0x100000a8) + 0x00000010)
 							// 0x10000d94 = 0x10000d80 + 0x00000014
 							reg0 = (*(uint32_t*)0x100000b8 + 0x00000014)
 
-							// MemRead 8 kB SRAM0 (address was computed as ((0x0000001c * arg0) + 0x100000a8) + 0x00000010)
+							// MemRead 8 kB SRAM0 (address was computed as ((0x0000001c * i2cId) + 0x100000a8) + 0x00000010)
 							// MemRead 8 kB SRAM0 (address was computed as (*(uint32_t*)0x100000b8 + 0x00000014) + 0x00000000)
 							reg1 = *(uint8_t*)0x10000d94; // = 0x00000004
 
-							// MemRead 8 kB SRAM0 (address was computed as ((0x0000001c * arg0) + 0x100000a8) + 0x00000010)
+							// Loop waiting for I2C_XFER_T.status not be I2C_STATUS_BUSY
+							// MemRead 8 kB SRAM0 (address was computed as ((0x0000001c * i2cId) + 0x100000a8) + 0x00000010)
 							// MemRead 8 kB SRAM0 (address was computed as (*(uint32_t*)0x100000b8 + 0x00000014) + 0x00000000)
 							// Compute 0x00000004 - 0x00000004 for compare
-							if (*(uint8_t*)0x10000d94 - 0x00000004) is NOT Equal, Z == 1
+							if (*(uint8_t*)0x10000d94 - 0x00000004) is Equal, Z == 1
 							{
-								// UNKOWN PATH execute 0x00004262
+								// UNKOWN PATH execute 0x0000425c
 							}
+
+							// At 0x00004262 branching to 0x00004325 (reg14)
+
+//TODO: pick up here to finish cleaning up and understanding sim data...
+
+							reg0 = 0x00000000; // (fields.imm)
+
+							// MemWrite 8 kB SRAM0 (address was computed as reg4 + 0x00000010)
+							*(uint32_t*)0x100000b8 = reg0; // = 0x00000000 (modified bits = 0x10000d80)
+
+							// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000000)
+							reg2 = *(uint32_t*)0x100000a8; // = 0x40000000
+
+							// MemRead I2C: CONSET (address was computed as reg2 + 0x00000000)
+							reg0 = *(uint32_t*)0x40000000; // = 0x00000060
+
+							// 0x00000000 = 0x00000060 << 27 (Carry Out = 0x00000020)
+							reg0 = (uint32_t)reg0 << 27;
+
+							// 0x00000000 = 0x00000000 >> 31 (Carry Out = 0x00000000)
+							reg0 = (uint32_t)reg0 >> 31;
+
+							// 0x00000001 = 0x00000000 + 0x00000001
+							reg0 = reg0 + 0x00000001;
+
+							Equal, Z == 1
+							{
+								// UNKOWN PATH execute 0x0000432a
+							}
+
+							// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000018)
+							reg0 = *(uint16_t*)0x100000c0; // = 0x00000000
+
+							// 0x00000000 = 0x00000000 << 16 (Carry Out = 0x00000000)
+							reg0 = (uint32_t)reg0 << 16;
+
+							// 0x00000000 = 0x00000000 >> 24 (Carry Out = 0x00000000)
+							reg0 = (uint32_t)reg0 >> 24;
+
+							NOT Equal, Z == 1
+							{
+								// UNKOWN PATH execute 0x0000433c
+							}
+
+							// MemRead 8 kB SRAM0 (address was computed as reg4 + 0x00000008)
+							reg2 = *(uint32_t*)0x100000b0; // = 0x0000424d
+
+							reg1 = 0x00000004; // (fields.imm)
+
+							reg0 = reg6; // = 0x00000000
+
+							// At 0x0000434a branching to 0x0000424d (reg2). LR set to 0x0000434c
+
+							reg2 = 0x0000001c; // (fields.imm)
+
+							// 0x00000000 = 0x0000001c * 0x00000000;
+							reg0 = reg2 * reg0;
+
+							// MemRead 128 kB on-chip flash (address encoded in instruction)
+							reg2 = *(uint32_t*)0x00004264; // = 0x100000a8
+
+							// 0x100000a8 = 0x00000000 + 0x100000a8
+							reg0 = reg0 + reg2;
+
+							// Compute 0x00000004 - 0x00000001 for compare
+							if (reg1 - 0x00000001) is NOT Not equal, Z == 0
+							{
+								// UNKOWN PATH execute 0x00004258
+							}
+
+							// At 0x00004262 branching to 0x0000434d (reg14)
+
+							// MemRead 8 kB SRAM0 (address was computed as reg5 + 0x00000014)
+							reg0 = *(uint8_t*)0x10000d94; // = 0x00000000
+
+						}
+						// Restore reg4 from Stack at 0x10001f90 (Value saved was 0x00000000)
+						// Restore reg5 from Stack at 0x10001f94 (Value saved was 0x00000001)
+						// Restore reg6 from Stack at 0x10001f98 (Value saved was 0xffffffff)
+						// Restore PC from Stack at 0x10001f9c (Value saved was 0x0000d6f9)
+						// Stack Pointer updated to 0x10001fa0
+
+						// 0x00000000 = 0x00000000 << 0 (Carry Out = 0x20000000)
+						reg5 = (uint32_t)reg0 << 0;
+
+						NOT Equal, Z == 1
+						{
+							// UNKOWN PATH execute 0x0000d6fc
+						}
+
+						reg0 = 0x00000005; // (fields.imm)
+
+						// Branch from 0x0000d708 to 0x000040a4 (Set LR to 0x0000d70d)
+
+						// MemRead 128 kB on-chip flash (address encoded in instruction)
+						reg1 = *(uint32_t*)0x000040b4; // = 0x40048080
+
+						// MemRead system control: SYSAHBCLKCTRL (address was computed as reg1 + 0x00000000)
+						reg2 = *(uint32_t*)0x40048080; // = 0x0c09617f
+
+						reg3 = 0x00000001; // (fields.imm)
+
+						// 0x00000020 = 0x00000001 << 0x00000005 (Carry Out = 0x00000000)
+						reg3 = (uint32_t)reg3 << reg0;
+
+						// 0x0c09615f = 0x0c09617f & ~0x00000020;
+						reg2 = reg2 & ~reg3;
+
+						// MemWrite system control: SYSAHBCLKCTRL (address was computed as reg1 + 0x00000000)
+						*(uint32_t*)0x40048080 = reg2; // = 0x0c09615f (modified bits = 0x00000020)
+
+						// At 0x000040b0 branching to 0x0000d70d (reg14)
+
+						// Compute 0x00000000 - 0x00000000 for compare
+						if (reg5 - 0x00000000) is NOT Equal, Z == 1
+						{
+							// UNKOWN PATH execute 0x0000d710
+						}
+
+						reg0 = 0x00000000; // (fields.imm)
+
+					}
+					// Restore reg4 from Stack at 0x10001fa0 (Value saved was 0x00000009)
+					// Restore reg5 from Stack at 0x10001fa4 (Value saved was 0x00000001)
+					// Restore reg6 from Stack at 0x10001fa8 (Value saved was 0x00010074)
+					// Restore PC from Stack at 0x10001fac (Value saved was 0x00006a31)
+					// Stack Pointer updated to 0x10001fb0
+
+					// Compute 0x00000000 - 0x00000000 for compare
+					if (reg0 - 0x00000000) is Not equal, Z == 0
+					{
+						// UNKOWN PATH execute 0x00006a1a
+					}
+
+				}
+				// Restore reg4 from Stack at 0x10001fb0 (Value saved was 0x00010074)
+				// Restore PC from Stack at 0x10001fb4 (Value saved was 0x00005fd7)
+				// Stack Pointer updated to 0x10001fb8
+
+			}
+			// Restore reg4 from Stack at 0x10001fb8 (Value saved was 0x00010074)
+			// Restore PC from Stack at 0x10001fbc (Value saved was 0x00005df3)
+			// Stack Pointer updated to 0x10001fc0
+
+			// MemRead 128 kB on-chip flash (address encoded in instruction)
+			reg0 = *(uint32_t*)0x00005ea8; // = 0x0000a895
+
+			// Branch from 0x00005df4 to 0x00002fcc (Set LR to 0x00005df9)
 
 }
 
@@ -11768,10 +11932,16 @@ void Interrupt_1_PIN_INT1() {
 }
 
 /**
- * I2C Interrupt occurrs ...TODO
+ * I2C Interrupt occurrs when I2C controller state changes.
+ *
  * Vector Table entry is 0x00000199.
  */
 void Interrupt_15_I2C_Interrupt() {
+	// NOTE: Leaving this here for reference, but we really don't need it as
+	//  we know I2C communications are occurring using lpc_chip_11uxx_lib and
+	//  we can abstract away I2C transfers without diving into what exactly
+	//  the ISR is doing.
+
 	// MemRead 128 kB on-chip flash (address was computed as 0x0000207c + 0x00000000)
 	// At 0x0000019c branching to 0x00005c81 (*(uint32_t*)0x0000207c)
 
