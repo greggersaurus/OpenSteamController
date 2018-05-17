@@ -124,14 +124,25 @@ Free book geared towards beginners on how to reverse engineer code.
 
 ## [Radare](http://www.radare.org/r/)
 
-This proved to not be particularly useful for raw stripped binary.
+This may be worth learning and using as a supplementary tool (now that time spent
+ with pinkySim has give me better understanding of assembly flow). 
+
+Somewhat different approach than pinkySim in that we are looking at assembly and trying 
+ to assess actions that could be taken and potential purpose, as opposed to focusing on
+ actions taken during simulation and why they were taken (and maybe should not have been).
 
 * [Steep learning curve](https://www.gitbook.com/book/radare/radare2book/details)
+    * Videos for learning basics (specifically related to firmware reverese engineering)
+        * https://www.youtube.com/watch?v=R3sGlzXfEkU
+        * https://www.youtube.com/watch?v=GIU4yJn2-2A
+        * https://www.youtube.com/watch?v=iTKra0XD6z4
 * Has option to disassemble ARM, but how exactly does it handle ARMv6-M?
-    * Does not automatically work with firmware.bin as input
     * What about #if 0  section iwth armv6 options?
-* With have firmware binary format (i.e. no code/data sections information) this only helps so much. 
-    * Simulation with pinkySim can be utilized to possibly rebuild this section information and then revisit this tool?
+* How to deal with firmware stripped binary format (i.e. no code/data sections information)?
+    * Build up scripting tooling to handle this? (i.e. don't decode instructions we "know" we "cannot reach")
+        * Scripting to identify code/data semi-automatically? 
+* Can use flow visualization to identify different sections of code to focus on?
+    * Allows us to see paths we are not taking (and where they might go), rather than just knowing a branch was not taken.
 
 ## [Fracture](https://github.com/draperlaboratory/fracture)
 
