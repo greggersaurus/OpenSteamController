@@ -24,6 +24,12 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Consider latest firmware update (new firmware to enable BLE for new Steam Link app)
+    1. Look at what has changed?
+    1. Will new tooling help to decompose the new firmware faster?
+    1. Is this a distraction not worth digging into right now?
+       1. Majority of functional behavior from vcf_wired_controller_d0g_57bf5c10.bin should remain unchanged (even if underlying assembly changes). 
+       1. Once functionality is fully understood, applying that understanding to newer firmware may be quicker than "starting over" with new firmware?
 1. Simulation to C Conversion
     1. Continue running straightforward sim (with USB_VBUS = 1)
         1. Finish converting Left Haptic Init sim data
