@@ -26,6 +26,12 @@ This section is a running list of priorities to focus on in hopes of reaching
 
 1. Questionable paths to dig into
     1. Check default value read by PIO0_3 via dev board code (with USB cable connected and not?)
+1. Consider latest firmware update (new firmware to enable BLE for new Steam Link app)
+    1. Look at what has changed?
+    1. Will new tooling help to decompose the new firmware faster?
+    1. Is this a distraction not worth digging into right now?
+       1. Majority of functional behavior from vcf_wired_controller_d0g_57bf5c10.bin should remain unchanged (even if underlying assembly changes). 
+       1. Once functionality is fully understood, applying that understanding to newer firmware may be quicker than "starting over" with new firmware?
 1. Simulation to C Conversion
     1. Re-run everything using output of new pinkySim exeLog simplified C
     1. Run and decode non-straightforward paths
