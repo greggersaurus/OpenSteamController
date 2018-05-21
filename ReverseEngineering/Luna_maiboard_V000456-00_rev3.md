@@ -35,14 +35,14 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |             9 | XTALOUT               |                  | |
 |            10 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
 |            11 | PIO0_20               |                  | |
-|            12 | PIO1_10               | PIO1_10          | Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up... (routed to pin ??(middle) on U10 on front of PCB) |
+|            12 | PIO1_10               | PIO1_10          | TODO: get more info on this... Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up... (routed to pin ??(middle) on U10 on front of PCB) |
 |            13 | PIO0_2                | PIO0_2           | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to...). Seems to have something to do with Brown Out Detection. |
 |            14 | PIO1_26               |                  | S2 - Left trackpad click |
 |            15 | PIO1_27               |                  | S3 - LT (Left trigger digital) |
 |            16 | PIO1_4                |                  | S8 - LB (Left bumper) | 
 |            17 | PIO1_1                | PIO1_1           | Set as output GPIO and driven high, during init. (Routes to R35 and R36 near gyro + accelerometer chip). RST related for Gyro + Accelerometer maybe?|
 |            18 | PIO1_20               |                  | S17 - FRONT_L (Front left arrow button) |
-|            19 | PIO0_3                | USB_VBUS         | Read on startup to tell is USB cable is plugged in. |
+|            19 | PIO0_3                | USB_VBUS         | Monitors the presence of USB bus power. |
 |            20 | PIO0_4                | I2C SCL          | Connected to MPU-6500 I2C SCL |
 |            21 | PIO0_5                | I2C SDA          | Connected to MPU-6500 I2C SDA |
 |            22 | PIO0_21               | CT16B1_MAT0      | Control Steam Button LED (LED1) |
@@ -52,7 +52,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            26 | USB_DP                |                  | |
 |            27 | PIO1_24               |                  | |
 |            28 | PIO1_18               | TXD (USART)      | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
-|            29 | PIO0_6                | not(USB_CONNECT) | |
+|            29 | PIO0_6                | not(USB_CONNECT) | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
 |            30 | PIO0_7                | PIO0_7           | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)) |
 |            31 | PIO1_28               | PIO1_28          | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)) |
 |            32 | PIO1_5                |                  | |

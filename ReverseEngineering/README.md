@@ -25,7 +25,7 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Questionable paths to dig into
-    1. Check default value read by PIO0_3 via dev board code (with USB cable connected and not?)
+    1. PIO0_3 status any different when configured to have pull down instead of pull-up?
 1. Consider latest firmware update (new firmware to enable BLE for new Steam Link app)
     1. Look at what has changed?
     1. Will new tooling help to decompose the new firmware faster?

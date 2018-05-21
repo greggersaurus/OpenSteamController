@@ -15040,449 +15040,188 @@ void main()
 		
 		// Branch from 0x00001582 to 0x000007a0 (Set LR to 0x00001587)
 
+		// Clear GPREG1 (this register retains state through Deep power-down mode)
+		// *(uint32_t*)0x000007ac -> 0x40038000 (MemRead 128 kB on-chip flash)
+		// MemWrite PMU: GPREG1 (address was computed as (0x40038000) + 0x00000008)
+		*(uint32_t*)0x40038008 = 0x00000000; // = 0x00000000 (modified bits = 0x00000000)
+		
+		// At PC 0x000007a8 branching to (Branch from 0x00001582 to 0x000007a0)
+		
+		// Branch from 0x0000159a to 0x00000572 (Set LR to 0x0000159f)
+		
+		// Branch to 0x0000057e
+		
+		// Enable pull-down resistor for PIO0_3
+		// *(uint32_t*)0x00001624 -> 0x40044000 (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x00001620 -> 0x0000163c (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x0000163c -> 0x00080300 (MemRead 128 kB on-chip flash) (Addr = (0x0000163c) + (0x00000000))
+		// MemWrite IOCON: PIO0_3 (address was computed as (0x40044000) + (0x0000000c))
+		// *(uint32_t*)0x00001620 -> 0x0000163c (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x0000163c -> 0x00080300 (MemRead 128 kB on-chip flash) (Addr = (0x0000163c) + (0x00000000))
+		*(uint32_t*)0x4004400c = 0x00000008; // = 0x00000008 (modified bits = 0x00000098)
+		
+		// At PC 0x00000580 branching to (Branch from 0x0000159a to 0x00000572)
+		
+		// Branch to 0x0000158c
+		
+		// Branch from 0x0000159a to 0x00000572 (Set LR to 0x0000159f)
+		
+		// Branch to 0x0000057e
+		
+		// Set pin functiona to not(USB_CONNECT). Signal used to switch an external 1.5 k  resistor under software control. Used with the SoftConnect USB feature.:
+		// *(uint32_t*)0x00001624 -> 0x40044000 (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x00001620 -> 0x0000163c (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x00001640 -> 0x00010600 (MemRead 128 kB on-chip flash) (Addr = (0x0000163c) + (0x00000004))
+		// MemWrite IOCON: PIO0_6 (address was computed as (0x40044000) + (0x00000018))
+		// *(uint32_t*)0x00001620 -> 0x0000163c (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x00001640 -> 0x00010600 (MemRead 128 kB on-chip flash) (Addr = (0x0000163c) + (0x00000004))
+		*(uint32_t*)0x40044018 = 0x00000001; // = 0x00000001 (modified bits = 0x00000091)
+		
+		// At PC 0x00000580 branching to (Branch from 0x0000159a to 0x00000572)
+		
+		// Branch to 0x0000158c
+		
+		// Branch from 0x0000159a to 0x00000572 (Set LR to 0x0000159f)
+		
+		// Execute 0x00000578
+		
+		// Set pin function to RXD. Receiver input for USART.Used in UART ISP mode.
+		// *(uint32_t*)0x00001620 -> 0x0000163c (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x00001644 -> 0x00021101 (MemRead 128 kB on-chip flash) (Addr = (0x0000163c) + (0x00000008))
+		// *(uint32_t*)0x00001624 -> 0x40044000 (MemRead 128 kB on-chip flash)
+		// MemWrite IOCON: PIO1_17 (address was computed as (0x40044044) + 0x00000060)
+		// *(uint32_t*)0x00001620 -> 0x0000163c (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x00001644 -> 0x00021101 (MemRead 128 kB on-chip flash) (Addr = (0x0000163c) + (0x00000008))
+		*(uint32_t*)0x400440a4 = 0x00000002; // = 0x00000002 (modified bits = 0x00000092)
+		
+		// At PC 0x0000057c branching to (Branch from 0x0000159a to 0x00000572)
+		
+		// Branch to 0x0000158c
+		
+		// Branch from 0x0000159a to 0x00000572 (Set LR to 0x0000159f)
+		
+		// Execute 0x00000578
+		
+		// Set pin function to TXD. Transmitter output for USART. Used in UART ISP mode.
+		// *(uint32_t*)0x00001620 -> 0x0000163c (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x00001648 -> 0x00021201 (MemRead 128 kB on-chip flash) (Addr = (0x0000163c) + (0x0000000c))
+		// *(uint32_t*)0x00001624 -> 0x40044000 (MemRead 128 kB on-chip flash)
+		// MemWrite IOCON: PIO1_18 (address was computed as (0x40044048) + 0x00000060)
+		// *(uint32_t*)0x00001620 -> 0x0000163c (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x00001648 -> 0x00021201 (MemRead 128 kB on-chip flash) (Addr = (0x0000163c) + (0x0000000c))
+		*(uint32_t*)0x400440a8 = 0x00000002; // = 0x00000002 (modified bits = 0x00000092)
+		
+		// At PC 0x0000057c branching to (Branch from 0x0000159a to 0x00000572)
+		
+		// Execute 0x000015a4
+		
+		// Branch from 0x000015a4 to 0x00000ce8 (Set LR to 0x000015a9)
+		
+		// Check PIO0_3 status (will be 1 USB connected, 0 otherwise) TODO: Check this path? (why checking again so soon? Pull down enable related in any way?)
+		// *(uint8_t*)0x50000003 -> 0x00000001 (MemRead GPIO: P0_3 PBYTE) (Addr = (0x50000000) + 0x00000003)
+		if ((*(uint8_t*)0x50000003) - 0x00000000) is (Equal (Z == 1))
+			// Would Branch to 0x00000cf4
+		// Execute 0x00000cf2
+		
+		// At PC 0x00000cf4 branching to (Branch from 0x000015a4 to 0x00000ce8)
+		
+		// Branch from 0x000015ac to 0x00000f90 (Set LR to 0x000015b1)
+		
+		// Drive Battery/Power Related GPIO
+		//
+		// Determines whether to drive GPIO high or low
+		//	arg0x00000f90_0 = (0x00000000)
+		void fnc0x00000f90(arg0x00000f90_0)
+		{
+			// SP = 0x10001bf8
+			
+			// Branch from 0x00000f94 to 0x00000cf8 (Set LR to 0x00000f99)
+			
+			// At PC 0x00000cfc branching to (Branch from 0x00000f94 to 0x00000cf8)
+			
+			// *(uint32_t*)0x00000d00 -> 0x10000254 (MemRead 128 kB on-chip flash)
+			// *(uint32_t*)0x10000258 -> 0x0000000a (MemRead 8 kB SRAM0) (Addr = (0x10000254) + 0x00000004)
+			if ((*(uint32_t*)0x10000258) - 0x00000008) is (Carry clear (C == 0))
+				// Would Branch to 0x00000fae
+			// Execute 0x00000fa2
+			
+			// *(uint32_t*)0x00000fcc -> 0x50000020 (MemRead 128 kB on-chip flash)
+			// MemWrite GPIO: P1_10 PBYTE (address was computed as (0x50000020) + 0x0000000a)
+			*(uint8_t*)0x5000002a = (arg0x00000f90_0) ^ (0x00000001); // = 0x01 (modified bits = 0x01)
+			
+			// Branching from PC = 0x00000fac to PC = 0x00000fc2
+			
+			// Branch from 0x00000fc4 to 0x0000055c (Set LR to 0x00000fc9)
+			
+			// MemWrite GPIO: DIR1 (address was computed as (0x50002004) + 0x00000000)
+			// *(uint32_t*)0x50002004 -> 0x00000400 (MemRead GPIO: DIR1) (Addr = (0x50002004) + 0x00000000)
+			*(uint32_t*)0x50002004 = (*(uint32_t*)0x50002004) | (0x00000400); // = 0x00000400 (modified bits = 0x00000000)
+			
+			// At PC 0x00000570 branching to (Branch from 0x00000fc4 to 0x0000055c)
+			
+		}
+		
+		// PC = 0x000015b1
+		
+		// SP = 0x10001c08
+		
+		// Branch from 0x000015ba to 0x00000bdc (Set LR to 0x000015bf)
+		
+		// EEPROM Read
+		//
+		// EEPROM address to read
+		//	arg0x00000bdc_0 = (0x00000500)
+		//
+		// RAM address to write EEPROM data to
+		// *(uint32_t*)0x00000d28 -> 0x10000254 (MemRead 128 kB on-chip flash)
+		//	arg0x00000bdc_1 = (0x10001c08)
+		//
+		// Number of bytes to read from EEPROM
+		//	arg0x00000bdc_2 = (0x00000004)
+		//
+		fnc0x00000bdc(arg0x00000bdc_0, arg0x00000bdc_1, arg0x00000bdc_2);
+		
+		// PC = 0x000015bf
+		
+		// SP = 0x10001c08
+		
+		// Check value of offset 0x500 in EEPROM. This this is related to watchdog. Showed up as 0 in both Steam Controllers I have.
+		// *(uint32_t*)0x10001c08 -> 0x00000000 (MemRead 8 kB SRAM0) (Addr = (0x10001c08) + 0x00000000)
+		if ((*(uint32_t*)0x10001c08) - 0x00000000) is NOT (Equal (Z == 1))
+			// Would Execute 0x000015c6
+		// Branch to 0x000015de
+		
+		// Check if GPREG0 is 0xecaabac0 (wakeup from deep sleep path here?) TODO: Check this path?
+		// *(uint32_t*)0x00001628 -> 0x40038000 (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x40038004 -> 0x00000000 (MemRead PMU: GPREG0) (Addr = (0x40038000) + 0x00000004)
+		// *(uint32_t*)0x0000162c -> 0xecaabac0 (MemRead 128 kB on-chip flash)
+		if ((*(uint32_t*)0x40038004) - (0xecaabac0)) is NOT (Not equal (Z == 0))
+			// Would Execute 0x000015e8
+		// Branch to 0x000015ec
+		
+		// Execute 0x000015fc
+		
+		// Branch from 0x000015fc to 0x00000cf8 (Set LR to 0x00001601)
+		
+		// At PC 0x00000cfc branching to (Branch from 0x000015fc to 0x00000cf8)
+		
+		// Check HW/Board Revision number read from EEPROM TODO: Check this path? This is large division in code. Previously worke down here and USART was setup... Mean anything?
+		// *(uint32_t*)0x00000d00 -> 0x10000254 (MemRead 128 kB on-chip flash)
+		// *(uint32_t*)0x10000258 -> 0x0000000a (MemRead 8 kB SRAM0) (Addr = (0x10000254) + 0x00000004)
+		if ((*(uint32_t*)0x10000258) - 0x00000000) is (Equal (Z == 1))
+			// Would Branch to 0x00001618
+		// Execute 0x00001604
+		
+		// Branch from 0x00001606 to 0x000007a0 (Set LR to 0x0000160b)
+		
+		// *(uint32_t*)0x000007ac -> 0x40038000 (MemRead 128 kB on-chip flash)
+		// MemWrite PMU: GPREG1 (address was computed as (0x40038000) + 0x00000008)
+		*(uint32_t*)0x40038008 = 0x00000001; // = 0x00000001 (modified bits = 0x00000001)
+		
+		// At PC 0x000007a8 branching to (Branch from 0x00001606 to 0x000007a0)
+
 //TODO: pick up here 
 
-	// Firmware Offset(s): 
-	//	0x00000fc8 - 0x00000fc8
-	//	0x00001580 - 0x00001582
-	//	0x000007a0 - 0x000007a8
-
-	// Set GPREG1 to 0
-	reg32 = (volatile uint32_t*)0x40038008;
-	*reg32 = 0;
-
-
-	// Firmware Offset(s): 
-	//	0x00001586 - 0x0000159a
-	//	0x00000572 - 0x00000576
-	//	0x0000057e - 0x00000580
-
-	// Enable pull down resistor on PIO0_3 register
-	// *(uint32_t*)0x4004400c = 0x00000008;
-	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000003, regVal = 0x00000008);
-
-
-	// Firmware Offset(s): 
-	//	0x0000159e - 0x000015a2
-	//	0x0000158c - 0x0000159a
-	//	0x00000572 - 0x00000576
-	//	0x0000057e - 0x00000580
-
-	// Set PIO0_6 to function as ~USB_CONNECT
-	// *(uint32_t*)0x40044018 = 0x00000001;
-	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 0, regWordOffset = 0x00000006, regVal = 0x00000001);
-	
-
-	// Firmware Offset(s): 
-	//	0x0000159e - 0x000015a2
-	//	0x0000158c - 0x0000159a
-	//	0x00000572 - 0x0000057c
-
-	// Set PIO1_17 to function as RXD - Receiver input for USART (for communications with Radio Chip?)
-	// *(uint32_t*)0x400440a4 = 0x00000002;
-	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 1, regWordOffset = 0x00000011, regVal = 0x00000002);
-
-
-	// Firmware Offset(s): 
-	//	0x0000158c - 0x0000159a
-	//	0x00000572 - 0x0000057c
-
-	// Set PIO1_18 to function as TXD - Transmitter output for USART (for communications with Radio Chip?)
-	// *(uint32_t*)0x400440a8 = 0x00000002
-	set32bitReg(uint32_t baseReg = 0x40044000, uint8_t additionalOffset = 1, regWordOffset = 0x00000012, regVal = 0x00000002);
-
-
-	// Firmware Offset(s): 
-	//	0x0000159e - 0x000015a4
-	//	0x00000ce8 - 0x00000cf0
-	//	0x00000cf4 - 0x00000cf4
-
-	usbConnected = usbVoltPresent();
-
-
-	// Firmware Offset(s): 
-	//	0x000015a8 - 0x000015ac
-	//	0x00000f90 - 0x00000f94
-	//	0x00000cf8 - 0x00000cfc
-	//	0x00000f98 - 0x00000fa0
-	//	0x00000fa2 - 0x00000fac
-	//	0x00000fae - 0x00000fae
-	//	0x00000cf8 - 0x00000cfc
-	//	0x00000fb2 - 0x00000fb6
- 	//	0x00000fb8 - ??
-	//	0x00000fbe - 0x00000fc0
-
-	gpio_num = drivePwrUpGpio(hwVer = 0x10000258, uint8_t gpioVal = !usbConnected);
-
-
-	// Firmware Offset(s): 
-	//	0x00000fc2 - 0x00000fc4
-
-	// Branch to LR (0x0000055c)
-
-
-	// Firmware Offset(s): 
-	//	0x0000055c - 0x00000570
-
-	// Set PIO1_{gpio_num} to output via GPIO direction port 1 register
-	setGpioOutDir(baseAddr = 0x50000000, port = 1, gpioNum = gpio_num);
-
-
-	// Firmware Offset(s): 
-	//	0x00000fc8 - 0x00000fc8
-	//	0x000015b0 - 0x000015ba
-	//	0x00000bdc - 0x00000bf0
-	//	0x00000bb4 - 0x00000bc0
-	//	0x000007b0 - 0x000007ba
-	//	0x00000bc4 - 0x00000bca
-
-	// Setup for EEPROM read via IAP command (i.e. calculation of system clock frequency)
-	//	*0x10001bc8 = 0x0000003e Command code : 62 (0x3e)
-	//	*0x10001bcc = 0x00000500 Param0: EEPROM Address = 0x00000500
-	//	*0x10001bd0 = 0x10001c08 Param1: RAM Address = 0x10001c08
-	//	*0x10001bd4 = 0x00000004 Param2: Number of bytes to be read = 4
-	//	*0x10001bd8 = 0x0000b71b Param3: System Clock Frequency = 0x0000b71b
-
-	// To store data read from EEPROM
-	uint32_t eeprom_data2;
-
-	// Command 62 for EEPROM Read
-	command_param[0] = 62;
-	// EEPROM address (4 kB available)
-	command_param[1] = 0x500;
-	// RAM address where to read data to write to EEPROM
-	command_param[2] = eeprom_data2;
-	// Number of bytes to write
-	command_param[3] = sizeof(eeprom_data2);
-	// System clock frequency in kHz
-	command_param[4] = 46875;
-
-
-	// Firmware Offset(s): 
-	//	0x1fff1ff0 - 0x1fff1ff2
-	//	0x1fff171c - 0x1fff171c
-	//	... 
-
-	// boot ROM code for executing IAP command
-	
-	iap_entry(command_param = 0x10001bc8, status_result = 0x10001bdc);	
-
-	// Surprisingly no check of status_result...
-
-
-	// Firmware Offset(s): 
-	//	0x00000bcc - 0x00000bcc
-	//	0x000007c0 - 0x000007cc
-
-	// Decrement 0x10000250 and cps (change processor state (to reenable interrupts after IAP command?)
-
-
-	// Firmware Offset(s): 
-	//	0x00000bd0 - 0x00000bd4
-	//	0x00000bf4 - 0x00000bf4
-	//	0x000015be - 0x000015c4 
-
-	// Check if 0x10001c08 (Value read from EEPROM) is 0
-	if (eeprom_data2 != 0)
-	{
-		// Firmware Offset(s): 
-		//	0x000015c6 - 0x000015ce 
-		// 	0x00000bfc - 0x00000c10
-		//	0x00000bb4 - 0x00000bc0
-
-		*(uint32_t*)0x10001c0c = 0;
-
-		// Setup for EEPROM write via IAP command 
-		//	*0x10001bc8 = 0x0000003d Command code : 61 (0x3d)
-		//	*0x10001bcc = 0x00000500 Param0: EEPROM Address = 0x00000500
-		//	*0x10001bd0 = 0x10001c0c Param1: RAM Address = 0x10001c0c
-		//	*0x10001bd4 = 0x00000004 Param2: Number of bytes to be read = 4
-		//	*0x10001bd8 = 0x0000b71b Param3: System Clock Frequency = 0x0000b71b
-
-		// Firmware Offset(s): 
-		//	0x000007b0 - 0x000007ba
-		//	0x00000bc4 - 0x00000bca
-
-		// For marking cps state of disabling interrupts (I think)
-		*(uint32_t*)0x10000250 += 1;
-
-		// Firmware Offset(s): 
-		//	0x1fff1ff0 - 0x1fff1ff2
-		//	0x1fff171c - 0x1fff171c
-		//	... 
-
-		// boot ROM code for executing IAB command
-		iap_entry(command_param = 0x10001bc8, status_result = 0x10001bdc);
-
-
-		// Firmware Offset(s): 
-		//	0x00000bcc - 0x00000bcc
-		//	0x000007d0 - 0x000007cc
-
-		// Decrement 0x10000250 and cps (change processor state (to reenable interrupts after IAP command?)
-	}
-
-
-	// Firmware Offset(s): 
-	//	0x000015de - 0x000015e6
-
-	// Check if GPREG0 is set to 0xecaabac0
-	reg32 = 0x40038004;
-	val = *reg32;
-	if (val == 0xecaabac0)
-	{
-	     // TODO: UNKNOWN PATHS
-	     //	If GPREG0 is 0xecaabac0 execute instruction 0x000015e6 instead of branching to 0x000015ec
-	}
-
-
-	// Firmware Offset(s): 
-	//	0x000015ec - 0x000015fa
-	//	0x000015fc - 0x000015fc
-
-	// Call into some function that checks if Reg 0 is set to 0xecaabac0. 
-	//  I think this is an impossible path, as Reg 0 is set compare above.
-	//  Either way UKNOWN PATH is to branch to instruction at 0x00001618 if Reg 0 does not equal 0xecaabac0
-
-
-	// Firmware Offset(s): 
-	//	0x00000cf8 - 0x00000cfc
-	//	0x00001600 - 0x00001602	
-
-	// Check hw version read from EEPROM
-	if (*0x10000258 == 0) {
-		// This path I decomposed before properly aquiring EEPROM
-		//  data. This is kept mostly for the sake of having already
-		//  put the work in. It most likely will not actually be 
-		//  useful at this point.
-		init_phase2_hw_0();
-	} else {
-		// This path matches behavior of my Steam Controller.
-		init_phase2_hw_not0();
-	}
-}
-
-/**
- * Function to enable power to a specified analog block.
- *
- * Firmware Offset(s): 
- *	0x000005a4 - 0x000005b8
- * 
- * \param reg0 Set bit(s) specify which blocks to power. See 3.5.41 
- *	Power configuration register in UM10462 for details.
- * 
- * \return None.
- */
-void pwrAnalogBlock(uint32_t reg0)
-{
-	// Power Configuration Register                                                 
-	volatile uint32_t* reg32 = (volatile uint32_t*)0x40048238;
-	uint32_t val = 0;
-
-	// Read current register value                                                           
-	val = *reg32;                                                                     
-	// Clear reserved bit that must stay cleared                                    
-	val &= 0x000005ff;                                                              
-	// Clear desired bit (clearing enables desired block(s))
-	val &= ~(reg0 & 0x000005ff);                                                           
-	// Reserved bits that must always be set                                        
-	val |= 0xe800;                                                                  
-
-	// Write result to register
-	*reg32 = val;  
-}
-
-/**
- * Function for setting a 32-bit register to a particular value.
- * 
- * Firmware Offset(s): 
- * 	0x00000572 - 0x00000576
- *	0x00000578 - 0x0000057c
- * 	0x0000057e - 0x00000580
- *
- * \param baseReg Base register value
- * \param additionalOffset Add additional 0x60 byte offset to baseReg
- * \param regWordOffset Word sized offset from baseReg indicates which register to change
- * \param regVal Value to write to register
- * 
- * \return None.
- */
-void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOffset, uint32_t regVal)
-{
-	regWordOffset <<= 2;
-
-	if (additionalOffset != 0)
-	{
-		// Execture instruction 0x00000578
-		volatile uint32_t* reg32 = (volatile uint32_t*)(baseReg + regWordOffset + 0x60);
-		*reg32 = regVal;
-		return;
-	}
-
-	volatile uint32_t* reg32 = (volatile uint32_t*)baseReg + regWordOffset;
-	*reg32 = regVal;
-}
-
-/**
- * Function for checking Main Clock Source Select Register.
- * 
- * Firmware Offset(s): 
- *	0x00000494 - 0x00000496
- *	0x00000450 - 0x0000046a
- * 
- * \return None.
- */
-void checkMainClockSourceSel(){
-	// Check main clock source select register and verify is set to PLL output
-	//  reg32 = (volatile uint32_t*)0x40048070;
-	//  val = *reg32;
-	//  if (val ...)
-	//  {
-		// TODO: UKNOWN PATHS
-		// 	Branch to 0x00000470 if 0x3&val is 0
-		// 	Branch to 0x00000474 if val is 1
-		// 	Branch to 0x0000047a if val is 2
-		// 	Branch to 0x0000046e if val != 3
-	//  }
-}
-
-/**
- * Function for checking Main Clock Source Select Register.
- * 
- * Firmware Offset(s): 
- * 	0x000004d0 - 0x000004d2
- *	0x000004a8 - 0x000004b4
- *	0x000004be - 0x000004c2
- * 
- * \return None.
- */
-void checkSysPllClockSrcSel(){
-	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
-	//  reg32 = (volatile uint32_t*)0x40048040;
-	//  val = *reg32;
-	//  if (val ...)
-	//  {
-		// TODO: UKNOWN PATHS
-		// 	Branch to 0x000004ba if val is 0
-		// 	Execute instruction at 0x000004b6 if val != 1
-	//  }
-}
-
-/**
- * Check if a USB voltage is detected (i.e. from plugged in cable).
- *
- * Firmware Offset(s): 
- *	0x00000ce8 - 0x00000cf0
- *	0x00000cf2 - ...
- *	0x00000cf4 - 0x00000cf4
- *
- * \return True if USB cable is plugged into controller. False otherwise. (Reg 0).
- */
-bool usbVoltPresent(){
-	bool retval = false;
-
-	// Check state of PIO0_3 (USB voltage detected) 
-	uint8_t val = *((uint8_t*)0x50000003);
-
-	if (val) {
-		// TODO: UKNOWN PATHS
-		//	if PIO0_3 is not 0 (USB cable is conected) instruction at 0x00000cf2 is executed
-	}
-
-	return retval;
-}
-
-/**
- * Set the specified GPIO direction to output via the GPIO port direcetion 
- *  registers.
- *
- * Firmware Offset(s): 
- *	0x0000055c - 0x00000570
- *
- * \param baseAddr Base address of GPIO registers (Reg 0).
- * \param port Specify port 0 or port 1 banks of GPIOs (Reg 1).
- * \param gpioNum 0-based GPIO number to set as an output (Reg 2).
- *
- * \return None.
- */
-void setGpioOutDir(uint32_t baseAddr, uint32_t port, uint32_t gpioNum) {
-	volatile uint32_t* reg32 = (volatile uint32_t*)(baseAddr + 0x2000 + port * 4)
-	uint32_t val = *reg32;
-	val |= (1 << gpioNum);
-	*reg32 = val;
-}
-
-/**
- * Set a GPIO's state as part of power up. GPIO driven differs based on hw
- *  version.
- *
- * Firmware Offset(s): 
- *	0x00000f90 - 0x00000f94
- * 	0x00000cf8 - 0x00000cfc
- * 	0x00000f98 - 0x00000fa0
- *	0x00000fa2 - 0x00000fac
- *	0x00000fae - 0x00000fae
- *	0x00000cf8 - 0x00000cfc
- *	0x00000fb2 - 0x00000fb6
- *	0x00000fb8 - ??
- *	0x00000fbe - 0x00000fc0
- *
- * \param hwVer Pointer to data read from EEPROM that stores hw version data. //TODO: This is referred to as Board Revision in Steam. My controller is 10
- * \param gpioVal Value to drive power up GPIO at (Reg 0).
- *
- * \return 0-based GPIO number that is being driven for proper power up.
- */
-uint32_t drivePwrUpGpio(uint32_t* hwVer, uint8_t gpioVal) {
-	int gpio_num = 0;
-
-	if (*hwVer >= 8) {
-		// Firmware Offset(s): 
-		//	0x00000fa2 - 0x00000fac
-
-		// Set PIO1_10 output bit
-		*((uint8_t*)0x5000002a) = !gpio_val;
-		gpio_num = 10;
-	} else {
-		// Firmware Offset(s): 
-		//	0x00000fae - 0x00000fae
-
-		// Entry Num: 58028 - 58035
-		// Step Num: 44549 - 44555
-		// Firmware Offset(s): 
-		//	0x00000cf8 - 0x00000cfc
-		//	0x00000fb2 - 0x00000fb6
-
-		// Read value of 0x10000258 and check if it's 5
-		//	TODO: UNKNOWN PATHS
-		//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
-
-		// Entry Num: 58036 - 58040
-		// Step Num: 44556 - 44559
-		// Firmware Offset(s): 
-		//	0x00000fbe - 0x00000fc0
-		// Set PIO1_8 output bit
-		*((uint8_t*)0x50000028) = gpio_val;
-		gpio_num = 8;
-	}
-
-	return gpio_num;
-}
-
-/**
- * There reaches a point in the init code (i.e. execution starting from the RESET
- *  entry point as defined in the Vector Table) in which the hw version read 
- *  from EEPROM causes a significant branch in the code. I am calling everything
- *  after this branch point phase2, and creating different functions to 
- *  encapsulate what has been decomposed depending on what hw version was read.
- *
- * This function captures the path of reading a hw version that is not 0.
- *
- * Note that this matches the path my Steam Controller takes. 
- *
- * \return None.
- */
-void init_phase2_hw_not0() 
-{
 	// Firmware Offset(s): 
 	//	0x000007a0 - 0x000007a8
 
@@ -24695,6 +24434,183 @@ void init_phase2_hw_not0()
 //TODO: are we SURE this is the "giving up" path?
 
 }
+
+/**
+ * Function for setting a 32-bit register to a particular value.
+ * 
+ * Firmware Offset(s): 
+ * 	0x00000572 - 0x00000576
+ *	0x00000578 - 0x0000057c
+ * 	0x0000057e - 0x00000580
+ *
+ * \param baseReg Base register value
+ * \param additionalOffset Add additional 0x60 byte offset to baseReg
+ * \param regWordOffset Word sized offset from baseReg indicates which register to change
+ * \param regVal Value to write to register
+ * 
+ * \return None.
+ */
+void set32bitReg(uint32_t baseReg, uint8_t additionalOffset, uint32_t regWordOffset, uint32_t regVal)
+{
+	regWordOffset <<= 2;
+
+	if (additionalOffset != 0)
+	{
+		// Execture instruction 0x00000578
+		volatile uint32_t* reg32 = (volatile uint32_t*)(baseReg + regWordOffset + 0x60);
+		*reg32 = regVal;
+		return;
+	}
+
+	volatile uint32_t* reg32 = (volatile uint32_t*)baseReg + regWordOffset;
+	*reg32 = regVal;
+}
+
+/**
+ * Function for checking Main Clock Source Select Register.
+ * 
+ * Firmware Offset(s): 
+ *	0x00000494 - 0x00000496
+ *	0x00000450 - 0x0000046a
+ * 
+ * \return None.
+ */
+void checkMainClockSourceSel(){
+	// Check main clock source select register and verify is set to PLL output
+	//  reg32 = (volatile uint32_t*)0x40048070;
+	//  val = *reg32;
+	//  if (val ...)
+	//  {
+		// TODO: UKNOWN PATHS
+		// 	Branch to 0x00000470 if 0x3&val is 0
+		// 	Branch to 0x00000474 if val is 1
+		// 	Branch to 0x0000047a if val is 2
+		// 	Branch to 0x0000046e if val != 3
+	//  }
+}
+
+/**
+ * Function for checking Main Clock Source Select Register.
+ * 
+ * Firmware Offset(s): 
+ * 	0x000004d0 - 0x000004d2
+ *	0x000004a8 - 0x000004b4
+ *	0x000004be - 0x000004c2
+ * 
+ * \return None.
+ */
+void checkSysPllClockSrcSel(){
+	// Check system PLL clock source select register and verify is set to Crystal Oscillator (SYSOSC)
+	//  reg32 = (volatile uint32_t*)0x40048040;
+	//  val = *reg32;
+	//  if (val ...)
+	//  {
+		// TODO: UKNOWN PATHS
+		// 	Branch to 0x000004ba if val is 0
+		// 	Execute instruction at 0x000004b6 if val != 1
+	//  }
+}
+
+/**
+ * Check if a USB voltage is detected (i.e. from plugged in cable).
+ *
+ * Firmware Offset(s): 
+ *	0x00000ce8 - 0x00000cf0
+ *	0x00000cf2 - ...
+ *	0x00000cf4 - 0x00000cf4
+ *
+ * \return True if USB cable is plugged into controller. False otherwise. (Reg 0).
+ */
+bool usbVoltPresent(){
+	bool retval = false;
+
+	// Check state of PIO0_3 (USB voltage detected) 
+	uint8_t val = *((uint8_t*)0x50000003);
+
+	if (val) {
+		// TODO: UKNOWN PATHS
+		//	if PIO0_3 is not 0 (USB cable is conected) instruction at 0x00000cf2 is executed
+	}
+
+	return retval;
+}
+
+/**
+ * Set the specified GPIO direction to output via the GPIO port direcetion 
+ *  registers.
+ *
+ * Firmware Offset(s): 
+ *	0x0000055c - 0x00000570
+ *
+ * \param baseAddr Base address of GPIO registers (Reg 0).
+ * \param port Specify port 0 or port 1 banks of GPIOs (Reg 1).
+ * \param gpioNum 0-based GPIO number to set as an output (Reg 2).
+ *
+ * \return None.
+ */
+void setGpioOutDir(uint32_t baseAddr, uint32_t port, uint32_t gpioNum) {
+	volatile uint32_t* reg32 = (volatile uint32_t*)(baseAddr + 0x2000 + port * 4)
+	uint32_t val = *reg32;
+	val |= (1 << gpioNum);
+	*reg32 = val;
+}
+
+/**
+ * Set a GPIO's state as part of power up. GPIO driven differs based on hw
+ *  version.
+ *
+ * Firmware Offset(s): 
+ *	0x00000f90 - 0x00000f94
+ * 	0x00000cf8 - 0x00000cfc
+ * 	0x00000f98 - 0x00000fa0
+ *	0x00000fa2 - 0x00000fac
+ *	0x00000fae - 0x00000fae
+ *	0x00000cf8 - 0x00000cfc
+ *	0x00000fb2 - 0x00000fb6
+ *	0x00000fb8 - ??
+ *	0x00000fbe - 0x00000fc0
+ *
+ * \param hwVer Pointer to data read from EEPROM that stores hw version data. //TODO: This is referred to as Board Revision in Steam. My controller is 10
+ * \param gpioVal Value to drive power up GPIO at (Reg 0).
+ *
+ * \return 0-based GPIO number that is being driven for proper power up.
+ */
+uint32_t drivePwrUpGpio(uint32_t* hwVer, uint8_t gpioVal) {
+	int gpio_num = 0;
+
+	if (*hwVer >= 8) {
+		// Firmware Offset(s): 
+		//	0x00000fa2 - 0x00000fac
+
+		// Set PIO1_10 output bit
+		*((uint8_t*)0x5000002a) = !gpio_val;
+		gpio_num = 10;
+	} else {
+		// Firmware Offset(s): 
+		//	0x00000fae - 0x00000fae
+
+		// Entry Num: 58028 - 58035
+		// Step Num: 44549 - 44555
+		// Firmware Offset(s): 
+		//	0x00000cf8 - 0x00000cfc
+		//	0x00000fb2 - 0x00000fb6
+
+		// Read value of 0x10000258 and check if it's 5
+		//	TODO: UNKNOWN PATHS
+		//		If value from EEPROM (written to 0x10000258) is 5, excecute instruction at 0x00000fb8
+
+		// Entry Num: 58036 - 58040
+		// Step Num: 44556 - 44559
+		// Firmware Offset(s): 
+		//	0x00000fbe - 0x00000fc0
+		// Set PIO1_8 output bit
+		*((uint8_t*)0x50000028) = gpio_val;
+		gpio_num = 8;
+	}
+
+	return gpio_num;
+}
+
 
 /**
  * There reaches a point in the init code (i.e. execution starting from the RESET
