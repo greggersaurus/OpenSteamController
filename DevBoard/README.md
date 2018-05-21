@@ -17,7 +17,7 @@ NXP provided library for easy access to LPC11U37 processor peripherals, etc.
 ## [Reverse Engineering](../ReverseEngineering/)
 
 The custom firwmare in this subproject is based on the Steam Controller 
- reverse engineering subproject. See this project for details on how the
+ Reverse Engineering subproject. See this project for details on how the
  firmware supported by Valve works, as well as details on the hardware. 
 
 ## Development Environment
@@ -36,7 +36,7 @@ The custom firmware for the LPC11U37 has been developed in the LPCXpresso IDE
 
 # Building
 
-Open LPCXpresso and import projects [SteamControllerDevKit](./SteamControllerDevKit) 
+Open the LPCXpresso IDE and import projects [SteamControllerDevKit](./SteamControllerDevKit) 
  and [lpc_chip_11uxx_lib](./lpc_chip_11uxx_lib).
 
 A project can be imported into LPCXpresso by selecting: 
@@ -49,11 +49,12 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
+1. Command for LED control
+    1. Use info from RevEng to utilize CT16B1 PWM capabilities
+        1. Understand how width of pulse is produced versus period
 1. READMEs for lpcexpresso projects
     1. Details on where lpc project came from
     2. Intention and requirements (i.e. lpc project) for SteamControllerDevKit project
-1. Command for LED control
-    1. Check sim and replicate idea of using counters to create PWM
 2. Command for communication with haptics
     1. It seems SPI may be the interface
     2. [Sample Interface Code](https://github.com/cirque-corp/Cirque_Pinnacle_1CA027) to use as starting point?
