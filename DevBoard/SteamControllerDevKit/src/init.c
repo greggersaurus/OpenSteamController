@@ -183,6 +183,8 @@ void stage1Init(void){
 	*reg32 = val;
 }
 
+static uint8_t pio0_3_start_val = 0;
+
 /**
  * Second stage initialization. Here we get into Steam Controller hardware 
  *  specific operations (i.e. using some battery power to keep us booted if 
@@ -213,6 +215,8 @@ void stage2Init(uint32_t hwVersion){
 
 	// Check state of PIO0_3 (USB voltage detected) 
 	uint8_t usb_volt_detect = *((uint8_t*)0x50000003);
+
+	pio0_3_start_val = usb_volt_detect;
 
 	if (!usb_volt_detect) {
 		// Check for brown out detect
@@ -295,4 +299,16 @@ void stage2Init(uint32_t hwVersion){
 	val = *reg32;
 	val |= 0x08000000;
 	*reg32 = val;
+}
+
+/**
+ * Prints out statistics captured during init. Useful for reverse engineering
+ *  to know the state of different inputs, etc. during different stages of boot.
+ *
+ * \return 0 on success.
+ */
+int initStatsCmdFnc(int argc, const char* argv[]) { 
+	consolePrint("PIO0_3 was %d on startup\n", pio0_3_start_val);
+	return 0;
+
 }

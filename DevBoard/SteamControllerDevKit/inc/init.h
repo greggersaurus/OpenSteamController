@@ -33,5 +33,6 @@
 
 void stage1Init(void);
 void stage2Init(uint32_t hwVersion);
+int initStatsCmdFnc(int argc, const char* argv[]);
 
 #endif /* _STEAM_CONTROLLER_INIT_ */
