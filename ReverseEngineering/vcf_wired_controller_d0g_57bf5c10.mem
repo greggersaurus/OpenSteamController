@@ -26,6 +26,8 @@
  * SOFTWARE.
  */
 
+(uint32_t*) 0x100000a4 - System Clock Frequency (CCLK) in Hz. (48000000 is calcualted and stored here).
+
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. Incremented after after interrupt disable (via cps). Decremented before interrupt enable (via cps).
 (uint16_t*) 0x10000254 - EEPROM Read Data 0x000 - Magic Number to indicate EEPROM has valid data
 (uint16_t*) 0x10000256 - EEPROM Read Data 0x002 - Continuation of Magic Number?

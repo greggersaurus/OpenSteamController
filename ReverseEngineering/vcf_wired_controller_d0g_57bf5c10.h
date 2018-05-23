@@ -137,3 +137,79 @@ void fnc0x1fff1ff0( arg0x1fff1ff0_0, arg0x1fff1ff0_1);
  */
 void fnc0x00000f90(arg0x00000f90_0);
 
+/**
+ * Memory initialization function. Memory is filled byte by byte. Sometimes 
+ *  memory is filled via constant data from value stored in code, other times
+ *  it is zeroed.
+ *
+ * \param arg0x00002a2a_0 Base address of non-zero constant values to write.
+ * \param arg0x00002a2a_1 Base addess of RAM to initialize.
+ * \param arg0x00002a2a_2 Number of bytes to write.
+ * 
+ * \return None.
+ */
+void fnc0x00002a2a(arg0x00002a2a_0, arg0x00002a2a_1, arg0x00002a2a_2);
+
+/**
+ * Calculate System Clock Frequency and save to global variable
+ * 
+ * \return None.
+ */
+void fnc0x00009cfc();
+
+/**
+ * Related to System Clock Frequney (CCLK) calculation. 
+ * Called by fnc0x00009cfc(), after appropraite checks.
+ *
+ * \return System Clock Frequency in Hz.
+ */
+int fnc0x00004174();
+
+/**
+ * Related to System Clock Frequney (CCLK) calculation. 
+ * Called by fnc0x00004174(), after appropraite checks.
+ *
+ * \return System Clock Frequency in Hz.
+ */
+int fnc0x00004130();
+
+/**
+ * Related to System Clock Frequney (CCLK) calculation. 
+ * Called by fnc0x00004130(), after appropraite checks.
+ *
+ * \return System Clock Frequency in Hz.
+ */
+int fnc0x000041b0();
+
+/**
+ * Related to System Clock Frequney (CCLK) calculation. 
+ * Called by fnc0x00004174(), after appropraite checks.
+ *
+ * \param arg0x000020ec_0 Previously calculated 
+ * \param arg0x000020ec_1 SYSAHBCLKDIV Value
+ *
+ * \return System Clock Frequency in Hz.
+ */
+int fnc0x000020ec(arg0x000020ec_0, arg0x000020ec_1);
+
+/**
+ * Set interrupt priorities.
+ *
+ * \return None.
+ */
+void fnc0x00009c50();
+
+/**
+ * Clear some RAM values.
+ *
+ * \return None.
+ */
+void fnc0x0000a0d8();
+
+/**
+ * Enable some (more) system clocks.
+ *
+ * \return None.
+ */
+void fnc0x00005644();
+
