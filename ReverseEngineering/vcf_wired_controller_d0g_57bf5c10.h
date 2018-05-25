@@ -212,10 +212,67 @@ void fnc0x0000a0d8();
  */
 void fnc0x00005644();
 
-?? fnc0x00002ba0( arg0x00002ba0_0, arg0x00002ba0_1, arg0x00002ba0_2, arg0x00002ba0_3, arg0x00002ba0_4, arg0x00002ba0_5, arg0x00002ba0_6, )
+/**
+ * Configure ADC
+ *
+ * \return None.
+ */
+void fnc0x00002ba0();
 
-// Related to ADC configuration...
-?? fnc0x00003fd0( arg0x00003fd0_0, arg0x00003fd0_1, arg0x00003fd0_3, arg0x00003fd0_4, arg0x00003fd0_5, arg0x00003fd0_6, )
+/** 
+ * AKA void Chip_ADC_Init(LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup) from
+ *  lpc_chip_11uxx_lib: adc_11xx.c.
+ * Initialize the ADC peripheral and the ADC setup structure to default value
+ *
+ * \param arg0x00003fd0_0 pADC The base of ADC peripheral on the chip
+ * \param arg0x00003fd0_1 ADCSetup ADC setup structure to be set
+ *
+ * \return None.
+ */
+void fnc0x00003fd0(arg0x00003fd0_0, arg0x00003fd0_1);
 
-// Calculate CLKDIV for ADC CR
-?? fnc0x0000d0e8( arg0x0000d0e8_0, arg0x0000d0e8_1, arg0x0000d0e8_2, arg0x0000d0e8_3, arg0x0000d0e8_4, arg0x0000d0e8_5, arg0x0000d0e8_6, )
+/**
+ * AKA STATIC uint8_t getClkDiv(LPC_ADC_T *pADC, bool burstMode, uint32_t adcRate, uint8_t clks) from
+ *  lpc_chip_11uxx_lib: adc_11xx.c.
+ * 
+ * \param arg0x0000d0e8_0 pADC Pointer to base control register for ADC being configured (not used in this function though...).
+ * \param arg0x0000d0e8_1 burstMode Determines how full ADC rate is calculated.
+ * \param arg0x0000d0e8_2 adcRate Desired ADC rate.
+ * \param arg0x0000d0e8_3 clks If burstMode is true this is used instead of hardcode "number of clock for a full conversion"
+ * 
+ * \return Clock divider for ADC
+ */
+uint8_t fnc0x0000d0e8(arg0x0000d0e8_0, arg0x0000d0e8_1, arg0x0000d0e8_2, arg0x0000d0e8_3);
+
+/**
+ * AKA void Chip_ADC_SetSampleRate(LPC_ADC_T *pADC, ADC_CLOCK_SETUP_T *ADCSetup, uint32_t rate) from
+ *  lpc_chip_11uxx_lib: adc_11xx.c.
+ *
+ * \param arg0x0000404c_0 pADC The base of ADC peripheral on the chip
+ * \param arg0x0000404c_1 ADCSetup ADC setup structure to be set
+ * \param arg0x0000404c_2 rate Sample rate, should be set so the clock for A/D converter is less than or equal to 4.5MHz.
+ *
+ * \return None.
+ */
+void fnc0x0000404c(arg0x0000404c_0, arg0x0000404c_1, arg0x0000404c_2);
+
+/**
+ * AKA void Chip_ADC_SetStartMode(LPC_ADC_T *pADC, ADC_START_MODE_T mode, ADC_EDGE_CFG_T EdgeOption) from
+ *  lpc_chip_11uxx_lib: adc_11xx.c.
+ *
+ * \param arg0x00004080_0 pADC The base of ADC peripheral on the chip
+ * \param arg0x00004080_1 mode Stating mode, should be :
+ *							- ADC_NO_START				: Must be set for Burst mode
+ *							- ADC_START_NOW				: Start conversion now
+ *							- ADC_START_ON_CTOUT15		: Start conversion when the edge selected by bit 27 occurs on CTOUT_15
+ *							- ADC_START_ON_CTOUT8		: Start conversion when the edge selected by bit 27 occurs on CTOUT_8
+ *							- ADC_START_ON_ADCTRIG0		: Start conversion when the edge selected by bit 27 occurs on ADCTRIG0
+ *							- ADC_START_ON_ADCTRIG1		: Start conversion when the edge selected by bit 27 occurs on ADCTRIG1
+ *							- ADC_START_ON_MCOA2		: Start conversion when the edge selected by bit 27 occurs on Motocon PWM output MCOA2
+ * \param arg0x00004080_2 EdgeOption Stating Edge Condition, should be :
+ *							- ADC_TRIGGERMODE_RISING	: Trigger event on rising edge
+ *							- ADC_TRIGGERMODE_FALLING	: Trigger event on falling edge
+ *
+ * \return None.
+ */
+void fnc0x00004080(arg0x00004080_0, arg0x00004080_1, arg0x00004080_2);

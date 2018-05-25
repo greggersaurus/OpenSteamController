@@ -26,6 +26,8 @@
  * SOFTWARE.
  */
 
+ (uint8_t*) 0x10000012 - Related to ADC configuration. Set to 0 after initial configuration of ADC. (TODO: Verify: Set bits indicate which AD is active (i.e. bit 6 for AD6)??)
+
 (uint32_t*) 0x100000a4 - System Clock Frequency (CCLK) in Hz. (48000000 is calcualted and stored here).
 
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. Incremented after after interrupt disable (via cps). Decremented before interrupt enable (via cps).
