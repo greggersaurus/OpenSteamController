@@ -123,7 +123,7 @@ void fnc0x00000bb4(arg0x00000bb4_0, arg0x00000bb4_1, arg0x00000bb4_2, arg0x00000
  * \param arg0x1fff1ff0_0 - unsigned int[] command_param
  * \param arg0x1fff1ff0_1 - unsigned int[] status_result
  */
-void fnc0x1fff1ff0( arg0x1fff1ff0_0, arg0x1fff1ff0_1);
+void fnc0x1fff1ff0(arg0x1fff1ff0_0, arg0x1fff1ff0_1);
 
 /**
  * Drive Battery/Power Related GPIO. This function checks the hardware version
@@ -151,44 +151,43 @@ void fnc0x00000f90(arg0x00000f90_0);
 void fnc0x00002a2a(arg0x00002a2a_0, arg0x00002a2a_1, arg0x00002a2a_2);
 
 /**
- * Calculate System Clock Frequency and save to global variable
+ * Calculate System Clock Frequency and save to (global?) variable
  * 
  * \return None.
  */
 void fnc0x00009cfc();
 
 /**
- * Related to System Clock Frequney (CCLK) calculation. 
- * Called by fnc0x00009cfc(), after appropraite checks.
+ * AKA uint32_t Chip_Clock_GetSystemClockRate(void) from
+ *  lpc_chip_11uxx_lib: clock_11xx.c
  *
- * \return System Clock Frequency in Hz.
+ * Return system clock rate (in Hz)
  */
-int fnc0x00004174();
+uint32_t fnc0x00004174();
 
 /**
- * Related to System Clock Frequney (CCLK) calculation. 
- * Called by fnc0x00004174(), after appropraite checks.
+ * AKA uint32_t Chip_Clock_GetMainClockRate(void) from
+ *  lpc_chip_11uxx_lib: clock_11xx.c
  *
- * \return System Clock Frequency in Hz.
+ * \return main clock rate (in Hz)
  */
-int fnc0x00004130();
+uint32_t fnc0x00004130();
 
 /**
- * Related to System Clock Frequney (CCLK) calculation. 
- * Called by fnc0x00004130(), after appropraite checks.
- *
- * \return System Clock Frequency in Hz.
+ * AKA uint32_t chip_clock_getsystemplloutclockrate(void) from 
+ *  lpc_chip_11uxx_lib: clock_11xx.c
+ * 
+ * \return system pll output clock rate (in Hz)
  */
-int fnc0x000041b0();
+uint32_t fnc0x000041b0();
 
 /**
- * Related to System Clock Frequney (CCLK) calculation. 
- * Called by fnc0x00004174(), after appropraite checks.
+ * Compute arg0x000020ec_0 / arg0x000020ec_1. Note this processor has no FPU.
  *
- * \param arg0x000020ec_0 Previously calculated 
- * \param arg0x000020ec_1 SYSAHBCLKDIV Value
+ * \param arg0x000020ec_0 Dividend
+ * \param arg0x000020ec_1 Divisor
  *
- * \return System Clock Frequency in Hz.
+ * \return arg0x000020ec_0 / arg0x000020ec_1.
  */
 int fnc0x000020ec(arg0x000020ec_0, arg0x000020ec_1);
 
@@ -213,3 +212,10 @@ void fnc0x0000a0d8();
  */
 void fnc0x00005644();
 
+?? fnc0x00002ba0( arg0x00002ba0_0, arg0x00002ba0_1, arg0x00002ba0_2, arg0x00002ba0_3, arg0x00002ba0_4, arg0x00002ba0_5, arg0x00002ba0_6, )
+
+// Related to ADC configuration...
+?? fnc0x00003fd0( arg0x00003fd0_0, arg0x00003fd0_1, arg0x00003fd0_3, arg0x00003fd0_4, arg0x00003fd0_5, arg0x00003fd0_6, )
+
+// Calculate CLKDIV for ADC CR
+?? fnc0x0000d0e8( arg0x0000d0e8_0, arg0x0000d0e8_1, arg0x0000d0e8_2, arg0x0000d0e8_3, arg0x0000d0e8_4, arg0x0000d0e8_5, arg0x0000d0e8_6, )
