@@ -26,15 +26,159 @@
  * SOFTWARE.
  */
 
- (uint8_t*) 0x10000012 - Related to ADC configuration. Set to 0 after initial configuration of ADC. (TODO: Verify: Set bits indicate which AD is active (i.e. bit 6 for AD6)??)
+ (uint8_t*) 0x10000012 - Related to ADC configuration. Set to 0 after initial 
+			 configuration of ADC. (TODO: Verify: Set bits indicate 
+			 which AD is active (i.e. bit 6 for AD6)??)
 
-(uint32_t*) 0x100000a4 - System Clock Frequency (CCLK) in Hz. (48000000 is calcualted and stored here).
+(uint32_t*) 0x100000a4 - System Clock Rate (CCLK) in Hz. (48000000 is calcualted
+			 and stored here based on PLL settings, etc.).
 
-(uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. Incremented after after interrupt disable (via cps). Decremented before interrupt enable (via cps).
-(uint16_t*) 0x10000254 - EEPROM Read Data 0x000 - Magic Number to indicate EEPROM has valid data
+
+(uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
+			 Incremented after after interrupt disable (via cps). 
+			 Decremented (and checked to be 0) before interrupt 
+			 enable (via cps). Ony used in early init?
+(uint16_t*) 0x10000254 - EEPROM Read Data 0x000 - Magic Number to indicate 
+			 EEPROM has valid data
 (uint16_t*) 0x10000256 - EEPROM Read Data 0x002 - Continuation of Magic Number?
-(uint32_t*) 0x10000258 - EEPROM Read Data 0x004 -Board/HW Revision Number
+(uint32_t*) 0x10000258 - EEPROM Read Data 0x004 - Board/HW Revision Number
 
 (uint32_t*) 0x10000260 - System Clock Frequency in Hz
 
+ (uint8_t*) 0x10000340 - Related to interrupts being enabled/disabled.
+			 Incremented after after interrupt disable (via cps). 
+			 Decremented (and checked to be 0) before interrupt 
+			 enable (via cps).  (Similar to 0x10000250, but used 
+			 after early init).
 
+(uint16_t*) 0x100009b4 - EEPROM Read Data 0x000 - Magic Number to indicate 
+			 EEPROM has valid data
+(uint16_t*) 0x100009b6 - EEPROM Read Data 0x002 - Continuation of Magic Number?
+(uint32_t*) 0x100009b8 - EEPROM Read Data 0x004 - Board/HW Revision Number
+ (uint8_t*) 0x100009b9 - EEPROM Read Data 0x005 - Uknown purpose
+ (uint8_t*) 0x100009ba - EEPROM Read Data 0x006 - Uknown purpose
+ (uint8_t*) 0x100009bb - EEPROM Read Data 0x007 - Uknown purpose
+ (uint8_t*) 0x100009bc - EEPROM Read Data 0x008 - Uknown purpose
+ (uint8_t*) 0x100009bd - EEPROM Read Data 0x009 - Uknown purpose
+ (uint8_t*) 0x100009be - EEPROM Read Data 0x00a - Uknown purpose
+ (uint8_t*) 0x100009bf - EEPROM Read Data 0x00b - Uknown purpose
+ (uint8_t*) 0x100009c0 - EEPROM Read Data 0x00c - Uknown purpose
+ (uint8_t*) 0x100009c1 - EEPROM Read Data 0x00d - Uknown purpose
+ (uint8_t*) 0x100009c2 - EEPROM Read Data 0x00e - Uknown purpose
+ (uint8_t*) 0x100009c3 - EEPROM Read Data 0x00f - Uknown purpose
+ (uint8_t*) 0x100009c4 - EEPROM Read Data 0x010 - Uknown purpose
+ (uint8_t*) 0x100009c5 - EEPROM Read Data 0x011 - Uknown purpose
+ (uint8_t*) 0x100009c6 - EEPROM Read Data 0x012 - Uknown purpose
+ (uint8_t*) 0x100009c7 - EEPROM Read Data 0x013 - Uknown purpose
+ (uint8_t*) 0x100009c8 - EEPROM Read Data 0x014 - Uknown purpose
+ (uint8_t*) 0x100009c9 - EEPROM Read Data 0x015 - Uknown purpose
+ (uint8_t*) 0x100009ca - EEPROM Read Data 0x016 - Uknown purpose
+ (uint8_t*) 0x100009cb - EEPROM Read Data 0x017 - Uknown purpose
+ (uint8_t*) 0x100009cc - EEPROM Read Data 0x018 - Uknown purpose
+ (uint8_t*) 0x100009cd - EEPROM Read Data 0x019 - Uknown purpose
+ (uint8_t*) 0x100009ce - EEPROM Read Data 0x01a - Uknown purpose
+ (uint8_t*) 0x100009cf - EEPROM Read Data 0x01b - Uknown purpose
+ (uint8_t*) 0x100009d0 - EEPROM Read Data 0x01c - Uknown purpose
+ (uint8_t*) 0x100009d1 - EEPROM Read Data 0x01d - Uknown purpose
+ (uint8_t*) 0x100009d2 - EEPROM Read Data 0x01e - Uknown purpose
+ (uint8_t*) 0x100009d3 - EEPROM Read Data 0x01f - Uknown purpose
+ (uint8_t*) 0x100009d4 - EEPROM Read Data 0x020 - Uknown purpose
+ (uint8_t*) 0x100009d5 - EEPROM Read Data 0x021 - Uknown purpose
+ (uint8_t*) 0x100009d6 - EEPROM Read Data 0x022 - Uknown purpose
+ (uint8_t*) 0x100009d7 - EEPROM Read Data 0x023 - Uknown purpose
+ (uint8_t*) 0x100009d8 - EEPROM Read Data 0x024 - Uknown purpose
+ (uint8_t*) 0x100009d9 - EEPROM Read Data 0x025 - Uknown purpose
+ (uint8_t*) 0x100009da - EEPROM Read Data 0x026 - Uknown purpose
+ (uint8_t*) 0x100009db - EEPROM Read Data 0x027 - Uknown purpose
+ (uint8_t*) 0x100009dc - EEPROM Read Data 0x028 - Uknown purpose
+ (uint8_t*) 0x100009dd - EEPROM Read Data 0x029 - Uknown purpose
+ (uint8_t*) 0x100009de - EEPROM Read Data 0x02a - Uknown purpose
+ (uint8_t*) 0x100009df - EEPROM Read Data 0x02b - Uknown purpose
+ (uint8_t*) 0x100009e0 - EEPROM Read Data 0x02c - Uknown purpose
+ (uint8_t*) 0x100009e1 - EEPROM Read Data 0x02d - Uknown purpose
+ (uint8_t*) 0x100009e2 - EEPROM Read Data 0x02e - Uknown purpose
+ (uint8_t*) 0x100009e3 - EEPROM Read Data 0x02f - Uknown purpose
+ (uint8_t*) 0x100009e4 - EEPROM Read Data 0x030 - Uknown purpose
+ (uint8_t*) 0x100009e5 - EEPROM Read Data 0x031 - Uknown purpose
+ (uint8_t*) 0x100009e6 - EEPROM Read Data 0x032 - Uknown purpose
+ (uint8_t*) 0x100009e7 - EEPROM Read Data 0x033 - Uknown purpose
+ (uint8_t*) 0x100009e8 - EEPROM Read Data 0x034 - Uknown purpose
+ (uint8_t*) 0x100009e9 - EEPROM Read Data 0x035 - Uknown purpose
+ (uint8_t*) 0x100009ea - EEPROM Read Data 0x036 - Uknown purpose
+ (uint8_t*) 0x100009eb - EEPROM Read Data 0x037 - Uknown purpose
+ (uint8_t*) 0x100009ec - EEPROM Read Data 0x038 - Uknown purpose
+ (uint8_t*) 0x100009ed - EEPROM Read Data 0x039 - Uknown purpose
+ (uint8_t*) 0x100009ee - EEPROM Read Data 0x03a - Uknown purpose
+ (uint8_t*) 0x100009ef - EEPROM Read Data 0x03b - Uknown purpose
+ (uint8_t*) 0x100009f0 - EEPROM Read Data 0x03c - Uknown purpose
+ (uint8_t*) 0x100009f1 - EEPROM Read Data 0x03d - Uknown purpose
+ (uint8_t*) 0x100009f2 - EEPROM Read Data 0x03e - Uknown purpose
+ (uint8_t*) 0x100009f3 - EEPROM Read Data 0x03f - Uknown purpose
+ (uint8_t*) 0x100009f4 - EEPROM Read Data 0x040 - Uknown purpose
+ (uint8_t*) 0x100009f5 - EEPROM Read Data 0x041 - Uknown purpose
+ (uint8_t*) 0x100009f6 - EEPROM Read Data 0x042 - Uknown purpose
+ (uint8_t*) 0x100009f7 - EEPROM Read Data 0x043 - Uknown purpose
+ (uint8_t*) 0x100009f8 - EEPROM Read Data 0x044 - Uknown purpose
+ (uint8_t*) 0x100009f9 - EEPROM Read Data 0x045 - Uknown purpose
+ (uint8_t*) 0x100009fa - EEPROM Read Data 0x046 - Uknown purpose
+ (uint8_t*) 0x100009fb - EEPROM Read Data 0x047 - Uknown purpose
+ (uint8_t*) 0x100009fc - EEPROM Read Data 0x048 - Uknown purpose
+ (uint8_t*) 0x100009fd - EEPROM Read Data 0x049 - Uknown purpose
+ (uint8_t*) 0x100009fe - EEPROM Read Data 0x04a - Uknown purpose
+ (uint8_t*) 0x100009ff - EEPROM Read Data 0x04b - Uknown purpose
+ (uint8_t*) 0x10000a00 - EEPROM Read Data 0x04c - Uknown purpose
+ (uint8_t*) 0x10000a01 - EEPROM Read Data 0x04d - Uknown purpose
+ (uint8_t*) 0x10000a02 - EEPROM Read Data 0x04e - Uknown purpose
+ (uint8_t*) 0x10000a03 - EEPROM Read Data 0x04f - Uknown purpose
+ (uint8_t*) 0x10000a04 - EEPROM Read Data 0x050 - Uknown purpose
+ (uint8_t*) 0x10000a05 - EEPROM Read Data 0x051 - Uknown purpose
+ (uint8_t*) 0x10000a06 - EEPROM Read Data 0x052 - Uknown purpose
+ (uint8_t*) 0x10000a07 - EEPROM Read Data 0x053 - Uknown purpose
+ (uint8_t*) 0x10000a08 - EEPROM Read Data 0x054 - Uknown purpose
+ (uint8_t*) 0x10000a09 - EEPROM Read Data 0x055 - Uknown purpose
+ (uint8_t*) 0x10000a0a - EEPROM Read Data 0x056 - Uknown purpose
+ (uint8_t*) 0x10000a0b - EEPROM Read Data 0x057 - Uknown purpose
+ (uint8_t*) 0x10000a0c - EEPROM Read Data 0x058 - Uknown purpose
+ (uint8_t*) 0x10000a0d - EEPROM Read Data 0x059 - Uknown purpose
+ (uint8_t*) 0x10000a0e - EEPROM Read Data 0x05a - Uknown purpose
+ (uint8_t*) 0x10000a0f - EEPROM Read Data 0x05b - Uknown purpose
+ (uint8_t*) 0x10000a10 - EEPROM Read Data 0x05c - Uknown purpose
+ (uint8_t*) 0x10000a11 - EEPROM Read Data 0x05d - Uknown purpose
+ (uint8_t*) 0x10000a12 - EEPROM Read Data 0x05e - Uknown purpose
+ (uint8_t*) 0x10000a13 - EEPROM Read Data 0x05f - Uknown purpose
+ (uint8_t*) 0x10000a14 - EEPROM Read Data 0x060 - Uknown purpose
+ (uint8_t*) 0x10000a15 - EEPROM Read Data 0x061 - Uknown purpose
+ (uint8_t*) 0x10000a16 - EEPROM Read Data 0x062 - Uknown purpose
+ (uint8_t*) 0x10000a17 - EEPROM Read Data 0x063 - Uknown purpose
+ (uint8_t*) 0x10000a18 - EEPROM Read Data 0x064 - Uknown purpose
+ (uint8_t*) 0x10000a19 - EEPROM Read Data 0x065 - Uknown purpose
+ (uint8_t*) 0x10000a1a - EEPROM Read Data 0x066 - Uknown purpose
+ (uint8_t*) 0x10000a1b - EEPROM Read Data 0x067 - Uknown purpose
+ (uint8_t*) 0x10000a1c - EEPROM Read Data 0x068 - Uknown purpose
+ (uint8_t*) 0x10000a1d - EEPROM Read Data 0x069 - Uknown purpose
+ (uint8_t*) 0x10000a1e - EEPROM Read Data 0x06a - Uknown purpose
+ (uint8_t*) 0x10000a1f - EEPROM Read Data 0x06b - Uknown purpose
+ (uint8_t*) 0x10000a20 - EEPROM Read Data 0x06c - Uknown purpose
+ (uint8_t*) 0x10000a21 - EEPROM Read Data 0x06d - Uknown purpose
+ (uint8_t*) 0x10000a22 - EEPROM Read Data 0x06e - Uknown purpose
+ (uint8_t*) 0x10000a23 - EEPROM Read Data 0x06f - Uknown purpose
+ (uint8_t*) 0x10000a24 - EEPROM Read Data 0x070 - Uknown purpose
+ (uint8_t*) 0x10000a25 - EEPROM Read Data 0x071 - Uknown purpose
+ (uint8_t*) 0x10000a26 - EEPROM Read Data 0x072 - Uknown purpose
+ (uint8_t*) 0x10000a27 - EEPROM Read Data 0x073 - Uknown purpose
+ (uint8_t*) 0x10000a28 - EEPROM Read Data 0x074 - Power-on Jingle Index
+ (uint8_t*) 0x10000a29 - EEPROM Read Data 0x075 - Power-off Jingle Index
+ (uint8_t*) 0x10000a2a - EEPROM Read Data 0x076 - Uknown purpose
+ (uint8_t*) 0x10000a2b - EEPROM Read Data 0x077 - Uknown purpose
+ (uint8_t*) 0x10000a2c - EEPROM Read Data 0x078 - Uknown purpose
+ (uint8_t*) 0x10000a2d - EEPROM Read Data 0x079 - Uknown purpose
+ (uint8_t*) 0x10000a2e - EEPROM Read Data 0x07a - Uknown purpose
+ (uint8_t*) 0x10000a2f - EEPROM Read Data 0x07b - Uknown purpose
+ (uint8_t*) 0x10000a30 - EEPROM Read Data 0x07c - Uknown purpose
+ (uint8_t*) 0x10000a31 - EEPROM Read Data 0x07d - Uknown purpose
+ (uint8_t*) 0x10000a32 - EEPROM Read Data 0x07e - Uknown purpose
+ (uint8_t*) 0x10000a33 - EEPROM Read Data 0x07f - Uknown purpose
+ (uint8_t*) 0x10000a34 - EEPROM Read Data 0x080 - Uknown purpose
+ (uint8_t*) 0x10000a35 - EEPROM Read Data 0x081 - Uknown purpose
+ (uint8_t*) 0x10000a36 - EEPROM Read Data 0x082 - Uknown purpose
+ (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose

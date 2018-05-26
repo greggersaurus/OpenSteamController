@@ -96,6 +96,7 @@ void fnc0x00000d04();
 
 /**
  * EEPROM Read
+ * Only used in early init?
  *
  * \param arg0x00000bdc_0 - EEPROM address to read
  * \param arg0x00000bdc_1 - RAM address to write EEPROM data to
@@ -107,6 +108,7 @@ void fnc0x00000bdc(arg0x00000bdc_0, arg0x00000bdc_1, arg0x00000bdc_2);
 
 /**
  * iap_command() wrapper (assuming command_param[4] is already on stack...).
+ * Only used in early init?
  *
  * \param arg0x00000bb4_0 - command_param[0] : IAP Command Code
  * \param arg0x00000bb4_1 - command_param[1] : IAP Command Specific
@@ -276,3 +278,36 @@ void fnc0x0000404c(arg0x0000404c_0, arg0x0000404c_1, arg0x0000404c_2);
  * \return None.
  */
 void fnc0x00004080(arg0x00004080_0, arg0x00004080_1, arg0x00004080_2);
+
+/**
+ * Retrieve first 132 bytes of EEPROM data and save to RAM. Also check magic
+ *  number from retrieved data.
+ *
+ * \return None.
+ */
+void fnc0x00006644();
+
+/**
+ * EEPROM Read
+ * Only used after early init?
+ *
+ * \param arg0x000051c4_0 - EEPROM address to read
+ * \param arg0x000051c4_1 - RAM address to write EEPROM data to
+ * \param arg0x000051c4_2 - Number of bytes to read from EEPROM
+ *
+ * \return Status Code from IAP command (i.e. CMD_SUCCESS).
+ */
+uint32_t fnc0x000051c4(arg0x000051c4_0, arg0x000051c4_1, arg0x000051c4_2)
+
+/**
+ * iap_command() wrapper (assuming command_param[4] is already on stack...).
+ * Only used after early init?
+ *
+ * \param arg0x00005d10_0 - command_param[0] : IAP Command Code
+ * \param arg0x00005d10_1 - command_param[1] : IAP Command Specific
+ * \param arg0x00005d10_2 - command_param[2] : IAP Command Specific
+ * \param arg0x00005d10_3 - command_param[3] : IAP Command Specific
+ *
+ * \return Status Code from IAP command (i.e. CMD_SUCCESS).
+ */
+uint32_t fnc0x00005d10(arg0x00005d10_0, arg0x00005d10_1, arg0x00005d10_2, arg0x00005d10_3);
