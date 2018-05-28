@@ -311,3 +311,127 @@ uint32_t fnc0x000051c4(arg0x000051c4_0, arg0x000051c4_1, arg0x000051c4_2)
  * \return Status Code from IAP command (i.e. CMD_SUCCESS).
  */
 uint32_t fnc0x00005d10(arg0x00005d10_0, arg0x00005d10_1, arg0x00005d10_2, arg0x00005d10_3);
+
+/**
+ * Call fnc0x00004cd8() to clear a bunch fo RAM values.
+ * Seems redundant as this is all function does and fnc0x00009184() calls
+ *  same subfunction to clear same SRAM0 values...
+ *
+ * \return None.
+ */
+void fnc0x00006cb0();
+
+/**
+ * Clear a bunch of SRAM0 values.
+ *
+ * \return None.
+ */
+void fnc0x00004cd8();
+
+/**
+ * Clear and initialize a bunch of SRAM0 values. 
+ * Calls:
+ *	fnc0x00004cd8()
+ *	fnc0x000091b0(arg0x000091b0_0, arg0x000091b0_1)
+ *	fnc0x00006d54()
+ *	fnc0x00006d94(arg0x00006d94_0, arg0x00006d94_1)
+ *
+ * \return None.
+ */
+void fnc0x00009184();
+
+/**
+ * Initialize some SRAM0 values.
+ * 
+ * \param arg0x000091b0_0 Used for pathing and values to set SRAM0 values.
+ * \param arg0x000091b0_1 Used for pathing and values to set SRAM0 values.
+ *
+ * \return None.
+ */
+void fnc0x000091b0(arg0x000091b0_0, arg0x000091b0_1);
+
+/**
+ * Clear some SRAM0 Values
+ *
+ * \return None.
+ */
+void fnc0x00006d54();
+
+/**
+ * Check some path options... but input arguments are constants...
+ *
+ * \param arg0x00006d94_0 Unknown usage. Not tested if arg0x00006d94_1 is 0xE
+ * \param arg0x00006d94_1 Checked against all integer values at least up until
+ *	0xE...
+ * 
+ * \return None.
+ */
+void fnc0x00006d94(arg0x00006d94_0, arg0x00006d94_1);
+
+/**
+ * Initial SRAM1 (calls fnc0x00004f30()).
+ *
+ * \param arg0x00004f20_0 Value written to 0x20000078. Purpose unknown.
+ *
+ * \return None.
+ */
+void fnc0x00004f20(arg0x00004f20_0);
+
+/**
+ * Initialize SRAM1 values.
+ *
+ * \return None.
+ */
+void fnc0x00004f30();
+
+/**
+ * USB configuration/initialization. Call fnc0x0000b7c8() to configure
+ *  clocks, etc. Call USBD_HW_API->Init() to initialize core USB device. 
+ *  And finally, setup interrupt in case USB_VBUS GPIO changes state.
+ *
+ * \return None.
+ */
+void fnc0x00003060();
+
+/**
+ * Configure USB peripheral (i.e. setup clocking, power up needed portions, 
+ *  set needed GPIO pin functions).
+ *
+ * \param arg0x0000b7c8_0 TODO: Unknown. Branch check at beginning of function.
+ *
+ * \return None.
+ */
+void fnc0x0000b7c8(arg0x0000b7c8_0);
+
+/** \fn ErrorCode_t Init(USBD_HANDLE_T* phUsb, USB_CORE_DESCS_T* pDesc, USBD_API_INIT_PARAM_T* param)
+ *  Function to initialize USB device stack's DCD and core layers.            
+ *                                                                            
+ *  This function is called by application layer to initialize USB hardware and core layers. 
+ *  On successful initialization the function returns a handle to USB device stack which should
+ *  be passed to the rest of the functions.                                   
+ *                                                                            
+ *  \param[in,out] phUsb Pointer to the USB device stack handle of type USBD_HANDLE_T. 
+ *  \param[in]  pDesc Structure containing pointers to various descriptor arrays needed by the stack.
+ *                    These descriptors are reported to USB host as part of enumerations process.
+ *  \param[in]  param Structure containing USB device stack initialization parameters.
+ *  \return Returns \ref ErrorCode_t type to indicate success or error condition.
+ *          \retval LPC_OK(0) On success                                      
+ *          \retval ERR_USBD_BAD_MEM_BUF(0x0004000b) When insufficient memory buffer is passed or memory
+ *                                             is not aligned on 2048 boundary.
+ */                                                                           
+ErrorCode_t fnc0x1fff351c(arg0x1fff351c_0, arg0x1fff351c_1, arg0x1fff351c_2);
+
+/**
+ * Setup interrupt callback for specific GPIO changing state.
+ *
+ * \param arg0x000055e8_0 GPIO Group/Port Number of pin to be related to interrupt.
+ * \param arg0x000055e8_1 GPIO Pin Number of pin to be related to interrupt.
+ * \param arg0x000055e8_2 Callback function?? Related to interrupt. Will be
+ *	set to 0x100010b4 (if 0x100010b4 is non-zero).
+ * \param arg0x000055e8_3 Some sort of boolean? TODO: what if this is 0?
+ * 
+ * \return None.
+ */
+void fnc0x000055e8(arg0x000055e8_0, arg0x000055e8_1, arg0x000055e8_2, arg0x000055e8_3);
+
+?? fnc0x00006534( arg0x00006534_0, arg0x00006534_1, arg0x00006534_2, arg0x00006534_3, arg0x00006534_4, arg0x00006534_5, arg0x00006534_6, arg0x00006534_12, )

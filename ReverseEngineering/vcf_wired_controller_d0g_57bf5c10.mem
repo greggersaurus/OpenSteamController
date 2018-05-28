@@ -51,6 +51,12 @@
 			 enable (via cps).  (Similar to 0x10000250, but used 
 			 after early init).
 
+(uint32_t*) 0x1000034c - USBD_HANDLE_T (is typedef void*)
+(uint32_t*) 0x10000350 - (const USBD_API_T *)LPC_ROM_API->usbdApiBase (0x1fff1f24)
+(uint32_t*) 0x10000354 - Tracks bottom of USB stack, as devices/eps are added 
+		 	 (i.e. mem_base after init functions)
+(uint32_t*) 0x10000358 - mem_size from last USBD init call 
+
 (uint16_t*) 0x100009b4 - EEPROM Read Data 0x000 - Magic Number to indicate 
 			 EEPROM has valid data
 (uint16_t*) 0x100009b6 - EEPROM Read Data 0x002 - Continuation of Magic Number?
@@ -182,3 +188,6 @@
  (uint8_t*) 0x10000a35 - EEPROM Read Data 0x081 - Uknown purpose
  (uint8_t*) 0x10000a36 - EEPROM Read Data 0x082 - Uknown purpose
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
+
+(uint32_t*) 0x100010b4 - Callback function? Related to PIO0_3 (USB_VBUS) 
+			 changing state (fnc0x000055e8()).
