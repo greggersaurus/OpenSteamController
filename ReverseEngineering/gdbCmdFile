@@ -193,10 +193,9 @@ set {int}0x40060024 = 0xFFFFFFFF
 # PIO0_2 is read during init. Interrupt setup to monitor state change.
 set {char}0x50000002 = 0
 
-# PIO0_3 is USB_VBUS and indiciates if there USB bus power. Must be 1 for 
-#  system to boot properly. (Possibly some GPIO toggling causes this to be 
-#  powered if cable is not connected? Or there is some other path I don't
-#  understand).
+# PIO0_3 is USB_VBUS and indiciates if there USB bus power. If 1 system will
+#  boot and wait for USB enumeration/probing. If 0 system will boot and wait
+#  for data from RF chip.
 set {char}0x50000003 = 1
 
 # set {char}0x50000004 = pin state TODO: Should this be non-zero?
@@ -483,9 +482,8 @@ delete
 # Events change based on whether USB cable is connected (volatage present) or not
 if *(char*)0x50000003 == 0
 
-	# NOTE: We do not care about this path. This leads to infinite wfi loop as I think
-	#  the system is waiting for USB_VBUS to be powered when a GPIO is switched or
-	#  something or for system to power off to due brown out...?
+	# NOTE: We need to spend more time on this path. Somehow this "should"
+	#  lead to communicating with the RF chip, but I have not figured that out yet...
 
 	#------------------------------------------------------------------------------#
 
@@ -542,6 +540,8 @@ if *(char*)0x50000003 == 0
 	
 	# Remove watchpoint
 	delete 
+
+#TODO: whats next? What causes system to interact with RF chip (and via what interface? USART?)?
 
 
 	#------------------------------------------------------------------------------#
@@ -761,6 +761,66 @@ else
 	# Remove watchpoint
 	delete 
 
+
+	#------------------------------------------------------------------------------#
+
+
+# Simulate USB Callbacks...
+
+	# Setup watchpoint for...
+#	watch $pc == 0x000098f0
+
+	# Execute until watchpoint
+#	continue
+
+#	stepi
+
+	##
+	##set $lr = $pc
+	# arg0 = hUsb
+	##set $r0 = 0x20004118
+	# USB_Configure_Event
+	##set $pc = 0x00004e58
+
+	##set $lr = $pc
+	# arg0 = hUsb
+	##set $r0 = 0x20004118
+	# USB_Reset_Event
+	##set $pc = 0x00008d8a
+
+#	set $lr = $pc
+	# arg0 = hUsb
+#	set $r0 = 0x20004118
+	# USB_Reset_Event
+#	set $pc = 0x00008de4
+	##
+
+	# Remove watchpoint
+#	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+# TODO: try simulating past wfi for ADC read... Does this lead anywhere positive?
+
+	# Setup watchpoint 
+	watch $pc == 0x00002d00
+
+	# Execute until watchpoint
+	continue
+
+	# Set ADC counter variables (should not really be needed once ISR has served its 
+	#  purpose. But setting to final values just to be safe and accurate).
+	set {int}0x10000014 = 0x0000012d
+	set {int}0x10000018 = 0x00000007
+	# Set flag to indciate ADC ISR has served its purpose and ADC is shutdown
+	set {char}0x10000010 = 1
+	# Set value of counter used to accumulate ADC values
+# TODO: Need to figure out what this value should be and how that affects sim...
+	set {short}0x10000f8c = 0
+
+	# Remove watchpoint
+	delete 
 
 	#------------------------------------------------------------------------------#
 
