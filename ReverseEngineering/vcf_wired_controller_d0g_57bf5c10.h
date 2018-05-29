@@ -434,20 +434,96 @@ ErrorCode_t fnc0x1fff351c(arg0x1fff351c_0, arg0x1fff351c_1, arg0x1fff351c_2);
  */
 void fnc0x000055e8(arg0x000055e8_0, arg0x000055e8_1, arg0x000055e8_2, arg0x000055e8_3);
 
-// Init USB EP0
-?? fnc0x00006534( arg0x00006534_0, arg0x00006534_1, arg0x00006534_2, arg0x00006534_3, arg0x00006534_4, arg0x00006534_5, arg0x00006534_6, arg0x00006534_12, )
+/**
+ * Initialize USB HID EP1
+ * 
+ *  \return Returns \ref ErrorCode_t type to indicate success or error condition.
+ *          \retval LPC_OK On success                                         
+ *          \retval ERR_USBD_BAD_MEM_BUF  Memory buffer passed is not 4-byte  
+ *              aligned or smaller than required.                             
+ *          \retval ERR_API_INVALID_PARAM2 Either HID_GetReport() or HID_SetReport()
+ *              callback are not defined.                                     
+ *          \retval ERR_USBD_BAD_DESC  HID_HID_DESCRIPTOR_TYPE is not defined 
+ *              immediately after interface descriptor.                       
+ *          \retval ERR_USBD_BAD_INTF_DESC  Wrong interface descriptor is passed. 
+ *          \retval ERR_USBD_BAD_EP_DESC  Wrong endpoint descriptor is passed. 
+ */
+ErrorCode_t fnc0x00006534();
 
-// Init USB EPn (Generic wrapper for calling USBD_HID_API_T->init())
-?? fnc0x0000300c( arg0x0000300c_0, arg0x0000300c_1, arg0x0000300c_2, arg0x0000300c_3, arg0x0000300c_4, arg0x0000300c_5, arg0x0000300c_6, arg0x0000300c_12, )
+/**
+ * Initialize HID driver for specified EP 
+ *  (Generic wrapper for calling USBD_HID_API_T->init())
+ * 
+ * \param arg0x0000300c_0 USB EP Number
+ * \param arg0x0000300c_1 USBD_HID_INIT_PARAM_T* param	
+ *
+ *  \return Returns \ref ErrorCode_t type to indicate success or error condition.
+ *          \retval LPC_OK On success                                         
+ *          \retval ERR_USBD_BAD_MEM_BUF  Memory buffer passed is not 4-byte  
+ *              aligned or smaller than required.                             
+ *          \retval ERR_API_INVALID_PARAM2 Either HID_GetReport() or HID_SetReport()
+ *              callback are not defined.                                     
+ *          \retval ERR_USBD_BAD_DESC  HID_HID_DESCRIPTOR_TYPE is not defined 
+ *              immediately after interface descriptor.                       
+ *          \retval ERR_USBD_BAD_INTF_DESC  Wrong interface descriptor is passed. 
+ *          \retval ERR_USBD_BAD_EP_DESC  Wrong endpoint descriptor is passed. 
+ */
+ErrorCode_t fnc0x0000300c(arg0x0000300c_0, arg0x0000300c_1);
 
-// Init USB EP1
-?? fnc0x00007268( arg0x00007268_0, arg0x00007268_1, arg0x00007268_2, arg0x00007268_3, arg0x00007268_4, arg0x00007268_5, arg0x00007268_6, arg0x00007268_12, )
+/** \fn ErrorCode_t init(USBD_HANDLE_T hUsb, USBD_HID_INIT_PARAM_T* param)    
+ *  Function to initialize HID function driver module.                        
+ *                                                                            
+ *  This function is called by application layer to initialize HID function driver  
+ *  module. On successful initialization the function returns a handle to HID 
+ *  function driver module in passed param structure.                         
+ *                                                                            
+ *  \param[in] hUsb Handle to the USB device stack.                           
+ *  \param[in, out] param Structure containing HID function driver module     
+ *      initialization parameters.                                            
+ *  \return Returns \ref ErrorCode_t type to indicate success or error condition.
+ *          \retval LPC_OK On success                                         
+ *          \retval ERR_USBD_BAD_MEM_BUF  Memory buffer passed is not 4-byte  
+ *              aligned or smaller than required.                             
+ *          \retval ERR_API_INVALID_PARAM2 Either HID_GetReport() or HID_SetReport()
+ *              callback are not defined.                                     
+ *          \retval ERR_USBD_BAD_DESC  HID_HID_DESCRIPTOR_TYPE is not defined 
+ *              immediately after interface descriptor.                       
+ *          \retval ERR_USBD_BAD_INTF_DESC  Wrong interface descriptor is passed. 
+ *          \retval ERR_USBD_BAD_EP_DESC  Wrong endpoint descriptor is passed. 
+ */                                                                           
+ErrorCode_t fnc0x1fff2cfc(arg0x1fff2cfc_0, arg0x1fff2cfc_1);
 
-// Init USB EP2
-?? fnc0x00006058( arg0x00006058_0, arg0x00006058_1, arg0x00006058_2, arg0x00006058_3, arg0x00006058_4, arg0x00006058_5, arg0x00006058_6, arg0x00006058_12, )
+/**
+ * Initialize USB HID EP2
+ * 
+ *  \return Returns \ref ErrorCode_t type to indicate success or error condition.
+ *          \retval LPC_OK On success                                         
+ *          \retval ERR_USBD_BAD_MEM_BUF  Memory buffer passed is not 4-byte  
+ *              aligned or smaller than required.                             
+ *          \retval ERR_API_INVALID_PARAM2 Either HID_GetReport() or HID_SetReport()
+ *              callback are not defined.                                     
+ *          \retval ERR_USBD_BAD_DESC  HID_HID_DESCRIPTOR_TYPE is not defined 
+ *              immediately after interface descriptor.                       
+ *          \retval ERR_USBD_BAD_INTF_DESC  Wrong interface descriptor is passed. 
+ *          \retval ERR_USBD_BAD_EP_DESC  Wrong endpoint descriptor is passed. 
+ */
+ErrorCode_t fnc0x00007268();
 
-// Part of USB EP2 Init??
-?? fnc0x00007c90( arg0x00007c90_0, arg0x00007c90_1, arg0x00007c90_2, arg0x00007c90_3, arg0x00007c90_4, arg0x00007c90_5, arg0x00007c90_6, arg0x00007c90_12, )
+/**
+ * Initialize USB EP3
+ *
+ * \param arg0x00006058_0 Value to set variable 0x10000380 to. Unknown purpose.
+ *
+ * \return None.
+ */
+void fnc0x00006058(arg0x00006058_0);
+
+/**
+ * Copy some variable values?? Called as part of USB HID3 init...
+ *
+ * \return None.
+ */
+void fnc0x00007c90();
 
 // Lots of code here...
 ?? fnc0x00005d90( arg0x00005d90_0, arg0x00005d90_1, arg0x00005d90_2, arg0x00005d90_3, arg0x00005d90_4, arg0x00005d90_5, arg0x00005d90_6, arg0x00005d90_12, )
