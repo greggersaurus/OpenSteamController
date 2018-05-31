@@ -525,10 +525,54 @@ void fnc0x00006058(arg0x00006058_0);
  */
 void fnc0x00007c90();
 
-// Lots of code here...
+// Lots of code in here...
 ?? fnc0x00005d90( arg0x00005d90_0, arg0x00005d90_1, arg0x00005d90_2, arg0x00005d90_3, arg0x00005d90_4, arg0x00005d90_5, arg0x00005d90_6, arg0x00005d90_12, )
 
+/**
+ * Configure Brown Out Detection and Reset. That is specify voltage levels for
+ *  generating interrupts and enable reset function.
+ *
+ * \return None.
+ */
+void fnc0x0000521c();
 
+?? fnc0x00009204( arg0x00009204_0, arg0x00009204_1, arg0x00009204_2, arg0x00009204_3, arg0x00009204_4, arg0x00009204_5, arg0x00009204_6, arg0x00009204_12, )
+
+/**
+ * Write some RAM values. 
+ *  Specifically 
+ *	((uint8_t*)(0x10000953 + arg0x00007980_0))[0] = arg0x00007980_1
+ *	((uint8_t*)(0x10000953 + arg0x00007980_0))[1] = arg0x00007980_2
+ *	((uint8_t*)(0x10000924 + arg0x00007980_0))[0] = 1
+ *
+ * \return None.
+ */
+void fnc0x00007980(arg0x00007980_0, arg0x00007980_1, arg0x00007980_2);
+
+/**
+ * Setup TODO purpose GPIO (PIO1_7)
+ *
+ * \param arg0x000071e8_0 GPIO Bank/Group
+ * \param arg0x000071e8_1 GPIO Number/Offset
+ * 
+ * \return None.
+ */
+void fnc0x000071e8(arg0x000071e8_0, arg0x000071e8_1);
+
+/**
+ * Set I/O Configuration specified GPIO (while making sure to keep reserved
+ *  bits properly set).
+ * 
+ * \param arg0x00005508_0 GPIO Bank/Group
+ * \param arg0x00005508_1 GPIO Number/Offset
+ * \param arg0x00005508_2 GPIO settings (i.e. FUNC, MODE, HYS, INV, OD).
+ *
+ * \return None.
+ */
+void fnc0x00005508(arg0x00005508_0, arg0x00005508_1, arg0x00005508_2);
+
+
+?? fnc0x000064c4( arg0x000064c4_0, arg0x000064c4_1, arg0x000064c4_2, arg0x000064c4_3, arg0x000064c4_4, arg0x000064c4_5, arg0x000064c4_6, arg0x000064c4_12, )
 
 // Check state of PIO0_3 (USB_VBUS). This causes major divergence in code (i.e. if comms expected via USB or RF chip... I think).
 ?? fnc0x00007b70( arg0x00007b70_0, arg0x00007b70_1, arg0x00007b70_2, arg0x00007b70_3, arg0x00007b70_4, arg0x00007b70_5, arg0x00007b70_6, arg0x00007b70_12, )

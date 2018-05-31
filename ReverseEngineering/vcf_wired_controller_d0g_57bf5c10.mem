@@ -46,9 +46,13 @@
 (uint32_t*) 0x10000088 - HID EP1 related?
 (uint32_t*) 0x1000008c - HID EP1 related?
 
+(uint32_t*) 0x10000094 - EEPROM Read Data 0x004 - Board/HW Revision Number
+
 (uint32_t*) 0x100000a4 - System Clock Rate (CCLK) in Hz. (48000000 is calcualted
 			 and stored here based on PLL settings, etc.).
 
+ *(uint8_t*)0x10000200 - GPIO Bank/Group for TODO GPIO (PIO1_7)
+ *(uint8_t*)0x10000201 - GPIO Number for TODO GPIO (PIO1_7)
 
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
