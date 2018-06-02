@@ -31,6 +31,8 @@ This section is a running list of priorities to focus on in hopes of reaching
        1. Majority of functional behavior from vcf_wired_controller_d0g_57bf5c10.bin should remain unchanged (even if underlying assembly changes). 
        1. Once functionality is fully understood, applying that understanding to newer firmware may be quicker than "starting over" with new firmware?
 1. Simulation to C Conversion
+    1. Pay special attention to GPIOs as they are initialized and memory associated with them
+       1. Ohm-out and test via HW to get better idea for purpose of these GPIOs...
     1. Re-run everything using output of new pinkySim exeLog simplified C
         1. Clean vcf_wired_controller_d0g_57bf5c10.c of old style mess
             1. Make sure all fncs appear in .h file
@@ -73,11 +75,10 @@ This section is a running list of priorities to focus on in hopes of reaching
 1. List more details about hardware [Luna_maiboard_V000456-00_rev3.md](./Luna_maiboard_V000456-00_rev3.md)
     1. Other processors (i.e. wireless comms chip, gyro, haptics chip)
     1. See if we can get information on each pin (focus on LPC chip)
-    1. Add In/Out configuration column for pins?
-    1. What is PIO1_7 connected to on hardware?
-        1. Ohm it out!
-    1. What is PIO0_19 connected to on hardware?
-        1. Ohm it out!
+    1. Find out more on these GPIOs (i.e. Ohm it out, test using custom firmware)
+        1. PIO1_10
+        1. PIO1_7 
+        1. PIO0_19 
 1. Decompose EEPROM dumps
     1. Captured from two different controllers to isolate some differences
     1. Change settings to isolate other differences

@@ -22,72 +22,72 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 
 ## Pinout
 
-| Pin Number 	| Datasheet Name	| Pin Function	   | Notes 	|
-|--------------:|-----------------------|------------------|---------------|
-|             1 | PIO1_0                |                  | Analog joystick click button |
-|             2 | PIO1_25               |                  | S14 - Left inner grip button |
-|             3 | PIO1_19               |                  | |
-|             4 | PIO0_0/nRESET         |                  | |
-|             5 | PIO0_1                |                  | |
-|             6 | PIO1_7                | PIO1_7           | Set as output GPIO and driven high during init (trace leads to... TODO)|
-|             7 | V<sub>SS</sub>        | V<sub>SS</sub>   | V<sub>SS</sub> |
-|             8 | XTALIN                |                  | |
-|             9 | XTALOUT               |                  | |
-|            10 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
-|            11 | PIO0_20               |                  | |
-|            12 | PIO1_10               | PIO1_10          | TODO: get more info on this... Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up... (routed to pin ??(middle) on U10 on front of PCB) |
-|            13 | PIO0_2                | PIO0_2           | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to...). Seems to have something to do with Brown Out Detection. |
-|            14 | PIO1_26               |                  | S2 - Left trackpad click |
-|            15 | PIO1_27               |                  | S3 - LT (Left trigger digital) |
-|            16 | PIO1_4                |                  | S8 - LB (Left bumper) | 
-|            17 | PIO1_1                | PIO1_1           | Set as output GPIO and driven high, during init. (Routes to R35 and R36 near gyro + accelerometer chip). RST related for Gyro + Accelerometer maybe?|
-|            18 | PIO1_20               |                  | S17 - FRONT_L (Front left arrow button) |
-|            19 | PIO0_3                | USB_VBUS         | Monitors the presence of USB bus power. |
-|            20 | PIO0_4                | I2C SCL          | Connected to MPU-6500 I2C SCL |
-|            21 | PIO0_5                | I2C SDA          | Connected to MPU-6500 I2C SDA |
-|            22 | PIO0_21               | CT16B1_MAT0      | Control Steam Button LED (LED1) |
-|            23 | PIO1_17               | RXD (USART)      | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 21 |
-|            24 | PIO1_23               |                  | Connected to MPU-6500 Pin 12 (INT) |
-|            25 | USB_DM                |                  | |
-|            26 | USB_DP                |                  | |
-|            27 | PIO1_24               |                  | |
-|            28 | PIO1_18               | TXD (USART)      | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
-|            29 | PIO0_6                | not(USB_CONNECT) | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
-|            30 | PIO0_7                | PIO0_7           | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)) |
-|            31 | PIO1_28               | PIO1_28          | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)) |
-|            32 | PIO1_5                |                  | |
-|            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
-|            34 | PIO1_2                |                  | S19 - FRONT_F (Front right arrow button) | 
-|            35 | PIO1_21               |                  | S5 - Right trackpad click  |
-|            36 | PIO0_8                | MISO0            | Connected to MISO on Right Haptic and Left Haptic |
-|            37 | PIO0_9                | MOSI0            | Connected to MISO on Right Haptic and Left Haptic |
-|            38 | SWCLK/PIO0_10         | SWCLK?           | Connected to DEBUG interface for LPC11U37F |
-|            39 | PIO1_8                |                  | |
-|            40 | PIO0_22               | AD6              | Setup to function as AD6 during init (trace leads to C6, continutes to R10 near power?) |
-|            41 | PIO1_29               | SCK0             | Connected to SCLK on Right Haptic and Left Haptic |
-|            42 | TDI/PIO0_11           | TDI              | Pull-down resistor enabled |
-|            43 | PIO1_11               |                  | S9 - Y Button |
-|            44 | TMS/PIO0_12           |                  | |
-|            45 | TDO/PIO0_13           | TDO              | Pull-down resistor enabled |
-|            46 | nTRST/PIO0_14         |                  | |
-|            47 | PIO1_13               |                  | S6 - RT (Right trigger digital) |
-|            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
-|            49 | PIO1_14               |                  | S10 - RB (Right bumper) |
-|            50 | PIO1_3                |                  | S16 - Right inner grip button | 
-|            51 | PIO1_22               |                  | S4 - B Button |
-|            52 | SWDIO/PIO0_15         | SWDIO?           | Connected to DEBUG interface for LPC11U37F |
-|            53 | PIO0_16               |                  | | 
-|            54 | V<sub>SS</sub>        | V<sub>SS</sub>   | V<sub>SS</sub> |
-|            55 | PIO1_9                |                  | S7 - X Button |
-|            56 | PIO0_23               | PIO0_23          | Input with pull-down resistor enabled. Connected to Data Ready on Right Haptic? |
-|            57 | PIO1_15               | PIO1_15          | Chip Select/SS for Right Haptic (active low) |
-|            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | V<sub>DD</sub> |
-|            59 | PIO1_12               | PIO1_12          | Read during init to check if it is logic low or not. (trace leads to VDD on Haptics). If low PIO0_18 is checked. |
-|            60 | PIO0_17               |                  | S1 - A Button |
-|            61 | PIO0_18               | PIO0_18          | If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB). | 
-|            62 | PIO0_19               | PIO0_19          | Set as output during init and driven low. (trace leads to... TODO)|
-|            63 | PIO1_16               | PIO1_16          | Input with pull-down resistor enabled. Connected to Data Ready on Left Haptic. |
-|            64 | PIO1_6                | PIO1_6           | Chip Select/SS for Left Haptic (active low) |
+| Pin Number 	| Datasheet Name	| Pin Function	   | Pin Direction | Notes 	|
+|--------------:|-----------------------|------------------|---------------|---------------|
+|             1 | PIO1_0                |                  |               | Analog joystick click button |
+|             2 | PIO1_25               |                  |               | S14 - Left inner grip button |
+|             3 | PIO1_19               |                  |               | |
+|             4 | PIO0_0/nRESET         |                  |               | |
+|             5 | PIO0_1                |                  |               | |
+|             6 | PIO1_7                | PIO1_7           | Out           | Set as output GPIO and driven high during init (trace leads to... TODO)|
+|             7 | V<sub>SS</sub>        | V<sub>SS</sub>   | In            | V<sub>SS</sub> |
+|             8 | XTALIN                |                  |               | |
+|             9 | XTALOUT               |                  |               | |
+|            10 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
+|            11 | PIO0_20               |                  |               | |
+|            12 | PIO1_10               | PIO1_10          | Out           | TODO: get more info on this... Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up... (routed to pin ??(middle) on U10 on front of PCB) |
+|            13 | PIO0_2                | PIO0_2           |               | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to...). Seems to have something to do with Brown Out Detection. |
+|            14 | PIO1_26               |                  |               | S2 - Left trackpad click |
+|            15 | PIO1_27               |                  |               | S3 - LT (Left trigger digital) |
+|            16 | PIO1_4                |                  |               | S8 - LB (Left bumper) | 
+|            17 | PIO1_1                | PIO1_1           |               | Set as output GPIO and driven high, during init. (Routes to R35 and R36 near gyro + accelerometer chip). RST related for Gyro + Accelerometer maybe?|
+|            18 | PIO1_20               |                  |               | S17 - FRONT_L (Front left arrow button) |
+|            19 | PIO0_3                | USB_VBUS         | In            | Monitors the presence of USB bus power. |
+|            20 | PIO0_4                | I2C SCL          |               | Connected to MPU-6500 I2C SCL |
+|            21 | PIO0_5                | I2C SDA          |               | Connected to MPU-6500 I2C SDA |
+|            22 | PIO0_21               | CT16B1_MAT0      |               | Control Steam Button LED (LED1) |
+|            23 | PIO1_17               | RXD (USART)      | In            | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 21 |
+|            24 | PIO1_23               |                  |               | Connected to MPU-6500 Pin 12 (INT) |
+|            25 | USB_DM                |                  |               | |
+|            26 | USB_DP                |                  |               | |
+|            27 | PIO1_24               |                  |               | |
+|            28 | PIO1_18               | TXD (USART)      | Out           | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
+|            29 | PIO0_6                | not(USB_CONNECT) | In            | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
+|            30 | PIO0_7                | PIO0_7           |               | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)) |
+|            31 | PIO1_28               | PIO1_28          |               | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)) |
+|            32 | PIO1_5                |                  |               | |
+|            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
+|            34 | PIO1_2                |                  |               | S19 - FRONT_F (Front right arrow button) | 
+|            35 | PIO1_21               |                  |               | S5 - Right trackpad click  |
+|            36 | PIO0_8                | MISO0            |               | Connected to MISO on Right Haptic and Left Haptic |
+|            37 | PIO0_9                | MOSI0            |               | Connected to MISO on Right Haptic and Left Haptic |
+|            38 | SWCLK/PIO0_10         | SWCLK?           |               | Connected to DEBUG interface for LPC11U37F |
+|            39 | PIO1_8                |                  |               | |
+|            40 | PIO0_22               | AD6              |               | Setup to function as AD6 during init (trace leads to C6, continutes to R10 near power?) |
+|            41 | PIO1_29               | SCK0             |               | Connected to SCLK on Right Haptic and Left Haptic |
+|            42 | TDI/PIO0_11           | TDI              |               | Pull-down resistor enabled |
+|            43 | PIO1_11               |                  |               | S9 - Y Button |
+|            44 | TMS/PIO0_12           |                  |               | |
+|            45 | TDO/PIO0_13           | TDO              |               | Pull-down resistor enabled |
+|            46 | nTRST/PIO0_14         |                  |               | |
+|            47 | PIO1_13               |                  |               | S6 - RT (Right trigger digital) |
+|            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
+|            49 | PIO1_14               |                  |               | S10 - RB (Right bumper) |
+|            50 | PIO1_3                |                  |               | S16 - Right inner grip button | 
+|            51 | PIO1_22               |                  |               | S4 - B Button |
+|            52 | SWDIO/PIO0_15         | SWDIO?           |               | Connected to DEBUG interface for LPC11U37F |
+|            53 | PIO0_16               |                  |               | | 
+|            54 | V<sub>SS</sub>        | V<sub>SS</sub>   | In            | V<sub>SS</sub> |
+|            55 | PIO1_9                |                  |               | S7 - X Button |
+|            56 | PIO0_23               | PIO0_23          |               | Input with pull-down resistor enabled. Connected to Data Ready on Right Haptic? |
+|            57 | PIO1_15               | PIO1_15          |               | Chip Select/SS for Right Haptic (active low) |
+|            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
+|            59 | PIO1_12               | PIO1_12          |               | Read during init to check if it is logic low or not. (trace leads to VDD on Haptics). If low PIO0_18 is checked. |
+|            60 | PIO0_17               |                  |               | S1 - A Button |
+|            61 | PIO0_18               | PIO0_18          |               | If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB). | 
+|            62 | PIO0_19               | PIO0_19          |               | Set as output during init and driven low. (trace leads to... TODO)|
+|            63 | PIO1_16               | PIO1_16          |               | Input with pull-down resistor enabled. Connected to Data Ready on Left Haptic. |
+|            64 | PIO1_6                | PIO1_6           |               | Chip Select/SS for Left Haptic (active low) |
 
 
 # MPU-6500
