@@ -36,7 +36,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            10 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            11 | PIO0_20               |                  |               | |
 |            12 | PIO1_10               | PIO1_10          | Out           | TODO: get more info on this... Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up... (routed to pin ??(middle) on U10 on front of PCB) |
-|            13 | PIO0_2                | PIO0_2           |               | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to...). Seems to have something to do with Brown Out Detection. |
+|            13 | PIO0_2                | PIO0_2           | In            | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to...). Seems to have something to do with Brown Out Detection. |
 |            14 | PIO1_26               |                  |               | S2 - Left trackpad click |
 |            15 | PIO1_27               |                  |               | S3 - LT (Left trigger digital) |
 |            16 | PIO1_4                |                  |               | S8 - LB (Left bumper) | 
@@ -85,7 +85,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            59 | PIO1_12               | PIO1_12          |               | Read during init to check if it is logic low or not. (trace leads to VDD on Haptics). If low PIO0_18 is checked. |
 |            60 | PIO0_17               |                  |               | S1 - A Button |
 |            61 | PIO0_18               | PIO0_18          |               | If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB). | 
-|            62 | PIO0_19               | PIO0_19          |               | Set as output during init and driven low. (trace leads to... TODO)|
+|            62 | PIO0_19               | PIO0_19          | Out           | Set as output during init and driven low. (trace leads to... TODO)|
 |            63 | PIO1_16               | PIO1_16          |               | Input with pull-down resistor enabled. Connected to Data Ready on Left Haptic. |
 |            64 | PIO1_6                | PIO1_6           |               | Chip Select/SS for Left Haptic (active low) |
 

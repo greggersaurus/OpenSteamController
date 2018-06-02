@@ -30,6 +30,9 @@
 			 configuration of ADC. (TODO: Verify: Set bits indicate 
 			 which AD is active (i.e. bit 6 for AD6)??)
 
+ (uint8_t*) 0x1000001c - GPIO Bank/Group for TODO GPIO (PIO0_19)
+ (uint8_t*) 0x1000001d - GPIO Number for TODO GPIO (PIO0_19)
+
 (uint16_t*) 0x10000080 - USB_HID_REPORT_T field for HID EP1
 			  uint16_t len; /**< Size of the report descriptor in bytes. */ 
  (uint8_t*) 0x10000082 - USB_HID_REPORT_T field for HID EP1
@@ -51,19 +54,27 @@
 (uint32_t*) 0x100000a4 - System Clock Rate (CCLK) in Hz. (48000000 is calcualted
 			 and stored here based on PLL settings, etc.).
 
- *(uint8_t*)0x10000200 - GPIO Bank/Group for TODO GPIO (PIO1_7)
- *(uint8_t*)0x10000201 - GPIO Number for TODO GPIO (PIO1_7)
+ (uint8_t*) 0x10000200 - GPIO Bank/Group for TODO GPIO (PIO1_7)
+ (uint8_t*) 0x10000201 - GPIO Number for TODO GPIO (PIO1_7)
 
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
 			 Decremented (and checked to be 0) before interrupt 
 			 enable (via cps). Ony used in early init?
-(uint16_t*) 0x10000254 - EEPROM Read Data 0x000 - Magic Number to indicate 
-			 EEPROM has valid data
+(uint16_t*) 0x10000254 - 1. EEPROM Read Data 0x000 - Magic Number to indicate 
+			 EEPROM has valid data (early init only)
+			 2. SSP0 control register base address
 (uint16_t*) 0x10000256 - EEPROM Read Data 0x002 - Continuation of Magic Number?
 (uint32_t*) 0x10000258 - EEPROM Read Data 0x004 - Board/HW Revision Number
 
 (uint32_t*) 0x10000260 - System Clock Frequency in Hz
+
+ (uint8_t*) 0x100002b0 - GPIO Bank/Group for PINT1 GPIO (PIO0_2)
+ (uint8_t*) 0x100002b1 - GPIO Number for PINT1 GPIO (PIO0_2)
+ (uint8_t*) 0x100002b2 - Inverted value of PINT1 GPIO (PIO0_2) read before 
+			 setting up interrupt.
+
+(uint32_t*) 0x100002bc - Callback? related to PINT1 GPIO (PIO0_2)
 
 (uint32_t*) 0x100002c8 - USB HID3 related?
 
@@ -247,6 +258,7 @@
 
 (uint32_t*) 0x100010b4 - Callback function? Related to PIO0_3 (USB_VBUS) 
 			 changing state (fnc0x000055e8()).
+(uint32_t*) 0x100010b8 - Callback function. Related to PINT1 (PIO0_2 change).
 
 (uint16_t*) 0x10001140 - HID EP3 related?
  (uint8_t*) 0x10001142 - HID EP3 related?

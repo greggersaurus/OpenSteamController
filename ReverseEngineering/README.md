@@ -79,6 +79,7 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. PIO1_10
         1. PIO1_7 
         1. PIO0_19 
+        1. PIO0_2
 1. Decompose EEPROM dumps
     1. Captured from two different controllers to isolate some differences
     1. Change settings to isolate other differences

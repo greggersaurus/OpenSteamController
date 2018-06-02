@@ -571,8 +571,40 @@ void fnc0x000071e8(arg0x000071e8_0, arg0x000071e8_1);
  */
 void fnc0x00005508(arg0x00005508_0, arg0x00005508_1, arg0x00005508_2);
 
+/**
+ * Setup TODO purpose GPIO (PIO0_19)
+ *
+ * \param arg0x000064c4_0 GPIO Bank/Group
+ * \param arg0x000064c4_1 GPIO Number/Offset
+ * 
+ * \return None.
+ */
+void fnc0x000064c4(arg0x000064c4_0, arg0x000064c4_1);
 
-?? fnc0x000064c4( arg0x000064c4_0, arg0x000064c4_1, arg0x000064c4_2, arg0x000064c4_3, arg0x000064c4_4, arg0x000064c4_5, arg0x000064c4_6, arg0x000064c4_12, )
+/**
+ * Setup next PINT (PINT1) for TODO purpose
+ *
+ * \param arg0x00007c38_0 GPIO Bank/Group
+ * \param arg0x00007c38_1 GPIO Number/Offset
+ * \param arg0x00007c38_2 A callback function?
+ * 
+ * \return None.
+ */
+void fnc0x00007c38(arg0x00007c38_0, arg0x00007c38_1, arg0x00007c38_2);
+
+/**
+ * Setup next (i.e. next free) GPIO interrupt
+ *
+ * \param arg0x00005544_0 GPIO Bank/Group
+ * \param arg0x00005544_1 GPIO Number/Offset
+ * \param arg0x00005544_2 A callback function called by interrupt handler?
+ * \param arg0x00005544_3 Boolean of unknown purpose? TODO: only simulated with value of 0...
+
+ * \return None.
+ */
+void fnc0x00005544(arg0x00005544_0, arg0x00005544_1, arg0x00005544_2, arg0x00005544_3);
+
+?? fnc0x0000bb38( arg0x0000bb38_0, arg0x0000bb38_1, arg0x0000bb38_2, arg0x0000bb38_3, arg0x0000bb38_4, arg0x0000bb38_5, arg0x0000bb38_6, arg0x0000bb38_12, )
 
 // Check state of PIO0_3 (USB_VBUS). This causes major divergence in code (i.e. if comms expected via USB or RF chip... I think).
 ?? fnc0x00007b70( arg0x00007b70_0, arg0x00007b70_1, arg0x00007b70_2, arg0x00007b70_3, arg0x00007b70_4, arg0x00007b70_5, arg0x00007b70_6, arg0x00007b70_12, )
