@@ -35,7 +35,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |             9 | XTALOUT               |                  |               | |
 |            10 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            11 | PIO0_20               |                  |               | |
-|            12 | PIO1_10               | PIO1_10          | Out           | TODO: get more info on this... Set as output GPIO and driven ?? (during init). Has to do with BOD and controller booting up... (routed to pin ??(middle) on U10 on front of PCB) |
+|            12 | PIO1_10               | PIO1_10          | Out           | TODO: get more info on this... Set as output GPIO and driven ?? (during init). Related to AD? Or has to do with BOD and controller booting up... (routed to pin ??(middle) on U10 on front of PCB) |
 |            13 | PIO0_2                | PIO0_2           | In            | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to...). Seems to have something to do with Brown Out Detection. |
 |            14 | PIO1_26               |                  |               | S2 - Left trackpad click |
 |            15 | PIO1_27               |                  |               | S3 - LT (Left trigger digital) |
@@ -53,8 +53,8 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            27 | PIO1_24               |                  |               | |
 |            28 | PIO1_18               | TXD (USART)      | Out           | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
 |            29 | PIO0_6                | not(USB_CONNECT) | In            | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
-|            30 | PIO0_7                | PIO0_7           |               | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)) |
-|            31 | PIO1_28               | PIO1_28          |               | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)) |
+|            30 | PIO0_7                | PIO0_7           | Out           | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)). Related/similar to GPIO1_28? Any other purpose? More details? TODO|
+|            31 | PIO1_28               | PIO1_28          | Out           | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)). Related/similar to GPIO0_7? Any other purpose? More details? TODO |
 |            32 | PIO1_5                |                  |               | |
 |            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            34 | PIO1_2                |                  |               | S19 - FRONT_F (Front right arrow button) | 
@@ -63,7 +63,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            37 | PIO0_9                | MOSI0            |               | Connected to MISO on Right Haptic and Left Haptic |
 |            38 | SWCLK/PIO0_10         | SWCLK?           |               | Connected to DEBUG interface for LPC11U37F |
 |            39 | PIO1_8                |                  |               | |
-|            40 | PIO0_22               | AD6              |               | Setup to function as AD6 during init (trace leads to C6, continutes to R10 near power?) |
+|            40 | PIO0_22               | AD6              | In            | Setup to function as AD6 during init (trace leads to C6, continutes to R10 near power?) |
 |            41 | PIO1_29               | SCK0             |               | Connected to SCLK on Right Haptic and Left Haptic |
 |            42 | TDI/PIO0_11           | TDI              |               | Pull-down resistor enabled |
 |            43 | PIO1_11               |                  |               | S9 - Y Button |

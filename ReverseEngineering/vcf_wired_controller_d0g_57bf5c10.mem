@@ -26,9 +26,14 @@
  * SOFTWARE.
  */
 
+ (uint8_t*) 0x10000008 - GPIO Bank/Group for TODO GPIO (PIO1_28)
+ (uint8_t*) 0x10000009 - GPIO Number for TODO GPIO (PIO1_28)     
+ (uint8_t*) 0x1000000a - GPIO Bank/Group for TODO GPIO (PIO0_7)
+ (uint8_t*) 0x1000000b - GPIO Number for TODO GPIO (PIO0_7)     
+
  (uint8_t*) 0x10000012 - Related to ADC configuration. Set to 0 after initial 
-			 configuration of ADC. (TODO: Verify: Set bits indicate 
-			 which AD is active (i.e. bit 6 for AD6)??)
+			 configuration of ADC. Verify: Set bits indicate 
+			 which AD is active (i.e. bit 6 for AD6).
 
  (uint8_t*) 0x1000001c - GPIO Bank/Group for TODO GPIO (PIO0_19)
  (uint8_t*) 0x1000001d - GPIO Number for TODO GPIO (PIO0_19)
@@ -68,6 +73,13 @@
 (uint32_t*) 0x10000258 - EEPROM Read Data 0x004 - Board/HW Revision Number
 
 (uint32_t*) 0x10000260 - System Clock Frequency in Hz
+
+ (uint8_t*) 0x100002ac - GPIO Bank/Group for TODO GPIO (PIO1_10)
+ (uint8_t*) 0x100002ad - GPIO Number/Offset for TODO GPIO (PIO1_10)
+ (uint8_t*) 0x100002ae - Inversion of (initial?) GPIO value for TODO GPIO 
+			 (PIO1_10)
+ (uint8_t*) 0x100002af - Indicates which AD channel is being sampled (related
+			 to GPIO1_10?)
 
  (uint8_t*) 0x100002b0 - GPIO Bank/Group for PINT1 GPIO (PIO0_2)
  (uint8_t*) 0x100002b1 - GPIO Number for PINT1 GPIO (PIO0_2)
@@ -256,9 +268,22 @@
  (uint8_t*) 0x10000a36 - EEPROM Read Data 0x082 - Uknown purpose
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
 
+(uint32_t*) 0x10000fa8 - Function pointer. Related to handling accumulated 
+			 results of AD6 readings?
+
+(uint32_t*) 0x10000fc8 - Function pointer. Related to AD6 and GPIO1_10?
+
 (uint32_t*) 0x100010b4 - Callback function? Related to PIO0_3 (USB_VBUS) 
 			 changing state (fnc0x000055e8()).
 (uint32_t*) 0x100010b8 - Callback function. Related to PINT1 (PIO0_2 change).
+
+(uint32_t*) 0x100010b0 - UKNOWN STRUCT A UNKNOWN FIELD A (initialized to 0x000e1000)
+ (uint8_t*) 0x100010ab - UKNOWN STRUCT A UNKNOWN FIELD B (initialized to 0x11)
+ (uint8_t*) 0x100010aa - UKNOWN STRUCT A UNKNOWN FIELD C (initialized to 0x01)
+ (uint8_t*) 0x100010ad - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x12)
+ (uint8_t*) 0x100010ac - UKNOWN STRUCT A UNKNOWN FIELD E (initialized to 0x01)
+ (uint8_t*) 0x100010a8 - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x01)
+ (uint8_t*) 0x100010a9 - UKNOWN STRUCT A UNKNOWN FIELD F (initialized to 0x05)
 
 (uint16_t*) 0x10001140 - HID EP3 related?
  (uint8_t*) 0x10001142 - HID EP3 related?

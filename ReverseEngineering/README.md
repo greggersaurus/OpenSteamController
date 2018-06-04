@@ -75,11 +75,16 @@ This section is a running list of priorities to focus on in hopes of reaching
 1. List more details about hardware [Luna_maiboard_V000456-00_rev3.md](./Luna_maiboard_V000456-00_rev3.md)
     1. Other processors (i.e. wireless comms chip, gyro, haptics chip)
     1. See if we can get information on each pin (focus on LPC chip)
+    1. What is ADC connected to (specifically Channel 6)
+        1. This may help with understanding some of these GPIOs...
     1. Find out more on these GPIOs (i.e. Ohm it out, test using custom firmware)
         1. PIO1_10
         1. PIO1_7 
         1. PIO0_19 
         1. PIO0_2
+        1. PIO1_28
+        1. PIO0_7
+        1. PIO0_22 (AD6) What does this read...?
 1. Decompose EEPROM dumps
     1. Captured from two different controllers to isolate some differences
     1. Change settings to isolate other differences

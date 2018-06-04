@@ -536,7 +536,18 @@ void fnc0x00007c90();
  */
 void fnc0x0000521c();
 
-?? fnc0x00009204( arg0x00009204_0, arg0x00009204_1, arg0x00009204_2, arg0x00009204_3, arg0x00009204_4, arg0x00009204_5, arg0x00009204_6, arg0x00009204_12, )
+/**
+ * Groups together a whole bunch of GPIO and memory initialization:
+ *	PIO1_7
+ *	PIO0_19
+ *	PIO0_2 (PINT1)
+ *	PIO1_28
+ *	PIO0_7
+ *  These all related?
+ *
+ * \return None.
+ */
+void fnc0x00009204();
 
 /**
  * Write some RAM values. 
@@ -604,7 +615,49 @@ void fnc0x00007c38(arg0x00007c38_0, arg0x00007c38_1, arg0x00007c38_2);
  */
 void fnc0x00005544(arg0x00005544_0, arg0x00005544_1, arg0x00005544_2, arg0x00005544_3);
 
-?? fnc0x0000bb38( arg0x0000bb38_0, arg0x0000bb38_1, arg0x0000bb38_2, arg0x0000bb38_3, arg0x0000bb38_4, arg0x0000bb38_5, arg0x0000bb38_6, arg0x0000bb38_12, )
+/**
+ * Initialize fields in UNKNOWN STRUCT A. (Note some values for struct init are
+ *  are stack).
+ *
+ * \param arg0x0000bb38_0 Value for UKNOWN STRUCT A UNKNOWN FIELD A
+ * \param arg0x0000bb38_1 Value for UKNOWN STRUCT A UNKNOWN FIELD C
+ * \param arg0x0000bb38_2 Value for UKNOWN STRUCT A UNKNOWN FIELD B
+ * \param arg0x0000bb38_3 Value for UKNOWN STRUCT A UNKNOWN FIELD E
+ *
+ * \return None.
+ */
+void fnc0x0000bb38(arg0x0000bb38_0, arg0x0000bb38_1, arg0x0000bb38_2, arg0x0000bb38_3);
+
+/**
+ * Setup a GPIO for TODO prupose. arg0x00004fdc_0 is an offset that seems to
+ *  imply this function can be used to specify a  series of related or similar
+ *  GPIOs. 
+ *
+ * \param arg0x00004fdc_0 Offset/index to define GPIO purpose?
+ * \param arg0x00004fdc_1 Group/bank of GPIO to configure
+ * \param arg0x00004fdc_2 Num/offset of GPIO to configure
+ *
+ * \return None.
+ */
+void fnc0x00004fdc(arg0x00004fdc_0, arg0x00004fdc_1, arg0x00004fdc_2);
+
+/**
+ * Configure GPIO1_10 (related to board powering up via battery?) and AD6
+ *  (related to TODO).
+ *
+ * \return None.
+ */
+void fnc0x00007af0();
+
+/**
+ * Enable ADC conversion (and interrupts) for specified channel.
+ *
+ * \param arg0x00002a90_0 0-based AD channel to setup.
+ * \param arg0x00002a90_1 Callback function related to conversion complete?
+ *
+ * \return None.
+ */
+void fnc0x00002a90(arg0x00002a90_0, arg0x00002a90_1);
 
 // Check state of PIO0_3 (USB_VBUS). This causes major divergence in code (i.e. if comms expected via USB or RF chip... I think).
 ?? fnc0x00007b70( arg0x00007b70_0, arg0x00007b70_1, arg0x00007b70_2, arg0x00007b70_3, arg0x00007b70_4, arg0x00007b70_5, arg0x00007b70_6, arg0x00007b70_12, )
