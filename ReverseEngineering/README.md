@@ -85,6 +85,12 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. PIO1_28
         1. PIO0_7
         1. PIO0_22 (AD6) What does this read...?
+        1. PIO1_1 (JTAG related?)
+    1. Add Chart to label how hardware peripherals are used?
+        1. CT16B1 = driving Steam Controller LED
+        1. CT16B0 = ??
+        1. AD = AD6 = ??
+        1. SSP0 = CS ?? = Left Haptics, CS ?? = Right Haptics 
 1. Decompose EEPROM dumps
     1. Captured from two different controllers to isolate some differences
     1. Change settings to isolate other differences

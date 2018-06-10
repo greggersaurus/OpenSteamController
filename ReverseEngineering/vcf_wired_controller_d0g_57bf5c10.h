@@ -525,7 +525,7 @@ void fnc0x00006058(arg0x00006058_0);
  */
 void fnc0x00007c90();
 
-// Lots of code in here...
+// TODO: Lots of code in here... Overarching system/perpipherals initiliazation?
 ?? fnc0x00005d90( arg0x00005d90_0, arg0x00005d90_1, arg0x00005d90_2, arg0x00005d90_3, arg0x00005d90_4, arg0x00005d90_5, arg0x00005d90_6, arg0x00005d90_12, )
 
 /**
@@ -610,7 +610,7 @@ void fnc0x00007c38(arg0x00007c38_0, arg0x00007c38_1, arg0x00007c38_2);
  * \param arg0x00005544_1 GPIO Number/Offset
  * \param arg0x00005544_2 A callback function called by interrupt handler?
  * \param arg0x00005544_3 Boolean of unknown purpose? TODO: only simulated with value of 0...
-
+ *
  * \return None.
  */
 void fnc0x00005544(arg0x00005544_0, arg0x00005544_1, arg0x00005544_2, arg0x00005544_3);
@@ -659,5 +659,166 @@ void fnc0x00007af0();
  */
 void fnc0x00002a90(arg0x00002a90_0, arg0x00002a90_1);
 
-// Check state of PIO0_3 (USB_VBUS). This causes major divergence in code (i.e. if comms expected via USB or RF chip... I think).
-?? fnc0x00007b70( arg0x00007b70_0, arg0x00007b70_1, arg0x00007b70_2, arg0x00007b70_3, arg0x00007b70_4, arg0x00007b70_5, arg0x00007b70_6, arg0x00007b70_12, )
+/**
+ * Check state of PIO0_3 (USB_VBUS). This causes major divergence in code 
+ *  (i.e. if comms expected via USB or RF chip... I think).
+ * 
+ * \return 1 if USB_VBUS reads high, 0 otherwise. 
+ */
+int fnc0x00007b70();
+
+/**
+ * Drive TODO GPIO (GPIO1_10).
+ *
+ * \param arg0x00007b98_0 Enable/disable what is driven by GPIO1_10? Actual
+ *  	value written to GPIO may be inverted based on settings.
+ *
+ * \return None.
+ */
+void fnc0x00007b98(arg0x00007b98_0);
+
+/**
+ * Configure GPIO1_1 and TDI/TDO mode... But why?
+ *
+ * \return None.
+ */
+void fnc0x00005b44();
+
+/**
+ * Drive GPIO1_1 and Configure TDI/TDO MODE... But why? Are TDI/TDO used for
+ *  multiple functions (i.e. not just JTAG?)?
+ *
+ * \param arg0x00005ba0_0 Unknown. Maybe related to how to drive GPIO1_1?
+ * \return None.
+ */
+void fnc0x00005ba0(arg0x00005ba0_0);
+
+/**
+ * Initialize Steam Controller LED control.
+ *
+ * \param arg0x000098b4_0 Timer/Counter number (i.e. n in CT16Bn) to be used as
+ *	PWM for LED.
+ * 
+ * \return None.
+ */
+void fnc0x000098b4(arg0x000098b4_0);
+
+/**
+ * Set next function pointer in array starting at 0x10000dd8.
+ *
+ * \param arg0x00007bbc_0 Function pointer to save in next open array slot.
+ *
+ * \return None.
+ */
+void fnc0x00007bbc(arg0x00007bbc_0);
+
+/**
+ * Configure counter/timer to act as PWM for Steam Controller LED (i.e. reset 
+ *	timer and setup appropriate MAT output pin).
+ *
+ * \param arg0x000098b4_0 Timer/Counter number (i.e. n in CT16Bn) to be used as
+ *	PWM for LED.
+ *
+ * \return None. 
+ */
+void fnc0x00007388(arg0x00007388_0);
+
+/**
+ * Enable clock for a given timer/counter.
+ *
+ * \param arg0x000045bc_0 Base control register address for counter whose clock
+ *	is to be enabled.
+ *
+ * \return None.
+ */
+void fnc0x000045bc(arg0x000045bc_0);
+
+/**
+ * Enable match pin function for given timer/counter.
+ *
+ * \param arg0x0000a010_0 Base control register for timer.
+ * \param arg0x0000a010_1 Which MAT is enabled for PWM mode.
+ * \param arg0x0000a010_2 Boolean flag? TODO purpose?
+ *
+ * \return None.
+ */
+void fnc0x0000a010(arg0x0000a010_0, arg0x0000a010_1, arg0x0000a010_2);
+
+/**
+ * Update some CT16B1 related variables and calcualte and set MR0 for CT16B1
+ *
+ * \return None.
+ */
+void fnc0x0000a434();
+
+/**
+ * Calculate and set MR0 for CT16B1.
+ *
+ * \param arg0x00007368_0 TODO Used to updates some CT16B1 related variables.
+ *
+ * \return None.
+ */
+void fnc0x00007368(arg0x00007368_0);
+
+/**
+ * Caluclate MR0 for CT16B1.
+ *
+ * /return Vale to set MR0 register for CT16B1.
+ */
+uint32_t fnc0x0000e65c();
+
+/**
+ * TODO: Some math related function?
+ *
+ * Called as:
+ * 	part of MR0 calculated for CT16B1
+ *	TODO: Add other functions
+ *
+ * Calls :
+ *	fnc0x0000281a
+ *
+ * \return ?? 
+ */
+uint32_t fnc0x00002672(arg0x00002672_0);
+
+/**
+ * TODO: Some math related function?
+ *
+ * Called as:
+ * 	part of MR0 calculated for CT16B1
+ *	TODO: Add other functions
+ *
+ * \return ??
+ */
+uint32_t fnc0x0000281a(arg0x0000281a_0, arg0x0000281a_1, arg0x0000281a_2, arg0x0000281a_3);
+
+/**
+ * TODO: Some math/path related function?
+ *
+ * Called as:
+ * 	part of MR0 calculated for CT16B1
+ *	TODO: Add other functions
+ *
+ * \return ??
+ */
+void fnc0x00002394(arg0x00002394_0, arg0x00002394_1);
+
+/**
+ * TODO: Some math/path related function?
+ *
+ * Called as:
+ * 	part of MR0 calculated for CT16B1
+ *	TODO: Add other functions
+ *
+ * \return ??
+ */
+uint32_t fnc0x0000231c(arg0x0000231c_0, arg0x0000231c_1, arg0x0000231c_2);
+
+/**
+ * TODO: Update some variables related to CT16B1?
+ *
+ * Called as:
+ *	Part of Steam Controller button control initialization
+ * \return None.
+ */
+void fnc0x00007404(arg0x00007404_0, arg0x00007404_1);

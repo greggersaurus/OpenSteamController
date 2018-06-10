@@ -40,12 +40,12 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            14 | PIO1_26               |                  |               | S2 - Left trackpad click |
 |            15 | PIO1_27               |                  |               | S3 - LT (Left trigger digital) |
 |            16 | PIO1_4                |                  |               | S8 - LB (Left bumper) | 
-|            17 | PIO1_1                | PIO1_1           |               | Set as output GPIO and driven high, during init. (Routes to R35 and R36 near gyro + accelerometer chip). RST related for Gyro + Accelerometer maybe?|
+|            17 | PIO1_1                | PIO1_1           | Out           | Set as output GPIO and driven high, during init. Related to JTAG (based on sim exe/function grouping)?? (Routes to R35 and R36 near gyro + accelerometer chip). RST related for Gyro + Accelerometer maybe?|
 |            18 | PIO1_20               |                  |               | S17 - FRONT_L (Front left arrow button) |
 |            19 | PIO0_3                | USB_VBUS         | In            | Monitors the presence of USB bus power. |
 |            20 | PIO0_4                | I2C SCL          |               | Connected to MPU-6500 I2C SCL |
 |            21 | PIO0_5                | I2C SDA          |               | Connected to MPU-6500 I2C SDA |
-|            22 | PIO0_21               | CT16B1_MAT0      |               | Control Steam Button LED (LED1) |
+|            22 | PIO0_21               | CT16B1_MAT0      | Out           | Control Steam Button LED (LED1) |
 |            23 | PIO1_17               | RXD (USART)      | In            | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 21 |
 |            24 | PIO1_23               |                  |               | Connected to MPU-6500 Pin 12 (INT) |
 |            25 | USB_DM                |                  |               | |
@@ -65,10 +65,10 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            39 | PIO1_8                |                  |               | |
 |            40 | PIO0_22               | AD6              | In            | Setup to function as AD6 during init (trace leads to C6, continutes to R10 near power?) |
 |            41 | PIO1_29               | SCK0             |               | Connected to SCLK on Right Haptic and Left Haptic |
-|            42 | TDI/PIO0_11           | TDI              |               | Pull-down resistor enabled |
+|            42 | TDI/PIO0_11           | TDI              | In            | Pull-down resistor enabled |
 |            43 | PIO1_11               |                  |               | S9 - Y Button |
 |            44 | TMS/PIO0_12           |                  |               | |
-|            45 | TDO/PIO0_13           | TDO              |               | Pull-down resistor enabled |
+|            45 | TDO/PIO0_13           | TDO              | Out           | Pull-down resistor enabled |
 |            46 | nTRST/PIO0_14         |                  |               | |
 |            47 | PIO1_13               |                  |               | S6 - RT (Right trigger digital) |
 |            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |

@@ -26,6 +26,11 @@
  * SOFTWARE.
  */
 
+ (uint8_t*) 0x10000002 - Counter variable? Related to CT16B1?
+ (uint8_t*) 0x10000003 - Related to CT16B1?
+
+ (uint8_t*) 0x10000005 - Counter variable? Related to CT16B1?
+
  (uint8_t*) 0x10000008 - GPIO Bank/Group for TODO GPIO (PIO1_28)
  (uint8_t*) 0x10000009 - GPIO Number for TODO GPIO (PIO1_28)     
  (uint8_t*) 0x1000000a - GPIO Bank/Group for TODO GPIO (PIO0_7)
@@ -37,6 +42,21 @@
 
  (uint8_t*) 0x1000001c - GPIO Bank/Group for TODO GPIO (PIO0_19)
  (uint8_t*) 0x1000001d - GPIO Number for TODO GPIO (PIO0_19)
+
+ (uint8_t*) 0x10000044 - CT16B1 related?
+ (uint8_t*) 0x10000045 - Defines which MAT to enable PWM mode for. (i.e. n in
+			 CT16B1_MATn).
+
+ (uint8_t*) 0x10000047 - Related to CT16B1? Timer number (i.e. n in C16TBn?)
+(uint16_t*) 0x10000048 - Related to CT16B1?
+(uint16_t*) 0x1000004a - CT16B1 related?
+(uint16_t*) 0x1000004c - CT16B1 related?
+(uint16_t*) 0x1000004e - CT16B1 related?
+(uint32_t*) 0x10000050 - Base address for timer/counter related to Steam Button
+			 LED (CT16B1).
+(uint32_t*) 0x10000054 - Related to C16B1? Callback function of some sort?
+(uint32_t*) 0x10000058 - CT16B1 related?
+(uint32_t*) 0x1000005c - CT16B1 related?
 
 (uint16_t*) 0x10000080 - USB_HID_REPORT_T field for HID EP1
 			  uint16_t len; /**< Size of the report descriptor in bytes. */ 
@@ -76,8 +96,8 @@
 
  (uint8_t*) 0x100002ac - GPIO Bank/Group for TODO GPIO (PIO1_10)
  (uint8_t*) 0x100002ad - GPIO Number/Offset for TODO GPIO (PIO1_10)
- (uint8_t*) 0x100002ae - Inversion of (initial?) GPIO value for TODO GPIO 
-			 (PIO1_10)
+ (uint8_t*) 0x100002ae - Controls whether or not to invert output for TODO GPIO 
+			 (PIO1_10)?
  (uint8_t*) 0x100002af - Indicates which AD channel is being sampled (related
 			 to GPIO1_10?)
 
@@ -88,7 +108,16 @@
 
 (uint32_t*) 0x100002bc - Callback? related to PINT1 GPIO (PIO0_2)
 
+(uint32_t*) 0x100002c4 - Counter. Related to next open position in array of
+			 function pointers starting at 0x10000dd8.
 (uint32_t*) 0x100002c8 - USB HID3 related?
+
+  (int8_t*) 0x100002d0 - GPIO group/base for TODO GPIO (GPIO1_1)
+  (int8_t*) 0x100002d1 - GPIO num/offset for TODO GPIO (GPIO1_1)
+  (int8_t*) 0x100002d2 - Related to JTAG TDI MODE settings?
+  (int8_t*) 0x100002d3 - Related to JTAG TDO MODE settings?
+
+(uint32_t*) 0x10000330 - Related to CT16B1?
 
 (uint32_t*) 0x10000338 - USB HID3 related?
 
@@ -268,6 +297,9 @@
  (uint8_t*) 0x10000a36 - EEPROM Read Data 0x082 - Uknown purpose
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
 
+(uint32_t*) 0x10000dd8 - First in array of function pointers (related to 
+			 CT16B1?)
+
 (uint32_t*) 0x10000fa8 - Function pointer. Related to handling accumulated 
 			 results of AD6 readings?
 
@@ -288,3 +320,5 @@
 (uint16_t*) 0x10001140 - HID EP3 related?
  (uint8_t*) 0x10001142 - HID EP3 related?
  (uint8_t*) 0x10001143 - HID EP3 related?
+
+(uint16_t*) 0x200002a2 - Related to CT16B1 MR0 calculation?
