@@ -26,6 +26,9 @@
  * SOFTWARE.
  */
 
+ (uint8_t*) 0x10000000 - Related to CT16B0
+ (uint8_t*) 0x10000001 - Flag to indicate CT16B0 interrupt has fired and been
+			 handled.
  (uint8_t*) 0x10000002 - Counter variable? Related to CT16B1?
  (uint8_t*) 0x10000003 - Related to CT16B1?
 
@@ -164,6 +167,11 @@
 					     */
 (uint32_t*) 0x10000394 - USB_HID_REPORT_T field for HID EP3
 			  uint8_t* desc; /**< Report descriptor. */
+
+(uint32_t*) 0x100007e8 - Related to CT16B0?
+
+(uint32_t*) 0x10000818 - Related to CT16B0. Callback function? First entry in
+			 array of callback functions?
 
 (uint16_t*) 0x100009b4 - EEPROM Read Data 0x000 - Magic Number to indicate 
 			 EEPROM has valid data

@@ -822,3 +822,53 @@ uint32_t fnc0x0000231c(arg0x0000231c_0, arg0x0000231c_1, arg0x0000231c_2);
  * \return None.
  */
 void fnc0x00007404(arg0x00007404_0, arg0x00007404_1);
+
+/**
+ * Configure CT16B0 and delay for specified amount.
+ * 
+ * \param arg0x0000a934_0 Defines length of delay before interrupt fires TODO:
+ *	understand and have this make more sense (i.e. units on delay)?
+ *
+ * \return None.
+ */
+void fnc0x0000a934(arg0x0000a934_0);
+
+/**
+ * Set CT16B1 and wait until MR0 causes causes interrup to fire and be handled.
+ * 
+ * \param arg0x00005174_0 Unused (n in CT16Bn maybe, but optimzied out?)
+ * \param arg0x00005174_1 Match Register 0 value.
+ *
+ * \return None.
+ */
+void fnc0x00005174(arg0x00005174_0, arg0x00005174_1);
+
+/**
+ * Configure interrupts, etc. for CT16B0.
+ *
+ * \return None.
+ */
+void fnc0x0000600c();
+
+/**
+ * Set callback function and another variable related to counter/timer?
+ * 
+ * \param arg0x0000a0fc_0 Base address of counter/timer to have clock enabled for.
+ * \param arg0x0000a0fc_1 Offset/index or number related to counter/timer? (i.e.
+ *	n in CT16Bn).
+ * \param arg0x0000a0fc_2 Function pointer to be saved?
+ * \param arg0x0000a0fc_3 Some other parameter to be saved?
+ *
+ * \return None.
+ */
+void fnc0x0000a0fc(arg0x0000a0fc_0, arg0x0000a0fc_1, arg0x0000a0fc_2, arg0x0000a0fc_3);
+
+/**
+ * Enable clock for a given counter/timer
+ * 
+ * \param arg0x00004574_0 Base address of counter/timer to have clock enabled for.
+ * 
+ * \return None.
+ */
+void fnc0x00004574(arg0x00004574_0);
+
