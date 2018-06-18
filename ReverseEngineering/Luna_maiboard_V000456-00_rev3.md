@@ -59,12 +59,12 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            34 | PIO1_2                |                  |               | S19 - FRONT_F (Front right arrow button) | 
 |            35 | PIO1_21               |                  |               | S5 - Right trackpad click  |
-|            36 | PIO0_8                | MISO0            |               | Connected to MISO on Right Haptic and Left Haptic |
-|            37 | PIO0_9                | MOSI0            |               | Connected to MISO on Right Haptic and Left Haptic |
+|            36 | PIO0_8                | MISO0            | In            | Master In Slave Out for SSP0. Connected to MISO on Right Trackpad/Haptic and Left Trackpad/Haptic. |
+|            37 | PIO0_9                | MOSI0            | Out           | Master Out Slave In for SSP0. Connected to MOSI on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            38 | SWCLK/PIO0_10         | SWCLK?           |               | Connected to DEBUG interface for LPC11U37F |
 |            39 | PIO1_8                |                  |               | |
 |            40 | PIO0_22               | AD6              | In            | Setup to function as AD6 during init (trace leads to C6, continutes to R10 near power?) |
-|            41 | PIO1_29               | SCK0             |               | Connected to SCLK on Right Haptic and Left Haptic |
+|            41 | PIO1_29               | SCK0             | Out           | Serial clock for SSP0. Connected to SCLK on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            42 | TDI/PIO0_11           | TDI              | In            | Pull-down resistor enabled |
 |            43 | PIO1_11               |                  |               | S9 - Y Button |
 |            44 | TMS/PIO0_12           |                  |               | |
@@ -79,15 +79,15 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            53 | PIO0_16               |                  |               | | 
 |            54 | V<sub>SS</sub>        | V<sub>SS</sub>   | In            | V<sub>SS</sub> |
 |            55 | PIO1_9                |                  |               | S7 - X Button |
-|            56 | PIO0_23               | PIO0_23          |               | Input with pull-down resistor enabled. Connected to Data Ready on Right Haptic? |
-|            57 | PIO1_15               | PIO1_15          |               | Chip Select/SS for Right Haptic (active low) |
+|            56 | PIO0_23               | PIO0_23          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Right Trackpad/Haptic? |
+|            57 | PIO1_15               | PIO1_15          | Out           | Chip Select/SS for Right Trackpad/Haptic (active low) |
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
-|            59 | PIO1_12               | PIO1_12          |               | Read during init to check if it is logic low or not. (trace leads to VDD on Haptics). If low PIO0_18 is checked. |
+|            59 | PIO1_12               | PIO1_12          |               | Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. |
 |            60 | PIO0_17               |                  |               | S1 - A Button |
 |            61 | PIO0_18               | PIO0_18          |               | If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB). | 
 |            62 | PIO0_19               | PIO0_19          | Out           | Set as output during init and driven low. (trace leads to... TODO)|
-|            63 | PIO1_16               | PIO1_16          |               | Input with pull-down resistor enabled. Connected to Data Ready on Left Haptic. |
-|            64 | PIO1_6                | PIO1_6           |               | Chip Select/SS for Left Haptic (active low) |
+|            63 | PIO1_16               | PIO1_16          |               | Input with pull-down resistor enabled. Connected to Data Ready on Left Trackpad/Haptic. |
+|            64 | PIO1_6                | PIO1_6           |               | Chip Select/SS for Left Trackpad/Haptic (active low) |
 
 
 # MPU-6500

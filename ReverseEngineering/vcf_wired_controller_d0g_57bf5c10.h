@@ -872,3 +872,114 @@ void fnc0x0000a0fc(arg0x0000a0fc_0, arg0x0000a0fc_1, arg0x0000a0fc_2, arg0x0000a
  */
 void fnc0x00004574(arg0x00004574_0);
 
+/**
+ * Initialize comms to trackpad/haptics and place in shutdown mode
+ * 
+ * \return None.
+ */
+void fnc0x0000a388();
+
+/**
+ * Initialize comms to specified number of haptics/trackpads and place all in shutdown mode
+ */
+void fnc0x000048bc(arg0x000048bc_0);
+
+/**
+ * Configure SSP0 for haptics communications and enable for polling mode 
+ *  (i.e. interrupts not enabled)
+ *
+ * \return None.
+ */
+void fnc0x00008f50();
+
+/**
+ * AKA void Chip_SSP_Init(LPC_SSP_T *pSSP)??
+ * Initialize the SSP
+ *
+ * \param arg0x000043f4_0 pSSP The base of SSP peripheral on the chip
+ *
+ * \return None.
+ */
+void fnc0x000043f4(arg0x000043f4_0);
+
+/**
+ * AKA void Chip_SSP_SetBitRate(LPC_SSP_T *pSSP, uint32_t bitRate)
+ * Set the clock frequency for SSP interface
+ *
+ * \param arg0x0000445c_0 pSSP The base of SSP peripheral on the chip
+ * \param arg0x0000445c_1 bitRate The SSP bit rate
+ *
+ * \return None.
+ */
+void fnc0x0000445c(arg0x0000445c_0, arg0x0000445c_1);
+
+/**
+ * AKA void Chip_SSP_SetClockRate(LPC_SSP_T *pSSP, uint32_t clk_rate, uint32_t prescale)
+ * Set up output clocks per bit for SSP bus
+ *
+ * \param arg0x000044b4_0 pSSP The base of SSP peripheral on the chip
+ * \param arg0x000044b4_1 clk_rate The number of prescaler-output clocks per bit on the bus, minus one
+ * \param arg0x000044b4_2 prescale The factor by which the Prescaler divides the SSP peripheral clock PCLK
+ *
+ * \return None.
+ */
+void fnc0x000044b4(arg0x000044b4_0, arg0x000044b4_1, arg0x000044b4_2);
+
+/**
+ * Configure Chip Select and Data Ready pins for specified haptic.
+ *
+ * \param arg0x00007498_0 Specifies which haptic to configure 0 = Right,
+ *	1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x00007498(arg0x00007498_0);
+
+/**
+ * Write to trackpad/haptics controller (i.e. Cirque Pinnacle ASIC) register
+ *
+ * \param arg0x00004c7e_0 Specifies which haptic to configure 0 = Right,
+ *	1 = Left.
+ * \param arg0x00004c7e_1 Cirque Pinnacle ASIC register to write to.
+ * \param arg0x00004c7e_2 Cirque Pinnacle ASIC register value to be written.
+ *
+ * \return None.
+ */
+void fnc0x00004c7e(arg0x00004c7e_0, arg0x00004c7e_1, arg0x00004c7e_2);
+
+/**
+ * Enable communications to given haptic (i.e. pull chip select low, disable
+ *  interrupts, enable clock for SSP0 and increment 0x10000340 (i.e. mutex or
+ *  counting semaphore).
+ *
+ * \param arg0x00009840_0 Specifies which haptic to configure 0 = Right,
+ *	1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x00009840(arg0x00009840_0);
+
+/**
+ * SPI blocking polling read/write. Similar to 
+ *  uint32_t Chip_SSP_RWFrames_Blocking(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup),
+ *  except it looks like a lot is trimmed and some instructions re-ordered (i.e. 
+ *  clearing interrupt status register and checking for overrun errors.
+ *
+ * \param arg0x00008efc_0 Pointer to struct containing all info needed for
+ * 	transaction. Similar (possibly equivalent to) Chip_SSP_DATA_SETUP_T.
+ *
+ * \return Number of bytes transmitted/received. 
+ */
+uint32_t fnc0x00008efc(arg0x00008efc_0);
+
+/**
+ * Disable communications to given haptic (i.e. pull chip select high, enable 
+ *  interrupts, disable clock for SSP0 and decrement 0x10000340 (i.e. mutex or
+ *  counting semaphore). Effectively inverse of fnc0x00009840().
+ *
+ * \param arg0x0000991c_0 Specifies which haptic to configure 0 = Right,
+ *	1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x0000991c(arg0x0000991c_0);

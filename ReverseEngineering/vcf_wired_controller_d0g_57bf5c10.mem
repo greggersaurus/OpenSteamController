@@ -85,6 +85,20 @@
  (uint8_t*) 0x10000200 - GPIO Bank/Group for TODO GPIO (PIO1_7)
  (uint8_t*) 0x10000201 - GPIO Number for TODO GPIO (PIO1_7)
 
+ (uint8_t*) 0x10000234 - Number of active haptics or haptics to configure.
+			 Related to SSP0. Copy of 0x20000002.
+
+ (uint8_t*) 0x10000236 - Bit number for SSP0 SYSAHBCLKCTRL clock enable/disable.
+
+ (uint8_t*) 0x1000023a - GPIO group/port for Right Haptic Chip Select.
+ (uint8_t*) 0x1000023b - GPIO group/port for Left Haptic Chip Select.
+ (uint8_t*) 0x1000023c - GPIO number/offset for Right Haptic Chip Selet.
+ (uint8_t*) 0x1000023d - GPIO number/offset for Left Haptic Chip Selet.
+ (uint8_t*) 0x1000023e - GPIO group/port for Right Haptic Data Ready?
+ (uint8_t*) 0x1000023f - GPIO group/port for Left Haptic Data Ready?
+ (uint8_t*) 0x10000240 - GPIO number/offset for Right Haptic Data Ready?
+ (uint8_t*) 0x10000241 - GPIO number/offset for Left Haptic Data Ready?
+
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
 			 Decremented (and checked to be 0) before interrupt 
@@ -328,5 +342,10 @@
 (uint16_t*) 0x10001140 - HID EP3 related?
  (uint8_t*) 0x10001142 - HID EP3 related?
  (uint8_t*) 0x10001143 - HID EP3 related?
+
+  (int8_t*) 0x20000000 - Related to Haptics/SSP0?
+
+ (uint8_t*) 0x20000002 - Number of active haptics or haptics to configure.
+			 Related to SSP0
 
 (uint16_t*) 0x200002a2 - Related to CT16B1 MR0 calculation?
