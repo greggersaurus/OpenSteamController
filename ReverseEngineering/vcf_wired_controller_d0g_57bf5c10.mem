@@ -81,6 +81,20 @@
 
 (uint32_t*) 0x100000a4 - System Clock Rate (CCLK) in Hz. (48000000 is calcualted
 			 and stored here based on PLL settings, etc.).
+(uint32_t*) 0x100000a8 - static struct i2c_interface i2c[0].ip
+			 IP base address of the I2C device
+(uint32_t*) 0x100000ac - static struct i2c_interface i2c[0].clk
+			 Clock used by I2C
+(uint32_t*) 0x100000b0 - static struct i2c_interface i2c[0].mEvent
+			 Current active Master event handler
+(uint32_t*) 0x100000b4 - static struct i2c_interface i2c[0].sEvent
+			 Slave transfer events
+(uint32_t*) 0x100000b8 - static struct i2c_interface i2c[0].mXfer
+			 Current active xfer pointer
+(uint32_t*) 0x100000bc - static struct i2c_interface i2c[0].sXfer
+			 Pointer to store xfer when bus is busy
+(uint32_t*) 0x100000c0 - static struct i2c_interface i2c[0].flags
+			 Flags used by I2C master and slave
 
  (uint8_t*) 0x10000200 - GPIO Bank/Group for TODO GPIO (PIO1_7)
  (uint8_t*) 0x10000201 - GPIO Number for TODO GPIO (PIO1_7)
@@ -318,6 +332,21 @@
  (uint8_t*) 0x10000a35 - EEPROM Read Data 0x081 - Uknown purpose
  (uint8_t*) 0x10000a36 - EEPROM Read Data 0x082 - Uknown purpose
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
+
+//TODO: Finish this up and verify it adds up in sim results.
+ (uint8_t*) 0x10000d80 - I2C_XFER_T.slaveAddr; 7-bit I2C Slave address 
+
+(uint32_t*) 0x10000d84 - I2C_XFER_T.txBuff; Pointer to array of bytes to be 
+			 transmitted
+(uint32_t*) 0x10000d88 - I2C_XFER_T.txSz; Number of bytes in transmit array,
+			 if 0 only receive transfer will be carried on 
+(uint32_t*) 0x10000d8c - I2C_XFER_T.rxBuff; Pointer memory where bytes 
+			 received from I2C be stored 
+(uint32_t*) 0x10000d90 - I2C_XFER_T.rxSz; Number of bytes to received,
+			 if 0 only transmission we be carried on 
+(uint32_t*) 0x10000d94 - I2C_XFER_T.status; Status of the current I2C transfer
+ (uint8_t*) 0x10000d98 - I2C_XFER_T.txBuff[0]
+ (uint8_t*) 0x10000d99 - I2C_XFER_T.txBuff[1]
 
 (uint32_t*) 0x10000dd8 - First in array of function pointers (related to 
 			 CT16B1?)

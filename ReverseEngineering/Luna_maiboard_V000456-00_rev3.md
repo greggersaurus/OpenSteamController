@@ -43,8 +43,8 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            17 | PIO1_1                | PIO1_1           | Out           | Set as output GPIO and driven high, during init. Related to JTAG (based on sim exe/function grouping)?? (Routes to R35 and R36 near gyro + accelerometer chip). RST related for Gyro + Accelerometer maybe?|
 |            18 | PIO1_20               |                  |               | S17 - FRONT_L (Front left arrow button) |
 |            19 | PIO0_3                | USB_VBUS         | In            | Monitors the presence of USB bus power. |
-|            20 | PIO0_4                | I2C SCL          |               | Connected to MPU-6500 I2C SCL |
-|            21 | PIO0_5                | I2C SDA          |               | Connected to MPU-6500 I2C SDA |
+|            20 | PIO0_4                | I2C SCL          | In/Out        | Connected to MPU-6500 I2C SCL |
+|            21 | PIO0_5                | I2C SDA          | In/Out        | Connected to MPU-6500 I2C SDA |
 |            22 | PIO0_21               | CT16B1_MAT0      | Out           | Control Steam Button LED (LED1) |
 |            23 | PIO1_17               | RXD (USART)      | In            | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 21 |
 |            24 | PIO1_23               |                  |               | Connected to MPU-6500 Pin 12 (INT) |

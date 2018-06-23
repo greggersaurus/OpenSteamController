@@ -983,3 +983,95 @@ uint32_t fnc0x00008efc(arg0x00008efc_0);
  * \return None.
  */
 void fnc0x0000991c(arg0x0000991c_0);
+
+/**
+ * Inialize comms to and put MPU-6500 in sleep mode (accelerometer/gyro).
+ *
+ * \param arg0x00005fbc_0 Unknown. Checked early in  function call.
+ *
+ * \return 0 on success?
+ */
+int fnc0x00005fbc(arg0x00005fbc_0);
+
+/**
+ * Initialize comms to and put MPU-6500 in sleep mode.
+ * 
+ * \param arg0x00006a10_0 I2C slave address of MPU-6500.
+ * 
+ * \return 0 on success?
+ */
+int fnc0x00006a10(arg0x00006a10_0);
+
+/**
+ * Initialize I2C 0 and setup transfers struct, interrupts, etc. needed for 
+ *  transfers to occur
+ *
+ * \param arg0x00005c8c_0 I2C Slave Address of device that will be communciated
+ *	with.
+ *
+ * \return None.
+ */
+void fnc0x00005c8c(arg0x00005c8c_0);
+
+/**
+ * AKA void Chip_I2C_Init(I2C_ID_T id)
+ * Initializes the LPC_I2C peripheral with specified parameter.
+ *
+ * \param arg0x00004268_0 id I2C peripheral ID (I2C0, I2C1 ... etc)
+ *
+ * \return None.
+ */
+void fnc0x00004268(arg0x00004268_0);
+
+/**
+ * AKA void Chip_I2C_SetClockRate(I2C_ID_T id, uint32_t clockrate)
+ * Set up clock rate for LPC_I2C peripheral.
+ *
+ * \param arg0x00004354_0 id I2C peripheral ID (I2C0, I2C1 ... etc)
+ * \param arg0x00004354_0 clockrate Target clock rate value to initialized I2C peripheral (Hz)
+ *
+ * \note
+ * Parameter @a clockrate for I2C0 should be from 1000 up to 1000000
+ * (1 KHz to 1 MHz), as I2C0 support Fast Mode Plus. If the @a clockrate
+ * is more than 400 KHz (Fast Plus Mode) Board_I2C_EnableFastPlus()
+ * must be called prior to calling this function.
+ *
+ * \return None.
+ */
+void fnc0x00004354(arg0x00004354_0, arg0x00004354_1);
+
+/**
+ * Write data to MPU-65000 (gyro/accelerometer)
+ *
+ * \param arg0x0000d6c4_0 Uknown. TODO
+ * \param arg0x0000d6c4_1 MPU 6500 Register Address
+ * \param arg0x0000d6c4_2 Number of data bytes in transfer sequence?
+ * \param arg0x0000d6c4_3 Address of data to transfer to MPU-6500?
+ *
+ * \return 0 on success?
+ */
+int fnc0x0000d6c4(arg0x0000d6c4_0, arg0x0000d6c4_1, arg0x0000d6c4_2, arg0x0000d6c4_3);
+
+/**
+ * AKA int Chip_I2C_MasterTransfer(I2C_ID_T id, I2C_XFER_T *xfer)
+ * Transmit and Receive data in master mode
+ *
+ * \param arg0x000042f0_0 id : I2C peripheral selected (I2C0, I2C1 etc)
+ * \param arg0x000042f0_0 xfer : Pointer to a I2C_XFER_T structure see notes below
+ *
+ * \return
+ * Any of #I2C_STATUS_T values, xfer->txSz will have number of bytes
+ * not sent due to error, xfer->rxSz will have the number of bytes yet
+ * to be received.
+ * @note
+ * The parameter @a xfer should have its member @a slaveAddr initialized
+ * to the 7-Bit slave address to which the master will do the xfer, Bit0
+ * to bit6 should have the address and Bit8 is ignored. During the transfer
+ * no code (like event handler) must change the content of the memory
+ * pointed to by @a xfer. The member of @a xfer, @a txBuff and @a txSz be
+ * initialized to the memory from which the I2C must pick the data to be
+ * transfered to slave and the number of bytes to send respectively, similarly
+ * @a rxBuff and @a rxSz must have pointer to memroy where data received
+ * from slave be stored and the number of data to get from slave respectilvely.
+ */
+int fnc0x000042f0(arg0x000042f0_0, arg0x000042f0_1);
