@@ -1075,3 +1075,23 @@ int fnc0x0000d6c4(arg0x0000d6c4_0, arg0x0000d6c4_1, arg0x0000d6c4_2, arg0x0000d6
  * from slave be stored and the number of data to get from slave respectilvely.
  */
 int fnc0x000042f0(arg0x000042f0_0, arg0x000042f0_1);
+
+/**
+ * Change Steam Controller LED blink rate/intensity?
+ * 
+ * \param arg0x000098f0_0 Used to specify intensity? Some sort of index relating
+ * 	to what value to set MR0 to for CT16B1?
+ * \param arg0x000098f0_1 Some sort of a flag?
+ * 
+ * \return None.
+ */
+void fnc0x000098f0(arg0x000098f0_0, arg0x000098f0_1);
+
+// Related to ADC readings?
+?? fnc0x00002cf0( arg0x00002cf0_0, arg0x00002cf0_1, arg0x00002cf0_2, arg0x00002cf0_3, arg0x00002cf0_4, arg0x00002cf0_5, arg0x00002cf0_6, arg0x00002cf0_12, )
+
+// Related to ADC readings?
+?? fnc0x00002d4c( arg0x00002d4c_0, arg0x00002d4c_1, arg0x00002d4c_2, arg0x00002d4c_3, arg0x00002d4c_4, arg0x00002d4c_5, arg0x00002d4c_6, arg0x00002d4c_12, )
+
+// Read and store all ADC values
+?? fnc0x00004cbc( arg0x00004cbc_0, arg0x00004cbc_1, arg0x00004cbc_2, arg0x00004cbc_3, arg0x00004cbc_4, arg0x00004cbc_5, arg0x00004cbc_6, arg0x00004cbc_12, )

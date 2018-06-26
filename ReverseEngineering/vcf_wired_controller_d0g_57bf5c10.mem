@@ -31,7 +31,7 @@
 			 handled.
  (uint8_t*) 0x10000002 - Counter variable? Related to CT16B1?
  (uint8_t*) 0x10000003 - Related to CT16B1?
-
+ (uint8_t*) 0x10000004 - Related to CT16B1?
  (uint8_t*) 0x10000005 - Counter variable? Related to CT16B1?
 
  (uint8_t*) 0x10000008 - GPIO Bank/Group for TODO GPIO (PIO1_28)
@@ -39,9 +39,13 @@
  (uint8_t*) 0x1000000a - GPIO Bank/Group for TODO GPIO (PIO0_7)
  (uint8_t*) 0x1000000b - GPIO Number for TODO GPIO (PIO0_7)     
 
+ (uint8_t*) 0x10000010 - Related to ADC?
+ (uint8_t*) 0x10000011 - Related to ADC?
  (uint8_t*) 0x10000012 - Related to ADC configuration. Set to 0 after initial 
 			 configuration of ADC. Verify: Set bits indicate 
 			 which AD is active (i.e. bit 6 for AD6).
+
+(uint32_t*) 0x10000018 - Related to ADC?
 
  (uint8_t*) 0x1000001c - GPIO Bank/Group for TODO GPIO (PIO0_19)
  (uint8_t*) 0x1000001d - GPIO Number for TODO GPIO (PIO0_19)
@@ -158,6 +162,7 @@
 			 enable (via cps).  (Similar to 0x10000250, but used 
 			 after early init).
 
+(uint32_t*) 0x10000348 - Function pointer? Related to I2C or CT16B1?
 (uint32_t*) 0x1000034c - USBD_HANDLE_T (is typedef void*)
 (uint32_t*) 0x10000350 - (const USBD_API_T *)LPC_ROM_API->usbdApiBase (0x1fff1f24)
 (uint32_t*) 0x10000354 - Tracks bottom of USB stack, as HID devices/eps are added 
