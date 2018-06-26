@@ -325,8 +325,8 @@ static void entryComplete() {
 	// Enter or return indicates end of command
 	consolePrint("\n");
 
-//TODO: debug so we see exactly what was in entry buffer
-	printHex(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
+	// Debug so we see exactly what was in entry buffer
+//	printHex(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
 
 //TODO: change all uint8_t* to char* so we don't need this casting?
 	executeCmd((const char*)entries[entriesWrIdx].str, 

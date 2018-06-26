@@ -49,18 +49,22 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
-1. Command for LED control
-    1. Use info from RevEng to utilize CT16B1 PWM capabilities
-        1. Understand how width of pulse is produced versus period
+1. ADC command
+    1. So we know what AD6 reads...
+1. Help command
 1. READMEs for lpcexpresso projects
     1. Details on where lpc project came from
-    2. Intention and requirements (i.e. lpc project) for SteamControllerDevKit project
-2. Command for communication with haptics
+    1. Intention and requirements (i.e. lpc project) for SteamControllerDevKit project
+1. Command for communication with haptics
     1. It seems SPI may be the interface
-    2. [Sample Interface Code](https://github.com/cirque-corp/Cirque_Pinnacle_1CA027) to use as starting point?
-3. Command for communication with gyro sensor
-4. Command for monitoring controller state
+    1. [Sample Interface Code](https://github.com/cirque-corp/Cirque_Pinnacle_1CA027) to use as starting point?
+1. Command for communication with gyro sensor
+1. Command for monitoring controller state
     1. Button states
-    2. Gyro info?
-    3. Haptic sensor info (i.e. x,y touch location)?
-5. Command for communications with radio chip?
+    1. Gyro info?
+    1. Haptic sensor info (i.e. x,y touch location)?
+1. Command for communications with radio chip?
+1. Reorganize/rename project so #define can be used to build for various needs
+    1. DevKit where USB acts as UART console for controlling peripherals
+    1. NinSwitch where USB acts as Nintendo Switch wired controller
+    1. PS4 where USB acts as Playstation 4 wired controller

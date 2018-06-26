@@ -30,8 +30,84 @@
 
 #include "console.h"
 
+#include "lpc_types.h"
+#include "chip.h"
+
+static LPC_TIMER_T* led_pwm_regs = LPC_TIMER16_1;
+
+/**
+ * Print command usage details to console.
+ *
+ * \return None.
+ */
+static void printUsage() {
+	consolePrint(
+		"usage: led intensity\n"
+		"\n"
+		"intensity = 16-bit value indicating intensity to drive LED at\n"
+	);
+}
+
+/**
+ * Handle LED Control command line function.
+ *
+ * \param argc Number of arguments (i.e. size of argv)
+ * \param argv Command line entry broken into array argument strings.
+ *
+ * \return 0 on success.
+ */
 int ledCmdFnc(int argc, const char* argv[]) {
-	consolePrint("ledCmdFnc not implemented yet!\n");
+	int retval = 0;
+
+	if (argc != 2) {
+		printUsage();
+		return -1;
+	}
+
+	uint32_t intensity = strtol(argv[1], NULL, 0);
+
+	setLedIntensity(intensity);
+
 	return 0;
+}
+
+/**
+ * Setup all clocks, peripherals, etc. so Steam Controller Button LED can be
+ *  controlled.
+ *
+ * \return 0 on success.
+ */
+void initLedCtrl() {
+	Chip_TIMER_Init(led_pwm_regs);
+
+	// Clear 16-bit Prescale Register (specifies the maximum value for the 
+	//  Prescale Counter).
+	led_pwm_regs->PR = 0;
+
+	// Enable PWM mode for CT16B1_MAT0.
+	led_pwm_regs->PWMC = 1;
+
+	Chip_TIMER_SetMatch(led_pwm_regs, 3, 0xFFF);
+	Chip_TIMER_SetMatch(led_pwm_regs, 0, 0x1000);
+
+	Chip_TIMER_ResetOnMatchEnable(led_pwm_regs, 3);
+
+	Chip_TIMER_Reset(led_pwm_regs);
+
+	Chip_TIMER_Enable(led_pwm_regs);
+
+	// Set PIO0_21 to function as CT16B1_MAT0 (Match output 0 for 16-bit timer 1).
+	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 21, IOCON_FUNC1);
+}
+
+/**
+ * Set the intensity of the Steam Controller LED. 
+ *
+ * \param intensity 0 = LED off, 65535 = max intensity.
+ * 
+ * \return None.
+ */
+void setLedIntensity(uint16_t intensity) {
+	Chip_TIMER_SetMatch(led_pwm_regs, 0, intensity);
 }
 

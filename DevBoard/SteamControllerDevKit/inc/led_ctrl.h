@@ -29,11 +29,12 @@
 #ifndef _LED_CTRL_
 #define _LED_CTRL_
 
+#include <stdint.h>
+
 int ledCmdFnc(int argc, const char* argv[]);
 
-//TODO: combine some of these?
-//void turnOnLed(void); 
-//void turnOffLed(void);
-//void pulseLed(pwmRate);
+void initLedCtrl();
+
+void setLedIntensity(uint16_t intensity);
 
 #endif /* _LED_CTRL_ */

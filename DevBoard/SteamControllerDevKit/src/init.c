@@ -36,6 +36,8 @@
 
 #include "init.h"
 
+#include "led_ctrl.h"
+
 /* System oscillator rate and clock rate on the CLKIN pin */                    
 //TODO: is this correct?
 const uint32_t OscRateIn = 12000000;                                            
@@ -299,6 +301,9 @@ void stage2Init(uint32_t hwVersion){
 	val = *reg32;
 	val |= 0x08000000;
 	*reg32 = val;
+
+	// Call initialization routines for specific peripherals, etc.
+	initLedCtrl();
 }
 
 /**

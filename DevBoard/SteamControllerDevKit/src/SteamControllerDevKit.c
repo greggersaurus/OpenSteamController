@@ -70,27 +70,11 @@ int main(void){
 	usbConfig();
 //TODO: return code check and blink LED on error?
 
-//TODO: What next? handle UART input (or can we do that completely from interrupt context?)
-
-//TODO: the following is simple code to prove firmware is running. Replace this with something more interesting...
-	// PIO0_21 is connected to button LED
-
-	// Set PIO0_21 output bit
-	*((uint8_t*)0x50000015) = 0;
-
-	// Set PIO0_21 to output via GPIO direction port 1 register
-	reg32 = (volatile uint32_t*)0x50002000;
-	val = *reg32;
-	val |= 0x00200000;
-	*reg32 = val;
-
 	// Force the counter to be placed into memory
 	volatile static int i = 0 ;
 	// Enter an infinite loop, just incrementing a counter
 	while(1) {
 		i++ ;
-		// When Y button is pressed Steam Button LED will light
-		*((uint8_t*)0x50000015) = !(*((uint8_t*)0x5000002B));
 
 		// Check serial input device for new characters to process
 		handleConsoleInput();
