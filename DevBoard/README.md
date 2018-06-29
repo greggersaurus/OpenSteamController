@@ -49,8 +49,13 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
-1. ADC command
-    1. So we know what AD6 reads...
+1. Check clean build works
+1. (finish) ADC command
+    1. Have it use interrupt like Valve's firmware does
+    1. Add safety checks, timeouts, etc.
+    1. Read other channels (analog triggers? analog joystick?)
+        1. See how sim results configure PIOs
+    1. Polling mode where adc results are refreshed automatically until 'q' is pressed
 1. Help command
 1. READMEs for lpcexpresso projects
     1. Details on where lpc project came from
@@ -64,7 +69,7 @@ This is a running list of items I would like to prioritize and not lose track
     1. Gyro info?
     1. Haptic sensor info (i.e. x,y touch location)?
 1. Command for communications with radio chip?
-1. Reorganize/rename project so #define can be used to build for various needs
-    1. DevKit where USB acts as UART console for controlling peripherals
-    1. NinSwitch where USB acts as Nintendo Switch wired controller
-    1. PS4 where USB acts as Playstation 4 wired controller
+1. Reorganize/rename project (i.e. CustomFirwmare) so #define can be used to build for various needs
+    1. DEV_KIT where USB acts as UART console for controlling peripherals
+    1. NIN_SWITCH where USB acts as Nintendo Switch wired controller
+    1. PS4 where USB acts as Playstation 4 wired controller (if there is such a thing... Might need to be PS3?)

@@ -33,6 +33,7 @@
 #include "mem_access.h"
 #include "led_ctrl.h"
 #include "init.h"
+#include "adc_read.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -49,6 +50,8 @@ static Cmd cmds[] = {
 	{.cmdName = "eeprom", .cmdFnc = eepromCmdFnc},
 	{.cmdName = "led", .cmdFnc = ledCmdFnc},
 	{.cmdName = "initStats", .cmdFnc = initStatsCmdFnc},
+	{.cmdName = "adcRead", .cmdFnc = adcReadCmdFnc},
+//TODO: organize into alphabetical order?
 //TODO: help fnc?
 };
 

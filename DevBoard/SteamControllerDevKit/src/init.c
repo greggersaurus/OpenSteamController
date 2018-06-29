@@ -37,6 +37,7 @@
 #include "init.h"
 
 #include "led_ctrl.h"
+#include "adc_read.h"
 
 /* System oscillator rate and clock rate on the CLKIN pin */                    
 //TODO: is this correct?
@@ -186,6 +187,7 @@ void stage1Init(void){
 }
 
 static uint8_t pio0_3_start_val = 0;
+static uint16_t ad6_start_val = 0;
 
 /**
  * Second stage initialization. Here we get into Steam Controller hardware 
@@ -304,6 +306,9 @@ void stage2Init(uint32_t hwVersion){
 
 	// Call initialization routines for specific peripherals, etc.
 	initLedCtrl();
+	initAdc();
+
+	ad6_start_val = adcReadChan(6);
 }
 
 /**
@@ -314,6 +319,7 @@ void stage2Init(uint32_t hwVersion){
  */
 int initStatsCmdFnc(int argc, const char* argv[]) { 
 	consolePrint("PIO0_3 was %d on startup\n", pio0_3_start_val);
+	consolePrint("AD6 was %d on startup\n", ad6_start_val);
 	return 0;
 
 }

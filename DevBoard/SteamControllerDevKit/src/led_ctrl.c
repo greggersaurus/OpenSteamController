@@ -33,7 +33,7 @@
 #include "lpc_types.h"
 #include "chip.h"
 
-static LPC_TIMER_T* led_pwm_regs = LPC_TIMER16_1;
+static LPC_TIMER_T* ledPwmRegs = LPC_TIMER16_1;
 
 /**
  * Print command usage details to console.
@@ -78,23 +78,23 @@ int ledCmdFnc(int argc, const char* argv[]) {
  * \return 0 on success.
  */
 void initLedCtrl() {
-	Chip_TIMER_Init(led_pwm_regs);
+	Chip_TIMER_Init(ledPwmRegs);
 
 	// Clear 16-bit Prescale Register (specifies the maximum value for the 
 	//  Prescale Counter).
-	led_pwm_regs->PR = 0;
+	ledPwmRegs->PR = 0;
 
 	// Enable PWM mode for CT16B1_MAT0.
-	led_pwm_regs->PWMC = 1;
+	ledPwmRegs->PWMC = 1;
 
-	Chip_TIMER_SetMatch(led_pwm_regs, 3, 0xFFF);
-	Chip_TIMER_SetMatch(led_pwm_regs, 0, 0x1000);
+	Chip_TIMER_SetMatch(ledPwmRegs, 3, 0xFFF);
+	Chip_TIMER_SetMatch(ledPwmRegs, 0, 0x1000);
 
-	Chip_TIMER_ResetOnMatchEnable(led_pwm_regs, 3);
+	Chip_TIMER_ResetOnMatchEnable(ledPwmRegs, 3);
 
-	Chip_TIMER_Reset(led_pwm_regs);
+	Chip_TIMER_Reset(ledPwmRegs);
 
-	Chip_TIMER_Enable(led_pwm_regs);
+	Chip_TIMER_Enable(ledPwmRegs);
 
 	// Set PIO0_21 to function as CT16B1_MAT0 (Match output 0 for 16-bit timer 1).
 	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 21, IOCON_FUNC1);
@@ -108,6 +108,6 @@ void initLedCtrl() {
  * \return None.
  */
 void setLedIntensity(uint16_t intensity) {
-	Chip_TIMER_SetMatch(led_pwm_regs, 0, intensity);
+	Chip_TIMER_SetMatch(ledPwmRegs, 0, intensity);
 }
 
