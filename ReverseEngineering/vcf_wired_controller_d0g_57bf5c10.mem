@@ -108,14 +108,14 @@
 
  (uint8_t*) 0x10000236 - Bit number for SSP0 SYSAHBCLKCTRL clock enable/disable.
 
- (uint8_t*) 0x1000023a - GPIO group/port for Right Haptic Chip Select.
- (uint8_t*) 0x1000023b - GPIO group/port for Left Haptic Chip Select.
- (uint8_t*) 0x1000023c - GPIO number/offset for Right Haptic Chip Selet.
- (uint8_t*) 0x1000023d - GPIO number/offset for Left Haptic Chip Selet.
- (uint8_t*) 0x1000023e - GPIO group/port for Right Haptic Data Ready?
- (uint8_t*) 0x1000023f - GPIO group/port for Left Haptic Data Ready?
- (uint8_t*) 0x10000240 - GPIO number/offset for Right Haptic Data Ready?
- (uint8_t*) 0x10000241 - GPIO number/offset for Left Haptic Data Ready?
+ (uint8_t*) 0x1000023a - GPIO group/port for Right Haptic Chip Select (PIO1_15).
+ (uint8_t*) 0x1000023b - GPIO group/port for Left Haptic Chip Select (PIO1_6).
+ (uint8_t*) 0x1000023c - GPIO number/offset for Right Haptic Chip Selet (PIO1_15).
+ (uint8_t*) 0x1000023d - GPIO number/offset for Left Haptic Chip Selet (PIO1_6).
+ (uint8_t*) 0x1000023e - GPIO group/port for Right Haptic Data Ready (PIO0_23)?
+ (uint8_t*) 0x1000023f - GPIO group/port for Left Haptic Data Ready (PIO1_16)?
+ (uint8_t*) 0x10000240 - GPIO number/offset for Right Haptic Data Ready (PIO0_23)?
+ (uint8_t*) 0x10000241 - GPIO number/offset for Left Haptic Data Ready (PIO1_16)?
 
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
@@ -129,10 +129,12 @@
 
 (uint32_t*) 0x10000260 - System Clock Frequency in Hz
 
- (uint8_t*) 0x100002ac - GPIO Bank/Group for TODO GPIO (PIO1_10)
- (uint8_t*) 0x100002ad - GPIO Number/Offset for TODO GPIO (PIO1_10)
- (uint8_t*) 0x100002ae - Controls whether or not to invert output for TODO GPIO 
-			 (PIO1_10)?
+ (uint8_t*) 0x100002ac - GPIO Bank/Group for TODO (power/battery related?) GPIO 
+			 (PIO1_10)
+ (uint8_t*) 0x100002ad - GPIO Number/Offset for TODO GPIO (power/battery 
+			 related?) (PIO1_10)
+ (uint8_t*) 0x100002ae - Controls whether or not to invert output for TODO 
+			 (power/battery related?) GPIO (PIO1_10)?
  (uint8_t*) 0x100002af - Indicates which AD channel is being sampled (related
 			 to GPIO1_10?)
 
@@ -141,7 +143,7 @@
  (uint8_t*) 0x100002b2 - Inverted value of PINT1 GPIO (PIO0_2) read before 
 			 setting up interrupt.
 
-(uint32_t*) 0x100002bc - Callback? related to PINT1 GPIO (PIO0_2)
+(uint32_t*) 0x100002bc - Function pointer. Called in PINT1. PINT1 GPIO = PIO0_2.
 
 (uint32_t*) 0x100002c4 - Counter. Related to next open position in array of
 			 function pointers starting at 0x10000dd8.
@@ -149,8 +151,10 @@
 
   (int8_t*) 0x100002d0 - GPIO group/base for TODO GPIO (GPIO1_1)
   (int8_t*) 0x100002d1 - GPIO num/offset for TODO GPIO (GPIO1_1)
-  (int8_t*) 0x100002d2 - Related to JTAG TDI MODE settings?
-  (int8_t*) 0x100002d3 - Related to JTAG TDO MODE settings?
+  (int8_t*) 0x100002d2 - Related to JTAG TDI_PIO0_11 MODE settings?
+  (int8_t*) 0x100002d3 - Related to JTAG TDO_PIO0_13 MODE settings?
+  (int8_t*) 0x100002d4 - Related to JTAG TDI_PIO0_11 setup?
+  (int8_t*) 0x100002d5 - Related to JTAG TDO_PIO0_13 setup?
 
 (uint32_t*) 0x10000330 - Related to CT16B1?
 
@@ -160,7 +164,8 @@
 			 Incremented after after interrupt disable (via cps). 
 			 Decremented (and checked to be 0) before interrupt 
 			 enable (via cps).  (Similar to 0x10000250, but used 
-			 after early init).
+			 after early init). Effectively a locking mechanism
+			 (i.e. counting semaphore).
 
 (uint32_t*) 0x10000348 - Function pointer? Related to I2C or CT16B1?
 (uint32_t*) 0x1000034c - USBD_HANDLE_T (is typedef void*)
@@ -338,7 +343,6 @@
  (uint8_t*) 0x10000a36 - EEPROM Read Data 0x082 - Uknown purpose
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
 
-//TODO: Finish this up and verify it adds up in sim results.
  (uint8_t*) 0x10000d80 - I2C_XFER_T.slaveAddr; 7-bit I2C Slave address 
 
 (uint32_t*) 0x10000d84 - I2C_XFER_T.txBuff; Pointer to array of bytes to be 

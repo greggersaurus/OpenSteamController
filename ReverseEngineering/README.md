@@ -31,12 +31,13 @@ This section is a running list of priorities to focus on in hopes of reaching
        1. Majority of functional behavior from vcf_wired_controller_d0g_57bf5c10.bin should remain unchanged (even if underlying assembly changes). 
        1. Once functionality is fully understood, applying that understanding to newer firmware may be quicker than "starting over" with new firmware?
 1. Simulation to C Conversion
+    1. Clean
+        1. Remove memory section from .c
+    1. Resim with GPIO values obtained from custom firmware
+    1. Revisit ADC IRQ?
+        1. Simulate given AD6 values obtained from Dev Board command...
     1. Pay special attention to GPIOs as they are initialized and memory associated with them
-       1. Ohm-out and test via HW to get better idea for purpose of these GPIOs...
-    1. Re-run everything using output of new pinkySim exeLog simplified C
-        1. Clean vcf_wired_controller_d0g_57bf5c10.c of old style mess
-            1. Make sure all fncs appear in .h file
-            1. Clean up all lingering and unused args
+        1. Ohm-out and test via HW to get better idea for purpose of these GPIOs...
     1. Run and decode non-straightforward paths
         1. SysTick
             1. (Re)visit this as priority is set to max in config
