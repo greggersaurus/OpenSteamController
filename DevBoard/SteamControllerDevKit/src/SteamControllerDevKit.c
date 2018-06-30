@@ -47,8 +47,6 @@
  */
 int main(void){
 	int retval = 0;
-	volatile uint32_t* reg32 = (volatile uint32_t)0;
-	uint32_t val = 0;
 
 	// TODO: not sure if this should only be called from ResetISR() or not.
 	//	 Might matter if low power modes come into play or something?
