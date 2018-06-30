@@ -52,7 +52,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            26 | USB_DP                |                  |               | |
 |            27 | PIO1_24               |                  |               | |
 |            28 | PIO1_18               | TXD (USART)      | Out           | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
-|            29 | PIO0_6                | not(USB_CONNECT) | In            | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
+|            29 | PIO0_6                | not(USB_CONNECT) | Out           | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
 |            30 | PIO0_7                | PIO0_7           | Out           | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)). Related/similar to GPIO1_28? Any other purpose? More details? TODO|
 |            31 | PIO1_28               | PIO1_28          | Out           | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)). Related/similar to GPIO0_7? Any other purpose? More details? TODO |
 |            32 | PIO1_5                |                  |               | |
@@ -82,7 +82,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            56 | PIO0_23               | PIO0_23          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Right Trackpad/Haptic? |
 |            57 | PIO1_15               | PIO1_15          | Out           | Chip Select/SS for Right Trackpad/Haptic (active low) |
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
-|            59 | PIO1_12               | PIO1_12          |               | Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. |
+|            59 | PIO1_12               | PIO1_12          | In            | Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. |
 |            60 | PIO0_17               |                  |               | S1 - A Button |
 |            61 | PIO0_18               | PIO0_18          |               | If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB). | 
 |            62 | PIO0_19               | PIO0_19          | Out           | Set as output during init and driven low. (trace leads to... TODO)|

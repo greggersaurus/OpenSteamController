@@ -191,7 +191,8 @@ set {int}0x40060024 = 0xFFFFFFFF
 # set {char}0x50000001 = pin state TODO: Should this be non-zero?
 
 # PIO0_2 is read during init. Interrupt setup to monitor state change.
-set {char}0x50000002 = 0
+#  Always reads 1 according to Custom Firmware.
+set {char}0x50000002 = 1
 
 # PIO0_3 is USB_VBUS and indiciates if there USB bus power. If 1 system will
 #  boot and wait for USB enumeration/probing. If 0 system will boot and wait
@@ -213,8 +214,8 @@ set {char}0x50000003 = 1
 # set {char}0x50000010 = pin state TODO: Should this be non-zero?
 # set {char}0x50000011 = pin state TODO: Should this be non-zero?
 
-# PIO0_18 is read if PIO1_12 is low. RAM address 0x100002b3 set based on value.
-set {char}0x50000012 = 1
+# PIO0_18 always reads 0 according to Custom Firmware
+set {char}0x50000012 = 0
 
 # set {char}0x50000013 = pin state TODO: Should this be non-zero?
 # set {char}0x50000014 = pin state TODO: Should this be non-zero?
@@ -235,8 +236,8 @@ set {char}0x50000012 = 1
 # set {char}0x5000002A = pin state TODO: Should this be non-zero?
 # set {char}0x5000002B = pin state TODO: Should this be non-zero?
 
-# PIO1_12 is connected to VDD for Haptics. RAM address 0x100002b3 set based on value.
-set {char}0x5000002C = 1
+# PIO1_12 always reads 0 according to Custom Firmware
+set {char}0x5000002C = 0
 
 # set {char}0x5000002D = pin state TODO: Should this be non-zero?
 # set {char}0x5000002E = pin state TODO: Should this be non-zero?
