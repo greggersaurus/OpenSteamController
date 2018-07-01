@@ -766,7 +766,42 @@ else
 	#------------------------------------------------------------------------------#
 
 
-# Simulate USB Callbacks...
+	# Setup watchpoint before code waits for ADC interrupt to have run its
+	#  initial course for AD6
+	watch $pc == 0x00002d00
+
+	# Execute until watchpoint
+	continue
+
+	##
+	# ADC Interrupt Execution:
+	# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
+	#  interrupt. Vector Table entry is 0x00000205.
+	##set $lr = $pc
+	##set $pc = 0x00000204
+	# Counter for how many times interrupt fires initially before AD values
+	#  start being accumulated
+	set {int}0x10000014 = 0x0000012d
+	# Counter for how many times interrupt fires for accumulating AD6 values
+	set {int}0x10000018 = 0x00000007
+	# Set flag to indicate ADC ISR has served its purpose and ADC is shutdown
+	set {char}0x10000010 = 1
+	# Set value of 8 accumulated channel 6 ADC values
+	#  ADC Chanel 6 reads ~0x03ac when polled via adcRead command in custom firmware.
+	set {short}0x10000f8c = 0x1d60
+	#TODO: Might want to try making not destructive (if need to simulate it or other
+	#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
+	#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
+	## 
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+# TODO: need to Simulate USB Callbacks...?
 
 	# Setup watchpoint for...
 #	watch $pc == 0x000098f0
@@ -798,42 +833,6 @@ else
 
 	# Remove watchpoint
 #	delete 
-
-
-	#------------------------------------------------------------------------------#
-
-
-	# Setup watchpoint before code waits for ADC interrupt to have run its
-	#  initial course for AD6
-	watch $pc == 0x00002d00
-
-	# Execute until watchpoint
-	continue
-
-	##
-	# ADC Interrupt Execution:
-	# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
-	#  interrupt. Vector Table entry is 0x00000205.
-	set $lr = $pc
-	set $pc = 0x00000204
-	# Counter for how many times interrupt fires initially before AD values
-	#  start being accumulated
-	set {int}0x10000014 = 0x0000012d
-	# Counter for how many times interrupt fires for accumulating AD6 values
-	set {int}0x10000018 = 0x00000007
-	# Set flag to indicate ADC ISR has served its purpose and ADC is shutdown
-	set {char}0x10000010 = 1
-	# Set value of 8 accumulated channel 6 ADC values
-# TODO: compare sim results with this value...
-#	set {short}0x10000f8c = 0x1d60
-	#TODO: Might want to try making not destructive (if need to simulate it or other
-	#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
-	#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
-	## 
-
-	# Remove watchpoint
-	delete 
-
 
 	#------------------------------------------------------------------------------#
 
