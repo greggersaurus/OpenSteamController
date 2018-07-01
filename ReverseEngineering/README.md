@@ -33,9 +33,7 @@ This section is a running list of priorities to focus on in hopes of reaching
 1. Simulation to C Conversion
     1. Clean
         1. Remove memory section from .c
-    1. Resim with GPIO values obtained from custom firmware
-    1. Revisit ADC IRQ?
-        1. Simulate given AD6 values obtained from Dev Board command...
+    1. Resim with ADC ISR accumulator value from AD6 (i.e. 0x10000f8c)
     1. Pay special attention to GPIOs as they are initialized and memory associated with them
         1. Ohm-out and test via HW to get better idea for purpose of these GPIOs...
     1. Run and decode non-straightforward paths

@@ -39,13 +39,21 @@
  (uint8_t*) 0x1000000a - GPIO Bank/Group for TODO GPIO (PIO0_7)
  (uint8_t*) 0x1000000b - GPIO Number for TODO GPIO (PIO0_7)     
 
- (uint8_t*) 0x10000010 - Related to ADC?
- (uint8_t*) 0x10000011 - Related to ADC?
+ (uint8_t*) 0x10000010 - Flag related to ADC ISR. For DR6 case this indicates
+			 ADC chnanel 6 has been sampled 8 times.
+ (uint8_t*) 0x10000011 - Checked in ADC ISR (if 0x10000018 is 8). Maybe ADC 
+			 clock is not disabled if this is not set?
  (uint8_t*) 0x10000012 - Related to ADC configuration. Set to 0 after initial 
-			 configuration of ADC. Verify: Set bits indicate 
-			 which AD is active (i.e. bit 6 for AD6).
+			 configuration of ADC. Set bits indicate which ADC
+			 channel is active (i.e. bit 6 for AD6).
 
-(uint32_t*) 0x10000018 - Related to ADC?
+(uint32_t*) 0x10000014 - ADC ISR initial delay counter. ADC ISR will run ~300
+			 times (clearing ADC Data Register status bits) before
+			 before any data is actually recorded. Some sort of 
+			 delay to make sure whatever is being measured comes
+			 into a steady or known state perhaps?
+(uint32_t*) 0x10000018 - ADC ISR sample counter. (For DR6 case) counts up to 8
+			 before 0x10000010 flag is set.
 
  (uint8_t*) 0x1000001c - GPIO Bank/Group for TODO GPIO (PIO0_19)
  (uint8_t*) 0x1000001d - GPIO Number for TODO GPIO (PIO0_19)
@@ -359,6 +367,9 @@
 
 (uint32_t*) 0x10000dd8 - First in array of function pointers (related to 
 			 CT16B1?)
+
+(uint16_t*) 0x10000f8c - Accumulator V_VREF from DR6 (i.e. voltage on ADC 
+			 channel 6).  Accumulation occurs in ADC ISR.
 
 (uint32_t*) 0x10000fa8 - Function pointer. Related to handling accumulated 
 			 results of AD6 readings?

@@ -1093,5 +1093,34 @@ void fnc0x000098f0(arg0x000098f0_0, arg0x000098f0_1);
 // Related to ADC readings?
 ?? fnc0x00002d4c( arg0x00002d4c_0, arg0x00002d4c_1, arg0x00002d4c_2, arg0x00002d4c_3, arg0x00002d4c_4, arg0x00002d4c_5, arg0x00002d4c_6, arg0x00002d4c_12, )
 
-// Read and store all ADC values
-?? fnc0x00004cbc( arg0x00004cbc_0, arg0x00004cbc_1, arg0x00004cbc_2, arg0x00004cbc_3, arg0x00004cbc_4, arg0x00004cbc_5, arg0x00004cbc_6, arg0x00004cbc_12, )
+/**
+ * ADC ISR: 
+ *
+ * 	For DR6: The ISR seems to initially wait, and then capture and 
+ *	 accumulate 8 readings of ADC channel 6 voltage to 0x10000f8c. Upon
+ *	 capturing last sample ADC clock may be disabled.
+ *
+ *	TODO: add details on what we know this does for other channels
+ *
+ * \return None.
+ */
+void fnc0x00002b20();
+
+/**
+ * Clear all ADC Data Registers (clears status bits on registers, by reading
+ *  ADC Data Registers and doing nothing with read data.)
+ *
+ * \return None.
+ */
+void fnc0x00004cbc();
+
+/**
+ * AKA void Chip_ADC_SetBurstCmd(LPC_ADC_T *pADC, FunctionalState NewState)
+ *  Enable burst mode.
+ * 
+ * \param arg0x0000402c_0 pADC The base of ADC peripheral on the chip
+ * \param arg0x0000402c_1 NewState New state, should be ENABLE or DISABLE
+ * 
+ * \return None.
+ */
+void fnc0x0000402c(arg0x0000402c_0, arg0x0000402c_1);
