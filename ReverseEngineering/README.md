@@ -87,7 +87,8 @@ This section is a running list of priorities to focus on in hopes of reaching
     1. Add Chart to label how hardware peripherals are used?
         1. CT16B1 = driving Steam Controller LED
         1. CT16B0 = used as timer for a delay during init. (That it?)
-        1. AD = AD6 = ??
+        1. ADC 
+            1. AD6 = Measuring some voltage related to battery power (i.e. does system have enough voltage to run off battery... I think)
         1. SSP0 = CS ?? = Left Haptics, CS ?? = Right Haptics 
 1. Decompose EEPROM dumps
     1. Captured from two different controllers to isolate some differences

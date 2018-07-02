@@ -159,16 +159,21 @@
 			 high, this is set to high. If PIO1_12 is low, this is 
 			 set value of PIO0_18.
 
- (uint8_t*) 0x100002b6 - Related to reading DR6??
+ (uint8_t*) 0x100002b6 - Related to reading DR6?? Some sort of flag/bool?
 
-(uint16_t*) 0x100002b8 - 
+(uint16_t*) 0x100002b8 - Voltage related to DR6 in mV? Checked if is greater 
+			 than or equal to 0x000005dc if PIO0_2=1 during boot 
+			 when USB_VBUS=0, PIO0_18=1, PIO1_12=1.
 
 (uint32_t*) 0x100002bc - Function pointer. Called in PINT1. PINT1 GPIO = PIO0_2.
 
+   (float*) 0x100002c0 - Multiplication value of 3.3 voltage related to 
+			 converting DR6 ADC value.
 (uint32_t*) 0x100002c4 - Counter. Related to next open position in array of
 			 function pointers starting at 0x10000dd8.
 (uint32_t*) 0x100002c8 - USB HID3 related?
-(uint32_t*) 0x100002cc - Value calculated based on DR6 average value??
+(uint32_t*) 0x100002cc - Value calculated based on DR6 average value?? (DR6
+			 ADC value converted to voltage level maybe?)
 
   (int8_t*) 0x100002d0 - GPIO group/base for TODO GPIO (GPIO1_1)
   (int8_t*) 0x100002d1 - GPIO num/offset for TODO GPIO (GPIO1_1)

@@ -1084,8 +1084,12 @@ int fnc0x000042f0(arg0x000042f0_0, arg0x000042f0_1);
  */
 void fnc0x000098f0(arg0x000098f0_0, arg0x000098f0_1);
 
-// Related to ADC readings?
-?? fnc0x00002cf0( arg0x00002cf0_0, arg0x00002cf0_1, arg0x00002cf0_2, arg0x00002cf0_3, arg0x00002cf0_4, arg0x00002cf0_5, arg0x00002cf0_6, arg0x00002cf0_12, )
+/**
+ * Setup ADC to convert sample via ISR and get DR6 results related to (battery) power?
+ *
+ * \return None.
+ */
+void fnc0x00002cf0()
 
 /**
  * Configure/setup for ISR to run and save accumulated readings for AD6 in
@@ -1135,8 +1139,24 @@ void fnc0x00004cbc();
  */
 void fnc0x0000402c(arg0x0000402c_0, arg0x0000402c_1);
 
-// Check results for ADC read results (for active AD channels)?
-?? fnc0x00004d3c( arg0x00004d3c_0, arg0x00004d3c_1, arg0x00004d3c_2, arg0x00004d3c_3, arg0x00004d3c_4, arg0x00004d3c_5, arg0x00004d3c_6, arg0x00004d3c_12, )
+/**
+ * Check/process results for ADC read results for active channels.
+ *
+ * \return None.
+ */
+void fnc0x00004d3c();
 
-// Check DRn average value accumulated via ADC ISR
-?? fnc0x00003b48( arg0x00003b48_0, arg0x00003b48_1, arg0x00003b48_2, arg0x00003b48_3, arg0x00003b48_4, arg0x00003b48_5, arg0x00003b48_6, arg0x00003b48_7, arg0x00003b48_12, )
+/**
+ * Related to ADC Channel 6 voltage being measured. Check if we need to, and 
+ *  if needed convert ADC channel 6 ADC counts to voltage level in mV and store
+ *  to a global variable (0x100002b8).
+ *
+ * param arg0x00003b48_0 ADC Channel number? (Unused in current sim data)
+ * param arg0x00003b48_1 Average value of ADC channel 6
+ *
+ * \return None.
+ */
+void fnc0x00003b48(arg0x00003b48_0, arg0x00003b48_1);
+
+// Additional ADC related setup? Setting up other channels for TODO purposes...?
+?? fnc0x00002f4c( arg0x00002f4c_0, arg0x00002f4c_1, arg0x00002f4c_2, arg0x00002f4c_3, arg0x00002f4c_4, arg0x00002f4c_5, arg0x00002f4c_6, arg0x00002f4c_12, )
