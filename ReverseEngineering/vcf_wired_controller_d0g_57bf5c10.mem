@@ -43,9 +43,8 @@
 			 ADC chnanel 6 has been sampled 8 times.
  (uint8_t*) 0x10000011 - Checked in ADC ISR (if 0x10000018 is 8). Maybe ADC 
 			 clock is not disabled if this is not set?
- (uint8_t*) 0x10000012 - Related to ADC configuration. Set to 0 after initial 
-			 configuration of ADC. Set bits indicate which ADC
-			 channel is active (i.e. bit 6 for AD6).
+ (uint8_t*) 0x10000012 - Set bits indicate which ADC channel is active (i.e. 
+			 bit 6 for AD6).
 
 (uint32_t*) 0x10000014 - ADC ISR initial delay counter. ADC ISR will run ~300
 			 times (clearing ADC Data Register status bits) before
@@ -111,6 +110,12 @@
  (uint8_t*) 0x10000200 - GPIO Bank/Group for TODO GPIO (PIO1_7)
  (uint8_t*) 0x10000201 - GPIO Number for TODO GPIO (PIO1_7)
 
+ (uint8_t*) 0x10000203 - GPIO Bank/Group for TODO (power related?) GPIO (PIO1_12)
+ (uint8_t*) 0x10000204 - GPIO Bank/Group for TODO (power related?) GPIO (PIO0_18)
+ (uint8_t*) 0x10000205 - GPIO Number for TODO (power related?) GPIO (PIO1_12)
+ (uint8_t*) 0x10000206 - GPIO Number for TODO (power related?) GPIO (PIO0_18)
+
+
  (uint8_t*) 0x10000234 - Number of active haptics or haptics to configure.
 			 Related to SSP0. Copy of 0x20000002.
 
@@ -150,12 +155,20 @@
  (uint8_t*) 0x100002b1 - GPIO Number for PINT1 GPIO (PIO0_2)
  (uint8_t*) 0x100002b2 - Inverted value of PINT1 GPIO (PIO0_2) read before 
 			 setting up interrupt.
+ (uint8_t*) 0x100002b3 - Related to power or battery or someting? If PIO1_12 is 
+			 high, this is set to high. If PIO1_12 is low, this is 
+			 set value of PIO0_18.
+
+ (uint8_t*) 0x100002b6 - Related to reading DR6??
+
+(uint16_t*) 0x100002b8 - 
 
 (uint32_t*) 0x100002bc - Function pointer. Called in PINT1. PINT1 GPIO = PIO0_2.
 
 (uint32_t*) 0x100002c4 - Counter. Related to next open position in array of
 			 function pointers starting at 0x10000dd8.
 (uint32_t*) 0x100002c8 - USB HID3 related?
+(uint32_t*) 0x100002cc - Value calculated based on DR6 average value??
 
   (int8_t*) 0x100002d0 - GPIO group/base for TODO GPIO (GPIO1_1)
   (int8_t*) 0x100002d1 - GPIO num/offset for TODO GPIO (GPIO1_1)
@@ -368,13 +381,28 @@
 (uint32_t*) 0x10000dd8 - First in array of function pointers (related to 
 			 CT16B1?)
 
+(uint16_t*) 0x10000f80 - ADC Channel 0 accumulator?
+(uint16_t*) 0x10000f82 - ADC Channel 1 accumulator?
+(uint16_t*) 0x10000f84 - ADC Channel 2 accumulator?
+(uint16_t*) 0x10000f86 - ADC Channel 3 accumulator?
+(uint16_t*) 0x10000f88 - ADC Channel 4 accumulator?
+(uint16_t*) 0x10000f8a - ADC Channel 5 accumulator?
 (uint16_t*) 0x10000f8c - Accumulator V_VREF from DR6 (i.e. voltage on ADC 
 			 channel 6).  Accumulation occurs in ADC ISR.
+(uint16_t*) 0x10000f8e - ADC Channel 7 accumulator?
 
 (uint32_t*) 0x10000fa8 - Function pointer. Related to handling accumulated 
-			 results of AD6 readings?
+			 results of AD6 readings.
 
-(uint32_t*) 0x10000fc8 - Function pointer. Related to AD6 and GPIO1_10?
+(uint32_t*) 0x10000fb0 - Possible function pointer. Related to AD0?
+(uint32_t*) 0x10000fb4 - Possible function pointer. Related to AD1?
+(uint32_t*) 0x10000fb8 - Possible function pointer. Related to AD2?
+(uint32_t*) 0x10000fbc - Possible function pointer. Related to AD3?
+(uint32_t*) 0x10000fc0 - Possible function pointer. Related to AD4?
+(uint32_t*) 0x10000fc4 - Possible function pointer. Related to AD5?
+(uint32_t*) 0x10000fc8 - Function pointer. Executes code that checks P1_12 and 
+			 (potentially) P0_18. Related to AD6.
+(uint32_t*) 0x10000fcc - Possible function pointer. Related to AD7?
 
 (uint32_t*) 0x100010b4 - Callback function? Related to PIO0_3 (USB_VBUS) 
 			 changing state (fnc0x000055e8()).

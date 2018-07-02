@@ -768,51 +768,48 @@ void fnc0x00007368(arg0x00007368_0);
 uint32_t fnc0x0000e65c();
 
 /**
- * TODO: Some math related function?
+ * Convert integer to float.
  *
- * Called as:
- * 	part of MR0 calculated for CT16B1
- *	TODO: Add other functions
+ * \param arg0x00002672_0 Integer value to convert to floating point 
+ *	representation.
  *
- * Calls :
- *	fnc0x0000281a
- *
- * \return ?? 
+ * \return arg0x00002672_0 in float format
  */
-uint32_t fnc0x00002672(arg0x00002672_0);
+float fnc0x00002672(arg0x00002672_0);
 
 /**
- * TODO: Some math related function?
+ * Called by fnc0x00002672() to convert integer to floating point representation.
  *
- * Called as:
- * 	part of MR0 calculated for CT16B1
- *	TODO: Add other functions
+ * \param arg0x0000281a_0 Integer to convert to float format.
+ * \param arg0x0000281a_1 TODO Some sort of flag?
+ * \param arg0x0000281a_2 TODO ??
+ * \param arg0x0000281a_3 TODO ??
  *
  * \return ??
  */
-uint32_t fnc0x0000281a(arg0x0000281a_0, arg0x0000281a_1, arg0x0000281a_2, arg0x0000281a_3);
+float fnc0x0000281a(arg0x0000281a_0, arg0x0000281a_1, arg0x0000281a_2, arg0x0000281a_3);
 
 /**
- * TODO: Some math/path related function?
+ * Floating point division
  *
- * Called as:
- * 	part of MR0 calculated for CT16B1
- *	TODO: Add other functions
+ * \param arg0x00002394_0 Dividend
+ * \param arg0x00002394_1 Divisor
  *
- * \return ??
+ * \return (float)arg0x00002394_0 / (float)arg0x00002394_1
  */
-void fnc0x00002394(arg0x00002394_0, arg0x00002394_1);
+float fnc0x00002394(arg0x00002394_0, arg0x00002394_1);
 
 /**
- * TODO: Some math/path related function?
+ * Floating point multiplication.
  *
- * Called as:
- * 	part of MR0 calculated for CT16B1
- *	TODO: Add other functions
+ * \param arg0x0000231c_0 Multiplier
+ * \param arg0x0000231c_1 Multiplicand
+ * \param arg0x0000231c_2 Copy of Multiplier (this a compiler artifact that
+ *	this looks like a third argument?
  *
- * \return ??
+ * \return arg0x0000231c_0 * arg0x0000231c_1 (see note on arg0x0000231c_2).
  */
-uint32_t fnc0x0000231c(arg0x0000231c_0, arg0x0000231c_1, arg0x0000231c_2);
+float fnc0x0000231c(arg0x0000231c_0, arg0x0000231c_1, arg0x0000231c_2);
 
 /**
  * TODO: Update some variables related to CT16B1?
@@ -1090,8 +1087,21 @@ void fnc0x000098f0(arg0x000098f0_0, arg0x000098f0_1);
 // Related to ADC readings?
 ?? fnc0x00002cf0( arg0x00002cf0_0, arg0x00002cf0_1, arg0x00002cf0_2, arg0x00002cf0_3, arg0x00002cf0_4, arg0x00002cf0_5, arg0x00002cf0_6, arg0x00002cf0_12, )
 
-// Related to ADC readings?
-?? fnc0x00002d4c( arg0x00002d4c_0, arg0x00002d4c_1, arg0x00002d4c_2, arg0x00002d4c_3, arg0x00002d4c_4, arg0x00002d4c_5, arg0x00002d4c_6, arg0x00002d4c_12, )
+/**
+ * Configure/setup for ISR to run and save accumulated readings for AD6 in
+ *  global variable.
+ *
+ * \return None.
+ */
+void fnc0x00002d4c();
+
+/**
+ * Check values of P1_12 and (potentially) P0_18. Update variable 0x100002b3
+ *  based on results. Related to battery power or cap charging or something?
+ *
+ * \return None.
+ */
+void fnc0x00003bf4();
 
 /**
  * ADC ISR: 
@@ -1124,3 +1134,9 @@ void fnc0x00004cbc();
  * \return None.
  */
 void fnc0x0000402c(arg0x0000402c_0, arg0x0000402c_1);
+
+// Check results for ADC read results (for active AD channels)?
+?? fnc0x00004d3c( arg0x00004d3c_0, arg0x00004d3c_1, arg0x00004d3c_2, arg0x00004d3c_3, arg0x00004d3c_4, arg0x00004d3c_5, arg0x00004d3c_6, arg0x00004d3c_12, )
+
+// Check DRn average value accumulated via ADC ISR
+?? fnc0x00003b48( arg0x00003b48_0, arg0x00003b48_1, arg0x00003b48_2, arg0x00003b48_3, arg0x00003b48_4, arg0x00003b48_5, arg0x00003b48_6, arg0x00003b48_7, arg0x00003b48_12, )
