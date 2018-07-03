@@ -182,6 +182,11 @@
   (int8_t*) 0x100002d4 - Related to JTAG TDI_PIO0_11 setup?
   (int8_t*) 0x100002d5 - Related to JTAG TDO_PIO0_13 setup?
 
+ (uint8_t*) 0x10000310 - ADC channel (2) associated with TODO functionality
+ (uint8_t*) 0x10000311 - ADC channel (0) associated with TODO functionality
+
+(uint32_t*) 0x1000031c - Related to ADC Channel 2?
+
 (uint32_t*) 0x10000330 - Related to CT16B1?
 
 (uint32_t*) 0x10000338 - USB HID3 related?
@@ -236,6 +241,12 @@
 
 (uint32_t*) 0x10000818 - Related to CT16B0. Callback function? First entry in
 			 array of callback functions?
+
+(uint32_t*) 0x10000868 - Related to ADC Channel 2?
+(uint32_t*) 0x1000086c - Related to ADC Channel 2?
+
+(uint32_t*) 0x100008a8 - Related to ADC Channel 2?
+(uint32_t*) 0x100008ac - Related to ADC Channel 2?
 
 (uint16_t*) 0x100009b4 - EEPROM Read Data 0x000 - Magic Number to indicate 
 			 EEPROM has valid data
@@ -396,8 +407,22 @@
 			 channel 6).  Accumulation occurs in ADC ISR.
 (uint16_t*) 0x10000f8e - ADC Channel 7 accumulator?
 
-(uint32_t*) 0x10000fa8 - Function pointer. Related to handling accumulated 
-			 results of AD6 readings.
+(uint32_t*) 0x10000f90 - Function pointer. Related to handling AD0 readings 
+			 obtained via ISR. 
+(uint32_t*) 0x10000f94 - Function pointer. Related to handling AD1 readings
+			 obtained via ISR. 
+(uint32_t*) 0x10000f98 - Function pointer. Related to handling AD2 readings
+			 obtained via ISR. 
+(uint32_t*) 0x10000f9c - Function pointer. Related to handling AD3 readings
+			 obtained via ISR. 
+(uint32_t*) 0x10000fa0 - Function pointer. Related to handling AD4 readings
+			 obtained via ISR. 
+(uint32_t*) 0x10000fa4 - Function pointer. Related to handling AD5 readings
+			 obtained via ISR. 
+(uint32_t*) 0x10000fa8 - Function pointer. Related to handling AD6 readings
+			 obtained via ISR. 
+(uint32_t*) 0x10000fac - Function pointer. Related to handling AD7 readings
+			 obtained via ISR. 
 
 (uint32_t*) 0x10000fb0 - Possible function pointer. Related to AD0?
 (uint32_t*) 0x10000fb4 - Possible function pointer. Related to AD1?
@@ -408,6 +433,12 @@
 (uint32_t*) 0x10000fc8 - Function pointer. Executes code that checks P1_12 and 
 			 (potentially) P0_18. Related to AD6.
 (uint32_t*) 0x10000fcc - Possible function pointer. Related to AD7?
+
+   (float*) 0x10001064 - Related to AD0/AD2 TODO functionality. Initialized to
+			 value 32767.0
+
+   (float*) 0x10001088 - Related to AD0/AD2 TODO functionality. Initialized to
+			 value 32767.0
 
 (uint32_t*) 0x100010b4 - Callback function? Related to PIO0_3 (USB_VBUS) 
 			 changing state (fnc0x000055e8()).

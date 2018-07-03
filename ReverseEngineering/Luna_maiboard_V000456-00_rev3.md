@@ -63,12 +63,12 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            37 | PIO0_9                | MOSI0            | Out           | Master Out Slave In for SSP0. Connected to MOSI on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            38 | SWCLK/PIO0_10         | SWCLK?           |               | Connected to DEBUG interface for LPC11U37F |
 |            39 | PIO1_8                |                  |               | |
-|            40 | PIO0_22               | AD6              | In            | Setup to function as AD6 during init (trace leads to C6, continutes to R10 near power?) |
+|            40 | PIO0_22               | AD6              | In            | Measures voltage that matters when no USB power is present? (trace leads to C6, continutes to R10 near power...) |
 |            41 | PIO1_29               | SCK0             | Out           | Serial clock for SSP0. Connected to SCLK on Right Trackpad/Haptic and Left Trackpad/Haptic. |
-|            42 | TDI/PIO0_11           | TDI              | In            | Pull-down resistor enabled |
+|            42 | TDI/PIO0_11           | AD0              | In            | TODO: what is this measuring...? (Note: Functions as TDI for short time during initialization) |
 |            43 | PIO1_11               |                  |               | S9 - Y Button |
 |            44 | TMS/PIO0_12           |                  |               | |
-|            45 | TDO/PIO0_13           | TDO              | Out           | Pull-down resistor enabled |
+|            45 | TDO/PIO0_13           | AD2              | In            | TODO: what is this measuring...? (Note: Functions as TDO for short time during initialization) |
 |            46 | nTRST/PIO0_14         |                  |               | |
 |            47 | PIO1_13               |                  |               | S6 - RT (Right trigger digital) |
 |            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |

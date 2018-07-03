@@ -650,7 +650,8 @@ void fnc0x00004fdc(arg0x00004fdc_0, arg0x00004fdc_1, arg0x00004fdc_2);
 void fnc0x00007af0();
 
 /**
- * Enable ADC conversion (and interrupts) for specified channel.
+ * Enable ADC conversion (and handling of data via interrupts) for specified 
+ *  channel.
  *
  * \param arg0x00002a90_0 0-based AD channel to setup.
  * \param arg0x00002a90_1 Callback function related to conversion complete?
@@ -1158,5 +1159,11 @@ void fnc0x00004d3c();
  */
 void fnc0x00003b48(arg0x00003b48_0, arg0x00003b48_1);
 
-// Additional ADC related setup? Setting up other channels for TODO purposes...?
-?? fnc0x00002f4c( arg0x00002f4c_0, arg0x00002f4c_1, arg0x00002f4c_2, arg0x00002f4c_3, arg0x00002f4c_4, arg0x00002f4c_5, arg0x00002f4c_6, arg0x00002f4c_12, )
+/**
+ * Setup AD2 and AD0 for TODO functionality. 
+ * 
+ * \param arg0x00002f4c_0 ?? Function pointer maybe?
+ *
+ * \return None.
+ */
+void fnc0x00002f4c(arg0x00002f4c_0);
