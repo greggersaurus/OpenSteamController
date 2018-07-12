@@ -52,10 +52,12 @@ This is a running list of items I would like to prioritize and not lose track
 1. Check clean build works
 1. (finish) ADC command
     1. Have it use interrupt like Valve's firmware does
+        1. Make sure IRQ is not starving anything running in normal execution context (i.e. not IRQ)
     1. Add safety checks, timeouts, etc.
     1. Read other channels (analog triggers? analog joystick?)
         1. See how sim results configure PIOs
     1. Polling mode where adc results are refreshed automatically until 'q' is pressed
+    1. Better comments
 1. Help command
 1. READMEs for lpcexpresso projects
     1. Details on where lpc project came from

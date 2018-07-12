@@ -62,7 +62,15 @@ int adcReadCmdFnc(int argc, const char* argv[]) {
 
 //TODO
 
-	consolePrint("ADC Channel 6 Reads 0x%04x\n", adcReadChan(ADC_CH6));
+	consolePrint("ADC Channel 6 Reads 0x%04x\n\n", adcReadChan(ADC_CH6));
+
+	consolePrint("ADC Channel 0 Reads 0x%04x\n", adcReadChan(ADC_CH0));
+	consolePrint("ADC Channel 2 Reads 0x%04x\n\n", adcReadChan(ADC_CH2));
+
+	// Joystick X direction (left = 0x338, neutral = 0x20a right = 0x0f0)
+	consolePrint("ADC Channel 1 Reads 0x%04x\n", adcReadChan(ADC_CH1));
+	// Joystick Y direction (up = 0x32a, neutral = 0x207, down = 0xf8)
+	consolePrint("ADC Channel 3 Reads 0x%04x\n\n", adcReadChan(ADC_CH3));
 
 	return 0;
 }
@@ -74,7 +82,8 @@ int adcReadCmdFnc(int argc, const char* argv[]) {
  */
 void initAdc() {
 
-//	NVIC_SetPriority(ADC_IRQn, 2);
+// Try setting all of these manually, maybe something is not getting calculted to give a messed up clock rate or something?
+	NVIC_SetPriority(ADC_IRQn, 0);
 
 	Chip_ADC_Init(adcRegs, &adcSetup);
 
@@ -82,7 +91,7 @@ void initAdc() {
 
 	Chip_ADC_SetSampleRate(adcRegs, &adcSetup, 400000);
 
-//	Chip_ADC_SetStartMode(adcRegs, ADC_NO_START, ADC_TRIGGERMODE_RISING);
+	Chip_ADC_SetStartMode(adcRegs, ADC_NO_START, ADC_TRIGGERMODE_FALLING);
 
 	// Set PIO0_22 to function as AD6
 	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 22, IOCON_FUNC1);
@@ -90,13 +99,60 @@ void initAdc() {
 	// Specify AD pin to be sampled and converted
 	Chip_ADC_EnableChannel(adcRegs, ADC_CH6, ENABLE);
 
-	// Enable AD6 to generate interrupt
-//	Chip_ADC_Int_SetChannelCmd(adcRegs, ADC_CH6, ENABLE);
-	
-//	NVIC_EnableIRQ(ADC_IRQn);
+	// Set PIO0_13 to function as AD2
+	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 13, IOCON_FUNC2);
 
-// TODO: extract code from the following functions and beyond 
-	//?? fnc0x00002cf0( arg0x00002cf0_0, arg0x00002cf0_1, arg0x00002cf0_2, arg0x00002cf0_3, arg0x00002cf0_4, arg0x00002cf0_5, arg0x00002cf0_6, arg0x00002cf0_12, )
+	// Specify AD pin to be sampled and converted
+	Chip_ADC_EnableChannel(adcRegs, ADC_CH2, ENABLE);
+
+	// Set PIO0_11 to function as AD0
+	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 11, IOCON_FUNC2);
+
+	// Specify AD pin to be sampled and converted
+	Chip_ADC_EnableChannel(adcRegs, ADC_CH0, ENABLE);
+
+	// Set PIO0_12 to function as AD1
+	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 12, IOCON_FUNC2);
+
+	// Specify AD pin to be sampled and converted
+	Chip_ADC_EnableChannel(adcRegs, ADC_CH1, ENABLE);
+
+	// Set PIO0_14 to function as AD3
+	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 14, IOCON_FUNC2);
+
+	// Specify AD pin to be sampled and converted
+	Chip_ADC_EnableChannel(adcRegs, ADC_CH3, ENABLE);
+
+	// Enable AD6 to generate interrupt
+	Chip_ADC_Int_SetChannelCmd(adcRegs, ADC_CH6, ENABLE);
+	
+	NVIC_EnableIRQ(ADC_IRQn);
+}
+
+static volatile uint16_t adcData[8] = {
+	0xDEAD,	
+	0xDEAD,	
+	0xDEAD,	
+	0xDEAD,	
+	0xDEAD,	
+	0xDEAD,	
+	0xDEAD,	
+	0xDEAD
+};
+
+void ADC_IRQHandler (void) {
+	static int blah = 0;
+	blah++;
+	if (blah > 8) {
+//TODO: this shouldn't be necessary, right? This is here so IRQ does not starve user thread (i.e. UART I/O) from running...
+		Chip_ADC_SetBurstCmd(adcRegs, DISABLE);
+		blah = 0;
+	}
+	for (int cnt = 0; cnt < 8; cnt++) {
+		uint16_t retval = 0;
+		if (SUCCESS == Chip_ADC_ReadValue(adcRegs, cnt, &retval))
+			adcData[cnt] = retval;
+	}
 }
 
 /**
@@ -105,16 +161,20 @@ void initAdc() {
  * \return Most recently aquired data from specified ADC channel.
  */
 uint16_t adcReadChan(uint8_t chan) {
-	uint16_t retval = 0;
 
-	//TODO: return ?? if ADC channel is not enabled??
+//TODO: return status code instead?
 
-	Chip_ADC_SetStartMode(adcRegs, ADC_START_NOW, ADC_TRIGGERMODE_RISING);
+// Issue is that IRQ happening again and again overrides for loop in main???? Should only have to enable burst mode once, 
+//	rather than reenabling and then having IRQ disable after running a certain number of times....
+// TODO: FIX THIS!!!
+	Chip_ADC_SetBurstCmd(adcRegs, ENABLE);
 
-	while (Chip_ADC_ReadStatus(adcRegs, chan, ADC_DR_DONE_STAT) != SET) {}
+// This GPIO enables joystick to actually generate ADC values
+	Chip_GPIO_WritePortBit(LPC_GPIO, 0, 19, true);
 
-	/* Read ADC value */
-	Chip_ADC_ReadValue(adcRegs, chan, &retval);
+	if (chan < 8)
+		return adcData[chan];
 
-	return retval;
+	return 0xDEAD;
 }
+

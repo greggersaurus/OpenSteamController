@@ -293,8 +293,6 @@ void stage2Init(uint32_t hwVersion){
 	val |= 0x04000000;
 	*reg32 = val;
 
-	initAdc();
-
 	// Select USB PLL out via USB clock source select register
 	reg32 = (volatile uint32_t*)0x400480c0;
 	*reg32 = 0;
@@ -339,7 +337,8 @@ void stage2Init(uint32_t hwVersion){
 	Chip_GPIO_WritePortBit(LPC_GPIO, 0, 7, false);
 	Chip_GPIO_WriteDirBit(LPC_GPIO, 0, 7, true);
 
-	ad6_start_val = adcReadChan(6);
+	initAdc();
+	//ad6_start_val = adcReadChan(6);
 
 	Chip_GPIO_WritePortBit(LPC_GPIO, 1, 1, true);
 	Chip_GPIO_WriteDirBit(LPC_GPIO, 1, 1, true);

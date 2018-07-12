@@ -74,6 +74,9 @@ int main(void){
 	while(1) {
 		i++ ;
 
+// TODO: Should this be moved to all (or maybe only possibly) happen in IRQ context? 
+//	  It seems ADC IRQ can starve this from ever running...
+//	  Is this an ADC IRQ configuration issue?	
 		// Check serial input device for new characters to process
 		handleConsoleInput();
 	}
