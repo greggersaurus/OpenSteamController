@@ -13,6 +13,9 @@ The goal of this subproject is to use the Steam Controller as a development boar
 ## [lpc_chip_11uxx_lib](./lpc_chip_11uxx_lib)
 
 NXP provided library for easy access to LPC11U37 processor peripherals, etc.
+ This was obtained from NXP's website under the 
+ lpcopen_v2_03_lpcxpresso_nxp_lpcxpresso_11u37h package. It also seems Valve is 
+ leveraging this library in the Steam Controller's official firmware. 
 
 ## [Reverse Engineering](../ReverseEngineering/)
 
