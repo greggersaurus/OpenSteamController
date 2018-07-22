@@ -32,10 +32,21 @@ The custom firmware for the LPC11U37 has been developed in the LPCXpresso IDE
 
 ## [How to Manually Load Firmware](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
 
-* From powered down state, hold right trigger while connecting via USB
-    * Mount "CRP DISABLD" will appear
-    * Load new firmware binary with command "cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin"
-    * eject "CRP DISABLD"
+* From powered down state, hold the right trigger while connecting the controller via USB to a PC
+    * This will activate the USB In-System Programming for the LPC11U37F
+* The LPC11U37F will act as a FAT12 file system labeled "CRP DISABLD"
+    * The file system will have a single file called "firmware.bin"
+* The update process may be slightly different depending on your operating system 
+    * On OSX (Tested specifically on 10.12.6):
+        * Mount "CRP DISABLD" will appear
+        * Load new firmware binary with command "cat new_firmware.bin > /Volumes/CRP\ DISABLD/firmware.bin"
+        * eject "CRP DISABLD"
+    * On Linux systems (As reported by @rigidsh):
+        * If you will use  "cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin" on ubuntu(or similar linux) firmware will be corrupted and controller will not start.
+        * To prevent it, use command: `dd conv=nocreat,notrunc oflag=direct bs=512 if=<path to your firmware> of=<path to sc flash>/firmware.bin`
+    * On Windows (Untested. See remark in Section 3 of AN11305v1 from NXP for source):
+        * "Any standard program or tool can be used to write new firmware to the LPC11U37." 
+        * "In a Windows Explorer window, a user can delete firmware.bin and drag over a new file to program the flash."
 
 # Building
 
