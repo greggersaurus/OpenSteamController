@@ -123,9 +123,6 @@ static uint8_t pio0_18_start_val = 0;
  *	(as there is no way to communicate failure if this setup fails).
  */
 void stage2Init(uint32_t hwVersion){
-	volatile uint32_t* reg32 = (volatile uint32_t)0;
-	uint32_t val = 0;
-
 	// Check board version read from EEPROM
 	if (hwVersion < 8){
 		// Hard lock if version is not what we have tested to. HW version
@@ -135,103 +132,73 @@ void stage2Init(uint32_t hwVersion){
 	}
 
 	// Enables clock for GPIO port registers via system clock control register
-	reg32 = (volatile uint32_t*)0x40048080;
-	val = *reg32;
-	val |= 0x40;
-	*reg32 = val;
+	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_GPIO);
 
 	// Check state of PIO0_3 (USB voltage detected) 
-	uint8_t usb_volt_detect = *((uint8_t*)0x50000003);
+	uint8_t usb_volt_detect = Chip_GPIO_ReadPortBit(LPC_GPIO, 0 , 3);
 
 	pio0_3_start_val = usb_volt_detect;
 
 	if (!usb_volt_detect) {
 		// Check for brown out detect
-		reg32 = (volatile uint32_t*)0x40048030;
-		if (*reg32 & 0x8) {
+		if (Chip_SYSCTL_GetSystemRSTStatus() & SYSCTL_RST_BOD) {
 			// Clear BOD
-			*reg32 = 0x8;
+			Chip_SYSCTL_ClearSystemRSTStatus(SYSCTL_RST_BOD);
 			// Set PIO1_10 (~Battery Power Enable?) output bit
-			*((uint8_t*)0x5000002a) = 1;
+			Chip_GPIO_WritePortBit(LPC_GPIO, 1, 10, true);
 		} else {
 			// Set PIO1_10 (~Battery Power Enable?) output bit
-			*((uint8_t*)0x5000002a) = 0;
+			Chip_GPIO_WritePortBit(LPC_GPIO, 1, 10, false);
 		}
 	} else {
 		// Set PIO1_10 to output bit
-		*((uint8_t*)0x5000002a) = 0;
+		Chip_GPIO_WritePortBit(LPC_GPIO, 1, 10, false);
 	}
 
 	// Set PIO1_10 (~Battery Power Enable?) to output via GPIO direction port 1 register
-	reg32 = (volatile uint32_t*)0x50002004;
-	val = *reg32;
-	val |= 0x00000400;
-	*reg32 = val;
+	Chip_GPIO_SetPinDIROutput(LPC_GPIO, 1, 10);
 
 	// Set GPREG1 to 0
-	reg32 = (volatile uint32_t*)0x40038008;
-	*reg32 = 0;
+	Chip_PMU_WriteGPREG(LPC_PMU, 1, 0);
 
 	// Enable pull down resistor on PIO0_3 register
-	*(uint32_t*)0x4004400c = 0x00000008;
+	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 3, IOCON_MODE_PULLDOWN);
 
 	// Set PIO0_6 to function as ~USB_CONNECT
-	*(uint32_t*)0x40044018 = 0x00000001;
+	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 6, IOCON_FUNC1);
 
 	// Set PIO1_17 to function as RXD - Receiver input for USART
-	*(uint32_t*)0x400440a4 = 0x00000002;
+	Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 17, IOCON_FUNC2);
 
 	// Set PIO1_18 to function as TXD - Transmitter output for USART
-	*(uint32_t*)0x400440a8 = 0x00000002;
+	Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 18, IOCON_FUNC2);
 
 	// Check state of PIO0_3 (USB voltage detected) 
-	usb_volt_detect = *((uint8_t*)0x50000003);
+	usb_volt_detect = Chip_GPIO_ReadPortBit(LPC_GPIO, 0 , 3);
 
 	// Set PIO1_10 (~Battery Power Enable?) output bit
 	if (!usb_volt_detect){
 		// Must keep using battery power if there is no USB power
-		*((uint8_t*)0x5000002a) = 0;
+		Chip_GPIO_WritePortBit(LPC_GPIO, 1, 10, false);
 	} else {
 		// Disable battery power if USB voltage is present
-		*((uint8_t*)0x5000002a) = 1;
+		Chip_GPIO_WritePortBit(LPC_GPIO, 1, 10, true);
 	}
 
 	// Set PIO1_10 (~Battery Power Enable?) to output via GPIO direction port 1 register
-	reg32 = (volatile uint32_t*)0x50002004;
-	val = *reg32;
-	val |= 0x00000400;
-	*reg32 = val;
+	Chip_GPIO_SetPinDIROutput(LPC_GPIO, 1, 10);
 
 	// Enables SRAM1 block at address 0x2000 0000
-	reg32 = (volatile uint32_t*)0x40048080;
-	val = *reg32;
-	val |= 0x04000000;
-	*reg32 = val;
+	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_RAM1);
 
 	// Select USB PLL out via USB clock source select register
-	reg32 = (volatile uint32_t*)0x400480c0;
-	*reg32 = 0;
-	// Clear USB clock source update enable register
-	reg32 = (volatile uint32_t*)0x400480c4;
-	*reg32 = 0;
-	// Update clock source via USB clock source update enable register
-	reg32 = (volatile uint32_t*)0x400480c4;
-	*reg32 = 1;
-	// Set divide by 1 for USB clock divider register
-	reg32 = (volatile uint32_t*)0x400480c8;
-	*reg32 = 1;
+	Chip_Clock_SetUSBClockSource(SYSCTL_USBCLKSRC_PLLOUT, 1);
 
 	// Enables clock to the USB register interface via System clock control register
-	reg32 = (volatile uint32_t*)0x40048080;
-	val = *reg32;
-	val |= 0x00004000;
-	*reg32 = val;
+	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_USB);
 
 	// Enables USB SRAM block at address 0x20004000 via System clock control register 
-	reg32 = (volatile uint32_t*)0x40048080;
-	val = *reg32;
-	val |= 0x08000000;
-	*reg32 = val;
+	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_USBRAM);
 
 	// Drive some GPIOs according to simulation results (not sure why exactly...)
 	Chip_GPIO_WritePortBit(LPC_GPIO, 1, 7, true);
