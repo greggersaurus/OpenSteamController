@@ -67,9 +67,9 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            41 | PIO1_29               | SCK0             | Out           | Serial clock for SSP0. Connected to SCLK on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            42 | TDI/PIO0_11           | AD0              | In            | TODO: what is this measuring...? (Note: Functions as TDI for short time during initialization) |
 |            43 | PIO1_11               |                  |               | S9 - Y Button |
-|            44 | TMS/PIO0_12           |                  |               | |
+|            44 | TMS/PIO0_12           | AD1              | In            | Tracks joystick X direction when PIO0_19 is driven high (left = 0x338, neutral = 0x20a right = 0x0f0)|
 |            45 | TDO/PIO0_13           | AD2              | In            | TODO: what is this measuring...? (Note: Functions as TDO for short time during initialization) |
-|            46 | nTRST/PIO0_14         |                  |               | |
+|            46 | nTRST/PIO0_14         | AD3              | In            | Tracks joystick Y direction when PIO0_19 is driven high (left = 0x338, neutral = 0x20a right = 0x0f0)|
 |            47 | PIO1_13               |                  |               | S6 - RT (Right trigger digital) |
 |            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            49 | PIO1_14               |                  |               | S10 - RB (Right bumper) |
@@ -85,7 +85,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            59 | PIO1_12               | PIO1_12          | In            | Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. |
 |            60 | PIO0_17               |                  |               | S1 - A Button |
 |            61 | PIO0_18               | PIO0_18          |               | If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB). | 
-|            62 | PIO0_19               | PIO0_19          | Out           | Set as output during init and driven low. (trace leads to... TODO)|
+|            62 | PIO0_19               | PIO0_19          | Out           | Active high enable for analog joystick (i.e. causes AD1 reads to track X direction and AD3 to track Y direction). |
 |            63 | PIO1_16               | PIO1_16          |               | Input with pull-down resistor enabled. Connected to Data Ready on Left Trackpad/Haptic. |
 |            64 | PIO1_6                | PIO1_6           |               | Chip Select/SS for Left Trackpad/Haptic (active low) |
 

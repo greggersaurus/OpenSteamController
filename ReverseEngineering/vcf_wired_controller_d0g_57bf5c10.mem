@@ -54,8 +54,19 @@
 (uint32_t*) 0x10000018 - ADC ISR sample counter. (For DR6 case) counts up to 8
 			 before 0x10000010 flag is set.
 
- (uint8_t*) 0x1000001c - GPIO Bank/Group for TODO GPIO (PIO0_19)
- (uint8_t*) 0x1000001d - GPIO Number for TODO GPIO (PIO0_19)
+ (uint8_t*) 0x1000001c - GPIO Bank/Group for Joystick Power GPIO (PIO0_19)
+ (uint8_t*) 0x1000001d - GPIO Number for Joystick Power GPIO (PIO0_19)
+ (uint8_t*) 0x1000001e - Related to Joystick?
+
+ (uint8_t*) 0x10000023 - AD channel number for joystick X position
+ (uint8_t*) 0x10000024 - AD channel number for joystick Y position
+
+(uint16_t*) 0x10000036 - Related to Joystick X position?
+(uint16_t*) 0x10000038 - Related to Joystick Y position?
+(uint16_t*) 0x1000003a - Related to Joystick X position?
+(uint16_t*) 0x1000003c - Related to Joystick X position?
+(uint16_t*) 0x1000003e - Related to Joystick X position?
+(uint16_t*) 0x10000040 - Related to Joystick Y position?
 
  (uint8_t*) 0x10000044 - CT16B1 related?
  (uint8_t*) 0x10000045 - Defines which MAT to enable PWM mode for. (i.e. n in
@@ -242,11 +253,16 @@
 (uint32_t*) 0x10000818 - Related to CT16B0. Callback function? First entry in
 			 array of callback functions?
 
+(uint32_t*) 0x10000858 - Related to Joystick?
+(uint32_t*) 0x1000085c - Related to Joystick?
+
 (uint32_t*) 0x10000868 - Related to ADC Channel 2?
 (uint32_t*) 0x1000086c - Related to ADC Channel 2?
 
 (uint32_t*) 0x100008a8 - Related to ADC Channel 2?
 (uint32_t*) 0x100008ac - Related to ADC Channel 2?
+(uint32_t*) 0x100008b0 - Related to Joystick?
+(uint32_t*) 0x100008b4 - Related to Joystick?
 
 (uint16_t*) 0x100009b4 - EEPROM Read Data 0x000 - Magic Number to indicate 
 			 EEPROM has valid data
@@ -299,10 +315,8 @@
  (uint8_t*) 0x100009e5 - EEPROM Read Data 0x031 - Uknown purpose
  (uint8_t*) 0x100009e6 - EEPROM Read Data 0x032 - Uknown purpose
  (uint8_t*) 0x100009e7 - EEPROM Read Data 0x033 - Uknown purpose
- (uint8_t*) 0x100009e8 - EEPROM Read Data 0x034 - Uknown purpose
- (uint8_t*) 0x100009e9 - EEPROM Read Data 0x035 - Uknown purpose
- (uint8_t*) 0x100009ea - EEPROM Read Data 0x036 - Uknown purpose
- (uint8_t*) 0x100009eb - EEPROM Read Data 0x037 - Uknown purpose
+(uint16_t*) 0x100009e8 - EEPROM Read Data 0x034 - Related to Joystick?
+(uint16_t*) 0x100009ea - EEPROM Read Data 0x036 - Related to Joystick?
  (uint8_t*) 0x100009ec - EEPROM Read Data 0x038 - Uknown purpose
  (uint8_t*) 0x100009ed - EEPROM Read Data 0x039 - Uknown purpose
  (uint8_t*) 0x100009ee - EEPROM Read Data 0x03a - Uknown purpose
@@ -396,6 +410,8 @@
 
 (uint32_t*) 0x10000dd8 - First in array of function pointers (related to 
 			 CT16B1?)
+(uint32_t*) 0x10000ddc - Second in array of function pointers (related to 
+			 Joystick X/Y and ADC?)
 
 (uint16_t*) 0x10000f80 - ADC Channel 0 accumulator?
 (uint16_t*) 0x10000f82 - ADC Channel 1 accumulator?
@@ -434,6 +450,91 @@
 			 (potentially) P0_18. Related to AD6.
 (uint32_t*) 0x10000fcc - Possible function pointer. Related to AD7?
 
+   (float*) 0x10000fd0 - Related to Joystick X (= 0.15). Written by
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+   (float*) 0x10000fd4 - Related to Joystick X (= 611.0). Written by
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+   (float*) 0x10000fd8 - Related to Joystick X (= 511.0). Written by
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+   (float*) 0x10000fdc - Related to Joystick X (= 711.0). Written by 
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+ (uint8_t*) 0x10000fe0 - Related to Joystick X. Written by
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+
+(uint16_t*) 0x10000fe2 - Related to Joystick X (= 3). Written by
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+   (float*) 0x10000fe4 - Related to Joystick X (= 511.0). Written by
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+   (float*) 0x10000fe8 - Related to Joystick X (= 0.0). Written by
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+   (float*) 0x10000fec - Related to Joystick X (= 711.0). Written by
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+   (float*) 0x10000ff0 - Related to Joystick X (= 0.0). Written by
+			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+   (float*) 0x10000ff4 - Related to Joystick X (= 0.15). Written by
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+   (float*) 0x10000ff8 - Related to Joystick X (= 411.0). Written by
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+   (float*) 0x10000ffc - Related to Joystick X (= 511.0). Written by
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+   (float*) 0x10001000 - Related to Joystick X (= 311.0). Written by 
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+ (uint8_t*) 0x10001004 - Related to Joystick X (= 1). Written by
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+
+(uint16_t*) 0x10001006 - Related to Joystick X (= 3). Written by
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+   (float*) 0x10001008 - Related to Joystick X (= 511.0). Written by
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+   (float*) 0x1000100c - Related to Joystick X (= 0.0). Written by
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+   (float*) 0x10001010 - Related to Joystick X (= 311.0). Written by
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+   (float*) 0x10001014 - Related to Joystick X (= 0.0). Written by
+			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+   (float*) 0x10001018 - Related to Joystick Y (= 0.15). Written by
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+   (float*) 0x1000101c - Related to Joystick Y (= 601.0). Written by
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+   (float*) 0x10001020 - Related to Joystick Y (= 501.0). Written by
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+   (float*) 0x10001024 - Related to Joystick Y (= 701.0). Written by 
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+ (uint8_t*) 0x10001028 - Related to Joystick Y (= 0). Written by
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+
+(uint16_t*) 0x1000102a - Related to Joystick Y (= 3). Written by
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+   (float*) 0x1000102c - Related to Joystick Y (= 501.0). Written by
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+   (float*) 0x10001030 - Related to Joystick Y (= 0.0). Written by
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+   (float*) 0x10001034 - Related to Joystick Y (= 701.0). Written by
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+   (float*) 0x10001038 - Related to Joystick Y (= 0.0). Written by
+			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+   (float*) 0x1000103c - Related to Joystick Y (= 0.15). Written by
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+   (float*) 0x10001040 - Related to Joystick Y (= 401.0). Written by
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+   (float*) 0x10001044 - Related to Joystick Y (= 501.0). Written by
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+   (float*) 0x10001048 - Related to Joystick Y (= 301.0). Written by 
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+ (uint8_t*) 0x1000104c - Related to Joystick Y (= 1). Written by
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+
+(uint16_t*) 0x1000104e - Related to Joystick Y (= 3). Written by
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+   (float*) 0x10001050 - Related to Joystick Y (= 501.0). Written by
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+   (float*) 0x10001054 - Related to Joystick Y (= 0.0). Written by
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+   (float*) 0x10001058 - Related to Joystick Y (= 301.0). Written by
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+   (float*) 0x1000105c - Related to Joystick Y (= 0.0). Written by
+			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+
    (float*) 0x10001064 - Related to AD0/AD2 TODO functionality. Initialized to
 			 value 32767.0
 
@@ -461,4 +562,8 @@
  (uint8_t*) 0x20000002 - Number of active haptics or haptics to configure.
 			 Related to SSP0
 
+ (uint8_t*) 0x20000075 - Counter?? Related to Joystick X/Y position?
+
 (uint16_t*) 0x200002a2 - Related to CT16B1 MR0 calculation?
+
+(uint32_t*) 0x200002c0 - Related to Joystick X/Y position? Callback?

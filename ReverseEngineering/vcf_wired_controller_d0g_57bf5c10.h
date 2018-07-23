@@ -525,8 +525,16 @@ void fnc0x00006058(arg0x00006058_0);
  */
 void fnc0x00007c90();
 
-// TODO: Lots of code in here... Overarching system/perpipherals initiliazation?
-?? fnc0x00005d90( arg0x00005d90_0, arg0x00005d90_1, arg0x00005d90_2, arg0x00005d90_3, arg0x00005d90_4, arg0x00005d90_5, arg0x00005d90_6, arg0x00005d90_12, )
+/**
+ * Peripheral initialization (i.e. BOD, peripheral control related GPIOs, 
+ *	Steam Button LED Control, CT16B0, Haptics (via SPI), 
+ *	MPU-6500 gyo/accelerometer, ADC channel for power related stuff, 
+ *	ADC channels for analog triggers (maybe?), ADC channels for analog 
+ *	Joystick
+ *
+ * \return None.
+ */
+void fnc0x00005d90();
 
 /**
  * Configure Brown Out Detection and Reset. That is specify voltage levels for
@@ -539,7 +547,7 @@ void fnc0x0000521c();
 /**
  * Groups together a whole bunch of GPIO and memory initialization:
  *	PIO1_7
- *	PIO0_19
+ *	PIO0_19 (Analog Joystick Enable)
  *	PIO0_2 (PINT1)
  *	PIO1_28
  *	PIO0_7
@@ -583,7 +591,7 @@ void fnc0x000071e8(arg0x000071e8_0, arg0x000071e8_1);
 void fnc0x00005508(arg0x00005508_0, arg0x00005508_1, arg0x00005508_2);
 
 /**
- * Setup TODO purpose GPIO (PIO0_19)
+ * Setup Joystick Power GPIO (PIO0_19)
  *
  * \param arg0x000064c4_0 GPIO Bank/Group
  * \param arg0x000064c4_1 GPIO Number/Offset
@@ -1167,3 +1175,58 @@ void fnc0x00003b48(arg0x00003b48_0, arg0x00003b48_1);
  * \return None.
  */
 void fnc0x00002f4c(arg0x00002f4c_0);
+
+/**
+ * Enable two ADC channels for Joystick X/Y position measurement funcitonality.
+ * 
+ * \param arg0x00006384_0 Relates to address that some value (callback?) is
+ *	written to.
+ * \param arg0x00006384_1 Relates to address that some value (callback?) is
+ *	written to.
+ *
+ * \return None.
+ */
+void fnc0x00006384(arg0x00006384_0, arg0x00006384_1);
+
+/**
+ * Related to Joystick X/Y position? Calibrating L/R/U/D extreme values??
+ *
+ * \param arg0x0000963c_0 Base address of where results are to be stored.
+ * \param arg0x0000963c_1 Some integer value... 
+ * \param arg0x0000963c_2 Another integer value (defines extreme maybe?)
+ * \param arg0x0000963c_3 Value set in results registers defined by 
+ *	arg0x0000963c_0.
+ *
+ * \return 0 or 1 (maybe related to setting upper or lower limit maybe?)
+ */
+int fnc0x0000963c(arg0x0000963c_0, arg0x0000963c_1, arg0x0000963c_2, arg0x0000963c_3);
+
+/**
+ * Add args and convert result to floating point.
+ *
+ * \param arg0x00002662_0 Summation operand 1 (in standard binary).
+ * \param arg0x00002662_1 Summation operand 2 (in standard binary).
+ * 
+ * \return Sum in floating point representation. 
+ */
+float fnc0x00002662(arg0x00002662_0, arg0x00002662_1);
+
+/**
+ * Enable/disable analog joystick power.
+ * 
+ * \param arg0x00006504_0 Logic high enable for analog joystick (i.e. causes 
+ * 	AD1 reads to track X direction and AD3 to track Y direction).
+ *
+ * \return None.
+ */
+void fnc0x00006504(arg0x00006504_0);
+
+/**
+ * Set some variables (callback?) related to Joystick X/Y measurements?
+ *
+ * \return None.
+ */
+void fnc0x00004e84(arg0x00004e84_0);
+
+// Initialize GPIOs for buttons?
+?? fnc0x00007934( arg0x00007934_0, arg0x00007934_1, arg0x00007934_2, arg0x00007934_3, arg0x00007934_4, arg0x00007934_5, arg0x00007934_6, arg0x00007934_12, )

@@ -31,11 +31,6 @@ This section is a running list of priorities to focus on in hopes of reaching
        1. Majority of functional behavior from vcf_wired_controller_d0g_57bf5c10.bin should remain unchanged (even if underlying assembly changes). 
        1. Once functionality is fully understood, applying that understanding to newer firmware may be quicker than "starting over" with new firmware?
 1. Simulation to C Conversion
-    1. Utilize Dev Board to figure out what other AD channels are for...
-        1. PIO0_13 = AD2
-        1. PIO0_11 = AD0
-        1. PIO0_12 = AD1
-        1. PIO0_14 = AD3
     1. Clean
         1. Remove memory section from .c
     1. Pay special attention to GPIOs as they are initialized and memory associated with them
@@ -92,10 +87,6 @@ This section is a running list of priorities to focus on in hopes of reaching
     1. Add Chart to label how hardware peripherals are used?
         1. CT16B1 = driving Steam Controller LED
         1. CT16B0 = used as timer for a delay during init. (That it?)
-        1. ADC 
-            1. AD0 = Related to AD2
-            1. AD2 = Related to AD0
-            1. AD6 = Measuring some voltage related to battery power (i.e. does system have enough voltage to run off battery... I think)
         1. SSP0 = CS ?? = Left Haptics, CS ?? = Right Haptics 
 1. Decompose EEPROM dumps
     1. Captured from two different controllers to isolate some differences
