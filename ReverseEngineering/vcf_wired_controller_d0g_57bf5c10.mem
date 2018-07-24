@@ -264,6 +264,88 @@
 (uint32_t*) 0x100008b0 - Related to Joystick?
 (uint32_t*) 0x100008b4 - Related to Joystick?
 
+ (uint8_t*) 0x10000924 - Flag? related to S6 RT Button
+ (uint8_t*) 0x10000925 - Flag? related to S3 LT Button
+ (uint8_t*) 0x10000926 - Flag? related to S9 Y Button
+ (uint8_t*) 0x10000927 - Flag? related to S4 B Button
+ (uint8_t*) 0x10000928 - Flag? related to S7 X Button
+ (uint8_t*) 0x10000929 - Flag? related to S1 A Button
+ (uint8_t*) 0x1000092a - Flag? related to S10 Right Bumper Button
+ (uint8_t*) 0x1000092b - Flag? related to S8 Left Bumper Button
+ (uint8_t*) 0x1000092c - Flag? related to S2 Left Trackpad Click Button
+ (uint8_t*) 0x1000092d - Flag? related to S19 Front Right Arrow Button
+ (uint8_t*) 0x1000092e - Flag? related to S? Steam Button
+ (uint8_t*) 0x1000092f - Flag? related to S17 Front Left Arrow Button
+ (uint8_t*) 0x10000930 - Flag? related to ?? Button
+ (uint8_t*) 0x10000931 - Flag? related to ?? Button
+ (uint8_t*) 0x10000932 - Flag? related to ?? Button
+ (uint8_t*) 0x10000933 - Flag? related to ?? Button
+ (uint8_t*) 0x10000934 - Flag? related to ?? Button
+ (uint8_t*) 0x10000935 - Flag? related to ?? Button
+ (uint8_t*) 0x10000936 - Flag? related to ?? Button
+ (uint8_t*) 0x10000937 - Flag? related to ?? Button
+ (uint8_t*) 0x10000938 - Flag? related to S14 Left Inner Grip Button
+ (uint8_t*) 0x10000939 - Flag? related to S16 Right Inner Grip Button
+ (uint8_t*) 0x1000093a - Flag? related to ?? Button
+ (uint8_t*) 0x1000093b - Flag? related to ?? Button
+ (uint8_t*) 0x1000093c - Flag? related to ?? Button
+ (uint8_t*) 0x1000093d - Flag? related to ?? Button
+ (uint8_t*) 0x1000093e - Flag? related to ?? Button
+ (uint8_t*) 0x1000093f - Flag? related to ?? Button
+ (uint8_t*) 0x10000940 - Flag? related to ?? Button
+ (uint8_t*) 0x10000941 - Flag? related to ?? Button
+ (uint8_t*) 0x10000942 - Flag? related to ?? Button
+ (uint8_t*) 0x10000943 - Flag? related to ?? Button
+ (uint8_t*) 0x10000944 - Flag? related to ?? Button
+ (uint8_t*) 0x10000945 - Flag? related to ?? Button
+ (uint8_t*) 0x10000946 - Flag? related to ?? Button
+ (uint8_t*) 0x10000947 - Flag? related to ?? Button
+ (uint8_t*) 0x10000948 - Flag? related to ?? Button
+ (uint8_t*) 0x10000949 - Flag? related to ?? Button
+ (uint8_t*) 0x1000094a - Flag? related to ?? Button
+ (uint8_t*) 0x1000094b - Flag? related to ?? Button
+ (uint8_t*) 0x1000094c - Flag? related to ?? Button
+ (uint8_t*) 0x1000094d - Flag? related to ?? Button
+ (uint8_t*) 0x1000094e - Flag? related to S? Analog Joystick Click Button
+ (uint8_t*) 0x1000094f - Flag? related to S5 Right Trackpad Click Button
+ (uint8_t*) 0x10000950 - Flag? related to ?? Button
+ (uint8_t*) 0x10000951 - Flag? related to ?? Button
+ (uint8_t*) 0x10000952 - Flag? related to ?? Button
+ (uint8_t*) 0x10000953 - S6 Right Trigger Button GPIO group/base
+ (uint8_t*) 0x10000954 - S6 Right Trigger Button GPIO num/offset
+ (uint8_t*) 0x10000955 - S3 Left Trigger Button GPIO group/base
+ (uint8_t*) 0x10000956 - S3 Left Trigger Button GPIO num/offset
+ (uint8_t*) 0x10000957 - S9 Y Button GPIO group/base
+ (uint8_t*) 0x10000958 - S9 Y Button GPIO num/offset
+ (uint8_t*) 0x10000959 - S4 B Button GPIO group/base
+ (uint8_t*) 0x1000095a - S4 B Button GPIO num/offset
+ (uint8_t*) 0x1000095b - S7 X Button GPIO group/base
+ (uint8_t*) 0x1000095c - S7 X Button GPIO num/offset
+ (uint8_t*) 0x1000095d - S1 A Button GPIO group/base
+ (uint8_t*) 0x1000095e - S1 A Button GPIO num/offset
+ (uint8_t*) 0x1000095f - S10 Right Bumper Button GPIO group/base
+ (uint8_t*) 0x10000960 - S10 Right Bumper Button GPIO num/offset
+ (uint8_t*) 0x10000961 - S8 Left Bumper Button GPIO group/base
+ (uint8_t*) 0x10000962 - S8 Left Bumper Button GPIO num/offset
+ (uint8_t*) 0x10000963 - S2 Left Trackpad Click Button GPIO group/base
+ (uint8_t*) 0x10000964 - S2 Left Trackpad Click Button GPIO num/offset
+ (uint8_t*) 0x10000965 - S19 Front Right Arrow Button GPIO group/base
+ (uint8_t*) 0x10000966 - S19 Front Right Arrow Button Button GPIO num/offset
+ (uint8_t*) 0x10000967 - S? Steam Button GPIO group/base
+ (uint8_t*) 0x10000968 - S? Steam Button Button GPIO num/offset
+ (uint8_t*) 0x10000969 - S17 Front Left Arrow Button GPIO group/base
+ (uint8_t*) 0x1000096a - S17 Front Left Arrow Button Button GPIO num/offset
+
+ (uint8_t*) 0x1000097b - S14 Left Inner Grip Button GPIO group/base
+ (uint8_t*) 0x1000097c - S14 Left Inner Grip Button Button GPIO num/offset
+ (uint8_t*) 0x1000097d - S16 Right Inner Grip Button GPIO group/base
+ (uint8_t*) 0x1000097e - S16 Right Inner Grip Button Button GPIO num/offset
+
+ (uint8_t*) 0x100009a7 - S? Analog Joystick Click Button GPIO group/base
+ (uint8_t*) 0x100009a8 - S? Analog Joystick Click Button Button GPIO num/offset
+ (uint8_t*) 0x100009a9 - S5 Right Trackpad Click Button GPIO group/base
+ (uint8_t*) 0x100009aa - S5 Right Trackpad Click Button Button GPIO num/offset
+
 (uint16_t*) 0x100009b4 - EEPROM Read Data 0x000 - Magic Number to indicate 
 			 EEPROM has valid data
 (uint16_t*) 0x100009b6 - EEPROM Read Data 0x002 - Continuation of Magic Number?
@@ -412,6 +494,8 @@
 			 CT16B1?)
 (uint32_t*) 0x10000ddc - Second in array of function pointers (related to 
 			 Joystick X/Y and ADC?)
+(uint32_t*) 0x10000de0 - Third in array of function pointers (related to 
+			 Controller Buttons?)
 
 (uint16_t*) 0x10000f80 - ADC Channel 0 accumulator?
 (uint16_t*) 0x10000f82 - ADC Channel 1 accumulator?

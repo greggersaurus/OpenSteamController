@@ -1228,5 +1228,9 @@ void fnc0x00006504(arg0x00006504_0);
  */
 void fnc0x00004e84(arg0x00004e84_0);
 
-// Initialize GPIOs for buttons?
-?? fnc0x00007934( arg0x00007934_0, arg0x00007934_1, arg0x00007934_2, arg0x00007934_3, arg0x00007934_4, arg0x00007934_5, arg0x00007934_6, arg0x00007934_12, )
+/**
+ * Initialize GPIOs for monitoring button states.
+ * 
+ * \return None.
+ */
+void fnc0x00007934();
