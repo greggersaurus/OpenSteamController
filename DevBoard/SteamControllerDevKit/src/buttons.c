@@ -93,110 +93,110 @@ void initButtons(void) {
  * \return true if Steam Button is being pressed. False otherwise.
  */
 int getSteamButtonState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_STEAM_BTN);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_STEAM_BTN);
 }
 
 /**
  * \return true if Front Left Arrow Button is being pressed. False otherwise.
  */
 int getFrontLeftButtonState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_FRONT_L);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_FRONT_L);
 }
 
 /**
  * \return true if Front Right Arrow Button is being pressed. False otherwise.
  */
 int getFrontRightButtonState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_FRONT_R);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_FRONT_R);
 }
 
 /**
  * \return true if Analog Joystick Click Button is being pressed. False otherwise.
  */
 int getJoyClickState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_ANALOG_JOY_CLICK);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_ANALOG_JOY_CLICK);
 }
 
 /**
  * \return true if X Button is being pressed. False otherwise.
  */
 int getXButtonState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_X_BTN);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_X_BTN);
 }
 
 /**
  * \return true if Y Button is being pressed. False otherwise.
  */
 int getYButtonState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_Y_BTN);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_Y_BTN);
 }
 
 /**
  * \return true if B Button is being pressed. False otherwise.
  */
 int getBButtonState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_B_BTN);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_B_BTN);
 }
 
 /**
  * \return true if A Button is being pressed. False otherwise.
  */
 int getAButtonState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_A_BTN);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_A_BTN);
 }
 
 /**
  * \return true if Inner Right Grip Button is being pressed. False otherwise.
  */
 int getRightGripState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_GRIP);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_GRIP);
 }
 
 /**
  * \return true if Inner Left Grip Button is being pressed. False otherwise.
  */
 int getLeftGripState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_L_GRIP);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_L_GRIP);
 }
 
 /**
  * \return true if Right Trackpad Click Button is being pressed. False otherwise.
  */
 int getRightTrackpadClickState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD);
 }
 
 /**
  * \return true if Left Trackpad Click Button is being pressed. False otherwise.
  */
 int getLeftTrackpadClickState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_L_TRACKPAD);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_L_TRACKPAD);
 }
 
 /**
  * \return true if Right Digital Trigger Button is being pressed. False otherwise.
  */
 int getRightTriggerState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRIGGER);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRIGGER);
 }
 
 /**
  * \return true if Left Digital Trigger Button is being pressed. False otherwise.
  */
 int getLeftTriggerState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_L_TRIGGER);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_L_TRIGGER);
 }
 
 /**
  * \return true if Right Bumper Button is being pressed. False otherwise.
  */
 int getRightBumperState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_BUMPER);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_BUMPER);
 }
 
 /**
  * \return true if Left Bumper Button is being pressed. False otherwise.
  */
 int getLeftBumperState(void) {
-	return Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_L_BUMPER);
+	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_L_BUMPER);
 }

@@ -81,7 +81,6 @@ This is a running list of items I would like to prioritize and not lose track
     1. [Sample Interface Code](https://github.com/cirque-corp/Cirque_Pinnacle_1CA027) to use as starting point?
 1. Command for communication with gyro sensor
 1. Command for monitoring controller state
-    1. Button states
     1. Gyro info?
     1. Haptic sensor info (i.e. x,y touch location)?
 1. Command for communications with radio chip?
