@@ -34,6 +34,7 @@
 #include "led_ctrl.h"
 #include "init.h"
 #include "adc_read.h"
+#include "monitor.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -51,6 +52,7 @@ static Cmd cmds[] = {
 	{.cmdName = "led", .cmdFnc = ledCmdFnc},
 	{.cmdName = "initStats", .cmdFnc = initStatsCmdFnc},
 	{.cmdName = "adcRead", .cmdFnc = adcReadCmdFnc},
+	{.cmdName = "monitor", .cmdFnc = monitorCmdFnc},
 //TODO: organize into alphabetical order?
 //TODO: help fnc?
 };

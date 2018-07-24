@@ -42,6 +42,7 @@
 #include "console.h"
 #include "led_ctrl.h"
 #include "adc_read.h"
+#include "buttons.h"
 
 /* System oscillator rate and clock rate on the CLKIN pin */                    
 //TODO: is this correct?
@@ -231,6 +232,8 @@ void stage2Init(uint32_t hwVersion){
 
 	pio1_12_start_val = Chip_GPIO_GetPinState(LPC_GPIO, 1, 12);
 	pio0_18_start_val = Chip_GPIO_GetPinState(LPC_GPIO, 0, 18);
+
+	initButtons();
 }
 
 

@@ -63,7 +63,7 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
-1. Check clean build works
+1. Check clean build works (i.e. from fresh clone)
 1. (finish) ADC command
     1. Have it use interrupt like Valve's firmware does
         1. Make sure IRQ is not starving anything running in normal execution context (i.e. not IRQ)
