@@ -55,8 +55,8 @@ static Mouse_Ctrl_T g_mouse;
  * Public types/enumerations/variables
  ****************************************************************************/
 
-extern const uint8_t Mouse_ReportDescriptor[];
-extern const uint16_t Mouse_ReportDescSize;
+extern const uint8_t ProController_ReportDescriptor[];
+extern const uint16_t ProController_ReportDescSize;
 
 /*****************************************************************************
  * Private functions
@@ -189,9 +189,9 @@ ErrorCode_t Mouse_Init(USBD_HANDLE_T hUsb,
 	hid_param.HID_SetReport = Mouse_SetReport;
 	hid_param.HID_EpIn_Hdlr  = Mouse_EpIN_Hdlr;
 	/* Init reports_data */
-	reports_data[0].len = Mouse_ReportDescSize;
+	reports_data[0].len = ProController_ReportDescSize;
 	reports_data[0].idle_time = 0;
-	reports_data[0].desc = (uint8_t *) &Mouse_ReportDescriptor[0];
+	reports_data[0].desc = (uint8_t *) &ProController_ReportDescriptor[0];
 	hid_param.report_data  = reports_data;
 
 	ret = USBD_API->hid->init(hUsb, &hid_param);
