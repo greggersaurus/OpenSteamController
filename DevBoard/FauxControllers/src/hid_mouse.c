@@ -114,8 +114,9 @@ static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 	switch (pSetup->wValue.WB.H) {
 	case HID_REPORT_INPUT:
 		Mouse_UpdateReport();
-		*pBuffer = &g_mouse.report[0];
-		*plength = MOUSE_REPORT_SIZE;
+		//*pBuffer = &g_mouse.report[0];
+		*plength = 0;//MOUSE_REPORT_SIZE;
+		return -32;
 		break;
 
 	case HID_REPORT_OUTPUT:				/* Not Supported */
@@ -156,6 +157,49 @@ static ErrorCode_t Mouse_EpIN_Hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t even
 	return LPC_OK;
 }
 
+static ErrorCode_t Mouse_EpOUT_Hdlr(USBD_HANDLE_T hUsb, void* data, uint32_t event)
+{
+	uint8_t cnt = 0;
+	uint8_t rd_data[64];
+
+	switch (event) {
+		case USB_EVT_OUT:
+			/* USB_EVT_IN occurs when HW completes sending IN packet. So clear the
+			    busy flag for main loop to queue next packet.
+			 */
+			g_mouse.tx_busy = 0;
+
+
+
+			memset(rd_data, 0, 64);
+
+			cnt = USBD_API->hw->ReadEP(hUsb, HID_EP_OUT, rd_data);
+
+			if (cnt) {
+				if (rd_data[0] == 0x80) {
+					if (cnt > 1 && rd_data[1] == 0x01) {
+						// Respond with status and MAC address
+						rd_data[0] = 0x81;
+						rd_data[1] = 0x01;
+						rd_data[2] = 0x00;
+						rd_data[3] = 0x03;
+						// MAC address
+						rd_data[4] = 0x86;
+						rd_data[5] = 0xb3;
+						rd_data[6] = 0xef;
+						rd_data[7] = 0xbe;
+						rd_data[8] = 0xad;
+						rd_data[9] = 0xde;
+						cnt = USBD_API->hw->WriteEP(hUsb, HID_EP_IN, rd_data, 64);
+					}
+				}
+			}
+
+			break;
+		}
+		return LPC_OK;
+}
+
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
@@ -188,6 +232,7 @@ ErrorCode_t Mouse_Init(USBD_HANDLE_T hUsb,
 	hid_param.HID_GetReport = Mouse_GetReport;
 	hid_param.HID_SetReport = Mouse_SetReport;
 	hid_param.HID_EpIn_Hdlr  = Mouse_EpIN_Hdlr;
+	hid_param.HID_EpOut_Hdlr  = Mouse_EpOUT_Hdlr;
 	/* Init reports_data */
 	reports_data[0].len = ProController_ReportDescSize;
 	reports_data[0].idle_time = 0;

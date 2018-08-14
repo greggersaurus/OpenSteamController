@@ -52,6 +52,16 @@ This section lists some projects that influenced this project, as well as links
 * Example of code written in C using libusb
 * Downside is that it takes over controller when playing custom music
 
+## [HID Joy-Con Whispering](https://github.com/shinyquagsire23/HID-Joy-Con-Whispering)
+
+* Application for communicating with Pro Controller via USB HID. 
+* Helpful for Switch Faux Controller development to get USB communications in place. 
+
+## [Nintendo Switch Reverse Engineering](https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering)
+
+* Notes on Reverse Engineering of Nintendo Switch Controllers
+* Helpful details on HID communications with Pro Controller. 
+
 ## [Standalone Steam Controller Driver](https://github.com/ynsta/steamcontroller)
 
 * OK source for breaking down some USB commands

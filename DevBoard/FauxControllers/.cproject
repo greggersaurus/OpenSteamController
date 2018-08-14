@@ -67,6 +67,7 @@
 									<listOptionValue builtIn="false" value="../../lpc_chip_11uxx_lib/Debug"/>
 								</option>
 								<option id="com.crt.advproject.link.gcc.multicore.master.userobjs.951624305" name="Slave Objects (not visible)" superClass="com.crt.advproject.link.gcc.multicore.master.userobjs" valueType="userObjs"/>
+								<option id="com.crt.advproject.link.gcc.multicore.slave.1831197067" superClass="com.crt.advproject.link.gcc.multicore.slave"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1401671473" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>

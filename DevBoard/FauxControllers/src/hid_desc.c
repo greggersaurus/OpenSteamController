@@ -42,34 +42,118 @@
 /**
  * HID Pro Controller Report Descriptor
  */
-//TODO: make this actually match the Pro Controller Report Descriptor
 const uint8_t ProController_ReportDescriptor[] = {
-	HID_UsagePage(HID_USAGE_PAGE_GENERIC),
-	HID_Usage(HID_USAGE_GENERIC_MOUSE),
-	HID_Collection(HID_Application),
-	HID_Usage(HID_USAGE_GENERIC_POINTER),
-	HID_Collection(HID_Physical),
-	HID_UsagePage(HID_USAGE_PAGE_BUTTON),
-	HID_UsageMin(1),
-	HID_UsageMax(3),
-	HID_LogicalMin(0),
-	HID_LogicalMax(1),
-	HID_ReportCount(3),
-	HID_ReportSize(1),
-	HID_Input(HID_Data | HID_Variable | HID_Absolute),
-	HID_ReportCount(1),
-	HID_ReportSize(5),
-	HID_Input(HID_Constant),
-	HID_UsagePage(HID_USAGE_PAGE_GENERIC),
-	HID_Usage(HID_USAGE_GENERIC_X),
-	HID_Usage(HID_USAGE_GENERIC_Y),
-	HID_LogicalMin( (uint8_t) -127),
-	HID_LogicalMax(127),
-	HID_ReportSize(8),
-	HID_ReportCount(2),
-	HID_Input(HID_Data | HID_Variable | HID_Relative),
-	HID_EndCollection,
-	HID_EndCollection,
+	HID_UsagePage(HID_USAGE_PAGE_GENERIC), // 05 01 
+	HID_LogicalMin(0), // 15 00 
+	HID_Usage(HID_USAGE_GENERIC_JOYSTICK), // 09 04 
+	HID_Collection(HID_Application), // a1 01 
+
+		HID_ReportID(48), // 85 30 
+		HID_UsagePage(HID_USAGE_PAGE_GENERIC), // 05 01 
+		HID_UsagePage(HID_USAGE_PAGE_BUTTON), // 05 09 
+		HID_UsageMin(1), // 19 01 
+		HID_UsageMax(10), // 29 0a 
+		HID_LogicalMin(0), // 15 00 
+		HID_LogicalMax(1), // 25 01 
+		HID_ReportSize(1), // 75 01 
+		HID_ReportCount(10), // 95 0a 
+		HID_UnitExponent(0), // 55 00 
+		HID_Unit(0), // 65 00 
+		HID_Input(HID_Data | HID_Variable | HID_Absolute), // 81 02 
+
+		HID_UsagePage(HID_USAGE_PAGE_BUTTON), // 05 09 
+		HID_UsageMin(11), // 19 0b 
+		HID_UsageMin(14), // 29 0e 
+		HID_LogicalMin(0), // 15 00 
+		HID_LogicalMax(1), // 25 01 
+		HID_ReportSize(1), // 75 01 
+		HID_ReportCount(4), // 95 04 
+		HID_Input(HID_Data | HID_Variable | HID_Absolute), // 81 02 
+
+		HID_ReportSize(1), // 75 01 
+		HID_ReportCount(2), // 95 02 
+		HID_Input(HID_Constant | HID_Variable), // 81 03 
+
+		0x0b, HID_USAGE_GENERIC_POINTER, 0x00, 0x01, 0x00, // 0b 01 00 01 00 // TODO: Make sense of this...
+
+		HID_Collection(HID_Physical), // a1 00 
+
+			0x0b, HID_USAGE_GENERIC_X, 0x00, 0x01, 0x00, // 0b 30 00 01 00 // TODO: Make sense of this...
+			0x0b, HID_USAGE_GENERIC_Y, 0x00, 0x01, 0x00, // 0b 31 00 01 00 // TODO: Make sense of this...
+			0x0b, HID_USAGE_GENERIC_Z, 0x00, 0x01, 0x00, // 0b 32 00 01 00 // TODO: Make sense of this...
+			0x0b, HID_USAGE_GENERIC_RX, 0x00, 0x01, 0x00, // 0b 35 00 01 00 // TODO: Make sense of this...
+
+			HID_LogicalMin(0), // 15 00 
+			HID_LogicalMaxL(65535), // 27 ff ff 00 00 
+			HID_ReportSize(16), // 75 10 
+			HID_ReportCount(4), // 95 04 
+			HID_Input(HID_Data | HID_Variable | HID_Absolute), // 81 02 
+
+		HID_EndCollection, // c0 
+
+		0x0b, HID_USAGE_GENERIC_HATSWITCH, 0x00, 0x01, 0x00, // 0b 39 00 01 00 // TODO: Make sense of this...
+
+		HID_LogicalMin(0), // 15 00 
+		HID_LogicalMax(7), // 25 07 
+		HID_PhysicalMin(0), // 35 00 
+		HID_PhysicalMaxS(315), // 46 3b 01 
+		HID_Unit(20), // 65 14 
+		HID_ReportSize(4), // 75 04 
+		HID_ReportCount(1), // 95 01 
+		HID_Input(HID_Data | HID_Variable | HID_Absolute), // 81 02 
+
+		HID_UsagePage(HID_USAGE_PAGE_BUTTON), /// 05 09 
+
+		HID_UsageMin(15), /// 19 0f 
+		HID_UsageMax(18), /// 29 12 
+		HID_LogicalMin(0), // 15 00 
+		HID_LogicalMax(0), // 25 01 
+		HID_ReportSize(1), // 75 01 
+		HID_ReportCount(4), // 95 04 
+		HID_Input(HID_Data | HID_Variable | HID_Absolute), // 81 02 
+
+		HID_ReportSize(8), // 75 08 
+		HID_ReportCount(52), // 95 34 
+		HID_Input(HID_Constant | HID_Variable | HID_Absolute), // 81 03 
+
+		HID_UsagePageVendor(0), // 06 00 ff 
+
+		HID_ReportID(33), // 85 21 
+		HID_Usage(0x01), // 09 01 
+		HID_ReportSize(8), // 75 08 
+		HID_ReportCount(63), // 95 3f 
+		HID_Input(HID_Constant | HID_Variable | HID_Absolute), // 81 03 
+
+		HID_ReportID(129), // 85 81 
+		HID_Usage(0x02), // 09 02 
+		HID_ReportSize(8), // 75 08 
+		HID_ReportCount(63), // 95 3f 
+		HID_Input(HID_Constant | HID_Variable | HID_Absolute), // 81 03 
+
+		HID_ReportID(1), // 85 01 
+		HID_Usage(0x03), // 09 03 
+		HID_ReportSize(8), // 75 08 
+		HID_ReportCount(63), // 95 3f 
+		HID_Output(HID_Constant | HID_Variable | HID_Absolute | HID_Volatile), // 91 83 
+
+		HID_ReportID(16), // 85 10 
+		HID_Usage(0x04), // 09 04 
+		HID_ReportSize(8), // 75 08 
+		HID_ReportCount(63), // 95 3f 
+		HID_Output(HID_Constant | HID_Variable | HID_Absolute | HID_Volatile), // 91 83 
+
+		HID_ReportID(128), // 85 80 
+		HID_Usage(0x05), // 09 05 
+		HID_ReportSize(8), // 75 08 
+		HID_ReportCount(63), // 95 3f 
+		HID_Output(HID_Constant | HID_Variable | HID_Absolute | HID_Volatile), // 91 83 
+
+		HID_ReportID(130), // 85 82 
+		HID_Usage(0x06), // 09 06
+		HID_ReportSize(8), // 75 08 
+		HID_ReportCount(63), // 95 3f 
+		HID_Output(HID_Constant | HID_Variable | HID_Absolute | HID_Volatile), // 91 83 
+	HID_EndCollection, // c0 
 };
 const uint16_t ProController_ReportDescSize = sizeof(ProController_ReportDescriptor);
 
