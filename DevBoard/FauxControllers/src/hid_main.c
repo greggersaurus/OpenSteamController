@@ -186,8 +186,8 @@ int main(void)
 
 	while (1) {
 		/* Do Mouse tasks */
-		//Mouse_Tasks();
+		Mouse_Tasks();
 		/* Sleep until next IRQ happens */
-		__WFI();
+		//__WFI();
 	}
 }

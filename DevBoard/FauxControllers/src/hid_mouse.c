@@ -143,6 +143,8 @@ static ErrorCode_t Mouse_SetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 	return LPC_OK;
 }
 
+static volatile int send_updates = 0;
+
 /* HID interrupt IN endpoint handler */
 static ErrorCode_t Mouse_EpIN_Hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t event)
 {
@@ -157,10 +159,24 @@ static ErrorCode_t Mouse_EpIN_Hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t even
 	return LPC_OK;
 }
 
+typedef struct {
+	uint8_t data[8];
+	uint32_t size;
+} UsbDataPacket;
+
+static UsbDataPacket usbDataPackets[16];
+static int usbDataPacketsCnt = 0;
+static int epOutHdlrCnt = 0;
+
 static ErrorCode_t Mouse_EpOUT_Hdlr(USBD_HANDLE_T hUsb, void* data, uint32_t event)
 {
-	uint8_t cnt = 0;
+	uint32_t cnt = 0;
 	uint8_t rd_data[64];
+
+	static int unhandled_cnt = 0;
+	static int unhandled_ids[64];
+
+	epOutHdlrCnt++;
 
 	switch (event) {
 		case USB_EVT_OUT:
@@ -175,23 +191,106 @@ static ErrorCode_t Mouse_EpOUT_Hdlr(USBD_HANDLE_T hUsb, void* data, uint32_t eve
 
 			cnt = USBD_API->hw->ReadEP(hUsb, HID_EP_OUT, rd_data);
 
+			int cpy_cnt = cnt;
+			if (cpy_cnt > 8)
+				cpy_cnt = 8;
+			if (usbDataPacketsCnt < 16) {
+				memcpy(usbDataPackets[usbDataPacketsCnt].data, rd_data, cpy_cnt);
+				usbDataPackets[usbDataPacketsCnt].size = cnt;
+				usbDataPacketsCnt++;
+			}
+
 			if (cnt) {
-				if (rd_data[0] == 0x80) {
-					if (cnt > 1 && rd_data[1] == 0x01) {
-						// Respond with status and MAC address
-						rd_data[0] = 0x81;
-						rd_data[1] = 0x01;
-						rd_data[2] = 0x00;
-						rd_data[3] = 0x03;
-						// MAC address
-						rd_data[4] = 0x86;
-						rd_data[5] = 0xb3;
-						rd_data[6] = 0xef;
-						rd_data[7] = 0xbe;
-						rd_data[8] = 0xad;
-						rd_data[9] = 0xde;
-						cnt = USBD_API->hw->WriteEP(hUsb, HID_EP_IN, rd_data, 64);
+				if (rd_data[0] == 0x00) {
+					if (cnt > 1) {
+						if (rd_data[1] == 0x00) {
+							// Respond with status and MAC address
+							rd_data[0] = 0x81;
+							rd_data[1] = 0x01;
+							// Connection status?
+							rd_data[2] = 0x00;
+							// Controller Type?
+							rd_data[3] = 0x03;
+							// MAC address
+							rd_data[4] = 0x86;
+							rd_data[5] = 0xb3;
+							rd_data[6] = 0xef;
+							rd_data[7] = 0xbe;
+							rd_data[8] = 0xad;
+							rd_data[9] = 0xde;
+							// TODO: what if cnt is not 64?
+							cnt = USBD_API->hw->WriteEP(hUsb, HID_EP_IN, rd_data, 64);
+						}
 					}
+				} else if (rd_data[0] == 0x01 && cnt == 49) {
+							// Response copied from one run by Pro Controller... Will call out which numbers change (though don't know why yet...)
+							rd_data[0] = 0x21;
+							rd_data[1] = 0x92; // Changes: Counter/timer?
+							rd_data[2] = 0x91;
+							rd_data[3] = 0x00;
+							rd_data[4] = 0x80;
+							rd_data[5] = 0x00;
+							rd_data[6] = 0xb2; // Changes: bluetooth synchronization related??
+							rd_data[7] = 0xc7; // Changes: bluetooth synchronization related??
+							rd_data[8] = 0x73; // Changes: bluetooth synchronization related??
+							rd_data[9] = 0x7c; // Changes: bluetooth synchronization related??
+							rd_data[10] = 0xd7; // Changes: bluetooth synchronization related??
+							rd_data[11] = 0x78; // Changes: bluetooth synchronization related??
+							rd_data[12] = 0x0b; // Changes: bluetooth synchronization related??
+							rd_data[13] = 0x80;
+							rd_data[14] = 0x00;
+							rd_data[15] = 0x03;
+							// TODO: what if cnt is not 64?
+							cnt = USBD_API->hw->WriteEP(hUsb, HID_EP_IN, rd_data, 64);
+				} else if (rd_data[0] == 0x80) {
+					if (cnt > 1) {
+						if ( rd_data[1] == 0x01) {
+							// Respond with status and MAC address
+							rd_data[0] = 0x81;
+							rd_data[1] = 0x01;
+							// Connection status?
+							rd_data[2] = 0x00;
+							// Controller Type?
+							rd_data[3] = 0x03;
+							// MAC address
+							rd_data[4] = 0x86;
+							rd_data[5] = 0xb3;
+							rd_data[6] = 0xef;
+							rd_data[7] = 0xbe;
+							rd_data[8] = 0xad;
+							rd_data[9] = 0xde;
+							// TODO: what if cnt is not 64?
+							cnt = USBD_API->hw->WriteEP(hUsb, HID_EP_IN, rd_data, 64);
+						} else if (rd_data[1] == 0x02) {
+							// Handshake?
+							rd_data[0] = 0x81;
+							rd_data[1] = 0x02;
+							// TODO: what if cnt is not 64?
+							cnt = USBD_API->hw->WriteEP(hUsb, HID_EP_IN, rd_data, 64);
+						} else if (rd_data[1] == 0x03) {
+							// Switch baud rate to 3 Mbit?
+							rd_data[0] = 0x81;
+							rd_data[1] = 0x03;
+							// TODO: what if cnt is not 64?
+							//cnt = USBD_API->hw->WriteEP(hUsb, HID_EP_IN, rd_data, 64);
+						} else if (rd_data[1] == 0x04) {
+							// Talk HID only from now on??
+							// no response? but start sending packets?
+							//send_updates = 1;
+						} else if (rd_data[1] == 0x05) {
+							// De-init to try and talk BT again...?
+							// no response?
+						} else {
+							unhandled_ids[unhandled_cnt] = rd_data[0] << 8 | rd_data[1];
+							unhandled_cnt++;
+						}
+					} else {
+							unhandled_ids[unhandled_cnt] = -1;
+							unhandled_cnt++;
+					}
+				} else {
+					unhandled_ids[unhandled_cnt] = rd_data[0];
+					unhandled_cnt++;
 				}
 			}
 
@@ -253,6 +352,68 @@ ErrorCode_t Mouse_Init(USBD_HANDLE_T hUsb,
 /* Mouse tasks */
 void Mouse_Tasks(void)
 {
+//TODO: Not getting a response from the switch...
+
+// 	Is wired controller communicated to differently?
+//	Do we need to send additional messages to not talk BT?
+//	Are our timestampts/delays wrong and that is throwing things off?
+//	Is this related to unhandle EP Out messages?
+//	why do we end up in fault handler (sometimes)??
+
+	int cnt = 0;
+	static uint8_t status_msg[64] = {
+		0x30,
+		0xf4,
+		0x91,
+		0xC0,
+
+		0x80,
+		0xC0,	
+		0xff,
+		0xd7,
+
+		0x71,
+		0x90,
+		0xb7,
+		0x78, 
+
+		0x00,
+		0x1d,
+		0xfd,
+		0x50, 
+
+		0x00,
+		0xb4,
+		0x0f,
+		0xec, 
+
+		0xff,
+		0x00,
+		0x00,
+		0xfd, 
+
+		0xff,
+		0x1c,
+		0xfd,
+		0x52, 
+
+		0x00,
+		0xb8,
+		0x0f,
+		0xec
+	};
+
+	status_msg[1] += 4;
+
+	if (!send_updates) {
+		__WFI();
+	} else { 
+		// TODO: what if cnt is not 64?
+		cnt = USBD_API->hw->WriteEP(g_mouse.hUsb, HID_EP_IN, status_msg, 64);
+		for (volatile int cnt = 0; cnt < 0x20000; cnt++);
+	}
+
+#if (0)
 	/* check device is configured before sending report. */
 	if ( USB_IsConfigured(g_mouse.hUsb)) {
 		if (g_mouse.tx_busy == 0) {
@@ -267,5 +428,5 @@ void Mouse_Tasks(void)
 		/* reset busy flag if we get disconnected. */
 		g_mouse.tx_busy = 0;
 	}
-
+#endif
 }
