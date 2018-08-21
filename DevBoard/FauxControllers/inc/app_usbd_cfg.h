@@ -40,13 +40,22 @@ extern "C"
 {
 #endif
 
+// Defines which controller we are trying mimic
+#define SWITCH_WIRED 1
+// #define SWITCH_PRO 1
+
 /** @ingroup EXAMPLES_USBDROM_11UXX_HID_MOUSE
  * @{
  */
 
 /* HID In/Out Endpoint Address */
 #define HID_EP_IN                           0x81
-#define HID_EP_OUT                          0x01
+#ifdef SWITCH_WIRED
+	#define HID_EP_OUT                          0x02
+#endif
+#ifdef SWITCH_PRO
+	#define HID_EP_OUT                          0x01
+#endif
 /** Interval between mouse reports expressed in milliseconds for full-speed device. */
 #define HID_MOUSE_REPORT_INTERVAL_MS        10
 /* bInterval value used in descriptor. For HS this macro will differ from HID_MOUSE_REPORT_INTERVAL_MS macro. */

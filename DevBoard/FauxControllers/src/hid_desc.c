@@ -43,6 +43,54 @@
  * HID Pro Controller Report Descriptor
  */
 const uint8_t ProController_ReportDescriptor[] = {
+#ifdef SWITCH_WIRED
+	//TODO: Convert these all to HID_* macros
+	HID_UsagePage(HID_USAGE_PAGE_GENERIC), // 05 01 
+	0x09, 0x05, // 09 05 
+	0xa1, 0x01, // a1 01 
+		0x15, 0x00, // 15 00 
+		0x25, 0x01, // 25 01 
+		0x35, 0x00, // 35 00 
+		0x45, 0x01, // 45 01 
+		0x75, 0x01, // 75 01 
+		0x95, 0x0e, // 95 0e 
+
+		0x05, 0x09, // 05 09 
+		0x19, 0x01, // 19 01 
+		0x29, 0x0e, // 29 0e 
+		0x81, 0x02, // 81 02 
+		0x95, 0x02, // 95 02 
+		0x81, 0x01, // 81 01 
+
+		0x05, 0x01, // 05 01 
+		0x25, 0x07, // 25 07 
+		0x46, 0x3b, 0x01, // 46 3b 01 
+		0x75, 0x04, // 75 04 
+		0x95, 0x01, // 95 01 
+		0x65, 0x14, // 65 14 
+		0x09, 0x39, // 09 39 
+		0x81, 0x42, // 81 42 
+		0x65, 0x00, // 65 00 
+		0x95, 0x01, // 95 01 
+		0x81, 0x01, // 81 01 
+
+		0x26, 0xff, 0x00, // 26 ff 00 
+		0x46, 0xff, 0x00, // 46 ff 00 
+		0x09, 0x30, // 09 30 
+		0x09, 0x31, // 09 31 
+		0x09, 0x32, // 09 32 
+		0x09, 0x35, // 09 35 
+
+		0x75, 0x08, // 75 08 
+		0x95, 0x04, // 95 04 
+		0x81, 0x02, // 81 02 
+		0x75, 0x08, // 75 08 
+		0x95, 0x01, // 95 01 
+		0x81, 0x03, // 81 03 
+
+	HID_EndCollection, // c0
+#endif
+#ifdef SWITCH_PRO
 	HID_UsagePage(HID_USAGE_PAGE_GENERIC), // 05 01 
 	HID_LogicalMin(0), // 15 00 
 	HID_Usage(HID_USAGE_GENERIC_JOYSTICK), // 09 04 
@@ -154,6 +202,7 @@ const uint8_t ProController_ReportDescriptor[] = {
 		HID_ReportCount(63), // 95 3f 
 		HID_Output(HID_Constant | HID_Variable | HID_Absolute | HID_Volatile), // 91 83 
 	HID_EndCollection, // c0 
+#endif
 };
 const uint16_t ProController_ReportDescSize = sizeof(ProController_ReportDescriptor);
 
@@ -161,6 +210,23 @@ const uint16_t ProController_ReportDescSize = sizeof(ProController_ReportDescrip
  * USB Standard Device Descriptor
  */
 ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
+#ifdef SWITCH_WIRED
+	USB_DEVICE_DESC_SIZE, /* bLength */
+	USB_DEVICE_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL(0x0200), /* bcdUSB : 2.00*/
+	0x00, /* bDeviceClass */
+	0x00, /* bDeviceSubClass */
+	0x00, /* bDeviceProtocol */
+	USB_MAX_PACKET0, /* bMaxPacketSize0 */
+	WBVAL(0x20d6), /* idVendor */
+	WBVAL(0xa711), /* idProduct */
+	WBVAL(0x0200), /* bcdDevice : 2.00 */
+	0x01, /* iManufacturer */
+	0x02, /* iProduct */
+	0x03, /* iSerialNumber */
+	0x01 /* bNumConfigurations */
+#endif
+#ifdef SWITCH_PRO
 	USB_DEVICE_DESC_SIZE, /* bLength */
 	USB_DEVICE_DESCRIPTOR_TYPE, /* bDescriptorType */
 	WBVAL(0x0200), /* bcdUSB : 2.00*/
@@ -175,6 +241,7 @@ ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
 	0x02, /* iProduct */
 	0x03, /* iSerialNumber */
 	0x01 /* bNumConfigurations */
+#endif
 };
 
 /**
@@ -182,6 +249,62 @@ ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
  * All Descriptors (Configuration, Interface, Endpoint, Class, Vendor)
  */
 ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
+#ifdef SWITCH_WIRED
+	/* Configuration 1 */
+	USB_CONFIGURATION_DESC_SIZE, /* bLength */
+	USB_CONFIGURATION_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL( /* wTotalLength */
+		USB_CONFIGURATION_DESC_SIZE   +
+		USB_INTERFACE_DESC_SIZE       +
+		HID_DESC_SIZE                 +
+		USB_ENDPOINT_DESC_SIZE        +
+		USB_ENDPOINT_DESC_SIZE
+		),
+	0x01, /* bNumInterfaces */
+	0x01, /* bConfigurationValue */
+	0x00, /* iConfiguration */
+	USB_CONFIG_BUS_POWERED | USB_CONFIG_REMOTE_WAKEUP, /* bmAttributes */
+	USB_CONFIG_POWER_MA(500), /* bMaxPower */
+
+	/* Interface 0, Alternate Setting 0, HID Class */
+	USB_INTERFACE_DESC_SIZE, /* bLength */
+	USB_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType */
+	0x00, /* bInterfaceNumber */
+	0x00, /* bAlternateSetting */
+	0x02, /* bNumEndpoints */
+	USB_DEVICE_CLASS_HUMAN_INTERFACE, /* bInterfaceClass */
+	HID_SUBCLASS_NONE, /* bInterfaceSubClass */
+	HID_PROTOCOL_NONE, /* bInterfaceProtocol */
+	0x00, /* iInterface */
+	/* HID Class Descriptor */
+	/* HID_DESC_OFFSET = 0x0012 */
+	HID_DESC_SIZE, /* bLength */
+	HID_HID_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL(0x0111), /* bcdHID : 1.11*/
+	0x00, /* bCountryCode */
+	0x01, /* bNumDescriptors */
+	HID_REPORT_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL(sizeof(ProController_ReportDescriptor)), /* wDescriptorLength */
+
+	/* Endpoint, HID Interrupt In */
+	USB_ENDPOINT_DESC_SIZE, /* bLength */
+	USB_ENDPOINT_DESCRIPTOR_TYPE, /* bDescriptorType */
+	HID_EP_OUT, /* bEndpointAddress */
+	USB_ENDPOINT_TYPE_INTERRUPT, /* bmAttributes */
+	WBVAL(0x0040), /* wMaxPacketSize */
+	8, /* bInterval */
+
+	/* Endpoint, HID Interrupt Out */
+	USB_ENDPOINT_DESC_SIZE, /* bLength */
+	USB_ENDPOINT_DESCRIPTOR_TYPE, /* bDescriptorType */
+	HID_EP_IN, /* bEndpointAddress */
+	USB_ENDPOINT_TYPE_INTERRUPT, /* bmAttributes */
+	WBVAL(0x0040), /* wMaxPacketSize */
+	8, /* bInterval */
+	/* Terminator */
+	0 /* bLength */
+#endif
+#ifdef SWITCH_PRO
 	/* Configuration 1 */
 	USB_CONFIGURATION_DESC_SIZE, /* bLength */
 	USB_CONFIGURATION_DESCRIPTOR_TYPE, /* bDescriptorType */
@@ -233,12 +356,115 @@ ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 	8, /* bInterval */
 	/* Terminator */
 	0 /* bLength */
+#endif
 };
 
 /**
  * USB String Descriptor (optional)
  */
 const uint8_t USB_StringDescriptor[] = {
+#ifdef SWITCH_WIRED
+	/* Index 0x00: LANGID Codes */
+	0x04, /* bLength */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL(0x0409), /* wLANGID : US English */
+	/* Index 0x01: Manufacturer */
+	(40 * 2 + 2), /* bLength (40 Char + Type + lenght) */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
+	'B', 0,
+	'e', 0,
+	'n', 0,
+	's', 0,
+	'u', 0,
+	's', 0,
+	's', 0,
+	'e', 0,
+	'n', 0,
+	' ', 0,
+	'D', 0,
+	'e', 0,
+	'u', 0,
+	't', 0,
+	's', 0,
+	'c', 0,
+	'h', 0,
+	' ', 0,
+	'&', 0,
+	' ', 0,
+	'A', 0,
+	's', 0,
+	's', 0,
+	'o', 0,
+	'c', 0,
+	'i', 0,
+	'a', 0,
+	't', 0,
+	'e', 0,
+	's', 0,
+	',', 0,
+	'I', 0,
+	'n', 0,
+	'c', 0,
+	'.', 0,
+	'(', 0,
+	'B', 0,
+	'D', 0,
+	'A', 0,
+	')', 0,
+	/* Index 0x02: Product */
+	(28 * 2 + 2), /* bLength (28 Char + Type + lenght) */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
+	'C', 0,
+	'o', 0,
+	'r', 0,
+	'e', 0,
+	' ', 0,
+	'(', 0,
+	'P', 0,
+	'l', 0,
+	'u', 0,
+	's', 0,
+	')', 0,
+	' ', 0,
+	'W', 0,
+	'i', 0,
+	'r', 0,
+	'e', 0,
+	'd', 0,
+	' ', 0,
+	'C', 0,
+	'o', 0,
+	'n', 0,
+	't', 0,
+	'r', 0,
+	'o', 0,
+	'l', 0,
+	'l', 0,
+	'e', 0,
+	'r', 0,
+	/* Index 0x03: Serial Number */
+	(12 * 2 + 2), /* bLength (12 Char + Type + lenght) */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'1', 0,
+	/* Index 0x04: Interface 0, Alternate Setting 0 */
+	(3 * 2 + 2), /* bLength (9 Char + Type + lenght) */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */ //TODO: this correct?
+	'H', 0,
+	'I', 0,
+	'D', 0,
+#endif
+#ifdef SWITCH_PRO
 	/* Index 0x00: LANGID Codes */
 	0x04, /* bLength */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
@@ -302,4 +528,5 @@ const uint8_t USB_StringDescriptor[] = {
 	'H', 0,
 	'I', 0,
 	'D', 0,
+#endif
 };

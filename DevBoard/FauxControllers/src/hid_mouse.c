@@ -199,7 +199,13 @@ static ErrorCode_t Mouse_EpOUT_Hdlr(USBD_HANDLE_T hUsb, void* data, uint32_t eve
 				usbDataPackets[usbDataPacketsCnt].size = cnt;
 				usbDataPacketsCnt++;
 			}
+#ifdef SWITCH_WIRED
 
+
+
+#endif
+
+#ifdef SWITCH_PRO
 			if (cnt) {
 				if (rd_data[0] == 0x00) {
 					if (cnt > 1) {
@@ -293,6 +299,7 @@ static ErrorCode_t Mouse_EpOUT_Hdlr(USBD_HANDLE_T hUsb, void* data, uint32_t eve
 					unhandled_cnt++;
 				}
 			}
+#endif
 
 			break;
 		}
@@ -352,6 +359,12 @@ ErrorCode_t Mouse_Init(USBD_HANDLE_T hUsb,
 /* Mouse tasks */
 void Mouse_Tasks(void)
 {
+#ifdef SWITCH_WIRED
+
+
+
+#endif
+#ifdef SWITCH_PRO
 //TODO: Not getting a response from the switch...
 
 // 	Is wired controller communicated to differently?
@@ -412,6 +425,7 @@ void Mouse_Tasks(void)
 		cnt = USBD_API->hw->WriteEP(g_mouse.hUsb, HID_EP_IN, status_msg, 64);
 		for (volatile int cnt = 0; cnt < 0x20000; cnt++);
 	}
+#endif
 
 #if (0)
 	/* check device is configured before sending report. */
