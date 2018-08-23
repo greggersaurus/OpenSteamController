@@ -66,12 +66,16 @@ static void usb_pin_clk_init(void)
  * Public functions
  ****************************************************************************/
 
+volatile static int usbIrqHandlerCntr = 0;
+
 /**
  * @brief	Handle interrupt from USB0
  * @return	Nothing
  */
 void USB_IRQHandler(void)
 {
+	usbIrqHandlerCntr++;
+
 	uint32_t *addr = (uint32_t *) LPC_USB->EPLISTSTART;
 
 	/*	WORKAROUND for artf32289 ROM driver BUG:
@@ -88,9 +92,13 @@ void USB_IRQHandler(void)
 	USBD_API->hw->ISR(g_hUsb);
 }
 
+volatile static int findIntfDescCnt = 0;
+
 /* Find the address of interface descriptor for given class type. */
 USB_INTERFACE_DESCRIPTOR *find_IntfDesc(const uint8_t *pDesc, uint32_t intfClass)
 {
+	findIntfDescCnt++;
+
 	USB_COMMON_DESCRIPTOR *pD;
 	USB_INTERFACE_DESCRIPTOR *pIntfDesc = 0;
 	uint32_t next_desc_adr;

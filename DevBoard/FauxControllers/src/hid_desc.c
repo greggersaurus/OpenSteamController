@@ -42,8 +42,8 @@
 /**
  * HID Pro Controller Report Descriptor
  */
-const uint8_t ProController_ReportDescriptor[] = {
 #ifdef SWITCH_WIRED
+const uint8_t ProController_ReportDescriptor[] = {
 	//TODO: Convert these all to HID_* macros
 	HID_UsagePage(HID_USAGE_PAGE_GENERIC), // 05 01 
 	0x09, 0x05, // 09 05 
@@ -89,8 +89,10 @@ const uint8_t ProController_ReportDescriptor[] = {
 		0x81, 0x03, // 81 03 
 
 	HID_EndCollection, // c0
+};
 #endif
 #ifdef SWITCH_PRO
+const uint8_t ProController_ReportDescriptor[] = {
 	HID_UsagePage(HID_USAGE_PAGE_GENERIC), // 05 01 
 	HID_LogicalMin(0), // 15 00 
 	HID_Usage(HID_USAGE_GENERIC_JOYSTICK), // 09 04 
@@ -202,15 +204,15 @@ const uint8_t ProController_ReportDescriptor[] = {
 		HID_ReportCount(63), // 95 3f 
 		HID_Output(HID_Constant | HID_Variable | HID_Absolute | HID_Volatile), // 91 83 
 	HID_EndCollection, // c0 
-#endif
 };
+#endif
 const uint16_t ProController_ReportDescSize = sizeof(ProController_ReportDescriptor);
 
 /**
  * USB Standard Device Descriptor
  */
-ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
 #ifdef SWITCH_WIRED
+ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
 	USB_DEVICE_DESC_SIZE, /* bLength */
 	USB_DEVICE_DESCRIPTOR_TYPE, /* bDescriptorType */
 	WBVAL(0x0200), /* bcdUSB : 2.00*/
@@ -225,8 +227,10 @@ ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
 	0x02, /* iProduct */
 	0x03, /* iSerialNumber */
 	0x01 /* bNumConfigurations */
+};
 #endif
 #ifdef SWITCH_PRO
+ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
 	USB_DEVICE_DESC_SIZE, /* bLength */
 	USB_DEVICE_DESCRIPTOR_TYPE, /* bDescriptorType */
 	WBVAL(0x0200), /* bcdUSB : 2.00*/
@@ -241,15 +245,15 @@ ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
 	0x02, /* iProduct */
 	0x03, /* iSerialNumber */
 	0x01 /* bNumConfigurations */
-#endif
 };
+#endif
 
 /**
  * USB FSConfiguration Descriptor
  * All Descriptors (Configuration, Interface, Endpoint, Class, Vendor)
  */
-ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 #ifdef SWITCH_WIRED
+ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 	/* Configuration 1 */
 	USB_CONFIGURATION_DESC_SIZE, /* bLength */
 	USB_CONFIGURATION_DESCRIPTOR_TYPE, /* bDescriptorType */
@@ -303,8 +307,10 @@ ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 	8, /* bInterval */
 	/* Terminator */
 	0 /* bLength */
+};
 #endif
 #ifdef SWITCH_PRO
+ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 	/* Configuration 1 */
 	USB_CONFIGURATION_DESC_SIZE, /* bLength */
 	USB_CONFIGURATION_DESCRIPTOR_TYPE, /* bDescriptorType */
@@ -356,14 +362,14 @@ ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 	8, /* bInterval */
 	/* Terminator */
 	0 /* bLength */
-#endif
 };
+#endif
 
 /**
  * USB String Descriptor (optional)
  */
-const uint8_t USB_StringDescriptor[] = {
 #ifdef SWITCH_WIRED
+const uint8_t USB_StringDescriptor[] = {
 	/* Index 0x00: LANGID Codes */
 	0x04, /* bLength */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
@@ -463,8 +469,10 @@ const uint8_t USB_StringDescriptor[] = {
 	'H', 0,
 	'I', 0,
 	'D', 0,
+};
 #endif
 #ifdef SWITCH_PRO
+const uint8_t USB_StringDescriptor[] = {
 	/* Index 0x00: LANGID Codes */
 	0x04, /* bLength */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
@@ -528,5 +536,5 @@ const uint8_t USB_StringDescriptor[] = {
 	'H', 0,
 	'I', 0,
 	'D', 0,
-#endif
 };
+#endif

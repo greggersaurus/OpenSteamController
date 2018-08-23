@@ -107,9 +107,13 @@ static void Mouse_UpdateReport(void)
 	}
 }
 
+volatile static int getReportCnt = 0;
+
 /* HID Get Report Request Callback. Called automatically on HID Get Report Request */
 static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t *plength)
 {
+	getReportCnt++;
+
 	/* ReportID = SetupPacket.wValue.WB.L; */
 	switch (pSetup->wValue.WB.H) {
 	case HID_REPORT_INPUT:
@@ -126,9 +130,13 @@ static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 	return LPC_OK;
 }
 
+volatile static int setReportCnt = 0;
+
 /* HID Set Report Request Callback. Called automatically on HID Set Report Request */
 static ErrorCode_t Mouse_SetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t length)
 {
+	setReportCnt++;
+
 	/* we will reuse standard EP0Buf */
 	if (length == 0) {
 		return LPC_OK;
@@ -145,9 +153,12 @@ static ErrorCode_t Mouse_SetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 
 static volatile int send_updates = 0;
 
+static volatile int EpInCnt = 0;
+
 /* HID interrupt IN endpoint handler */
 static ErrorCode_t Mouse_EpIN_Hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t event)
 {
+	EpInCnt++;
 	switch (event) {
 	case USB_EVT_IN:
 		/* USB_EVT_IN occurs when HW completes sending IN packet. So clear the
@@ -164,9 +175,9 @@ typedef struct {
 	uint32_t size;
 } UsbDataPacket;
 
-static UsbDataPacket usbDataPackets[16];
-static int usbDataPacketsCnt = 0;
-static int epOutHdlrCnt = 0;
+static volatile UsbDataPacket usbDataPackets[16];
+static volatile int usbDataPacketsCnt = 0;
+static volatile int epOutHdlrCnt = 0;
 
 static ErrorCode_t Mouse_EpOUT_Hdlr(USBD_HANDLE_T hUsb, void* data, uint32_t event)
 {
@@ -361,7 +372,7 @@ void Mouse_Tasks(void)
 {
 #ifdef SWITCH_WIRED
 
-
+	__WFI();
 
 #endif
 #ifdef SWITCH_PRO

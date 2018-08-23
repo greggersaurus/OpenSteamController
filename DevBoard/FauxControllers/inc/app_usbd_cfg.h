@@ -42,7 +42,7 @@ extern "C"
 
 // Defines which controller we are trying mimic
 #define SWITCH_WIRED 1
-// #define SWITCH_PRO 1
+//#define SWITCH_PRO 1
 
 /** @ingroup EXAMPLES_USBDROM_11UXX_HID_MOUSE
  * @{
