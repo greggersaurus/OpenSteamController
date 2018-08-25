@@ -133,8 +133,8 @@ static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 	switch (pSetup->wValue.WB.H) {
 	case HID_REPORT_INPUT:
 		//Mouse_UpdateReport();
-		//*pBuffer = &g_mouse.report[0];
-		*plength = 0;//MOUSE_REPORT_SIZE;
+		*pBuffer = &g_mouse.report[0];
+		*plength = MOUSE_REPORT_SIZE;
 		break;
 
 	case HID_REPORT_OUTPUT:				/* Not Supported */
@@ -190,12 +190,6 @@ static ErrorCode_t Mouse_EpOUT_Hdlr(USBD_HANDLE_T hUsb, void* data, uint32_t eve
 
 	switch (event) {
 		case USB_EVT_OUT:
-			/* USB_EVT_IN occurs when HW completes sending IN packet. So clear the
-			    busy flag for main loop to queue next packet.
-			 */
-			g_mouse.tx_busy = 0;
-
-
 
 			memset(rd_data, 0, 64);
 
@@ -375,12 +369,25 @@ void Mouse_Tasks(void)
 
 #endif
 
-#if (0)
+#if (1)
 	/* check device is configured before sending report. */
 	if ( USB_IsConfigured(g_mouse.hUsb)) {
 		if (g_mouse.tx_busy == 0) {
 			/* update report based on board state */
-			Mouse_UpdateReport();
+			//Mouse_UpdateReport();
+			g_mouse.report[0] = 0x00; // Shoulder/bumper buttons. X, Y, A, B buttons
+			g_mouse.report[1] = 0x00; // 
+			if (g_mouse.report[2] == 0x0f) // ??. D pad
+				g_mouse.report[2] = 0x02; // 
+			else 
+				g_mouse.report[2] = 0x0f; // 
+			g_mouse.report[3] = 0x80;
+
+			g_mouse.report[4] = 0x80;
+			g_mouse.report[5] = 0x80;
+			g_mouse.report[6] = 0x80;
+			g_mouse.report[7] = 0x00;
+
 			/* send report data */
 			g_mouse.tx_busy = 1;
 			USBD_API->hw->WriteEP(g_mouse.hUsb, HID_EP_IN, &g_mouse.report[0], MOUSE_REPORT_SIZE);

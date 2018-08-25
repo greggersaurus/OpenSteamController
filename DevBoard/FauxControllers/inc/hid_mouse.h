@@ -43,7 +43,7 @@ extern "C"
  * @{
  */
 
-#define MOUSE_REPORT_SIZE        3
+#define MOUSE_REPORT_SIZE        8
 #define CLEAR_HID_MOUSE_REPORT(x)   memset(x, 0, MOUSE_REPORT_SIZE);
 
 /**
