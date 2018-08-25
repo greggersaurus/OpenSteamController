@@ -33,7 +33,6 @@
 #define __BOARD_H_
 
 #include "chip.h"
-#include "uda1380.h"
 /* board_api.h is included at the bottom of this file after DEBUG setup */
 
 #ifdef __cplusplus
@@ -95,21 +94,6 @@ extern "C" {
 #define NO_BUTTON_PRESSED   0x00
 
 /**
- * Joystick defines
- */
-#define JOY_UP              0x01
-#define JOY_DOWN            0x02
-#define JOY_LEFT            0x04
-#define JOY_RIGHT           0x08
-#define JOY_PRESS           0x10
-
-/**
- * UDA1380 defines
- */
-#define I2CDEV_UDA1380_ADDR     0x1A	/*!< UDA1380 address */
-#define UDA1380_I2C_BUS         I2C0	/**< I2C Bus to which UDA1380 is connected */
-
-/**
  * @brief	Initialize buttons on the board
  * @return	Nothing
  */
@@ -120,25 +104,6 @@ void Board_Buttons_Init(void);
  * @return	status of button
  */
 uint32_t Buttons_GetStatus(void);
-
-/**
- * @brief	Initialize Joystick
- * @return	Nothing
- */
-void Board_Joystick_Init(void);
-
-/**
- * @brief	Get Joystick status
- * @return	status of Joystick
- */
-uint8_t Joystick_GetStatus(void);
-
-/**
- * @brief	Sets up board specific I2C interface
- * @param	id	: I2C peripheral ID (I2C0)
- * @return	Nothing
- */
-void Board_I2C_Init(I2C_ID_T id);
 
 /**
  * @}

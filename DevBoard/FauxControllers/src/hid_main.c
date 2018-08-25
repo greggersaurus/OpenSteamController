@@ -39,6 +39,8 @@
  * Private types/enumerations/variables
  ****************************************************************************/
 
+volatile static int usbIrqHandlerCntr = 0;
+
 /*****************************************************************************
  * Public types/enumerations/variables
  ****************************************************************************/
@@ -66,8 +68,6 @@ static void usb_pin_clk_init(void)
  * Public functions
  ****************************************************************************/
 
-volatile static int usbIrqHandlerCntr = 0;
-
 /**
  * @brief	Handle interrupt from USB0
  * @return	Nothing
@@ -89,39 +89,11 @@ void USB_IRQHandler(void)
 		addr[0] &= ~(_BIT(29));	/* clear EP0_OUT stall */
 		addr[2] &= ~(_BIT(29));	/* clear EP0_IN stall */
 	}
+
+//TODO: what is this doing? Will digging here tell us a difference? How many IRQ handler calls do we get from Linux v.s. Switch?
+//	How many calls do we get if ID is completely wrong (i.e. are descriptors completely off or is there some other kind of handshaking going on here...?)
+// 	Retest what Linux shows now that project is cleaned up...
 	USBD_API->hw->ISR(g_hUsb);
-}
-
-volatile static int findIntfDescCnt = 0;
-
-/* Find the address of interface descriptor for given class type. */
-USB_INTERFACE_DESCRIPTOR *find_IntfDesc(const uint8_t *pDesc, uint32_t intfClass)
-{
-	findIntfDescCnt++;
-
-	USB_COMMON_DESCRIPTOR *pD;
-	USB_INTERFACE_DESCRIPTOR *pIntfDesc = 0;
-	uint32_t next_desc_adr;
-
-	pD = (USB_COMMON_DESCRIPTOR *) pDesc;
-	next_desc_adr = (uint32_t) pDesc;
-
-	while (pD->bLength) {
-		/* is it interface descriptor */
-		if (pD->bDescriptorType == USB_INTERFACE_DESCRIPTOR_TYPE) {
-
-			pIntfDesc = (USB_INTERFACE_DESCRIPTOR *) pD;
-			/* did we find the right interface descriptor */
-			if (pIntfDesc->bInterfaceClass == intfClass) {
-				break;
-			}
-		}
-		pIntfDesc = 0;
-		next_desc_adr = (uint32_t) pD + pD->bLength;
-		pD = (USB_COMMON_DESCRIPTOR *) next_desc_adr;
-	}
-
-	return pIntfDesc;
 }
 
 /**
@@ -196,6 +168,6 @@ int main(void)
 		/* Do Mouse tasks */
 		Mouse_Tasks();
 		/* Sleep until next IRQ happens */
-		//__WFI();
+		__WFI();
 	}
 }

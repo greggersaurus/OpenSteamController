@@ -39,6 +39,19 @@
  * Private types/enumerations/variables
  ****************************************************************************/
 
+volatile static int getReportCnt = 0;
+volatile static int setReportCnt = 0;
+static volatile int epInCnt = 0;
+static volatile int epOutHdlrCnt = 0;
+
+typedef struct {
+	uint8_t data[8];
+	uint32_t size;
+} UsbDataPacket;
+
+static volatile UsbDataPacket usbDataPackets[16];
+static volatile int usbDataPacketsCnt = 0;
+
 /**
  * @brief Structure to hold mouse data
  */
@@ -62,6 +75,7 @@ extern const uint16_t ProController_ReportDescSize;
  * Private functions
  ****************************************************************************/
 
+/*
 static void setXYMouseReport(uint8_t *rep, int8_t xVal, int8_t yVal)
 {
 	rep[1] = (uint8_t) xVal;
@@ -77,8 +91,10 @@ static void setLeftButtonMouseReport(uint8_t *rep, uint8_t state)
 		rep[0] &= ~0x01;
 	}
 }
+*/
 
 /* Routine to update mouse state report */
+/*
 static void Mouse_UpdateReport(void)
 {
 	uint8_t joystick_status = Joystick_GetStatus();
@@ -106,8 +122,7 @@ static void Mouse_UpdateReport(void)
 		break;
 	}
 }
-
-volatile static int getReportCnt = 0;
+*/
 
 /* HID Get Report Request Callback. Called automatically on HID Get Report Request */
 static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t *plength)
@@ -117,10 +132,9 @@ static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 	/* ReportID = SetupPacket.wValue.WB.L; */
 	switch (pSetup->wValue.WB.H) {
 	case HID_REPORT_INPUT:
-		Mouse_UpdateReport();
+		//Mouse_UpdateReport();
 		//*pBuffer = &g_mouse.report[0];
 		*plength = 0;//MOUSE_REPORT_SIZE;
-		return -32;
 		break;
 
 	case HID_REPORT_OUTPUT:				/* Not Supported */
@@ -129,8 +143,6 @@ static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 	}
 	return LPC_OK;
 }
-
-volatile static int setReportCnt = 0;
 
 /* HID Set Report Request Callback. Called automatically on HID Set Report Request */
 static ErrorCode_t Mouse_SetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t length)
@@ -151,14 +163,10 @@ static ErrorCode_t Mouse_SetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 	return LPC_OK;
 }
 
-static volatile int send_updates = 0;
-
-static volatile int EpInCnt = 0;
-
 /* HID interrupt IN endpoint handler */
 static ErrorCode_t Mouse_EpIN_Hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t event)
 {
-	EpInCnt++;
+	epInCnt++;
 	switch (event) {
 	case USB_EVT_IN:
 		/* USB_EVT_IN occurs when HW completes sending IN packet. So clear the
@@ -169,15 +177,6 @@ static ErrorCode_t Mouse_EpIN_Hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t even
 	}
 	return LPC_OK;
 }
-
-typedef struct {
-	uint8_t data[8];
-	uint32_t size;
-} UsbDataPacket;
-
-static volatile UsbDataPacket usbDataPackets[16];
-static volatile int usbDataPacketsCnt = 0;
-static volatile int epOutHdlrCnt = 0;
 
 static ErrorCode_t Mouse_EpOUT_Hdlr(USBD_HANDLE_T hUsb, void* data, uint32_t event)
 {
@@ -336,9 +335,6 @@ ErrorCode_t Mouse_Init(USBD_HANDLE_T hUsb,
 		return ERR_FAILED;
 	}
 
-	/* init joystick control */
-	Board_Joystick_Init();
-
 	/* Init HID params */
 	memset((void *) &hid_param, 0, sizeof(USBD_HID_INIT_PARAM_T));
 	hid_param.max_reports = 1;
@@ -348,8 +344,8 @@ ErrorCode_t Mouse_Init(USBD_HANDLE_T hUsb,
 	/* user defined functions */
 	hid_param.HID_GetReport = Mouse_GetReport;
 	hid_param.HID_SetReport = Mouse_SetReport;
-	hid_param.HID_EpIn_Hdlr  = Mouse_EpIN_Hdlr;
-	hid_param.HID_EpOut_Hdlr  = Mouse_EpOUT_Hdlr;
+	hid_param.HID_EpIn_Hdlr = Mouse_EpIN_Hdlr;
+	hid_param.HID_EpOut_Hdlr = Mouse_EpOUT_Hdlr;
 	/* Init reports_data */
 	reports_data[0].len = ProController_ReportDescSize;
 	reports_data[0].idle_time = 0;
@@ -372,70 +368,11 @@ void Mouse_Tasks(void)
 {
 #ifdef SWITCH_WIRED
 
-	__WFI();
 
 #endif
 #ifdef SWITCH_PRO
-//TODO: Not getting a response from the switch...
 
-// 	Is wired controller communicated to differently?
-//	Do we need to send additional messages to not talk BT?
-//	Are our timestampts/delays wrong and that is throwing things off?
-//	Is this related to unhandle EP Out messages?
-//	why do we end up in fault handler (sometimes)??
 
-	int cnt = 0;
-	static uint8_t status_msg[64] = {
-		0x30,
-		0xf4,
-		0x91,
-		0xC0,
-
-		0x80,
-		0xC0,	
-		0xff,
-		0xd7,
-
-		0x71,
-		0x90,
-		0xb7,
-		0x78, 
-
-		0x00,
-		0x1d,
-		0xfd,
-		0x50, 
-
-		0x00,
-		0xb4,
-		0x0f,
-		0xec, 
-
-		0xff,
-		0x00,
-		0x00,
-		0xfd, 
-
-		0xff,
-		0x1c,
-		0xfd,
-		0x52, 
-
-		0x00,
-		0xb8,
-		0x0f,
-		0xec
-	};
-
-	status_msg[1] += 4;
-
-	if (!send_updates) {
-		__WFI();
-	} else { 
-		// TODO: what if cnt is not 64?
-		cnt = USBD_API->hw->WriteEP(g_mouse.hUsb, HID_EP_IN, status_msg, 64);
-		for (volatile int cnt = 0; cnt < 0x20000; cnt++);
-	}
 #endif
 
 #if (0)

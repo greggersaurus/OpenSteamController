@@ -63,21 +63,6 @@ STATIC const PINMUX_GRP_T pinmuxing[] = {
 	{0,  11, (IOCON_FUNC1 | IOCON_ADMODE_EN | IOCON_FILT_DIS)},	/* PIO0_11 used for AD0 */
 	{0,  18, (IOCON_FUNC1 | IOCON_MODE_INACT)},		/* PIO0_18 used for RXD */
 	{0,  19, (IOCON_FUNC1 | IOCON_MODE_INACT)},		/* PIO0_19 used for TXD */
-
-	/* I2C0 */
-	{0,  4,  IOCON_FUNC1},
-	{0,  5,  IOCON_FUNC1},
-
-	/* Joystick inputs */
-	{1,  22, (IOCON_FUNC0 | IOCON_MODE_PULLUP)},
-	{1,  20, (IOCON_FUNC0 | IOCON_MODE_PULLUP)},
-	{1,  23, (IOCON_FUNC0 | IOCON_MODE_PULLUP)},
-	{1,  21, (IOCON_FUNC0 | IOCON_MODE_PULLUP)},
-	{1,  19, (IOCON_FUNC0 | IOCON_MODE_PULLUP)},
-
-	/* Button inputs */
-	{0,  1,  (IOCON_FUNC0 | IOCON_MODE_PULLUP)},
-	{0,  16, (IOCON_FUNC0 | IOCON_MODE_PULLUP)},
 };
 
 /*****************************************************************************

@@ -86,15 +86,6 @@ extern const uint8_t USB_StringDescriptor[];
 extern const uint8_t USB_DeviceQualifier[];
 
 /**
- * @brief	Find the address of interface descriptor for given class type.
- * @param	pDesc		: Pointer to configuration descriptor in which the desired class
- *			interface descriptor to be found.
- * @param	intfClass	: Interface class type to be searched.
- * @return	If found returns the address of requested interface else returns NULL.
- */
-extern USB_INTERFACE_DESCRIPTOR *find_IntfDesc(const uint8_t *pDesc, uint32_t intfClass);
-
-/**
  * @}
  */
 
