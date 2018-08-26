@@ -40,6 +40,9 @@ extern "C"
 {
 #endif
 
+
+#if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
+
 /** @ingroup EXAMPLES_USBDROM_11UXX_CDC_UART
  * @{
  */
@@ -88,6 +91,45 @@ extern USB_INTERFACE_DESCRIPTOR *find_IntfDesc(const uint8_t *pDesc, uint32_t in
 /**
  * @}
  */
+#endif
+
+
+#if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
+
+/* HID In/Out Endpoint Address */
+#define HID_EP_IN 0x81
+#define HID_EP_OUT 0x02
+
+/** Interval between mouse reports expressed in milliseconds for full-speed device. */
+#define HID_MOUSE_REPORT_INTERVAL_MS 10
+/* bInterval value used in descriptor. For HS this macro will differ from HID_MOUSE_REPORT_INTERVAL_MS macro. */
+#define HID_MOUSE_REPORT_INTERVAL 10
+
+/* The following manifest constants are used to define this memory area to be used
+   by USBD ROM stack.
+ */
+#define USB_STACK_MEM_BASE 0x20004000
+#define USB_STACK_MEM_SIZE 0x0800
+
+/* Manifest constants used by USBD ROM stack. These values SHOULD NOT BE CHANGED
+   for advance features which require usage of USB_CORE_CTRL_T structure.
+   Since these are the values used for compiling USB stack.
+ */
+#define USB_MAX_IF_NUM          8		/*!< Max interface number used for building USBDL_Lib. DON'T CHANGE. */
+#define USB_MAX_EP_NUM          5		/*!< Max number of EP used for building USBD ROM. DON'T CHANGE. */
+#define USB_MAX_PACKET0         64		/*!< Max EP0 packet size used for building USBD ROM. DON'T CHANGE. */
+#define USB_FS_MAX_BULK_PACKET  64		/*!< MAXP for FS bulk EPs used for building USBD ROM. DON'T CHANGE. */
+#define USB_HS_MAX_BULK_PACKET  512		/*!< MAXP for HS bulk EPs used for building USBD ROM. DON'T CHANGE. */
+#define USB_DFU_XFER_SIZE       2048	/*!< Max DFU transfer size used for building USBD ROM. DON'T CHANGE. */
+
+/* USB descriptor arrays defined *_desc.c file */
+extern const uint8_t USB_DeviceDescriptor[];
+extern uint8_t USB_HsConfigDescriptor[];
+extern uint8_t USB_FsConfigDescriptor[];
+extern const uint8_t USB_StringDescriptor[];
+extern const uint8_t USB_DeviceQualifier[];
+#endif
+
 
 #ifdef __cplusplus
 }

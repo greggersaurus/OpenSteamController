@@ -63,6 +63,14 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
+1. Get controller to act as PowerA wired
+    1. Clean up naming in changes...
+1. Add details on different firmware build types (i.e. intentions and commands/control layouts)
+1. Add details for each specific firwmare build type to this README
+1. Figure out interrupt related issues as to why Console output gets weird
+    1. Is this related to WFI() in main loop?
+    1. Is this related to ADC IRQ always running?
+    1. Is this related to monitor command lock up?
 1. Check clean build works (i.e. from fresh clone)
 1. (finish) ADC command
     1. Have it use interrupt like Valve's firmware does
@@ -88,3 +96,4 @@ This is a running list of items I would like to prioritize and not lose track
     1. DEV_KIT where USB acts as UART console for controlling peripherals
     1. NIN_SWITCH where USB acts as Nintendo Switch wired controller
     1. PS4 where USB acts as Playstation 4 wired controller (if there is such a thing... Might need to be PS3?)
+1. All TODOs in code to have items in this README?

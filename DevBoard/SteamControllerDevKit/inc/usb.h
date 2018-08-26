@@ -26,18 +26,21 @@
  */
 
 #include <stdint.h>
+#include "fw_cfg.h"
 
 #ifndef _STEAM_CONTROLLER_USB_
 #define _STEAM_CONTROLLER_USB_
 
 int usbConfig(void);
 
-//TODO: 
-// sendToHaptics (rumble?)
-// rcvFromHaptics (check for input on haptic sensor?)
-
+#if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
 int getUsbSerialData(uint8_t* data, uint32_t maxDataLen);
 void sendUsbSerialData(const uint8_t* data, uint32_t dataLen);
+#endif
+
+#if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
+void updateControllerStatusPacket(void);
+#endif
 
 #endif /* _STEAM_CONTROLLER_USB_ */
 

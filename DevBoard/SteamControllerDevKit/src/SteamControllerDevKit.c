@@ -36,6 +36,8 @@
 
 #include <stdint.h>
 
+#include "chip.h"
+
 #include "init.h"
 #include "eeprom_access.h"
 #include "console.h"
@@ -68,17 +70,23 @@ int main(void){
 	usbConfig();
 //TODO: return code check and blink LED on error?
 
-	// Force the counter to be placed into memory
-	volatile static int i = 0 ;
-	// Enter an infinite loop, just incrementing a counter
+	// Main execution loop
 	while(1) {
-		i++ ;
-
-// TODO: Should this be moved to all (or maybe only possibly) happen in IRQ context? 
-//	  It seems ADC IRQ can starve this from ever running...
-//	  Is this an ADC IRQ configuration issue?	
+#if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
 		// Check serial input device for new characters to process
 		handleConsoleInput();
+		// Sleep until next IRQ happens
+		//TODO: It should be OK to have this here right? Need to find out why it gives us weird artifacts in console output...
+		//__WFI();
+#endif
+
+#if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
+		// Update USB status packet sent to Switch
+		updateControllerStatusPacket();
+		// Sleep until next IRQ happens
+		__WFI();
+#endif
 	}
+
 	return 0 ;
 }

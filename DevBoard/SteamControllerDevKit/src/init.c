@@ -60,6 +60,7 @@ void stage1Init(void){
 	// Make sure crystal oscillator is powered
 	Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_SYSOSC_PD);
 
+// Should this be a loop to 0x100?? See ../FauxController/src/board_sysinit.c Is this just board_sysinit and we don't need it all written out like this??? (maybe it's even redundant?)
 	// Delay required after last system control register mod?          
 	for (uint32_t cnt = 0; cnt < 0x1600; cnt++);
 

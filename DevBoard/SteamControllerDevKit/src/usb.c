@@ -34,7 +34,6 @@
  */
 
 #include "usb.h"
-#include "eeprom_access.h"
 
 //TODO: straighten out weird circular includes? We cannot include usbd/usbd_core.h, even though that's what we want at this point...
 //#include "usbd/usbd_core.h"
@@ -49,6 +48,31 @@ const USBD_API_T *g_pUsbApi; //!< Through a series of non-ideal associations
 	//!< calls using USBD_API to access this. 
 
 static USBD_HANDLE_T usbHandle; //!< Handle for interacting with the USB device
+
+/**
+ * Handle interrupt from USB0.
+ *
+ * \return None.
+ */
+void USB_IRQHandler(void)
+{
+	uint32_t *addr = (uint32_t *) LPC_USB->EPLISTSTART;
+
+	/*	WORKAROUND for artf32289 ROM driver BUG:
+	    As part of USB specification the device should respond
+	    with STALL condition for any unsupported setup packet. The host will send
+	    new setup packet/request on seeing STALL condition for EP0 instead of sending
+	    a clear STALL request. Current driver in ROM doesn't clear the STALL
+	    condition on new setup packet which should be fixed.
+	 */
+	if ( LPC_USB->DEVCMDSTAT & _BIT(8) ) {	/* if setup packet is received */
+		addr[0] &= ~(_BIT(29));	/* clear EP0_OUT stall */
+		addr[2] &= ~(_BIT(29));	/* clear EP0_IN stall */
+	}
+	USBD_API->hw->ISR(usbHandle);
+}
+
+#if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
 
 // Structure containing Virtual Comm port control data.
 typedef struct USB_UART_DATA {
@@ -241,29 +265,6 @@ ALIGNED(4) const uint8_t USB_StringDescriptor[] = {
 	'O', 0,
 	'M', 0,
 };
-
-/**
- * Handle interrupt from USB0.
- *
- * \return None.
- */
-void USB_IRQHandler(void)
-{
-	uint32_t *addr = (uint32_t *) LPC_USB->EPLISTSTART;
-
-	/*	WORKAROUND for artf32289 ROM driver BUG:
-	    As part of USB specification the device should respond
-	    with STALL condition for any unsupported setup packet. The host will send
-	    new setup packet/request on seeing STALL condition for EP0 instead of sending
-	    a clear STALL request. Current driver in ROM doesn't clear the STALL
-	    condition on new setup packet which should be fixed.
-	 */
-	if ( LPC_USB->DEVCMDSTAT & _BIT(8) ) {	/* if setup packet is received */
-		addr[0] &= ~(_BIT(29));	/* clear EP0_OUT stall */
-		addr[2] &= ~(_BIT(29));	/* clear EP0_IN stall */
-	}
-	USBD_API->hw->ISR(usbHandle);
-}
 
 /**
  * USB CDC UART bulk EP_IN and EP_OUT endpoints handler 
@@ -520,8 +521,8 @@ static ErrorCode_t usbUartInit(USBD_HANDLE_T usbHandle,
 }
 
 /**
- * Configure USB interface. This allows for USB to communicate to other devices
- *  on the bus (i.e. act as a virtual comm port, or to haptics (TODO)).
+ * Configure USB interface. This allows for USB to communicate to act as a 
+ *  virtual comm port.
  *
  * \return 0 on success.
  */
@@ -663,3 +664,449 @@ int getUsbSerialData(uint8_t* data, uint32_t maxDataLen){
 
 	return rxRcvd;
 }
+#endif
+
+#if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
+
+/**
+ * HID Report Descriptor
+ */
+const uint8_t ProController_ReportDescriptor[] = {
+	//TODO: Translate these all to HID_* macros
+	HID_UsagePage(HID_USAGE_PAGE_GENERIC), // 05 01 
+	0x09, 0x05, // 09 05 
+	0xa1, 0x01, // a1 01 
+		0x15, 0x00, // 15 00 
+		0x25, 0x01, // 25 01 
+		0x35, 0x00, // 35 00 
+		0x45, 0x01, // 45 01 
+		0x75, 0x01, // 75 01 
+		0x95, 0x0e, // 95 0e 
+
+		0x05, 0x09, // 05 09 
+		0x19, 0x01, // 19 01 
+		0x29, 0x0e, // 29 0e 
+		0x81, 0x02, // 81 02 
+		0x95, 0x02, // 95 02 
+		0x81, 0x01, // 81 01 
+
+		0x05, 0x01, // 05 01 
+		0x25, 0x07, // 25 07 
+		0x46, 0x3b, 0x01, // 46 3b 01 
+		0x75, 0x04, // 75 04 
+		0x95, 0x01, // 95 01 
+		0x65, 0x14, // 65 14 
+		0x09, 0x39, // 09 39 
+		0x81, 0x42, // 81 42 
+		0x65, 0x00, // 65 00 
+		0x95, 0x01, // 95 01 
+		0x81, 0x01, // 81 01 
+
+		0x26, 0xff, 0x00, // 26 ff 00 
+		0x46, 0xff, 0x00, // 46 ff 00 
+		0x09, 0x30, // 09 30 
+		0x09, 0x31, // 09 31 
+		0x09, 0x32, // 09 32 
+		0x09, 0x35, // 09 35 
+
+		0x75, 0x08, // 75 08 
+		0x95, 0x04, // 95 04 
+		0x81, 0x02, // 81 02 
+		0x75, 0x08, // 75 08 
+		0x95, 0x01, // 95 01 
+		0x81, 0x03, // 81 03 
+
+	HID_EndCollection, // c0
+};
+const uint16_t ProController_ReportDescSize = sizeof(ProController_ReportDescriptor);
+
+/**
+ * USB Standard Device Descriptor
+ */
+ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
+	USB_DEVICE_DESC_SIZE, /* bLength */
+	USB_DEVICE_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL(0x0200), /* bcdUSB : 2.00*/
+	0x00, /* bDeviceClass */
+	0x00, /* bDeviceSubClass */
+	0x00, /* bDeviceProtocol */
+	USB_MAX_PACKET0, /* bMaxPacketSize0 */
+	WBVAL(0x20d6), /* idVendor */
+	WBVAL(0xa711), /* idProduct */
+	WBVAL(0x0200), /* bcdDevice : 2.00 */
+	0x01, /* iManufacturer */
+	0x02, /* iProduct */
+	0x03, /* iSerialNumber */
+	0x01 /* bNumConfigurations */
+};
+
+/**
+ * USB FSConfiguration Descriptor
+ * All Descriptors (Configuration, Interface, Endpoint, Class, Vendor)
+ */
+ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
+	/* Configuration 1 */
+	USB_CONFIGURATION_DESC_SIZE, /* bLength */
+	USB_CONFIGURATION_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL( /* wTotalLength */
+		USB_CONFIGURATION_DESC_SIZE   +
+		USB_INTERFACE_DESC_SIZE       +
+		HID_DESC_SIZE                 +
+		USB_ENDPOINT_DESC_SIZE        +
+		USB_ENDPOINT_DESC_SIZE
+		),
+	0x01, /* bNumInterfaces */
+	0x01, /* bConfigurationValue */
+	0x00, /* iConfiguration */
+	USB_CONFIG_BUS_POWERED | USB_CONFIG_REMOTE_WAKEUP, /* bmAttributes */
+	USB_CONFIG_POWER_MA(500), /* bMaxPower */
+
+	/* Interface 0, Alternate Setting 0, HID Class */
+	USB_INTERFACE_DESC_SIZE, /* bLength */
+	USB_INTERFACE_DESCRIPTOR_TYPE, /* bDescriptorType */
+	0x00, /* bInterfaceNumber */
+	0x00, /* bAlternateSetting */
+	0x02, /* bNumEndpoints */
+	USB_DEVICE_CLASS_HUMAN_INTERFACE, /* bInterfaceClass */
+	HID_SUBCLASS_NONE, /* bInterfaceSubClass */
+	HID_PROTOCOL_NONE, /* bInterfaceProtocol */
+	0x00, /* iInterface */
+	/* HID Class Descriptor */
+	/* HID_DESC_OFFSET = 0x0012 */
+	HID_DESC_SIZE, /* bLength */
+	HID_HID_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL(0x0111), /* bcdHID : 1.11*/
+	0x00, /* bCountryCode */
+	0x01, /* bNumDescriptors */
+	HID_REPORT_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL(sizeof(ProController_ReportDescriptor)), /* wDescriptorLength */
+
+	/* Endpoint, HID Interrupt In */
+	USB_ENDPOINT_DESC_SIZE, /* bLength */
+	USB_ENDPOINT_DESCRIPTOR_TYPE, /* bDescriptorType */
+	HID_EP_OUT, /* bEndpointAddress */
+	USB_ENDPOINT_TYPE_INTERRUPT, /* bmAttributes */
+	WBVAL(0x0040), /* wMaxPacketSize */
+	8, /* bInterval */
+
+	/* Endpoint, HID Interrupt Out */
+	USB_ENDPOINT_DESC_SIZE, /* bLength */
+	USB_ENDPOINT_DESCRIPTOR_TYPE, /* bDescriptorType */
+	HID_EP_IN, /* bEndpointAddress */
+	USB_ENDPOINT_TYPE_INTERRUPT, /* bmAttributes */
+	WBVAL(0x0040), /* wMaxPacketSize */
+	8, /* bInterval */
+	/* Terminator */
+	0 /* bLength */
+};
+
+/**
+ * USB String Descriptor (optional)
+ */
+const uint8_t USB_StringDescriptor[] = {
+	/* Index 0x00: LANGID Codes */
+	0x04, /* bLength */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
+	WBVAL(0x0409), /* wLANGID : US English */
+	/* Index 0x01: Manufacturer */
+	(40 * 2 + 2), /* bLength (40 Char + Type + lenght) */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
+	'B', 0,
+	'e', 0,
+	'n', 0,
+	's', 0,
+	'u', 0,
+	's', 0,
+	's', 0,
+	'e', 0,
+	'n', 0,
+	' ', 0,
+	'D', 0,
+	'e', 0,
+	'u', 0,
+	't', 0,
+	's', 0,
+	'c', 0,
+	'h', 0,
+	' ', 0,
+	'&', 0,
+	' ', 0,
+	'A', 0,
+	's', 0,
+	's', 0,
+	'o', 0,
+	'c', 0,
+	'i', 0,
+	'a', 0,
+	't', 0,
+	'e', 0,
+	's', 0,
+	',', 0,
+	'I', 0,
+	'n', 0,
+	'c', 0,
+	'.', 0,
+	'(', 0,
+	'B', 0,
+	'D', 0,
+	'A', 0,
+	')', 0,
+	/* Index 0x02: Product */
+	(28 * 2 + 2), /* bLength (28 Char + Type + lenght) */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
+	'C', 0,
+	'o', 0,
+	'r', 0,
+	'e', 0,
+	' ', 0,
+	'(', 0,
+	'P', 0,
+	'l', 0,
+	'u', 0,
+	's', 0,
+	')', 0,
+	' ', 0,
+	'W', 0,
+	'i', 0,
+	'r', 0,
+	'e', 0,
+	'd', 0,
+	' ', 0,
+	'C', 0,
+	'o', 0,
+	'n', 0,
+	't', 0,
+	'r', 0,
+	'o', 0,
+	'l', 0,
+	'l', 0,
+	'e', 0,
+	'r', 0,
+	/* Index 0x03: Serial Number */
+	(12 * 2 + 2), /* bLength (12 Char + Type + lenght) */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'0', 0,
+	'1', 0,
+	/* Index 0x04: Interface 0, Alternate Setting 0 */
+	(3 * 2 + 2), /* bLength (9 Char + Type + lenght) */
+	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */ //TODO: this correct?
+	'H', 0,
+	'I', 0,
+	'D', 0,
+};
+
+#define MOUSE_REPORT_SIZE (8)
+
+/**
+ * @brief Structure to hold mouse data
+ */
+typedef struct {
+	USBD_HANDLE_T hUsb;	/*!< Handle to USB stack. */
+	uint8_t report[MOUSE_REPORT_SIZE];	/*!< Last report data  */
+	uint8_t tx_busy;	/*!< Flag indicating whether a report is pending in endpoint queue. */
+} Mouse_Ctrl_T;
+
+/** Singleton instance of mouse control */
+static Mouse_Ctrl_T g_mouse;
+
+/* HID Get Report Request Callback. Called automatically on HID Get Report Request */
+static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t *plength)
+{
+	/* ReportID = SetupPacket.wValue.WB.L; */
+	switch (pSetup->wValue.WB.H) {
+	case HID_REPORT_INPUT:
+		//Mouse_UpdateReport();
+		*pBuffer = &g_mouse.report[0];
+		*plength = MOUSE_REPORT_SIZE;
+		break;
+
+	case HID_REPORT_OUTPUT:				/* Not Supported */
+	case HID_REPORT_FEATURE:			/* Not Supported */
+		return ERR_USBD_STALL;
+	}
+	return LPC_OK;
+}
+
+/* HID Set Report Request Callback. Called automatically on HID Set Report Request */
+static ErrorCode_t Mouse_SetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t length)
+{
+	/* we will reuse standard EP0Buf */
+	if (length == 0) {
+		return LPC_OK;
+	}
+	/* ReportID = SetupPacket.wValue.WB.L; */
+	switch (pSetup->wValue.WB.H) {
+	case HID_REPORT_INPUT:				/* Not Supported */
+	case HID_REPORT_OUTPUT:				/* Not Supported */
+	case HID_REPORT_FEATURE:			/* Not Supported */
+		return ERR_USBD_STALL;
+	}
+	return LPC_OK;
+}
+
+/* HID interrupt IN endpoint handler */
+static ErrorCode_t Mouse_EpIN_Hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t event)
+{
+	switch (event) {
+	case USB_EVT_IN:
+		/* USB_EVT_IN occurs when HW completes sending IN packet. So clear the
+		    busy flag for main loop to queue next packet.
+		 */
+		g_mouse.tx_busy = 0;
+		break;
+	}
+	return LPC_OK;
+}
+
+/* HID mouse interface init routine */
+static ErrorCode_t Mouse_Init(USBD_HANDLE_T hUsb,
+			   USB_INTERFACE_DESCRIPTOR *pIntfDesc,
+			   uint32_t *mem_base,
+			   uint32_t *mem_size)
+{
+	USBD_HID_INIT_PARAM_T hid_param;
+	USB_HID_REPORT_T reports_data[1];
+	ErrorCode_t ret = LPC_OK;
+
+	/* Do a quick check of if the interface descriptor passed is the right one. */
+	if ((pIntfDesc == 0) || (pIntfDesc->bInterfaceClass != USB_DEVICE_CLASS_HUMAN_INTERFACE)) {
+		return ERR_FAILED;
+	}
+
+	/* Init HID params */
+	memset((void *) &hid_param, 0, sizeof(USBD_HID_INIT_PARAM_T));
+	hid_param.max_reports = 1;
+	hid_param.mem_base = *mem_base;
+	hid_param.mem_size = *mem_size;
+	hid_param.intf_desc = (uint8_t *) pIntfDesc;
+	/* user defined functions */
+	hid_param.HID_GetReport = Mouse_GetReport;
+	hid_param.HID_SetReport = Mouse_SetReport;
+	hid_param.HID_EpIn_Hdlr = Mouse_EpIN_Hdlr;
+	//hid_param.HID_EpOut_Hdlr = Mouse_EpOUT_Hdlr;
+	/* Init reports_data */
+	reports_data[0].len = ProController_ReportDescSize;
+	reports_data[0].idle_time = 0;
+	reports_data[0].desc = (uint8_t *) &ProController_ReportDescriptor[0];
+	hid_param.report_data  = reports_data;
+
+	ret = USBD_API->hid->init(hUsb, &hid_param);
+
+	/* update memory variables */
+	*mem_base = hid_param.mem_base;
+	*mem_size = hid_param.mem_size;
+	/* store stack handle for later use. */
+	g_mouse.hUsb = hUsb;
+
+	return ret;
+}
+
+/**
+ * Configure USB interface. This allows for the Steam Controller to appear as
+ *  a Wired Controller Plus (by PowerA) for the Switch. 
+ *
+ * \return 0 on success.
+ */
+int usbConfig(void){
+	USBD_API_INIT_PARAM_T usb_param;
+	USB_CORE_DESCS_T desc;
+	ErrorCode_t errCode = ERR_FAILED;
+
+	/* initialize USBD ROM API pointer. */
+	g_pUsbApi = (const USBD_API_T *) LPC_ROM_API->usbdApiBase;
+
+	/* initialize call back structures */
+	memset((void *) &usb_param, 0, sizeof(USBD_API_INIT_PARAM_T));
+	usb_param.usb_reg_base = LPC_USB0_BASE;
+	/*	WORKAROUND for artf44835 ROM driver BUG:
+	    Code clearing STALL bits in endpoint reset routine corrupts memory area
+	    next to the endpoint control data. For example When EP0, EP1_IN, EP1_OUT,
+	    EP2_IN are used we need to specify 3 here. But as a workaround for this
+	    issue specify 4. So that extra EPs control structure acts as padding buffer
+	    to avoid data corruption. Corruption of padding memory doesn’t affect the
+	    stack/program behaviour.
+	 */
+	usb_param.max_num_ep = 2 + 1;
+	usb_param.mem_base = USB_STACK_MEM_BASE;
+	usb_param.mem_size = USB_STACK_MEM_SIZE;
+
+	/* Set the USB descriptors */
+	desc.device_desc = (uint8_t *) USB_DeviceDescriptor;
+	desc.string_desc = (uint8_t *) USB_StringDescriptor;
+
+	/* Note, to pass USBCV test full-speed only devices should have both
+	 * descriptor arrays point to same location and device_qualifier set
+	 * to 0.
+	 */
+	desc.high_speed_desc = USB_FsConfigDescriptor;
+	desc.full_speed_desc = USB_FsConfigDescriptor;
+	desc.device_qualifier = 0;
+
+	/* USB Initialization */
+	errCode = USBD_API->hw->Init(&usbHandle, &desc, &usb_param);
+	if (LPC_OK != errCode){
+		return -1;
+	}
+
+	/*	WORKAROUND for artf32219 ROM driver BUG:
+	    The mem_base parameter part of USB_param structure returned
+	    by Init() routine is not accurate causing memory allocation issues for
+	    further components.
+	 */
+	usb_param.mem_base = USB_STACK_MEM_BASE + (USB_STACK_MEM_SIZE 
+		- usb_param.mem_size);
+
+	errCode = Mouse_Init(usbHandle, (USB_INTERFACE_DESCRIPTOR *) &USB_FsConfigDescriptor[sizeof(USB_CONFIGURATION_DESCRIPTOR)],
+		&usb_param.mem_base, &usb_param.mem_size);
+	if (errCode != LPC_OK) {
+		return -1;
+	}
+
+	/*  enable USB interrupts */
+	NVIC_EnableIRQ(USB0_IRQn);
+	/* now connect */
+	USBD_API->hw->Connect(usbHandle, 1);
+
+	return 0;
+}
+
+void updateControllerStatusPacket(void) {
+	/* check device is configured before sending report. */
+	if ( USB_IsConfigured(g_mouse.hUsb)) {
+		if (g_mouse.tx_busy == 0) {
+			/* update report based on board state */
+			//Mouse_UpdateReport();
+			g_mouse.report[0] = 0x00; // Shoulder/bumper buttons. X, Y, A, B buttons
+			g_mouse.report[1] = 0x00; // 
+			if (g_mouse.report[2] == 0x0f) // ??. D pad
+				g_mouse.report[2] = 0x02; // 
+			else 
+				g_mouse.report[2] = 0x0f; // 
+			g_mouse.report[3] = 0x80;
+
+			g_mouse.report[4] = 0x80;
+			g_mouse.report[5] = 0x80;
+			g_mouse.report[6] = 0x80;
+			g_mouse.report[7] = 0x00;
+
+			/* send report data */
+			g_mouse.tx_busy = 1;
+			USBD_API->hw->WriteEP(g_mouse.hUsb, HID_EP_IN, &g_mouse.report[0], MOUSE_REPORT_SIZE);
+		}
+	}
+	else {
+		/* reset busy flag if we get disconnected. */
+		g_mouse.tx_busy = 0;
+	}
+}
+#endif

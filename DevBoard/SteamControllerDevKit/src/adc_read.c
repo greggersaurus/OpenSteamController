@@ -143,11 +143,13 @@ static volatile uint16_t adcData[8] = {
 void ADC_IRQHandler (void) {
 	static int blah = 0;
 	blah++;
+/*
 	if (blah > 8) {
 //TODO: this shouldn't be necessary, right? This is here so IRQ does not starve user thread (i.e. UART I/O) from running...
 		Chip_ADC_SetBurstCmd(adcRegs, DISABLE);
 		blah = 0;
 	}
+*/
 	for (int cnt = 0; cnt < 8; cnt++) {
 		uint16_t retval = 0;
 		if (SUCCESS == Chip_ADC_ReadValue(adcRegs, cnt, &retval))
@@ -164,9 +166,11 @@ uint16_t adcReadChan(uint8_t chan) {
 
 //TODO: return status code instead?
 
-// Issue is that IRQ happening again and again overrides for loop in main???? Should only have to enable burst mode once, 
-//	rather than reenabling and then having IRQ disable after running a certain number of times....
 // TODO: FIX THIS!!!
+//	There is an issue with IRQs and the console. It's better now that WFI
+//	 was added, but I think I have some sauce in the console processing, 
+//	 etc. that does not deal with interrupts well.... Leaving this scrappy
+//	 for now, but need to fix up soon!
 	Chip_ADC_SetBurstCmd(adcRegs, ENABLE);
 
 // This GPIO enables joystick to actually generate ADC values
