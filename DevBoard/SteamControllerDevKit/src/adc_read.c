@@ -41,7 +41,7 @@ static ADC_CLOCK_SETUP_T adcSetup;
  *
  * \return None.
  */
-static void printUsage() {
+static void printUsage(void) {
 	consolePrint(
 		"usage: adc\n"
 		"\n"
@@ -80,7 +80,7 @@ int adcReadCmdFnc(int argc, const char* argv[]) {
  *
  * \return 0 on success.
  */
-void initAdc() {
+void initAdc(void) {
 
 // Try setting all of these manually, maybe something is not getting calculted to give a messed up clock rate or something?
 	NVIC_SetPriority(ADC_IRQn, 0);
@@ -182,3 +182,60 @@ uint16_t adcReadChan(uint8_t chan) {
 	return 0xDEAD;
 }
 
+/**
+ * Convert ADC reading for X direction of analog stick to bounds expected by
+ *  Wired Controller Plus (by PowerA) for Nintendo Switch.
+ *
+ * \return X position of Analog stick where Left=0x00, Neutral=0x80, Right=0xff
+ */
+uint8_t getleftAnalogXPowerA(void) {
+	// Joystick X direction (left = 0x338, neutral = 0x20a right = 0x0f0)
+	uint16_t adcVal = adcReadChan(ADC_CH1);
+
+	if (adcVal < 0x100) {
+		adcVal = 0;
+	} else {
+		adcVal -= 0x100;
+	}
+
+	adcVal >>= 1;
+
+	if (adcVal > 0xff) {
+		adcVal = 0xff;
+	} else if (adcVal < 0x90 && adcVal > 0x70) {
+		adcVal = 0x80;
+	} else if (adcVal < 0x08) {
+		adcVal = 0x00;
+	}
+
+	return ~adcVal;
+}
+
+/**
+ * Convert ADC reading for Y direction of analog stick to bounds expected by
+ *  Wired Controller Plus (by PowerA) for Nintendo Switch.
+ *
+ * \return X position of Analog stick where Up=0x00, Neutral=0x80, Down=0xff
+ */
+uint8_t getleftAnalogYPowerA(void) {
+	// Joystick Y direction (up = 0x32a, neutral = 0x207, down = 0xf8)
+	uint16_t adcVal = adcReadChan(ADC_CH3);
+
+	if (adcVal < 0x100) {
+		adcVal = 0;
+	} else {
+		adcVal -= 0x100;
+	}
+
+	adcVal >>= 1;
+
+	if (adcVal > 0xff) {
+		adcVal = 0xff;
+	} else if (adcVal < 0x90 && adcVal > 0x70) {
+		adcVal = 0x80;
+	} else if (adcVal < 0x08) {
+		adcVal = 0x00;
+	}
+
+	return ~adcVal;
+}

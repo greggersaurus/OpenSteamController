@@ -35,6 +35,9 @@
 
 #include "usb.h"
 
+#include "buttons.h"
+#include "adc_read.h"
+
 //TODO: straighten out weird circular includes? We cannot include usbd/usbd_core.h, even though that's what we want at this point...
 //#include "usbd/usbd_core.h"
 #include "app_usbd_cfg.h"
@@ -905,19 +908,103 @@ const uint8_t USB_StringDescriptor[] = {
 	'D', 0,
 };
 
-#define MOUSE_REPORT_SIZE (8)
+typedef enum {
+	DPAD_UP = 0x0,
+	DPAD_UP_RIGHT = 0x1,
+	DPAD_RIGHT = 0x2,
+	DPAD_DOWN_RIGHT = 0x3,
+	DPAD_DOWN = 0x4,
+	DPAD_DOWN_LEFT = 0x5,
+	DPAD_LEFT = 0x6,
+	DPAD_UP_LEFT = 0x7,
+	DPAD_NEUTRAL = 0xF,
+} DpadEncoding;
+
+typedef struct {
+	uint8_t yButton : 1;
+	uint8_t bButton : 1;
+	uint8_t aButton : 1;
+	uint8_t xButton : 1;
+
+	uint8_t leftBumper : 1 ;
+	uint8_t rightBumper : 1;
+	uint8_t leftTrigger : 1;
+	uint8_t rightTrigger : 1;
+
+	uint8_t minusButton : 1;
+	uint8_t plusButton : 1;
+	uint8_t leftAnalogClick : 1;
+	uint8_t rightAnalogClick : 1;
+
+	uint8_t homeButton : 1;
+	uint8_t snapshotButton : 1;
+	uint8_t rsvd0 : 1;
+	uint8_t rsvd1 : 1;
+
+	DpadEncoding dPad : 4;	
+
+	uint8_t rsvd2 : 4;
+	
+	uint8_t leftAnalogX; // Left = 0x00, Neutral = 0x80, Right = 0xff
+
+	uint8_t leftAnalogY; // Up = 0x00, Neutral = 0x80, Down = 0xff
+
+	uint8_t rightAnalogX; // Left = 0x00, Neutral = 0x80, Right = 0xff
+
+	uint8_t rightAnalogY; // Up = 0x00, Neutral = 0x80, Down = 0xff
+
+	uint8_t rsvd3;
+} ControllreStatusReport;
+
 
 /**
  * @brief Structure to hold mouse data
  */
 typedef struct {
 	USBD_HANDLE_T hUsb;	/*!< Handle to USB stack. */
-	uint8_t report[MOUSE_REPORT_SIZE];	/*!< Last report data  */
+	ControllreStatusReport statusReport;	/*!< Last report data  */
 	uint8_t tx_busy;	/*!< Flag indicating whether a report is pending in endpoint queue. */
 } Mouse_Ctrl_T;
 
 /** Singleton instance of mouse control */
 static Mouse_Ctrl_T g_mouse;
+
+/**
+ * Update HID Report(s) for Faux Wired Controller Plus (by PowerA) for Nintendo
+ *  Switch. These report(s) give status information on the controller (i.e. 
+ *  what buttons are being pressed, what position is the analog stick in).
+ *
+ * \return None.
+ */
+static void updateReports() {
+	g_mouse.statusReport.rightTrigger = getRightTriggerState();
+	g_mouse.statusReport.leftTrigger = getLeftTriggerState();
+	g_mouse.statusReport.rightBumper = getRightBumperState();
+	g_mouse.statusReport.leftBumper = getLeftBumperState();
+
+	g_mouse.statusReport.xButton = getYButtonState();
+	g_mouse.statusReport.aButton = getBButtonState();
+	g_mouse.statusReport.bButton = getAButtonState();
+	g_mouse.statusReport.yButton = getXButtonState();
+
+	g_mouse.statusReport.snapshotButton = getLeftGripState();
+	g_mouse.statusReport.homeButton = getSteamButtonState();
+
+	g_mouse.statusReport.rightAnalogClick = getRightTrackpadClickState();
+	g_mouse.statusReport.leftAnalogClick = getJoyClickState();
+	g_mouse.statusReport.plusButton = getFrontRightButtonState();
+	g_mouse.statusReport.minusButton = getFrontLeftButtonState();
+
+	// TODO: Convert left trackpad finger location to DPAD encoding
+	g_mouse.statusReport.dPad = DPAD_NEUTRAL;
+
+	g_mouse.statusReport.leftAnalogX = getleftAnalogXPowerA();
+	g_mouse.statusReport.leftAnalogY = getleftAnalogYPowerA();
+	// TODO: Convert right trackpad finger location on X axis
+	g_mouse.statusReport.rightAnalogX = 0x80;
+	// TODO: Convert right trackpad finger location on Y axis
+	g_mouse.statusReport.rightAnalogY = 0x80;
+}
 
 /* HID Get Report Request Callback. Called automatically on HID Get Report Request */
 static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t *plength)
@@ -925,9 +1012,9 @@ static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 	/* ReportID = SetupPacket.wValue.WB.L; */
 	switch (pSetup->wValue.WB.H) {
 	case HID_REPORT_INPUT:
-		//Mouse_UpdateReport();
-		*pBuffer = &g_mouse.report[0];
-		*plength = MOUSE_REPORT_SIZE;
+		updateReports();
+		*pBuffer = &g_mouse.statusReport;
+		*plength = sizeof(ControllreStatusReport);
 		break;
 
 	case HID_REPORT_OUTPUT:				/* Not Supported */
@@ -1082,29 +1169,17 @@ int usbConfig(void){
 
 void updateControllerStatusPacket(void) {
 	/* check device is configured before sending report. */
-	if ( USB_IsConfigured(g_mouse.hUsb)) {
+	if (USB_IsConfigured(g_mouse.hUsb)) {
 		if (g_mouse.tx_busy == 0) {
 			/* update report based on board state */
-			//Mouse_UpdateReport();
-			g_mouse.report[0] = 0x00; // Shoulder/bumper buttons. X, Y, A, B buttons
-			g_mouse.report[1] = 0x00; // 
-			if (g_mouse.report[2] == 0x0f) // ??. D pad
-				g_mouse.report[2] = 0x02; // 
-			else 
-				g_mouse.report[2] = 0x0f; // 
-			g_mouse.report[3] = 0x80;
-
-			g_mouse.report[4] = 0x80;
-			g_mouse.report[5] = 0x80;
-			g_mouse.report[6] = 0x80;
-			g_mouse.report[7] = 0x00;
+			updateReports();
 
 			/* send report data */
 			g_mouse.tx_busy = 1;
-			USBD_API->hw->WriteEP(g_mouse.hUsb, HID_EP_IN, &g_mouse.report[0], MOUSE_REPORT_SIZE);
+			USBD_API->hw->WriteEP(g_mouse.hUsb, HID_EP_IN, 
+				&g_mouse.statusReport, sizeof(ControllreStatusReport));
 		}
-	}
-	else {
+	} else {
 		/* reset busy flag if we get disconnected. */
 		g_mouse.tx_busy = 0;
 	}

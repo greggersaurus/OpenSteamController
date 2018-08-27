@@ -32,9 +32,12 @@
 
 int adcReadCmdFnc(int argc, const char* argv[]);
 
-void initAdc();
+void initAdc(void);
 
 uint16_t adcReadChan(uint8_t chan);
+
+uint8_t getleftAnalogXPowerA(void);
+uint8_t getleftAnalogYPowerA(void);
 
 #endif /* _ADC_READ_ */
 
