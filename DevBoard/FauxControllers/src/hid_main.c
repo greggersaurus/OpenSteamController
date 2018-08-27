@@ -90,9 +90,6 @@ void USB_IRQHandler(void)
 		addr[2] &= ~(_BIT(29));	/* clear EP0_IN stall */
 	}
 
-//TODO: what is this doing? Will digging here tell us a difference? How many IRQ handler calls do we get from Linux v.s. Switch?
-//	How many calls do we get if ID is completely wrong (i.e. are descriptors completely off or is there some other kind of handshaking going on here...?)
-// 	Retest what Linux shows now that project is cleaned up...
 	USBD_API->hw->ISR(g_hUsb);
 }
 
