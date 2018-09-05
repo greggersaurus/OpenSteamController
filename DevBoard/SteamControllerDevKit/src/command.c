@@ -35,6 +35,7 @@
 #include "init.h"
 #include "adc_read.h"
 #include "monitor.h"
+#include "trackpad.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -53,6 +54,7 @@ static Cmd cmds[] = {
 	{.cmdName = "initStats", .cmdFnc = initStatsCmdFnc},
 	{.cmdName = "adcRead", .cmdFnc = adcReadCmdFnc},
 	{.cmdName = "monitor", .cmdFnc = monitorCmdFnc},
+	{.cmdName = "trackpad", .cmdFnc = trackpadCmdFnc},
 //TODO: organize into alphabetical order?
 //TODO: help fnc?
 };

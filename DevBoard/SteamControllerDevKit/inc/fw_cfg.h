@@ -44,7 +44,7 @@
 	// the Nintendo Switch. The Steam Controller can be connected to a 
 	// Nintendo Switch via USB and will act as a Switch Wired controller. 
 
-#define FIRMWARE_BEHAVIOR (SWITCH_WIRED_POWERA_FW) // Set this to one of the *_FW defines
+#define FIRMWARE_BEHAVIOR (DEV_BOARD_FW) // Set this to one of the *_FW defines
 	// above and do a clean build of the project to change the behavior of
 	// the Steam Controller.
 
