@@ -35,6 +35,11 @@
 
 static LPC_SSP_T* spiRegs = LPC_SSP0;
 
+typedef enum Trackpad_t {
+	R_TRACKPAD,
+	L_TRACKPAD
+} Trackpad;
+
 #define GPIO_R_TRACKPAD_CS 1, 15 
 #define GPIO_R_TRACKPAD_DR 0, 23 
 #define GPIO_L_TRACKPAD_CS 1, 6
@@ -54,15 +59,97 @@ static void printUsage(void) {
 }
 
 /**
+ * Write to a register on the Pinnacle ASIC (i.e. the Trackpad controller).
+ *
+ * \param trackpad Specifies which trackpad to communicate with. 
+ * \param addr Register address to write to.
+ * \param val Value to write to register.
+ *
+ * \return None.
+ */
+static void writePinnacleReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
+	Chip_SSP_DATA_SETUP_T xf_setup;
+	uint8_t tx_data[2];
+	uint8_t rx_data[2];
+
+	if (R_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, false);
+	} else if (L_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, false);
+	}
+
+	xf_setup.length = 2;
+	xf_setup.tx_cnt = 0;
+	xf_setup.tx_data = tx_data;
+	xf_setup.rx_cnt = 0;
+	xf_setup.rx_data = rx_data;
+
+	// Register write indicated by setting bit 7
+	tx_data[0] = 0x80 | (0x1F & addr);
+	tx_data[1] = val;
+
+	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
+
+	if (R_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, true);
+	} else if (L_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, true);
+	}
+}
+
+/**
+ * Read a register on the Pinnacle ASIC (i.e. the Trackpad controller).
+ *  TODO: What about multiple back to back reads?
+ *  TODO: What about waiting for DR to be high?
+ *
+ * \param trackpad Specifies which trackpad to communicate with. 
+ * \param addr Register address to read.
+ *
+ * \return The value read from the register.
+ */
+static uint8_t readPinnacleReg(Trackpad trackpad, uint8_t addr) {
+	Chip_SSP_DATA_SETUP_T xf_setup;
+	uint8_t tx_data[4];
+	uint8_t rx_data[4];
+
+	if (R_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, false);
+	} else if (L_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, false);
+	}
+
+	xf_setup.length = 4;
+	xf_setup.tx_cnt = 0;
+	xf_setup.tx_data = tx_data;
+	xf_setup.rx_cnt = 0;
+	xf_setup.rx_data = rx_data;
+
+	// Register read indicated by setting bits 7 and 5
+	tx_data[0] = 0xA0 | (0x1F & addr);
+	// Filler bytes
+	tx_data[1] = 0xFB;
+	tx_data[2] = 0xFB;
+	tx_data[3] = 0xFB;
+
+	rx_data[3] = 0xF1;
+
+	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
+
+	if (R_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, true);
+	} else if (L_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, true);
+	}
+
+	return rx_data[3];
+}
+
+/**
  * Setup all clocks, peripherals, etc. so the ADC chnanels can be read.
  *
  * \return 0 on success.
  */
 void initTrackpad(void) {
-	Chip_SSP_DATA_SETUP_T xf_setup;
-	uint8_t tx_data[2];
-	uint8_t rx_data[2];
-
 	NVIC_SetPriority(SSP0_IRQn, 0);
 
 	// Set PIO1_29 to function as Serial clock for SSP0
@@ -97,19 +184,11 @@ void initTrackpad(void) {
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Right Trackpad in shutdown mode
-//TODO: make Pinnacle register read and write functions (take into account multi-reads. Are there multi-writes???)
-	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, false);
-
-	xf_setup.length = 2;
-	xf_setup.tx_data = tx_data;
-	xf_setup.rx_data = rx_data;
-
-	tx_data[0] = 0x83;
-	tx_data[1] = 0x02;
-
-	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
-
-	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, true);
+// TODO: This is what the Steam Controller does with the trackpad on startup,
+//	however, the datahsheet states: "Request additional instructions from 
+//	Cirque for exiting Sleep and Shutdown modes if your application requires 
+//	SPI at 1 MHZ or greater." Figure this out later via further rev eng?
+//	writePinnacleReg(R_TRACKPAD, 0x03, 0x02);
 
 
 	// Chip select is active low
@@ -124,19 +203,20 @@ void initTrackpad(void) {
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Left Trackpad in shutdown mode
-//TODO: make Pinnacle register read and write functions (take into account multi-reads. Are there multi-writes???)
-	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, false);
+//TODO: See note above 
+//	writePinnacleReg(L_TRACKPAD, 0x03, 0x02);
 
-	xf_setup.length = 2;
-	xf_setup.tx_data = tx_data;
-	xf_setup.rx_data = rx_data;
 
-	tx_data[0] = 0x83;
-	tx_data[1] = 0x02;
+	// Test to setup Right trackpad to get data...
 
-	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
-
-	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, true);
+	// Clear Flags 
+	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
+	// Configures SysConfig1(normal mode, active)
+	writePinnacleReg(R_TRACKPAD, 0x03, 0x00);
+	// Configures FeedConfig2(disable relative mode features)
+	writePinnacleReg(R_TRACKPAD, 0x05, 0x1F);
+	// Configures FeedConfig1(absolute mode, enable feed)
+	writePinnacleReg(R_TRACKPAD, 0x04, 0x03);
 
 //TODO
 //	NVIC_EnableIRQ(SSP0_IRQn);
@@ -163,6 +243,42 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 	int retval = 0;
 
 //TODO
+	uint8_t data[5];
+
+	data[0] = readPinnacleReg(R_TRACKPAD, 0x00);
+	data[1] = readPinnacleReg(R_TRACKPAD, 0x01);
+
+	consolePrint("Firmware ID = 0x%02x\n", data[0]);
+	consolePrint("Firmware Version = 0x%02x\n\n", data[1]);
+
+// TODO: This shouldn't just lockup and loop like this... Provide exit capability (maybe even clearing/backspacing on screen to stop infinite scroll?)
+// 	This does seem to give sane data, but it is kind of sporadic (i.e. you might get no samples, even if finger is down).
+//	When samples are coming in data seems to track finger location properly. Probably more settings needed here for this to work better??
+//	(i.e. sensitivity or sample timing? Look into what might be going on here? Or maybe this has to do with pull-down on GPIO being too strong?)
+while(1) {
+	// Wait for trackpad to say it has new data
+	while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {
+		//consolePrint("DR Low for Right Trackpad\n");
+	}
+
+	data[0] = readPinnacleReg(R_TRACKPAD, 0x12);
+	data[1] = readPinnacleReg(R_TRACKPAD, 0x14);
+	data[2] = readPinnacleReg(R_TRACKPAD, 0x15);
+	data[3] = readPinnacleReg(R_TRACKPAD, 0x16);
+	data[4] = readPinnacleReg(R_TRACKPAD, 0x17);
+
+/*
+	consolePrint("ABS Data Packets = 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n\n",
+		data[0], data[1], data[2], data[3], data[4]);
+*/
+
+	uint16_t x = (0xF&data[3]) << 8 | data[1];
+	uint16_t y = (0xF0&data[3]) << 4 | data[2];
+	consolePrint("x = %d, y = %d, z = %d\n", x, y, data[4]);
+
+	// Clear Flags 
+	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
+}
 
 	return 0;
 }
