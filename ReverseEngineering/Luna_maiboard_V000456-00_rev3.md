@@ -26,7 +26,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |--------------:|-----------------------|------------------|---------------|---------------|
 |             1 | PIO1_0                | PIO1_0           | In            | Analog joystick click button |
 |             2 | PIO1_25               | PIO1_25          | In            | S14 - Left inner grip button |
-|             3 | PIO1_19               | PIO1_19          | In            | S? - Steam button |
+|             3 | PIO1_19               | PIO1_19          | In            | S18 - Steam button |
 |             4 | PIO0_0/nRESET         |                  |               | |
 |             5 | PIO0_1                |                  |               | Connected to S6 - RT (Right trigger digital) for purpose of enacting USB In-Systen Programming (i.e. update firwmare via "FAT" file system) |
 |             6 | PIO1_7                | PIO1_7           | Out           | Set as output GPIO and driven high during init (trace leads to... TODO)|
@@ -50,7 +50,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            24 | PIO1_23               |                  |               | Connected to MPU-6500 Pin 12 (INT) |
 |            25 | USB_DM                |                  |               | |
 |            26 | USB_DP                |                  |               | |
-|            27 | PIO1_24               |                  |               | |
+|            27 | PIO1_24               | PIO1_24          | In?           | Related to PIO1_8. Related to USART maybe? TODO |
 |            28 | PIO1_18               | TXD (USART)      | Out           | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
 |            29 | PIO0_6                | not(USB_CONNECT) | Out           | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
 |            30 | PIO0_7                | PIO0_7           | Out           | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)). Related/similar to GPIO1_28? Any other purpose? More details? TODO|
@@ -62,7 +62,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            36 | PIO0_8                | MISO0            | In            | Master In Slave Out for SSP0. Connected to MISO on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            37 | PIO0_9                | MOSI0            | Out           | Master Out Slave In for SSP0. Connected to MOSI on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            38 | SWCLK/PIO0_10         | SWCLK?           |               | Connected to DEBUG interface for LPC11U37F |
-|            39 | PIO1_8                |                  |               | |
+|            39 | PIO1_8                | PIO1_8           | In?           | Related to PIO1_24. Related to USART maybe? TODO|
 |            40 | PIO0_22               | AD6              | In            | Measures voltage that matters when no USB power is present? (trace leads to C6, continutes to R10 near power...) |
 |            41 | PIO1_29               | SCK0             | Out           | Serial clock for SSP0. Connected to SCLK on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            42 | TDI/PIO0_11           | AD0              | In            | TODO: what is this measuring...? (Note: Functions as TDI for short time during initialization) |
@@ -72,7 +72,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            46 | nTRST/PIO0_14         |                  |               | |
 |            47 | PIO1_13               | PIO1_13          | In            | S6 - RT (Right trigger digital) |
 |            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
-|            49 | PIO1_14               | PIO1_1           | In            | S10 - RB (Right bumper) |
+|            49 | PIO1_14               | PIO1_14          | In            | S10 - RB (Right bumper) |
 |            50 | PIO1_3                | PIO1_3           | In            | S16 - Right inner grip button | 
 |            51 | PIO1_22               | PIO1_22          | In            | S4 - B Button |
 |            52 | SWDIO/PIO0_15         | SWDIO?           |               | Connected to DEBUG interface for LPC11U37F |

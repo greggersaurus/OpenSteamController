@@ -82,6 +82,10 @@
 (uint32_t*) 0x10000054 - Related to C16B1? Callback function of some sort?
 (uint32_t*) 0x10000058 - CT16B1 related?
 (uint32_t*) 0x1000005c - CT16B1 related?
+ (uint8_t*) 0x10000060 - Bank/Group for TODO GPIO (PIO1_24) (Radio/USART?)
+ (uint8_t*) 0x10000061 - GPIO Number for TODO Power GPIO (PIO1_24) (Radio/USART?)
+ (uint8_t*) 0x10000062 - Bank/Group for TODO GPIO (PIO1_8) (Radio/USART?)
+ (uint8_t*) 0x10000063 - GPIO Number for TODO Power GPIO (PIO1_8) (Radio/USART?)
 
 (uint16_t*) 0x10000080 - USB_HID_REPORT_T field for HID EP1
 			  uint16_t len; /**< Size of the report descriptor in bytes. */ 
@@ -193,6 +197,9 @@
   (int8_t*) 0x100002d4 - Related to JTAG TDI_PIO0_11 setup?
   (int8_t*) 0x100002d5 - Related to JTAG TDO_PIO0_13 setup?
 
+ (uint8_t*) 0x100002de - Related to USART (Radio)?
+(uint32_t*) 0x100002e0 = Related to USART (Radio)? Fnc pointer?
+
  (uint8_t*) 0x10000310 - ADC channel (2) associated with TODO functionality
  (uint8_t*) 0x10000311 - ADC channel (0) associated with TODO functionality
 
@@ -274,7 +281,7 @@
  (uint8_t*) 0x1000092b - Flag? related to S8 Left Bumper Button
  (uint8_t*) 0x1000092c - Flag? related to S2 Left Trackpad Click Button
  (uint8_t*) 0x1000092d - Flag? related to S19 Front Right Arrow Button
- (uint8_t*) 0x1000092e - Flag? related to S? Steam Button
+ (uint8_t*) 0x1000092e - Flag? related to S18 Steam Button
  (uint8_t*) 0x1000092f - Flag? related to S17 Front Left Arrow Button
  (uint8_t*) 0x10000930 - Flag? related to ?? Button
  (uint8_t*) 0x10000931 - Flag? related to ?? Button
@@ -629,10 +636,10 @@
 			 changing state (fnc0x000055e8()).
 (uint32_t*) 0x100010b8 - Callback function. Related to PINT1 (PIO0_2 change).
 
-(uint32_t*) 0x100010b0 - UKNOWN STRUCT A UNKNOWN FIELD A (initialized to 0x000e1000)
- (uint8_t*) 0x100010ab - UKNOWN STRUCT A UNKNOWN FIELD B (initialized to 0x11)
- (uint8_t*) 0x100010aa - UKNOWN STRUCT A UNKNOWN FIELD C (initialized to 0x01)
- (uint8_t*) 0x100010ad - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x12)
+(uint32_t*) 0x100010b0 - UKNOWN STRUCT A UNKNOWN FIELD A (initialized to 0x000e1000) Related to USART (Radio)? Baud Rate Maybe....?
+ (uint8_t*) 0x100010ab - UKNOWN STRUCT A UNKNOWN FIELD B (initialized to 0x11) Related to USART (Radio)?
+ (uint8_t*) 0x100010aa - UKNOWN STRUCT A UNKNOWN FIELD C (initialized to 0x01) Related to USART (Radio)?
+ (uint8_t*) 0x100010ad - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x12) Related to USART (Radio)?
  (uint8_t*) 0x100010ac - UKNOWN STRUCT A UNKNOWN FIELD E (initialized to 0x01)
  (uint8_t*) 0x100010a8 - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x01)
  (uint8_t*) 0x100010a9 - UKNOWN STRUCT A UNKNOWN FIELD F (initialized to 0x05)

@@ -1234,3 +1234,18 @@ void fnc0x00004e84(arg0x00004e84_0);
  * \return None.
  */
 void fnc0x00007934();
+
+/**
+ * Configure TBD PIO1_24 and TBD PIO1_8. Radio/USART related?
+ * 
+ * \return None.
+ */
+void fnc0x0000ba44();
+
+// USART/RF chip communications init?
+?? fnc0x0000bd3c( arg0x0000bd3c_0, arg0x0000bd3c_1, arg0x0000bd3c_2, arg0x0000bd3c_3, arg0x0000bd3c_4, arg0x0000bd3c_5, arg0x0000bd3c_6, arg0x0000bd3c_12, )
+
+?? fnc0x0000ba9c( arg0x0000ba9c_0, arg0x0000ba9c_1, arg0x0000ba9c_2, arg0x0000ba9c_3, arg0x0000ba9c_4, arg0x0000ba9c_5, arg0x0000ba9c_6, arg0x0000ba9c_12, )
+
+//USART Config?
+?? fnc0x0000a648( arg0x0000a648_0, arg0x0000a648_1, arg0x0000a648_2, arg0x0000a648_3, arg0x0000a648_4, arg0x0000a648_5, arg0x0000a648_6, arg0x0000a648_12, )

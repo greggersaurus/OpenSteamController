@@ -84,6 +84,7 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. PIO0_7
         1. PIO0_22 (AD6) What does this read...?
         1. PIO1_1 (JTAG related?)
+        1. PIO1_28 and PIO1_4 (USART/Radio chip related?)
     1. Add Chart to label how hardware peripherals are used?
         1. CT16B1 = driving Steam Controller LED
         1. CT16B0 = used as timer for a delay during init. (That it?)
@@ -94,3 +95,7 @@ This section is a running list of priorities to focus on in hopes of reaching
 1. How is communication occurring with radio chip?
 1. Can we (continue to) make pinkySim logging better 
     1. More automation or second steps for cleaning .c log file?
+1. Look into wireless chip
+    1. Is same one on dongle?
+        1. If so can I use dongle as dev board?
+            1. If not should I order a dev board (https://www.nordicsemi.com/eng/Products/nRF51-Dongle)
