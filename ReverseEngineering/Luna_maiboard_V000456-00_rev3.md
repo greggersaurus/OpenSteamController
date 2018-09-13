@@ -55,7 +55,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            29 | PIO0_6                | not(USB_CONNECT) | Out           | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
 |            30 | PIO0_7                | PIO0_7           | Out           | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)). Related/similar to GPIO1_28? Any other purpose? More details? TODO|
 |            31 | PIO1_28               | PIO1_28          | Out           | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)). Related/similar to GPIO0_7? Any other purpose? More details? TODO |
-|            32 | PIO1_5                |                  |               | |
+|            32 | PIO1_5                | PIO1_5           | In            | USART/Radio Chip Related. PINT2 setup to monitor change. Trace leads to TODO|
 |            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            34 | PIO1_2                | PIO1_2           | In            | S19 - FRONT_R (Front right arrow button) | 
 |            35 | PIO1_21               | PIO1_21          | In            | S5 - Right trackpad click  |

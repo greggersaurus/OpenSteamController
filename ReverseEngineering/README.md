@@ -85,6 +85,7 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. PIO0_22 (AD6) What does this read...?
         1. PIO1_1 (JTAG related?)
         1. PIO1_28 and PIO1_4 (USART/Radio chip related?)
+        1. PIO1_5 (USART/Radio chip related. PINT2).
     1. Add Chart to label how hardware peripherals are used?
         1. CT16B1 = driving Steam Controller LED
         1. CT16B0 = used as timer for a delay during init. (That it?)

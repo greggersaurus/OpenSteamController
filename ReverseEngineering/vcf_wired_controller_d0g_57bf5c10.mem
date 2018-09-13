@@ -632,17 +632,20 @@
    (float*) 0x10001088 - Related to AD0/AD2 TODO functionality. Initialized to
 			 value 32767.0
 
+ (uint8_t*) 0x100010a8 - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x01) Related to USART (Radio). PINTSEL2 GPIO Bank/Group.
+ (uint8_t*) 0x100010a9 - UKNOWN STRUCT A UNKNOWN FIELD F (initialized to 0x05) Related to USART (Radio). PINTSEL2 GPIO Number.
+ (uint8_t*) 0x100010aa - UKNOWN STRUCT A UNKNOWN FIELD C (initialized to 0x01) Related to USART (Radio). RXD GPIO Bank/Group.
+ (uint8_t*) 0x100010ab - UKNOWN STRUCT A UNKNOWN FIELD B (initialized to 0x11) Related to USART (Radio). RXD GPIO Number.
+ (uint8_t*) 0x100010ac - UKNOWN STRUCT A UNKNOWN FIELD E (initialized to 0x01) Related to USART (Radio). TXD GPIO Bank/Group.
+ (uint8_t*) 0x100010ad - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x12) Related to USART (Radio). TXD GPIO Number.
+(uint32_t*) 0x100010b0 - UKNOWN STRUCT A UNKNOWN FIELD A (initialized to 0x000e1000) Related to USART (Radio). Baud Rate Maybe....?
+
 (uint32_t*) 0x100010b4 - Callback function? Related to PIO0_3 (USB_VBUS) 
 			 changing state (fnc0x000055e8()).
 (uint32_t*) 0x100010b8 - Callback function. Related to PINT1 (PIO0_2 change).
+(uint32_t*) 0x100010bc - Callback function. Related to PINT2 (PIO1_5 change).
+			 Related to USART/Radio.
 
-(uint32_t*) 0x100010b0 - UKNOWN STRUCT A UNKNOWN FIELD A (initialized to 0x000e1000) Related to USART (Radio)? Baud Rate Maybe....?
- (uint8_t*) 0x100010ab - UKNOWN STRUCT A UNKNOWN FIELD B (initialized to 0x11) Related to USART (Radio)?
- (uint8_t*) 0x100010aa - UKNOWN STRUCT A UNKNOWN FIELD C (initialized to 0x01) Related to USART (Radio)?
- (uint8_t*) 0x100010ad - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x12) Related to USART (Radio)?
- (uint8_t*) 0x100010ac - UKNOWN STRUCT A UNKNOWN FIELD E (initialized to 0x01)
- (uint8_t*) 0x100010a8 - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x01)
- (uint8_t*) 0x100010a9 - UKNOWN STRUCT A UNKNOWN FIELD F (initialized to 0x05)
 
 (uint16_t*) 0x10001140 - HID EP3 related?
  (uint8_t*) 0x10001142 - HID EP3 related?

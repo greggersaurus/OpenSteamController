@@ -1245,7 +1245,37 @@ void fnc0x0000ba44();
 // USART/RF chip communications init?
 ?? fnc0x0000bd3c( arg0x0000bd3c_0, arg0x0000bd3c_1, arg0x0000bd3c_2, arg0x0000bd3c_3, arg0x0000bd3c_4, arg0x0000bd3c_5, arg0x0000bd3c_6, arg0x0000bd3c_12, )
 
-?? fnc0x0000ba9c( arg0x0000ba9c_0, arg0x0000ba9c_1, arg0x0000ba9c_2, arg0x0000ba9c_3, arg0x0000ba9c_4, arg0x0000ba9c_5, arg0x0000ba9c_6, arg0x0000ba9c_12, )
+/**
+ * Configure communications with Radio Chip. Setup USART and GPIO1_5 to monitor
+ *  as interrupt.
+ *
+ * \return None.
+ */
+void fnc0x0000ba9c();
 
-//USART Config?
-?? fnc0x0000a648( arg0x0000a648_0, arg0x0000a648_1, arg0x0000a648_2, arg0x0000a648_3, arg0x0000a648_4, arg0x0000a648_5, arg0x0000a648_6, arg0x0000a648_12, )
+/**
+ * Configure USART0. 
+ *
+ * \param arg0x0000a648_0 Baud rate? Potentially unused.
+ * \param arg0x0000a648_1 RXD GPIO Bank/Group.
+ * \param arg0x0000a648_2 RXD GPIO Number.
+ * \param arg0x0000a648_3 TXD GPIO Bank/Group.
+ * Note: TXD GPIO Number was pushed onto stack before function call.
+ * 
+ * \return None.
+ */
+void fnc0x0000a648(arg0x0000a648_0, arg0x0000a648_1, arg0x0000a648_2, arg0x0000a648_3);
+
+?? fnc0x0000bcfc( arg0x0000bcfc_0, arg0x0000bcfc_1, arg0x0000bcfc_2, arg0x0000bcfc_3, arg0x0000bcfc_4, arg0x0000bcfc_5, arg0x0000bcfc_6, arg0x0000bcfc_12, )
+
+?? fnc0x0000bad8( arg0x0000bad8_0, arg0x0000bad8_1, arg0x0000bad8_2, arg0x0000bad8_3, arg0x0000bad8_4, arg0x0000bad8_5, arg0x0000bad8_6, arg0x0000bad8_12, )
+
+?? fnc0x0000a7e0( arg0x0000a7e0_0, arg0x0000a7e0_1, arg0x0000a7e0_2, arg0x0000a7e0_3, arg0x0000a7e0_4, arg0x0000a7e0_5, arg0x0000a7e0_6, arg0x0000a7e0_12, )
+
+?? fnc0x0000a86c( arg0x0000a86c_0, arg0x0000a86c_1, arg0x0000a86c_2, arg0x0000a86c_3, arg0x0000a86c_4, arg0x0000a86c_5, arg0x0000a86c_6, arg0x0000a86c_12, )
+
+?? fnc0x0000a77c( arg0x0000a77c_0, arg0x0000a77c_1, arg0x0000a77c_2, arg0x0000a77c_3, arg0x0000a77c_4, arg0x0000a77c_5, arg0x0000a77c_6, arg0x0000a77c_12, )
+
+?? fnc0x0000a800( arg0x0000a800_0, arg0x0000a800_1, arg0x0000a800_2, arg0x0000a800_3, arg0x0000a800_4, arg0x0000a800_5, arg0x0000a800_6, arg0x0000a800_12, )
+
+?? fnc0x0000a85c( arg0x0000a85c_0, arg0x0000a85c_1, arg0x0000a85c_2, arg0x0000a85c_3, arg0x0000a85c_4, arg0x0000a85c_5, arg0x0000a85c_6, arg0x0000a85c_12, )
