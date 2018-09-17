@@ -1242,8 +1242,13 @@ void fnc0x00007934();
  */
 void fnc0x0000ba44();
 
-// USART/RF chip communications init?
-?? fnc0x0000bd3c( arg0x0000bd3c_0, arg0x0000bd3c_1, arg0x0000bd3c_2, arg0x0000bd3c_3, arg0x0000bd3c_4, arg0x0000bd3c_5, arg0x0000bd3c_6, arg0x0000bd3c_12, )
+/**
+ * Radio Chip Init? Setup USART and send some messages to Radio Chip.
+ *  TODO: what do these messages do and are any responses expected checked?
+ *
+ * \return None.
+ */
+void fnc0x0000bd3c();
 
 /**
  * Configure communications with Radio Chip. Setup USART and GPIO1_5 to monitor
@@ -1266,16 +1271,74 @@ void fnc0x0000ba9c();
  */
 void fnc0x0000a648(arg0x0000a648_0, arg0x0000a648_1, arg0x0000a648_2, arg0x0000a648_3);
 
-?? fnc0x0000bcfc( arg0x0000bcfc_0, arg0x0000bcfc_1, arg0x0000bcfc_2, arg0x0000bcfc_3, arg0x0000bcfc_4, arg0x0000bcfc_5, arg0x0000bcfc_6, arg0x0000bcfc_12, )
+/**
+ * Send TODO (init? powerdown?) message [0x2, 0x53, 0x03] to Radio (via UART)??
+ *
+ * \return None.
+ */
+void fnc0x0000bcfc();
 
-?? fnc0x0000bad8( arg0x0000bad8_0, arg0x0000bad8_1, arg0x0000bad8_2, arg0x0000bad8_3, arg0x0000bad8_4, arg0x0000bad8_5, arg0x0000bad8_6, arg0x0000bad8_12, )
+/**
+ * Transmit Message to Radio (via UART). Note this literally just wraps
+ *	fnc0x0000a7e0()... Not sure why...
+ *
+ * \param arg0x0000bad8_0 (uint8_t*) Address of byte to be written out via UART.
+ * \param arg0x0000bad8_1 Buffer size (i.e. number of bytes to write)?
+ *
+ * \return None.
+ */
+void fnc0x0000bad8(arg0x0000bad8_0, arg0x0000bad8_1);
 
-?? fnc0x0000a7e0( arg0x0000a7e0_0, arg0x0000a7e0_1, arg0x0000a7e0_2, arg0x0000a7e0_3, arg0x0000a7e0_4, arg0x0000a7e0_5, arg0x0000a7e0_6, arg0x0000a7e0_12, )
+/**
+ * Transmit Message to Radio (via UART).
+ *
+ * \param arg0x0000a7e0_0 (uint8_t*) Address of byte to be written out via UART.
+ * \param arg0x0000a7e0_1 Buffer size (i.e. number of bytes to write)?
+ *
+ * \return None.
+ */
+void fnc0x0000a7e0(arg0x0000a7e0_0, arg0x0000a7e0_1);
 
-?? fnc0x0000a86c( arg0x0000a86c_0, arg0x0000a86c_1, arg0x0000a86c_2, arg0x0000a86c_3, arg0x0000a86c_4, arg0x0000a86c_5, arg0x0000a86c_6, arg0x0000a86c_12, )
+/**
+ * Transmit 0x02 to Radio Chip (via USART).
+ * TODO: How does make Radio chip react? Start of message marker maybe?
+ *
+ * \return None.
+ */
+void fnc0x0000a86c();
 
-?? fnc0x0000a77c( arg0x0000a77c_0, arg0x0000a77c_1, arg0x0000a77c_2, arg0x0000a77c_3, arg0x0000a77c_4, arg0x0000a77c_5, arg0x0000a77c_6, arg0x0000a77c_12, )
+/**
+ * Transmit byte via USART. If USART TX FIFO is full, byte will be buffered in
+ *  RAM FIFO.
+ *
+ * \param arg0x0000a77c_0 (uint8_t*) Address of byte to be written out via UART.
+ * \param arg0x0000a77c_1 Some sort of flag... Always simulated with '1' so far...
+ *
+ * \return None.
+ */
+void fnc0x0000a77c(arg0x0000a77c_0, arg0x0000a77c_1);
 
-?? fnc0x0000a800( arg0x0000a800_0, arg0x0000a800_1, arg0x0000a800_2, arg0x0000a800_3, arg0x0000a800_4, arg0x0000a800_5, arg0x0000a800_6, arg0x0000a800_12, )
+/**
+ * Transmit byte(s?) (message payload?) to Radio Chip (via USART).
+ *
+ * \param arg0x0000a77c_0 (uint8_t*) Address of byte to be written out via UART.
+ * \param arg0x0000a77c_1 Buffer size (i.e. number of bytes to write)?
+ *
+ * \return None.
+ */
+void fnc0x0000a800(arg0x0000a800_0, arg0x0000a800_1);
 
-?? fnc0x0000a85c( arg0x0000a85c_0, arg0x0000a85c_1, arg0x0000a85c_2, arg0x0000a85c_3, arg0x0000a85c_4, arg0x0000a85c_5, arg0x0000a85c_6, arg0x0000a85c_12, )
+/**
+ * Transmit 0x03 to Radio Chip (via USART).
+ * TODO: How does make Radio chip react? End of message marker maybe?
+ *
+ * \return None.
+ */
+void fnc0x0000a85c();
+
+/**
+ * Send TODO (??) message [0x2, 0x58, 0x03] to Radio (via UART)??
+ *
+ * \return None.
+ */
+void fnc0x0000c000();

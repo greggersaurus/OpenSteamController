@@ -24,6 +24,14 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Things to try immediately (see farther below for more details)
+    1. Simulate USART and PINT2 IRQs, as well as USB callbacks (at least resume)
+        1. All seem to be related... (in that there is some UART comms with Radio)
+    1. Dev Board comms with Radio Chip via UART
+        1. Monitor PIO1_5 and (anything else we can watch?) to check for change after sending same mesages?
+    1. Monitor GPIO1_5 when RF dongle is plugged in or not
+        1. Scope with official FW?
+
 1. Consider converting project(s) to CPP
     1. What version does compiler support?
         1. constexpr goodness?
@@ -46,8 +54,10 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. SysTick
             1. (Re)visit this as priority is set to max in config
         1. Callbacks (need to understand hUsb stack details?)
-            1. USB_Resume_Event at 0x00008de5
             1. USB_Configure_Event at 0x00004e59
+                1. This may be key to dig into as counter shared with USART inital TX also is checked and incremented here...
+                1. Make sure you understand when this actually fires (i.e. not until USB is enabled maybe...? Or could it be sooner? Or later triggered by external event?)
+            1. USB_Resume_Event at 0x00008de5
             1. USB_Reset_Event at 0x00008d8b 
             1. USB_Suspend_Event at 0x0000995d 
             1. HID_GetReport at 0x00005af1
@@ -61,8 +71,13 @@ This section is a running list of priorities to focus on in hopes of reaching
             1. Any responses expected from radio that would change path?
         1. Looping on checking some variables (related to Radio maybe?)
     1. Questions to consider
+        1. What can we run via DevBoard firmware?
+            1. What if we send USART messages to Radio chip and monitor GPIO1_5?
         1. Where is path of communicating with nRF51822 wireless chip?
             1. How is communication with this achieved (USART)?
+        1. Where is firmware for Radio chip?
+            1. How is this updated by Valve?
+                1. Check latest vcf as we know there was an update with latest firmware...?
         1. Should focus be Focus on USB_VBUS = 0 instead of USB_VBUS = 1?
             1. For USB_VBUS = 1 case jingle seems to be triggered by USB activity (i.e. driver probing/enumerating)
             1. For USB_VBUS = 0 case jingle seems to be triggered by communicating with RF chip
@@ -83,6 +98,7 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. PIO1_1 (JTAG related?)
         1. PIO1_28 and PIO1_4 (USART/Radio chip related?)
         1. PIO1_5 (USART/Radio chip related. PINT2).
+            1. What is state of this? Changes if we send messages via UART?
     1. Add Chart to label how hardware peripherals are used?
         1. CT16B1 = driving Steam Controller LED
         1. CT16B0 = used as timer for a delay during init. (That it?)

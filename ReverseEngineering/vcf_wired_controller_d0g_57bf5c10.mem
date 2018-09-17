@@ -197,8 +197,16 @@
   (int8_t*) 0x100002d4 - Related to JTAG TDI_PIO0_11 setup?
   (int8_t*) 0x100002d5 - Related to JTAG TDO_PIO0_13 setup?
 
+ (uint8_t*) 0x100002db - Circular UART TX Buffer read pointer?
+			 Checked in USB_Configure_Event...
+ (uint8_t*) 0x100002dc - Circular UART TX Buffer write pointer?
+ (uint8_t*) 0x100002dd - Counts how many bytes are queued in USART TX FIFO?
+			 Checked in USB_Configure_Event...
  (uint8_t*) 0x100002de - Related to USART (Radio)?
 (uint32_t*) 0x100002e0 = Related to USART (Radio)? Fnc pointer?
+ (uint8_t*) 0x100002e4 - Related to USART (Radio)?
+
+(uint32_t*) 0x100002f4 = Related to USART (Radio)? 
 
  (uint8_t*) 0x10000310 - ADC channel (2) associated with TODO functionality
  (uint8_t*) 0x10000311 - ADC channel (0) associated with TODO functionality
@@ -503,7 +511,14 @@
 			 Joystick X/Y and ADC?)
 (uint32_t*) 0x10000de0 - Third in array of function pointers (related to 
 			 Controller Buttons?)
+(uint32_t*) 0x10000de4 - Fourth in array of function pointers (related to 
+			 Radio/USART?)
 
+ (uint8_t*) 0x10000f00 - Circular USART TX Buffer[0]. Used to queue TX Data 
+			 for USART when USART (HW) TX FIFO is full?
+ ...
+ (uint8_t*) 0x10000f7f - Circular USART TX Buffer[127]. Used to queue TX Data 
+			 for USART when USART (HW) TX FIFO is full?
 (uint16_t*) 0x10000f80 - ADC Channel 0 accumulator?
 (uint16_t*) 0x10000f82 - ADC Channel 1 accumulator?
 (uint16_t*) 0x10000f84 - ADC Channel 2 accumulator?
