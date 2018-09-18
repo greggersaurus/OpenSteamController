@@ -1361,7 +1361,14 @@ void fnc0x00009b28();
  */
 void fnc0x00009a72(arg0x00009a72_0, arg0x00009a72_1);
 
-?? fnc0x0000b9f4( arg0x0000b9f4_0, arg0x0000b9f4_1, arg0x0000b9f4_2, arg0x0000b9f4_3, arg0x0000b9f4_4, arg0x0000b9f4_5, arg0x0000b9f4_6, arg0x0000b9f4_12, )
+/**
+ * Setup the watchdog timer
+ *
+ * \param arg0x0000b9f4_0 Watchdog timeout value (in units of 12M clocks).
+ *
+ * \return None.
+ */
+void fnc0x0000b9f4(arg0x0000b9f4_0);
 
 ?? fnc0x00002fd8( arg0x00002fd8_0, arg0x00002fd8_1, arg0x00002fd8_2, arg0x00002fd8_3, arg0x00002fd8_4, arg0x00002fd8_5, arg0x00002fd8_6, arg0x00002fd8_12, )
 
