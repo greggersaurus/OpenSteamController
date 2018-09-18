@@ -1370,7 +1370,17 @@ void fnc0x00009a72(arg0x00009a72_0, arg0x00009a72_1);
  */
 void fnc0x0000b9f4(arg0x0000b9f4_0);
 
-?? fnc0x00002fd8( arg0x00002fd8_0, arg0x00002fd8_1, arg0x00002fd8_2, arg0x00002fd8_3, arg0x00002fd8_4, arg0x00002fd8_5, arg0x00002fd8_6, arg0x00002fd8_12, )
+/**
+ * Enable/connect via USB. Make sure USB is setup and then indicate that USB
+ *  device must signal a connect. The pull-up resistor on USB_DP will be enabled
+ *  when this bit is set and the VbusDebounced bit is one.
+ *
+ * \param arg0x00002fd8_0 Flag. Checked at beginning of function. Unknown if
+ * 	not set.
+ *
+ * \return None.
+ */
+void fnc0x00002fd8(arg0x00002fd8_0);
 
 ?? fnc0x00007728( arg0x00007728_0, arg0x00007728_1, arg0x00007728_2, arg0x00007728_3, arg0x00007728_4, arg0x00007728_5, arg0x00007728_6, arg0x00007728_12, )
 

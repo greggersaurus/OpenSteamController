@@ -87,6 +87,8 @@
  (uint8_t*) 0x10000062 - Bank/Group for TODO GPIO (PIO1_8) (Radio/USART?)
  (uint8_t*) 0x10000063 - GPIO Number for TODO Power GPIO (PIO1_8) (Radio/USART?)
 
+ (uint8_t*) 0x10000074 - Related to USB being connected or maybe WWDT?
+
 (uint16_t*) 0x10000080 - USB_HID_REPORT_T field for HID EP1
 			  uint16_t len; /**< Size of the report descriptor in bytes. */ 
  (uint8_t*) 0x10000082 - USB_HID_REPORT_T field for HID EP1
