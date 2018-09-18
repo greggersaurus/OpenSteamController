@@ -31,6 +31,8 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. Monitor PIO1_5 and (anything else we can watch?) to check for change after sending same mesages?
     1. Monitor GPIO1_5 when RF dongle is plugged in or not
         1. Scope with official FW?
+    1. Check out what SysTick is doing now that it is setup
+        1. It's configured to fire every millisecond
 
 1. Consider converting project(s) to CPP
     1. What version does compiler support?
@@ -52,7 +54,7 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. PINT2
             1. Related to Radio?
         1. SysTick
-            1. (Re)visit this as priority is set to max in config
+            1. (Re)visit this as it is now being setup
         1. Callbacks (need to understand hUsb stack details?)
             1. USB_Configure_Event at 0x00004e59
                 1. This may be key to dig into as counter shared with USART inital TX also is checked and incremented here...

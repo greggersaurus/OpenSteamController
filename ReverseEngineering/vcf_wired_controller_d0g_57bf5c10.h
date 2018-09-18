@@ -186,10 +186,10 @@ uint32_t fnc0x000041b0();
 /**
  * Compute arg0x000020ec_0 / arg0x000020ec_1. Note this processor has no FPU.
  *
- * \param arg0x000020ec_0 Dividend
- * \param arg0x000020ec_1 Divisor
+ * \param arg0x000020ec_0 (uint32_t) Dividend
+ * \param arg0x000020ec_1 (uint32_t) Divisor
  *
- * \return arg0x000020ec_0 / arg0x000020ec_1.
+ * \return (uint32_t)arg0x000020ec_0 / (uint32_t)arg0x000020ec_1.
  */
 int fnc0x000020ec(arg0x000020ec_0, arg0x000020ec_1);
 
@@ -1342,3 +1342,31 @@ void fnc0x0000a85c();
  * \return None.
  */
 void fnc0x0000c000();
+
+/**
+ * Setup SysTick to fire every millisecond
+ *
+ * \return None.
+ */
+void fnc0x00009b28();
+
+/**
+ * Setup SysTick to fire at a particular rate and enable
+ *
+ * \param arg0x00009a72_0 The number of system clocks for after which the 
+ *	SysTick IRQ will periodically fire.
+ * \param arg0x00009a72_1 Defines the largest value that arg0x00009a72_0 can be.
+ *
+ * \return None.
+ */
+void fnc0x00009a72(arg0x00009a72_0, arg0x00009a72_1);
+
+?? fnc0x0000b9f4( arg0x0000b9f4_0, arg0x0000b9f4_1, arg0x0000b9f4_2, arg0x0000b9f4_3, arg0x0000b9f4_4, arg0x0000b9f4_5, arg0x0000b9f4_6, arg0x0000b9f4_12, )
+
+?? fnc0x00002fd8( arg0x00002fd8_0, arg0x00002fd8_1, arg0x00002fd8_2, arg0x00002fd8_3, arg0x00002fd8_4, arg0x00002fd8_5, arg0x00002fd8_6, arg0x00002fd8_12, )
+
+?? fnc0x00007728( arg0x00007728_0, arg0x00007728_1, arg0x00007728_2, arg0x00007728_3, arg0x00007728_4, arg0x00007728_5, arg0x00007728_6, arg0x00007728_12, )
+
+?? fnc0x00007734( arg0x00007734_0, arg0x00007734_1, arg0x00007734_2, arg0x00007734_3, arg0x00007734_4, arg0x00007734_5, arg0x00007734_6, arg0x00007734_12, )
+
+?? fnc0x0000625c( arg0x0000625c_0, arg0x0000625c_1, arg0x0000625c_2, arg0x0000625c_3, arg0x0000625c_4, arg0x0000625c_5, arg0x0000625c_6, arg0x0000625c_12, )
