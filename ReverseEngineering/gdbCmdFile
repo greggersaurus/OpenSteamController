@@ -801,15 +801,14 @@ else
 	#------------------------------------------------------------------------------#
 
 
-# TODO: need to Simulate USB Callbacks...?
 
-	# Setup watchpoint for...
-#	watch $pc == 0x000098f0
+	# Setup watchpoint right before wfi after compare of *(uint8_t*)0x100002b7 and *(uint8_t*)0x100002b4
+	watch $pc == 0x0000d858
 
 	# Execute until watchpoint
-#	continue
+	continue
 
-#	stepi
+# TODO: Simulate USB callback and other interrupts...
 
 	##
 	##set $lr = $pc
@@ -831,8 +830,15 @@ else
 #	set $pc = 0x00008de4
 	##
 
+	##
+# TODO: Change states so that wfi does not occur?
+	# Set PC to move past wfi (as simulator cannot handle it)
+	set $pc = 0x0000d85a
+	##
+
 	# Remove watchpoint
-#	delete 
+	delete 
+
 
 	#------------------------------------------------------------------------------#
 

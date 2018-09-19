@@ -26,6 +26,90 @@
  * SOFTWARE.
  */
 
+USB_HID0 HID Report Descriptor (len 0x41):
+0x0000eeaa - 0x0000eeea
+	 HID_UsagePage(HID_USAGE_PAGE_GENERIC)
+	 HID_Usage(HID_USAGE_GENERIC_KEYBOARD)
+	 HID_ReportCount(1)
+	 HID_Collection(HID_Application)
+	 HID_UsagePage(HID_USAGE_PAGE_KEYBOARD)
+	 HID_UsageMin(224)
+	 HID_UsageMax(231)
+	 HID_LogicalMin(0)
+	 HID_LogicalMax(1)
+	 HID_ReportSize(1)
+	 HID_ReportCount(8)
+	 HID_Input(HID_Variable) // 0x02
+	 HID_ReportCount(1)
+	 HID_ReportSize(8)
+	 HID_Input(HID_Constant) // 0x01
+	 HID_ReportCount(5)
+	 HID_ReportSize(1)
+	 HID_UsagePage(HID_USAGE_PAGE_LED)
+	 HID_UsageMin(1)
+	 HID_UsageMax(5)
+	 HID_Output(HID_Variable)
+	 HID_ReportCount(1)
+	 HID_ReportSize(3)
+	 HID_Output(HID_Constant)
+	 HID_ReportCount(6)
+	 HID_ReportSize(8)
+	 HID_LogicalMin(0)
+	 HID_LogicalMax(101)
+	 HID_UsagePage(HID_USAGE_PAGE_KEYBOARD)
+	 HID_UsageMin(0)
+	 HID_UsageMax(101)
+	 HID_Input(HID_Data) // 0x00
+	 HID_EndCollection
+
+USB_HID1 HID Report Descriptor (len 0x34):
+0x0000ee74 - 0x0000eea7
+	HID_UsagePage(HID_USAGE_PAGE_GENERIC)
+	HID_Usage(HID_USAGE_GENERIC_MOUSE)
+	HID_Collection(HID_Application)
+	HID_Usage(HID_USAGE_GENERIC_POINTER)
+	HID_Collection(HID_Physical)
+	HID_UsagePage(HID_USAGE_PAGE_BUTTON)
+	HID_UsageMin(1)
+	HID_UsageMax(5)
+	HID_LogicalMin(0)
+	HID_LogicalMax(1)
+	HID_ReportCount(5)
+	HID_ReportSize(1)
+	HID_Input(HID_Variable) // 0x02
+	HID_ReportCount(1)
+	HID_ReportSize(3)
+	HID_Input(HID_Constant) // 0x01
+	HID_UsagePage(HID_USAGE_PAGE_GENERIC)
+	HID_Usage(HID_USAGE_GENERIC_X)
+	HID_Usage(HID_USAGE_GENERIC_Y)
+	HID_Usage(HID_USAGE_GENERIC_WHEEL)
+	HID_LogicalMin(-127)
+	HID_LogicalMax(127)
+	HID_ReportSize(8)
+	HID_ReportCount(3)
+	HID_Input(HID_Relative | HID_Variable) // 0x06
+	HID_EndCollection
+
+USB_HID2 HID Report Descriptor (len 0x21):
+0x0000eeee - 0x0000ef0e
+	HID_UsagePageVendor(HID_USAGE_PAGE_UNDEFINED)
+	HID_Usage(HID_USAGE_GENERIC_POINTER)
+	HID_Collection(HID_Application)
+	HID_LogicalMin(0)
+	HID_LogicalMaxS(255)
+	HID_ReportSize(8)
+	HID_ReportCount(64)
+	HID_Usage(HID_USAGE_GENERIC_POINTER)
+	HID_Input(HID_Variable) // 0x02
+	HID_ReportCount(64)
+	HID_Usage(HID_USAGE_GENERIC_POINTER)
+	HID_Output(HID_Variable) // 0x02
+	HID_ReportSize(64)
+	HID_Output(HID_Constant) // 0x01
+	HID_Feature(HID_Variable) // 0x02
+	HID_EndCollection
+
  (uint8_t*) 0x10000000 - Related to CT16B0
  (uint8_t*) 0x10000001 - Flag to indicate CT16B0 interrupt has fired and been
 			 handled.
