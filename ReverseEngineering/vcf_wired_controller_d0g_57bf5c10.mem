@@ -176,7 +176,12 @@
 			 high, this is set to high. If PIO1_12 is low, this is 
 			 set value of PIO0_18.
 
+ (uint8_t*) 0x100002b4 - Checked on loop once init reaches a certain point...
+			 Check if is equal to 0x100002b7
+
  (uint8_t*) 0x100002b6 - Related to reading DR6?? Some sort of flag/bool?
+ (uint8_t*) 0x100002b7 - Checked on loop once init reaches a certain point...
+			 Check if is equal to 0x100002b4
 
 (uint16_t*) 0x100002b8 - Voltage related to DR6 in mV? Checked if is greater 
 			 than or equal to 0x000005dc if PIO0_2=1 during boot 
@@ -666,6 +671,8 @@
 (uint32_t*) 0x100010b8 - Callback function. Related to PINT1 (PIO0_2 change).
 (uint32_t*) 0x100010bc - Callback function. Related to PINT2 (PIO1_5 change).
 			 Related to USART/Radio.
+
+(uint32_t*) 0x100010d8 - Related to USB callbacks? Interrupt disabled in order to check...
 
 
 (uint16_t*) 0x10001140 - HID EP3 related?

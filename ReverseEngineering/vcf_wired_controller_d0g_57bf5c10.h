@@ -1382,8 +1382,24 @@ void fnc0x0000b9f4(arg0x0000b9f4_0);
  */
 void fnc0x00002fd8(arg0x00002fd8_0);
 
-?? fnc0x00007728( arg0x00007728_0, arg0x00007728_1, arg0x00007728_2, arg0x00007728_3, arg0x00007728_4, arg0x00007728_5, arg0x00007728_6, arg0x00007728_12, )
+/**
+ * Check some (USB related?) variable. Not sure what happens if variable is
+ *  not 0...
+ *
+ * \return None.
+ */
+void fnc0x00007728();
 
-?? fnc0x00007734( arg0x00007734_0, arg0x00007734_1, arg0x00007734_2, arg0x00007734_3, arg0x00007734_4, arg0x00007734_5, arg0x00007734_6, arg0x00007734_12, )
+/**
+ * Check some (USB related?) internal variable twice.
+ *
+ * \return 0 if variable was not set...
+ */
+int fnc0x00007734();
 
-?? fnc0x0000625c( arg0x0000625c_0, arg0x0000625c_1, arg0x0000625c_2, arg0x0000625c_3, arg0x0000625c_4, arg0x0000625c_5, arg0x0000625c_6, arg0x0000625c_12, )
+/**
+ * Disable interrupts and check some (USB related?) variable.
+ * 
+ * \return 1 if variable is not set...
+ */
+int fnc0x0000625c();
