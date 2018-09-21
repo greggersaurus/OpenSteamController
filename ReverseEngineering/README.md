@@ -31,8 +31,6 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. Monitor PIO1_5 and (anything else we can watch?) to check for change after sending same mesages?
     1. Monitor GPIO1_5 when RF dongle is plugged in or not
         1. Scope with official FW?
-    1. Check out what SysTick is doing now that it is setup
-        1. It's configured to fire every millisecond
     1. USB related callbacks
         1. Seems some variable related to wfi loop in main path may be related to USB (and maybe changed in callback functions?)
 

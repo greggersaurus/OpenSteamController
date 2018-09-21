@@ -1403,3 +1403,27 @@ int fnc0x00007734();
  * \return 1 if variable is not set...
  */
 int fnc0x0000625c();
+
+/**
+ * PendSV main handler.
+ *
+ * \return None.
+ */
+void fnc0x00007674();
+
+/**
+ * PendSV callback (called by main handler).
+ *
+ * \param arg0x0000bd88_0 Unknown. Pointer to something?
+ * \param arg0x0000bd88_1 Flag. If 0 do nothing.
+ *
+ * \return None.
+ */
+void fnc0x0000bd88(arg0x0000bd88_0, arg0x0000bd88_1);
+
+/**
+ * SysTick main handler.
+ *
+ * \return None.
+ */
+void fnc0x00009ad0();

@@ -288,13 +288,16 @@ USB_HID2 HID Report Descriptor (len 0x21):
   (int8_t*) 0x100002d4 - Related to JTAG TDI_PIO0_11 setup?
   (int8_t*) 0x100002d5 - Related to JTAG TDO_PIO0_13 setup?
 
+  (int8_t*) 0x100002d8 - Related to PendSV? (Possibly) Cleared in PendSV.
+
  (uint8_t*) 0x100002db - Circular UART TX Buffer read pointer?
 			 Checked in USB_Configure_Event...
  (uint8_t*) 0x100002dc - Circular UART TX Buffer write pointer?
  (uint8_t*) 0x100002dd - Counts how many bytes are queued in USART TX FIFO?
 			 Checked in USB_Configure_Event...
- (uint8_t*) 0x100002de - Related to USART (Radio)?
-(uint32_t*) 0x100002e0 = Related to USART (Radio)? Fnc pointer?
+ (uint8_t*) 0x100002de - Related to USART (Radio)? Checked in PendSV.
+(uint32_t*) 0x100002e0 - Fnc Pointer/callback. Called in PendSV. Also related
+			 to USART (Radio)?
  (uint8_t*) 0x100002e4 - Related to USART (Radio)?
 
 (uint32_t*) 0x100002f4 = Related to USART (Radio)? 
@@ -304,10 +307,18 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
 (uint32_t*) 0x1000031c - Related to ADC Channel 2?
 
-(uint16_t*) 0x10000324 - Related to SysTick?
-(uint16_t*) 0x10000326 - Related to SysTick?
-
-(uint32_t*) 0x10000330 - Related to CT16B1?
+(uint16_t*) 0x10000324 - Related to SysTick? Counter realted to real-time 
+			 (i.e. calculating 1 ms accurately...?)
+(uint16_t*) 0x10000326 - Related to SysTick? Counter realted to real-time 
+			 (i.e. calculating 1 ms accurately...?)
+(uint32_t*) 0x10000328 - Related to SysTick? Counter realted to real-time 
+			 (i.e. calculating 1 ms accurately...?)
+(uint32_t*) 0x1000032c - Related to SysTick? Counter realted to real-time 
+			 (i.e. calculating 1 ms accurately...?)
+(uint32_t*) 0x10000330 - Related to CT16B1? And/or SysTick? Counter realted to 
+			 real-time (i.e. calculating 1 ms accurately...?)
+(uint32_t*) 0x10000334 - Related to CT16B1? And/or SysTick? Counter realted to 
+			 real-time (i.e. calculating 1 ms accurately...?)
 
 (uint32_t*) 0x10000338 - USB HID3 related?
 (uint32_t*) 0x1000033c - Function pointer for SysTick?
