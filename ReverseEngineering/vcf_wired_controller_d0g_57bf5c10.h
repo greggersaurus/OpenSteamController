@@ -1427,3 +1427,10 @@ void fnc0x0000bd88(arg0x0000bd88_0, arg0x0000bd88_1);
  * \return None.
  */
 void fnc0x00009ad0();
+
+/**
+ * PIN_INT2/PINT2 main handler
+ *
+ * \return None.
+ */
+void fnc0x000053f8();

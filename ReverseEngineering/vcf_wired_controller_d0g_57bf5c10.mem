@@ -765,7 +765,9 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 changing state (fnc0x000055e8()).
 (uint32_t*) 0x100010b8 - Callback function. Related to PINT1 (PIO0_2 change).
 (uint32_t*) 0x100010bc - Callback function. Related to PINT2 (PIO1_5 change).
-			 Related to USART/Radio.
+			 Initially setup callback that does nothing... (at least
+			 for USB_VBUS = 1 case...). Maybe just used to wakeup
+			 processor in main loop from wfi?
 
 (uint32_t*) 0x100010d8 - Related to USB callbacks? Interrupt disabled in order to check...
 
