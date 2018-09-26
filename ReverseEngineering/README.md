@@ -25,13 +25,15 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Things to try immediately (see farther below for more details)
-    1. Simulate USART and PINT2 IRQs, as well as USB callbacks (at least resume)
-        1. All seem to be related... (in that there is some UART comms with Radio)
+    1. Decode functions from new sim data now that variable changed by SysTick handler moves us forward
+        1. Don't lose track of other variables checked in previous wfi path. They might still matter...
+    1. Simulate USART IRQ 
+        1. UART comms with Radio?
     1. Dev Board comms with Radio Chip via UART
         1. Monitor PIO1_5 and (anything else we can watch?) to check for change after sending same mesages?
     1. Monitor GPIO1_5 when RF dongle is plugged in or not
         1. Scope with official FW?
-    1. USB related callbacks
+    1. USB related callbacks (at leats resume one...)
         1. Seems some variable related to wfi loop in main path may be related to USB (and maybe changed in callback functions?)
 
 1. Consider converting project(s) to CPP
@@ -73,10 +75,10 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. PIO1_28
         1. PIO0_7
         1. PIO0_22 (AD6) What does this read...?
-        1. PIO1_1 (JTAG related?)
         1. PIO1_28 and PIO1_4 (USART/Radio chip related?)
         1. PIO1_5 (USART/Radio chip related. PINT2).
             1. What is state of this? Changes if we send messages via UART?
+            1. What does trace lead to (ohm it out...)
     1. Add Chart/Table to label how hardware peripherals are used?
         1. CT16B1 = driving Steam Controller LED
         1. CT16B0 = used as timer for a delay during init. (That it?)

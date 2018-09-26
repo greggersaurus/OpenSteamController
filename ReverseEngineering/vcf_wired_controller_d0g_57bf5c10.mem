@@ -171,7 +171,9 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000062 - Bank/Group for TODO GPIO (PIO1_8) (Radio/USART?)
  (uint8_t*) 0x10000063 - GPIO Number for TODO Power GPIO (PIO1_8) (Radio/USART?)
 
- (uint8_t*) 0x10000074 - Related to USB being connected or maybe WWDT?
+ (uint8_t*) 0x10000074 - Related to USB being connected or maybe WWDT? Flag set
+			 by SysTick handler after a certain number of 
+			 executions.
 
 (uint16_t*) 0x10000080 - USB_HID_REPORT_T field for HID EP1
 			  uint16_t len; /**< Size of the report descriptor in bytes. */ 
@@ -277,12 +279,15 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 converting DR6 ADC value.
 (uint32_t*) 0x100002c4 - Counter. Related to next open position in array of
 			 function pointers starting at 0x10000dd8.
-(uint32_t*) 0x100002c8 - USB HID3 related?
+(uint32_t*) 0x100002c8 - USB HID3 related? Related to SysTick 0x10000338 
+			 counter incremented in SysTick exception handler.
 (uint32_t*) 0x100002cc - Value calculated based on DR6 average value?? (DR6
 			 ADC value converted to voltage level maybe?)
 
-  (int8_t*) 0x100002d0 - GPIO group/base for TODO GPIO (GPIO1_1)
-  (int8_t*) 0x100002d1 - GPIO num/offset for TODO GPIO (GPIO1_1)
+  (int8_t*) 0x100002d0 - GPIO group/base for active low Analog Trigger enable 
+			 (GPIO1_1)
+  (int8_t*) 0x100002d1 - GPIO num/offset for active low Analog Trigger enable
+			 (GPIO1_1)
   (int8_t*) 0x100002d2 - Related to JTAG TDI_PIO0_11 MODE settings?
   (int8_t*) 0x100002d3 - Related to JTAG TDO_PIO0_13 MODE settings?
   (int8_t*) 0x100002d4 - Related to JTAG TDI_PIO0_11 setup?
@@ -305,14 +310,16 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000310 - ADC channel (2) associated with TODO functionality
  (uint8_t*) 0x10000311 - ADC channel (0) associated with TODO functionality
 
-(uint32_t*) 0x1000031c - Related to ADC Channel 2?
+(uint32_t*) 0x1000031c - Related to ADC Channel 0/2?
 
-(uint16_t*) 0x10000324 - Related to SysTick? Counter realted to real-time 
-			 (i.e. calculating 1 ms accurately...?)
+(uint16_t*) 0x10000324 - Related to SysTick. Counts up to 9 and then sets
+			 0x10000074 flag and clears.
 (uint16_t*) 0x10000326 - Related to SysTick? Counter realted to real-time 
 			 (i.e. calculating 1 ms accurately...?)
 (uint32_t*) 0x10000328 - Related to SysTick? Counter realted to real-time 
-			 (i.e. calculating 1 ms accurately...?)
+			 (i.e. calculating 1 ms accurately...?) Defines by
+			 how much 0x10000330 and 0x10000324 increment each
+			 tyime SysTick exception fires.
 (uint32_t*) 0x1000032c - Related to SysTick? Counter realted to real-time 
 			 (i.e. calculating 1 ms accurately...?)
 (uint32_t*) 0x10000330 - Related to CT16B1? And/or SysTick? Counter realted to 
@@ -320,7 +327,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
 (uint32_t*) 0x10000334 - Related to CT16B1? And/or SysTick? Counter realted to 
 			 real-time (i.e. calculating 1 ms accurately...?)
 
-(uint32_t*) 0x10000338 - USB HID3 related?
+(uint32_t*) 0x10000338 - USB HID3 related? Incremented in SysTick handler
+			 after initial delay.
 (uint32_t*) 0x1000033c - Function pointer for SysTick?
 
  (uint8_t*) 0x10000340 - Related to interrupts being enabled/disabled.
@@ -747,11 +755,11 @@ USB_HID2 HID Report Descriptor (len 0x21):
    (float*) 0x1000105c - Related to Joystick Y (= 0.0). Written by
 			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
 
-   (float*) 0x10001064 - Related to AD0/AD2 TODO functionality. Initialized to
-			 value 32767.0
+   (float*) 0x10001064 - Related to AD0/AD2 (trigger analog positions). 
+			 Initialized to value 32767.0
 
-   (float*) 0x10001088 - Related to AD0/AD2 TODO functionality. Initialized to
-			 value 32767.0
+   (float*) 0x10001088 - Related to AD0/AD2 (trigger analog positions). 
+			 Initialized to value 32767.0
 
  (uint8_t*) 0x100010a8 - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x01) Related to USART (Radio). PINTSEL2 GPIO Bank/Group.
  (uint8_t*) 0x100010a9 - UKNOWN STRUCT A UNKNOWN FIELD F (initialized to 0x05) Related to USART (Radio). PINTSEL2 GPIO Number.

@@ -694,10 +694,14 @@ void fnc0x00007b98(arg0x00007b98_0);
 void fnc0x00005b44();
 
 /**
- * Drive GPIO1_1 and Configure TDI/TDO MODE... But why? Are TDI/TDO used for
- *  multiple functions (i.e. not just JTAG?)?
+ * Choose between enabling JTAG or Analog triggers (as they share the same
+ * 	pins).
+ * 
+ * \param arg0x00005ba0_0 If 0 JTAG will be enabled. If 1 JTAG will be disabled
+ *	and TDO and TDI will be setup as AD0 and AD2 which measure Left and 
+ *	Right analog trigger positions respectively. PIO1_1 is active low
+ *	enable of triggers outputting analog voltage.
  *
- * \param arg0x00005ba0_0 Unknown. Maybe related to how to drive GPIO1_1?
  * \return None.
  */
 void fnc0x00005ba0(arg0x00005ba0_0);
@@ -1168,7 +1172,8 @@ void fnc0x00004d3c();
 void fnc0x00003b48(arg0x00003b48_0, arg0x00003b48_1);
 
 /**
- * Setup AD2 and AD0 for TODO functionality. 
+ * Setup AD2 and AD0 for Analog trigger position tracking (AD0 = Left, 
+ *	AD2 = Right).
  * 
  * \param arg0x00002f4c_0 ?? Function pointer maybe?
  *

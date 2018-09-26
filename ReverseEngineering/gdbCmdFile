@@ -801,14 +801,121 @@ else
 	#------------------------------------------------------------------------------#
 
 
+#TODO: simulate with this flag set
+	set {char}0x10000074 = 1
+
+		#------------------------------------------------------------------------------#
+
+		# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+		#  In path for controller not connected to USB cable, CT16B0 is used for ... TODO
+		watch *(int*)0x4000c008
+
+		# Execute until watchpoint
+		continue
+
+		# Assumption is we have broken for watch on CT16B1 Timer Counter register
+		#  Set back to zero to fake wrap around so code can continue
+		set {int}0x4000c008 = 0
+
+		# Remove watchpoint
+		delete 
+
+
+		#------------------------------------------------------------------------------#
+
+
+		# Setup watchpoint for wfi instruction.
+		watch $pc == 0x000051aa
+		
+		# Execute until watchpoint
+		continue
+		
+		# Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
+		#  fired and was handled properly).
+		
+		##
+		# CT16B0: An interrupt is generated when MR0 matches the value in the TC.
+		# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
+		#  interrupt. Vector Table entry is 0x00000129.
+		##set $lr = $pc
+		##set $pc = 0x000001a0
+		# Set Interrupt Register to indicate Interrupt flag for match channel 0
+		##set {int}0x4000c000 = 1
+		# TODO: Try adding watch for clearing IR once it's written? Or are we confident we have ISR mapped?
+		#TODO: Might want to try making not destructive (if need to simulate it or other
+		#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
+		#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
+		##
+		
+		##
+		# Change states as though CT16B0 interrupt ran as desired:
+		# Set PC to move past wfi (as simulator cannot handle it)
+		set $pc = 0x000051ac
+		# Set flag to indicate that ISR for CT16B0 has fired
+		set {char}0x10000001 = 1
+		##
+		
+		# Remove watchpoint
+		delete 
+
+
+		#------------------------------------------------------------------------------#
+
+
+		# Setup watchpoint before code waits for ADC interrupt to have run its
+		#  initial course for AD6
+		watch $pc == 0x00002d00
+
+		# Execute until watchpoint
+		continue
+
+		##
+		# ADC Interrupt Execution:
+		# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
+		#  interrupt. Vector Table entry is 0x00000205.
+		##set $lr = $pc
+		##set $pc = 0x00000204
+		# Counter for how many times interrupt fires initially before AD values
+		#  start being accumulated
+		set {int}0x10000014 = 0x0000012d
+		# Counter for how many times interrupt fires for accumulating AD6 values
+		set {int}0x10000018 = 0x00000007
+		# Set flag to indicate ADC ISR has served its purpose and ADC is shutdown
+		set {char}0x10000010 = 1
+		# Set value of 8 accumulated channel 6 ADC values
+		#  ADC Chanel 6 reads ~0x03ac when polled via adcRead command in custom firmware.
+		set {short}0x10000f8c = 0x1d60
+##TODO: add reading values from analog stick and analog triggers?
+		#TODO: Might want to try making not destructive (if need to simulate it or other
+		#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
+		#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
+		## 
+
+		# Remove watchpoint
+		delete 
+
+
+		#------------------------------------------------------------------------------#
+
+
+	#------------------------------------------------------------------------------#
+
+
+##TODO: maybe we don't come back to this exact path because of how SysTick changes global variables??? Leaving for now (and at least for example of setting up interrupt sim)...
+
 
 	# Setup watchpoint right before wfi after compare of *(uint8_t*)0x100002b7 and *(uint8_t*)0x100002b4
-	watch $pc == 0x0000d858
+###	watch $pc == 0x0000d858
 
 	# Execute until watchpoint
-	continue
+###	continue
 
 # TODO: Simulate USB callback and other interrupts...
+
+	##
+###	set $lr = $pc
+	# SysTick 
+###	set $pc = 0x00000118
 
 	##
 	##set $lr = $pc
@@ -833,11 +940,11 @@ else
 	##
 # TODO: Change states so that wfi does not occur?
 	# Set PC to move past wfi (as simulator cannot handle it)
-	set $pc = 0x0000d85a
+#	set $pc = 0x0000d85a
 	##
 
 	# Remove watchpoint
-	delete 
+###	delete 
 
 
 	#------------------------------------------------------------------------------#

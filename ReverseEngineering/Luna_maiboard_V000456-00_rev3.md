@@ -40,7 +40,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            14 | PIO1_26               | PIO1_26          | In            | S2 - Left trackpad click |
 |            15 | PIO1_27               | PIO1_27          | In            | S3 - LT (Left trigger digital) |
 |            16 | PIO1_4                | PIO1_4           | In            | S8 - LB (Left bumper) | 
-|            17 | PIO1_1                | PIO1_1           | Out           | Set as output GPIO and driven high, during init. Related to JTAG (based on sim exe/function grouping)?? (Routes to R35 and R36 near gyro + accelerometer chip). RST related for Gyro + Accelerometer maybe?|
+|            17 | PIO1_1                | PIO1_1           | Out           | Active low enable for analog triggers (Left = AD0, Right = AD2) |
 |            18 | PIO1_20               | PIO1_20          | In            | S17 - FRONT_L (Front left arrow button) |
 |            19 | PIO0_3                | USB_VBUS         | In            | Monitors the presence of USB bus power. Interrupt (PINT0) set to monitor if this changes. |
 |            20 | PIO0_4                | I2C SCL          | In/Out        | Connected to MPU-6500 I2C SCL |
@@ -65,10 +65,10 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            39 | PIO1_8                | PIO1_8           | In?           | Related to PIO1_24. Related to USART maybe? TODO|
 |            40 | PIO0_22               | AD6              | In            | Measures voltage that matters when no USB power is present? (trace leads to C6, continutes to R10 near power...) |
 |            41 | PIO1_29               | SCK0             | Out           | Serial clock for SSP0. Connected to SCLK on Right Trackpad/Haptic and Left Trackpad/Haptic. |
-|            42 | TDI/PIO0_11           | AD0              | In            | TODO: what is this measuring...? (Note: Functions as TDI for short time during initialization) |
+|            42 | TDI/PIO0_11           | AD0              | In            | Measures Left Analog trigger position (when PIO1_1 is low) (Note: Functions as TDI for short time during initialization) |
 |            43 | PIO1_11               | PIO1_11          | In            | S9 - Y Button |
 |            44 | TMS/PIO0_12           |                  |               | |
-|            45 | TDO/PIO0_13           | AD2              | In            | TODO: what is this measuring...? (Note: Functions as TDO for short time during initialization) |
+|            45 | TDO/PIO0_13           | AD2              | In            | Measures Right Analog trigger position (when PIO1_1 is low) (Note: Functions as TDO for short time during initialization) |
 |            46 | nTRST/PIO0_14         |                  |               | |
 |            47 | PIO1_13               | PIO1_13          | In            | S6 - RT (Right trigger digital) |
 |            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
