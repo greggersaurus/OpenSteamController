@@ -67,9 +67,9 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            41 | PIO1_29               | SCK0             | Out           | Serial clock for SSP0. Connected to SCLK on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            42 | TDI/PIO0_11           | AD0              | In            | Measures Left Analog trigger position (when PIO1_1 is low) (Note: Functions as TDI for short time during initialization) |
 |            43 | PIO1_11               | PIO1_11          | In            | S9 - Y Button |
-|            44 | TMS/PIO0_12           |                  |               | |
+|            44 | TMS/PIO0_12           | AD1              | In            | Measure Analog Joystick X position |
 |            45 | TDO/PIO0_13           | AD2              | In            | Measures Right Analog trigger position (when PIO1_1 is low) (Note: Functions as TDO for short time during initialization) |
-|            46 | nTRST/PIO0_14         |                  |               | |
+|            46 | nTRST/PIO0_14         | AD3              | In            | Measure Analog Joystick Y position |
 |            47 | PIO1_13               | PIO1_13          | In            | S6 - RT (Right trigger digital) |
 |            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            49 | PIO1_14               | PIO1_14          | In            | S10 - RB (Right bumper) |
