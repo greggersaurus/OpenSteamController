@@ -25,10 +25,17 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Things to try immediately (see farther below for more details)
+    1. (Fresh look) Make sure all valid paths in all enabled IRQs are covered
+        1. PINT0
+        1. PINT1
+        1. PINT2
+        1. ADC
+        1. I2C0
+        1. CT16B0
+        1. USART0 
+        1. USB_IRQ
     1. Decode functions from new sim data now that variable changed by SysTick handler moves us forward
         1. Don't lose track of other variables checked in previous wfi path. They might still matter...
-    1. Simulate USART IRQ 
-        1. UART comms with Radio?
     1. Dev Board comms with Radio Chip via UART
         1. Monitor PIO1_5 and (anything else we can watch?) to check for change after sending same mesages?
     1. Monitor GPIO1_5 when RF dongle is plugged in or not

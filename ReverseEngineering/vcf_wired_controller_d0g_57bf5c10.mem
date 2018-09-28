@@ -245,6 +245,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
 (uint32_t*) 0x10000260 - System Clock Frequency in Hz
 
+ (uint8_t*) 0x10000281 - Flag related to ??
+
  (uint8_t*) 0x100002ac - GPIO Bank/Group for TODO (power/battery related?) GPIO 
 			 (PIO1_10)
  (uint8_t*) 0x100002ad - GPIO Number/Offset for TODO GPIO (power/battery 
@@ -263,7 +265,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 set value of PIO0_18.
 
  (uint8_t*) 0x100002b4 - Checked on loop once init reaches a certain point...
-			 Check if is equal to 0x100002b7
+			 Check if is equal to 0x100002b7. Also, checked if is
+			 0 by fnc0x00005204().
 
  (uint8_t*) 0x100002b6 - Related to reading DR6?? Some sort of flag/bool?
  (uint8_t*) 0x100002b7 - Checked on loop once init reaches a certain point...
@@ -381,6 +384,9 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
 (uint32_t*) 0x10000818 - Related to CT16B0. Callback function? First entry in
 			 array of callback functions?
+
+
+(uint32_t*) 0x10000834 - Related to CT16B1 MR3??
 
 (uint32_t*) 0x10000858 - Related to Joystick?
 (uint32_t*) 0x1000085c - Related to Joystick?
@@ -633,10 +639,10 @@ USB_HID2 HID Report Descriptor (len 0x21):
  ...
  (uint8_t*) 0x10000f7f - Circular USART TX Buffer[127]. Used to queue TX Data 
 			 for USART when USART (HW) TX FIFO is full?
-(uint16_t*) 0x10000f80 - ADC Channel 0 accumulator?
-(uint16_t*) 0x10000f82 - ADC Channel 1 accumulator?
-(uint16_t*) 0x10000f84 - ADC Channel 2 accumulator?
-(uint16_t*) 0x10000f86 - ADC Channel 3 accumulator?
+(uint16_t*) 0x10000f80 - ADC Channel 0 accumulator.
+(uint16_t*) 0x10000f82 - ADC Channel 1 accumulator.
+(uint16_t*) 0x10000f84 - ADC Channel 2 accumulator.
+(uint16_t*) 0x10000f86 - ADC Channel 3 accumulator.
 (uint16_t*) 0x10000f88 - ADC Channel 4 accumulator?
 (uint16_t*) 0x10000f8a - ADC Channel 5 accumulator?
 (uint16_t*) 0x10000f8c - Accumulator V_VREF from DR6 (i.e. voltage on ADC 
@@ -788,6 +794,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
  (uint8_t*) 0x20000002 - Number of active haptics or haptics to configure.
 			 Related to SSP0
+
+ (uint8_t*) 0x20000008 - Flag related to ??
 
  (uint8_t*) 0x20000075 - Counter?? Related to Joystick X/Y position?
 

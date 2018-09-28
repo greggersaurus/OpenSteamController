@@ -844,7 +844,7 @@ void fnc0x00007404(arg0x00007404_0, arg0x00007404_1);
 void fnc0x0000a934(arg0x0000a934_0);
 
 /**
- * Set CT16B1 and wait until MR0 causes causes interrup to fire and be handled.
+ * Set CT16B0 and wait until MR0 causes causes interrupt to fire and be handled.
  * 
  * \param arg0x00005174_0 Unused (n in CT16Bn maybe, but optimzied out?)
  * \param arg0x00005174_1 Match Register 0 value.
@@ -1439,3 +1439,43 @@ void fnc0x00009ad0();
  * \return None.
  */
 void fnc0x000053f8();
+
+?? fnc0x00006e14( arg0x00006e14_0, arg0x00006e14_1, arg0x00006e14_2, arg0x00006e14_3, arg0x00006e14_4, arg0x00006e14_5, arg0x00006e14_6, arg0x00006e14_12, )
+
+/**
+ * Call function to choose between enabling JTAG or Analog Triggers 
+ *  (fnc0x00005ba0), then check if 0x100002b4 is 0.
+ *
+ * \param arg0x00005204_0 If 0 JTAG will be enabled. If 1 JTAG will be disabled
+ *	and TDO and TDI will be setup as AD0 and AD2 which measure Left and 
+ *	Right analog trigger positions respectively. PIO1_1 is active low
+ *	enable of triggers outputting analog voltage.
+ *
+ * \return None.
+ */
+void fnc0x00005204(arg0x00005204_0)
+
+// Function for handling AD0/AD2 read accumulations.
+?? fnc0x00002ebc( arg0x00002ebc_0, arg0x00002ebc_1, arg0x00002ebc_2, arg0x00002ebc_3, arg0x00002ebc_4, arg0x00002ebc_5, arg0x00002ebc_6, arg0x00002ebc_7, arg0x00002ebc_12, )
+
+// (Related to) Function for handling AD0 read accumulations?
+?? fnc0x00005fe8( arg0x00005fe8_0, arg0x00005fe8_1, arg0x00005fe8_2, arg0x00005fe8_3, arg0x00005fe8_4, arg0x00005fe8_5, arg0x00005fe8_6, arg0x00005fe8_7, arg0x00005fe8_12, )
+
+?? fnc0x00009690( arg0x00009690_0, arg0x00009690_1, arg0x00009690_2, arg0x00009690_3, arg0x00009690_4, arg0x00009690_5, arg0x00009690_6, arg0x00009690_7, arg0x00009690_12, )
+
+// Function for handling AD1/AD3 read accumulations.
+?? fnc0x0000627c( arg0x0000627c_0, arg0x0000627c_1, arg0x0000627c_2, arg0x0000627c_3, arg0x0000627c_4, arg0x0000627c_5, arg0x0000627c_6, arg0x0000627c_7, arg0x0000627c_12, )
+
+?? fnc0x0000a3b4( arg0x0000a3b4_0, arg0x0000a3b4_1, arg0x0000a3b4_2, arg0x0000a3b4_3, arg0x0000a3b4_4, arg0x0000a3b4_5, arg0x0000a3b4_6, arg0x0000a3b4_12, )
+
+?? fnc0x00006a58( arg0x00006a58_0, arg0x00006a58_1, arg0x00006a58_2, arg0x00006a58_3, arg0x00006a58_4, arg0x00006a58_5, arg0x00006a58_6, arg0x00006a58_12, )
+
+?? fnc0x00006dd4( arg0x00006dd4_0, arg0x00006dd4_1, arg0x00006dd4_2, arg0x00006dd4_3, arg0x00006dd4_4, arg0x00006dd4_5, arg0x00006dd4_6, arg0x00006dd4_12, )
+
+?? fnc0x00006d64( arg0x00006d64_0, arg0x00006d64_1, arg0x00006d64_2, arg0x00006d64_3, arg0x00006d64_4, arg0x00006d64_5, arg0x00006d64_6, arg0x00006d64_7, arg0x00006d64_12, )
+
+?? fnc0x00009914( arg0x00009914_0, arg0x00009914_1, arg0x00009914_2, arg0x00009914_3, arg0x00009914_4, arg0x00009914_5, arg0x00009914_6, arg0x00009914_12, )
+
+?? fnc0x0000743c( arg0x0000743c_0, arg0x0000743c_1, arg0x0000743c_2, arg0x0000743c_3, arg0x0000743c_4, arg0x0000743c_5, arg0x0000743c_6, arg0x0000743c_12, )
+
+?? fnc0x0000d71c( arg0x0000d71c_0, arg0x0000d71c_1, arg0x0000d71c_2, arg0x0000d71c_3, arg0x0000d71c_4, arg0x0000d71c_5, arg0x0000d71c_6, arg0x0000d71c_12, )
