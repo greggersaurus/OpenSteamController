@@ -33,7 +33,6 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. I2C0
         1. CT16B0
         1. USART0 
-        1. USB_IRQ
     1. Decode functions from new sim data now that variable changed by SysTick handler moves us forward
         1. Don't lose track of other variables checked in previous wfi path. They might still matter...
     1. Dev Board comms with Radio Chip via UART

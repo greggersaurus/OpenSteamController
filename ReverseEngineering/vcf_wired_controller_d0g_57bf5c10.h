@@ -1479,3 +1479,16 @@ void fnc0x00005204(arg0x00005204_0)
 ?? fnc0x0000743c( arg0x0000743c_0, arg0x0000743c_1, arg0x0000743c_2, arg0x0000743c_3, arg0x0000743c_4, arg0x0000743c_5, arg0x0000743c_6, arg0x0000743c_12, )
 
 ?? fnc0x0000d71c( arg0x0000d71c_0, arg0x0000d71c_1, arg0x0000d71c_2, arg0x0000d71c_3, arg0x0000d71c_4, arg0x0000d71c_5, arg0x0000d71c_6, arg0x0000d71c_12, )
+
+/** AKA \fn void ISR(USBD_HANDLE_T hUsb)                                          
+ *  Function to USB device controller interrupt events.                       
+ *                                                                            
+ *  When the user application is active the interrupt handlers are mapped in the user flash
+ *  space. The user application must provide an interrupt handler for the USB interrupt and
+ *  call this function in the interrupt handler routine. The driver interrupt handler takes
+ *  appropriate action according to the data received on the USB bus.         
+ *                                                                            
+ *  \param[in]  hUsb Handle to the USB device stack.                          
+ *  \return Nothing.                                                          
+ */                                                                           
+void fnc0x1fff3654(arg0x1fff3654_0);

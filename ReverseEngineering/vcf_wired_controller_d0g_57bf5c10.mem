@@ -790,6 +790,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10001142 - HID EP3 related?
  (uint8_t*) 0x10001143 - HID EP3 related?
 
+(uint32_t*) 0x10001c2c - Callback related to USB_IRQ (if GPREG1 is 0).
+
   (int8_t*) 0x20000000 - Related to Haptics/SSP0?
 
  (uint8_t*) 0x20000002 - Number of active haptics or haptics to configure.
