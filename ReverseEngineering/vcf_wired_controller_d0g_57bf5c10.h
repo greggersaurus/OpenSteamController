@@ -1194,8 +1194,9 @@ void fnc0x00002f4c(arg0x00002f4c_0);
 void fnc0x00006384(arg0x00006384_0, arg0x00006384_1);
 
 /**
- * Related to Joystick X/Y position? Calibrating L/R/U/D extreme values??
+ * Related to Analog position? Calibrating extreme values (L/R/U/D)??
  *
+ * \param stack[0] Value written to (uint32_t*)arg0x0000963c_0[0]
  * \param arg0x0000963c_0 Base address of where results are to be stored.
  * \param arg0x0000963c_1 Some integer value... 
  * \param arg0x0000963c_2 Another integer value (defines extreme maybe?)
@@ -1455,13 +1456,61 @@ void fnc0x000053f8();
  */
 void fnc0x00005204(arg0x00005204_0)
 
-// Function for handling AD0/AD2 read accumulations.
-?? fnc0x00002ebc( arg0x00002ebc_0, arg0x00002ebc_1, arg0x00002ebc_2, arg0x00002ebc_3, arg0x00002ebc_4, arg0x00002ebc_5, arg0x00002ebc_6, arg0x00002ebc_7, arg0x00002ebc_12, )
+/**
+ * Function for handling AD0/AD2 read accumulations.
+ * 
+ * \param arg0x00002ebc_0 ADC Number. 0 for Right Trigger. 2 for Left Trigger.
+ *	Others are invalid?
+ * \param arg0x00002ebc_1
+ *
+ * \return None.
+ */
+void fnc0x00002ebc(arg0x00002ebc_0, arg0x00002ebc_1);
 
-// (Related to) Function for handling AD0 read accumulations?
-?? fnc0x00005fe8( arg0x00005fe8_0, arg0x00005fe8_1, arg0x00005fe8_2, arg0x00005fe8_3, arg0x00005fe8_4, arg0x00005fe8_5, arg0x00005fe8_6, arg0x00005fe8_7, arg0x00005fe8_12, )
+/**
+ * Calculate AD0/AD2 calibration extreme(s)?
+ *	This function calls fnc0x0000963c().
+ *
+ * \param arg0x00005fe8_0 Addresss where calculated results (calibration 
+ *	results?) are to be stored.
+ * \param arg0x00005fe8_1 Some sort of index/offset?
+ *
+ * \return None.
+ */
+void fnc0x00005fe8(arg0x00005fe8_0, arg0x00005fe8_1);
 
 ?? fnc0x00009690( arg0x00009690_0, arg0x00009690_1, arg0x00009690_2, arg0x00009690_3, arg0x00009690_4, arg0x00009690_5, arg0x00009690_6, arg0x00009690_7, arg0x00009690_12, )
+
+/**
+ * Floating point addition (but maybe actually subtraction since one operand
+ *	or the other always seems to be negative).
+ * 
+ * \param arg0x00002268_0 Operand 1.
+ * \param arg0x00002268_1 Operand 2.
+ * 
+ * \return
+ */
+float fnc0x00002268(arg0x00002268_0, arg0x00002268_1);
+
+/**
+ * Check field/flags (byte offset 0x18) in struct AnalogReadingRelated.
+ *
+ * \param arg0x0000356c_0 Pointer to struct AnalogReadingRelated. Not sure what
+ *	happens if 32-bit field at byte offset 0x18 has any of bits 31:24 set.
+ *
+ * \return None.
+ */
+void fnc0x0000356c(arg0x0000356c_0);
+
+/**
+ * Check field/flags (byte offset 0x20) in struct AnalogReadingRelated.
+ *
+ * \param arg0x0000356c_0 Pointer to struct AnalogReadingRelated. Not sure what
+ *	happens if 32-bit field at byte offset 0x20 has any of bits 31:24 set.
+ *
+ * \return None.
+ */
+void fnc0x00003500(arg0x00003500_0);
 
 // Function for handling AD1/AD3 read accumulations.
 ?? fnc0x0000627c( arg0x0000627c_0, arg0x0000627c_1, arg0x0000627c_2, arg0x0000627c_3, arg0x0000627c_4, arg0x0000627c_5, arg0x0000627c_6, arg0x0000627c_7, arg0x0000627c_12, )

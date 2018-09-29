@@ -125,8 +125,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
  (uint8_t*) 0x10000010 - Flag related to ADC ISR. For DR6 case this indicates
 			 ADC chnanel 6 has been sampled 8 times.
- (uint8_t*) 0x10000011 - Checked in ADC ISR (if 0x10000018 is 8). Maybe ADC 
-			 clock is not disabled if this is not set?
+ (uint8_t*) 0x10000011 - Checked in ADC ISR (if 0x10000018 is 8). If set
+			 accumulated ADC results will be processed in IRQ.
  (uint8_t*) 0x10000012 - Set bits indicate which ADC channel is active (i.e. 
 			 bit 6 for AD6).
 
@@ -310,8 +310,13 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
 (uint32_t*) 0x100002f4 = Related to USART (Radio)? 
 
- (uint8_t*) 0x10000310 - ADC channel (2) associated with TODO functionality
- (uint8_t*) 0x10000311 - ADC channel (0) associated with TODO functionality
+ (uint8_t*) 0x10000310 - ADC channel (2) associated with Right Trigger depth
+			 measurement functionality.
+ (uint8_t*) 0x10000311 - ADC channel (0) associated with Left Trigger depth
+			 measurement functionality.
+
+(uint16_t*) 0x10000316 - AD2 (Right Trigger Analog) related.
+(uint16_t*) 0x10000318 - AD0 (Left Trigger Analog) related.
 
 (uint32_t*) 0x1000031c - Related to ADC Channel 0/2?
 
@@ -676,6 +681,7 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 (potentially) P0_18. Related to AD6.
 (uint32_t*) 0x10000fcc - Possible function pointer. Related to AD7?
 
+struct AnalogReadingRelated {
    (float*) 0x10000fd0 - Related to Joystick X (= 0.15). Written by
 			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
    (float*) 0x10000fd4 - Related to Joystick X (= 611.0). Written by
@@ -695,8 +701,10 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
    (float*) 0x10000fec - Related to Joystick X (= 711.0). Written by
 			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
-   (float*) 0x10000ff0 - Related to Joystick X (= 0.0). Written by
+(uint32_t*) 0x10000ff0 - Related to Joystick X (= 0.0). Written by
 			 fnc0x0000963c(0x10000fd0, 0x1ff, 0x2c7, 3)
+}
+struct AnalogReadingRelated {
    (float*) 0x10000ff4 - Related to Joystick X (= 0.15). Written by
 			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
    (float*) 0x10000ff8 - Related to Joystick X (= 411.0). Written by
@@ -712,12 +720,14 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
    (float*) 0x10001008 - Related to Joystick X (= 511.0). Written by
 			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
-   (float*) 0x1000100c - Related to Joystick X (= 0.0). Written by
+(uint32_t*) 0x1000100c - Related to Joystick X (= 0.0). Written by
 			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
    (float*) 0x10001010 - Related to Joystick X (= 311.0). Written by
 			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
-   (float*) 0x10001014 - Related to Joystick X (= 0.0). Written by
+(uint32_t*) 0x10001014 - Related to Joystick X (= 0.0). Written by
 			 fnc0x0000963c(0x10000ff4, 0x1ff, 0x137, 3)
+}
+struct AnalogReadingRelated {
    (float*) 0x10001018 - Related to Joystick Y (= 0.15). Written by
 			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
    (float*) 0x1000101c - Related to Joystick Y (= 601.0). Written by
@@ -737,8 +747,10 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
    (float*) 0x10001034 - Related to Joystick Y (= 701.0). Written by
 			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
-   (float*) 0x10001038 - Related to Joystick Y (= 0.0). Written by
+(uint32_t*) 0x10001038 - Related to Joystick Y (= 0.0). Written by
 			 fnc0x0000963c(0x10001018, 0x1f5, 0x2bd, 3)
+}
+struct AnalogReadingRelated {
    (float*) 0x1000103c - Related to Joystick Y (= 0.15). Written by
 			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
    (float*) 0x10001040 - Related to Joystick Y (= 401.0). Written by
@@ -754,18 +766,42 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
    (float*) 0x10001050 - Related to Joystick Y (= 501.0). Written by
 			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
-   (float*) 0x10001054 - Related to Joystick Y (= 0.0). Written by
+(uint32_t*) 0x10001054 - Related to Joystick Y (= 0.0). Written by
 			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
    (float*) 0x10001058 - Related to Joystick Y (= 301.0). Written by
 			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
-   (float*) 0x1000105c - Related to Joystick Y (= 0.0). Written by
+(uint32_t*) 0x1000105c - Related to Joystick Y (= 0.0). Written by
 			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
+}
 
    (float*) 0x10001064 - Related to AD0/AD2 (trigger analog positions). 
 			 Initialized to value 32767.0
 
-   (float*) 0x10001088 - Related to AD0/AD2 (trigger analog positions). 
-			 Initialized to value 32767.0
+struct AnalogReadingRelated {
+   (float*) 0x10001084 - Related to Left Trigger analog (= 0.1). Written by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
+   (float*) 0x10001088 - Related to Left Trigger analog. 
+			 Initialized to value 32767.0. Updated to 260.0 by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10). Later
+			 updated to 234.0.
+   (float*) 0x1000108c - Related to Left Trigger analog (= 315.0). Written by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
+   (float*) 0x10001090 - Related to Left Trigger analog (= 206.0). Written by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
+ (uint8_t*) 0x10001094 - Related to Left Trigger analog (= 1). Written by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
+
+(uint16_t*) 0x10001096 - Related to Left Trigger analog (= 10). Written by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
+   (float*) 0x10001098 - Related to Left Trigger analog (= 315.0). Written by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
+(uint32_t*) 0x1000109c - Related to Left Trigger analog (= 0). Written by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
+   (float*) 0x100010a0 - Related to Left Trigger analog (= 206.0). Written by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
+(uint32_t*) 0x100010a4 - Related to Left Trigger analog (= 0). Written by
+			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
+}
 
  (uint8_t*) 0x100010a8 - UKNOWN STRUCT A UNKNOWN FIELD D (initialized to 0x01) Related to USART (Radio). PINTSEL2 GPIO Bank/Group.
  (uint8_t*) 0x100010a9 - UKNOWN STRUCT A UNKNOWN FIELD F (initialized to 0x05) Related to USART (Radio). PINTSEL2 GPIO Number.
