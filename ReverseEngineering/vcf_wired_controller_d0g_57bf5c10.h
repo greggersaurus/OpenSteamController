@@ -1461,7 +1461,7 @@ void fnc0x00005204(arg0x00005204_0)
  * 
  * \param arg0x00002ebc_0 ADC Number. 0 for Right Trigger. 2 for Left Trigger.
  *	Others are invalid?
- * \param arg0x00002ebc_1
+ * \param arg0x00002ebc_1 Accumulated ADC reading.
  *
  * \return None.
  */
@@ -1479,7 +1479,17 @@ void fnc0x00002ebc(arg0x00002ebc_0, arg0x00002ebc_1);
  */
 void fnc0x00005fe8(arg0x00005fe8_0, arg0x00005fe8_1);
 
-?? fnc0x00009690( arg0x00009690_0, arg0x00009690_1, arg0x00009690_2, arg0x00009690_3, arg0x00009690_4, arg0x00009690_5, arg0x00009690_6, arg0x00009690_7, arg0x00009690_12, )
+/**
+ * Math related to struct AnalogReadingRelated.
+ *  Update second float in struct AnalogReadingRelated 
+ *	(i.e. AnalogReadingRelated + 0x4).
+ *
+ * \param arg0x00009690_0 Pointer to struct AnalogReadingRelated
+ * \param arg0x00009690_1 Only simulated with value 0...
+ *
+ * \return A float... TODO: purpose?
+ */
+float fnc0x00009690(arg0x00009690_0, arg0x00009690_1);
 
 /**
  * Floating point addition (but maybe actually subtraction since one operand
@@ -1512,8 +1522,15 @@ void fnc0x0000356c(arg0x0000356c_0);
  */
 void fnc0x00003500(arg0x00003500_0);
 
-// Function for handling AD1/AD3 read accumulations.
-?? fnc0x0000627c( arg0x0000627c_0, arg0x0000627c_1, arg0x0000627c_2, arg0x0000627c_3, arg0x0000627c_4, arg0x0000627c_5, arg0x0000627c_6, arg0x0000627c_7, arg0x0000627c_12, )
+/**
+ * Function for handling AD1/AD3 read accumulations (Joystick).
+ *
+ * \param arg0x0000627c_0 1 for AD1, 3 for AD3.
+ * \param arg0x0000627c_0 Accumulated ADC reading.
+ *
+ * \return None.
+ */
+void fnc0x0000627c(arg0x0000627c_0, arg0x0000627c_1);
 
 ?? fnc0x0000a3b4( arg0x0000a3b4_0, arg0x0000a3b4_1, arg0x0000a3b4_2, arg0x0000a3b4_3, arg0x0000a3b4_4, arg0x0000a3b4_5, arg0x0000a3b4_6, arg0x0000a3b4_12, )
 

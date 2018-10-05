@@ -66,6 +66,8 @@ This section is a running list of priorities to focus on in hopes of reaching
             1. For USB_VBUS = 1 case jingle seems to be triggered by USB activity (i.e. driver probing/enumerating)
             1. For USB_VBUS = 0 case jingle seems to be triggered by communicating with RF chip
                 1. Note that once controller has synced with RF dongle, plugging in USB does not change USB_VBUS...
+    1. Simulated with AD0/2 and AD1/3 have realistic accumulation results?
+        1. Low priority as figuring out details on math used to convert ADC samples is not super important to end goal.
 1. Understand USART/Radio communications protocol?
     1. Try to reverse engineer protocol to leverage comms with dongle??
 1. List more details about hardware [Luna_maiboard_V000456-00_rev3.md](./Luna_maiboard_V000456-00_rev3.md)

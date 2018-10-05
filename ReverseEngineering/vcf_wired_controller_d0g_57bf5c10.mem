@@ -140,17 +140,25 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
  (uint8_t*) 0x1000001c - GPIO Bank/Group for Joystick Power GPIO (PIO0_19)
  (uint8_t*) 0x1000001d - GPIO Number for Joystick Power GPIO (PIO0_19)
- (uint8_t*) 0x1000001e - Related to Joystick?
+ (uint8_t*) 0x1000001e - Related to Joystick.
+ (uint8_t*) 0x1000001f - Related to Joystick X/Y position (AD1/AD3)
 
- (uint8_t*) 0x10000023 - AD channel number for joystick X position
- (uint8_t*) 0x10000024 - AD channel number for joystick Y position
+ (uint8_t*) 0x10000021 - Related to Joystick X position (AD1)
+ (uint8_t*) 0x10000022 - Related to Joystick Y position (AD3)
+ (uint8_t*) 0x10000023 - AD channel number for joystick X position (AD1)
+ (uint8_t*) 0x10000024 - AD channel number for joystick Y position (AD3)
+
+(uint16_t*) 0x10000026 - Related to Joystick X position (AD1)
+(uint16_t*) 0x10000028 - Related to Joystick Y position (AD3)
+(uint16_t*) 0x1000002a - Accumulated ADC value for joystick X position (AD1)
+(uint16_t*) 0x1000002c - Accumulated ADC value for joystick Y position (AD3)
 
 (uint16_t*) 0x10000036 - Related to Joystick X position?
 (uint16_t*) 0x10000038 - Related to Joystick Y position?
 (uint16_t*) 0x1000003a - Related to Joystick X position?
 (uint16_t*) 0x1000003c - Related to Joystick X position?
 (uint16_t*) 0x1000003e - Related to Joystick X position?
-(uint16_t*) 0x10000040 - Related to Joystick Y position?
+(uint16_t*) 0x10000040 - Related to Joystick Y position.
 
  (uint8_t*) 0x10000044 - CT16B1 related?
  (uint8_t*) 0x10000045 - Defines which MAT to enable PWM mode for. (i.e. n in
@@ -268,7 +276,7 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 Check if is equal to 0x100002b7. Also, checked if is
 			 0 by fnc0x00005204().
 
- (uint8_t*) 0x100002b6 - Related to reading DR6?? Some sort of flag/bool?
+ (uint8_t*) 0x100002b6 - Related to reading AD6 DR6?? Some sort of flag/bool?
  (uint8_t*) 0x100002b7 - Checked on loop once init reaches a certain point...
 			 Check if is equal to 0x100002b4
 
@@ -310,11 +318,13 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
 (uint32_t*) 0x100002f4 = Related to USART (Radio)? 
 
- (uint8_t*) 0x10000310 - ADC channel (2) associated with Right Trigger depth
+ (uint8_t*) 0x10000310 - ADC channel (AD2) associated with Right Trigger depth
 			 measurement functionality.
- (uint8_t*) 0x10000311 - ADC channel (0) associated with Left Trigger depth
+ (uint8_t*) 0x10000311 - ADC channel (AD0) associated with Left Trigger depth
 			 measurement functionality.
 
+(uint16_t*) 0x10000312 - AD2 (Right Trigger Analog) related.
+(uint16_t*) 0x10000314 - AD0 (Left Trigger Analog) related.
 (uint16_t*) 0x10000316 - AD2 (Right Trigger Analog) related.
 (uint16_t*) 0x10000318 - AD0 (Left Trigger Analog) related.
 
@@ -644,15 +654,15 @@ USB_HID2 HID Report Descriptor (len 0x21):
  ...
  (uint8_t*) 0x10000f7f - Circular USART TX Buffer[127]. Used to queue TX Data 
 			 for USART when USART (HW) TX FIFO is full?
-(uint16_t*) 0x10000f80 - ADC Channel 0 accumulator.
-(uint16_t*) 0x10000f82 - ADC Channel 1 accumulator.
-(uint16_t*) 0x10000f84 - ADC Channel 2 accumulator.
-(uint16_t*) 0x10000f86 - ADC Channel 3 accumulator.
-(uint16_t*) 0x10000f88 - ADC Channel 4 accumulator?
-(uint16_t*) 0x10000f8a - ADC Channel 5 accumulator?
+(uint16_t*) 0x10000f80 - ADC Channel 0 accumulator. AD0.
+(uint16_t*) 0x10000f82 - ADC Channel 1 accumulator. AD1.
+(uint16_t*) 0x10000f84 - ADC Channel 2 accumulator. AD2.
+(uint16_t*) 0x10000f86 - ADC Channel 3 accumulator. AD3.
+(uint16_t*) 0x10000f88 - ADC Channel 4 accumulator? AD4?
+(uint16_t*) 0x10000f8a - ADC Channel 5 accumulator? AD5?
 (uint16_t*) 0x10000f8c - Accumulator V_VREF from DR6 (i.e. voltage on ADC 
-			 channel 6).  Accumulation occurs in ADC ISR.
-(uint16_t*) 0x10000f8e - ADC Channel 7 accumulator?
+			 channel 6).  Accumulation occurs in ADC ISR. AD6.
+(uint16_t*) 0x10000f8e - ADC Channel 7 accumulator? AD7?
 
 (uint32_t*) 0x10000f90 - Function pointer. Related to handling AD0 readings 
 			 obtained via ISR. 
@@ -773,33 +783,54 @@ struct AnalogReadingRelated {
 (uint32_t*) 0x1000105c - Related to Joystick Y (= 0.0). Written by
 			 fnc0x0000963c(0x1000103c, 0x1f5, 0x12d, 3)
 }
-
-   (float*) 0x10001064 - Related to AD0/AD2 (trigger analog positions). 
-			 Initialized to value 32767.0
-
 struct AnalogReadingRelated {
-   (float*) 0x10001084 - Related to Left Trigger analog (= 0.1). Written by
+   (float*) 0x10001060 - Related to Right Trigger AD2 (= 0.1). Written by
+			 fnc0x0000963c(0x10001060 0x13b, 0xce, 10)
+   (float*) 0x10001064 - Related to Right Trigger AD2. 
+			 Initialized to value 32767.0. Updated to 260.0 by
+			 fnc0x0000963c(0x10001060, 0x13b, 0xce, 10). Later
+			 updated to 234.0.
+   (float*) 0x10001068 - Related to Right Trigger AD2 (= 315.0). Written by
+			 fnc0x0000963c(0x10001060, 0x13b, 0xce, 10)
+   (float*) 0x1000106c - Related to Right Trigger AD2 (= 206.0). Written by
+			 fnc0x0000963c(0x10001060, 0x13b, 0xce, 10)
+ (uint8_t*) 0x10001070 - Related to Right Trigger AD2 (= 1). Written by
+			 fnc0x0000963c(0x10001060, 0x13b, 0xce, 10)
+
+(uint16_t*) 0x10001072 - Related to Right Trigger AD2 (= 10). Written by
+			 fnc0x0000963c(0x10001060, 0x13b, 0xce, 10)
+   (float*) 0x10001074 - Related to Right Trigger AD2 (= 315.0). Written by
+			 fnc0x0000963c(0x10001060, 0x13b, 0xce, 10)
+(uint32_t*) 0x10001078 - Related to Right Trigger AD2 (= 0). Written by
+			 fnc0x0000963c(0x10001060, 0x13b, 0xce, 10)
+   (float*) 0x1000107c - Related to Right Trigger AD2 (= 206.0). Written by
+			 fnc0x0000963c(0x10001060, 0x13b, 0xce, 10)
+(uint32_t*) 0x10001080 - Related to Right Trigger AD2 (= 0). Written by
+			 fnc0x0000963c(0x10001060, 0x13b, 0xce, 10)
+}
+struct AnalogReadingRelated {
+   (float*) 0x10001084 - Related to Left Trigger AD0 (= 0.1). Written by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
-   (float*) 0x10001088 - Related to Left Trigger analog. 
+   (float*) 0x10001088 - Related to Left Trigger AD0. 
 			 Initialized to value 32767.0. Updated to 260.0 by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10). Later
 			 updated to 234.0.
-   (float*) 0x1000108c - Related to Left Trigger analog (= 315.0). Written by
+   (float*) 0x1000108c - Related to Left Trigger AD0 (= 315.0). Written by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
-   (float*) 0x10001090 - Related to Left Trigger analog (= 206.0). Written by
+   (float*) 0x10001090 - Related to Left Trigger AD0 (= 206.0). Written by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
- (uint8_t*) 0x10001094 - Related to Left Trigger analog (= 1). Written by
+ (uint8_t*) 0x10001094 - Related to Left Trigger AD0 (= 1). Written by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
 
-(uint16_t*) 0x10001096 - Related to Left Trigger analog (= 10). Written by
+(uint16_t*) 0x10001096 - Related to Left Trigger AD0 (= 10). Written by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
-   (float*) 0x10001098 - Related to Left Trigger analog (= 315.0). Written by
+   (float*) 0x10001098 - Related to Left Trigger AD0 (= 315.0). Written by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
-(uint32_t*) 0x1000109c - Related to Left Trigger analog (= 0). Written by
+(uint32_t*) 0x1000109c - Related to Left Trigger AD0 (= 0). Written by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
-   (float*) 0x100010a0 - Related to Left Trigger analog (= 206.0). Written by
+   (float*) 0x100010a0 - Related to Left Trigger AD0 (= 206.0). Written by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
-(uint32_t*) 0x100010a4 - Related to Left Trigger analog (= 0). Written by
+(uint32_t*) 0x100010a4 - Related to Left Trigger AD0 (= 0). Written by
 			 fnc0x0000963c(0x10001084, 0x13b, 0xce, 10)
 }
 
