@@ -164,6 +164,7 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000045 - Defines which MAT to enable PWM mode for. (i.e. n in
 			 CT16B1_MATn).
 
+ (uint8_t*) 0x10000046 - Related to CT16B1? 
  (uint8_t*) 0x10000047 - Related to CT16B1? Timer number (i.e. n in C16TBn?)
 (uint16_t*) 0x10000048 - Related to CT16B1?
 (uint16_t*) 0x1000004a - CT16B1 related?
@@ -263,7 +264,6 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 (power/battery related?) GPIO (PIO1_10)?
  (uint8_t*) 0x100002af - Indicates which AD channel is being sampled (related
 			 to GPIO1_10?)
-
  (uint8_t*) 0x100002b0 - GPIO Bank/Group for PINT1 GPIO (PIO0_2)
  (uint8_t*) 0x100002b1 - GPIO Number for PINT1 GPIO (PIO0_2)
  (uint8_t*) 0x100002b2 - Inverted value of PINT1 GPIO (PIO0_2) read before 
@@ -271,7 +271,6 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x100002b3 - Related to power or battery or someting? If PIO1_12 is 
 			 high, this is set to high. If PIO1_12 is low, this is 
 			 set value of PIO0_18.
-
  (uint8_t*) 0x100002b4 - Checked on loop once init reaches a certain point...
 			 Check if is equal to 0x100002b7. Also, checked if is
 			 0 by fnc0x00005204().
@@ -279,10 +278,10 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x100002b6 - Related to reading AD6 DR6?? Some sort of flag/bool?
  (uint8_t*) 0x100002b7 - Checked on loop once init reaches a certain point...
 			 Check if is equal to 0x100002b4
-
 (uint16_t*) 0x100002b8 - Voltage related to DR6 in mV? Checked if is greater 
 			 than or equal to 0x000005dc if PIO0_2=1 during boot 
 			 when USB_VBUS=0, PIO0_18=1, PIO1_12=1.
+(uint16_t*) 0x100002ba - Compared to 0x100002b8...
 
 (uint32_t*) 0x100002bc - Function pointer. Called in PINT1. PINT1 GPIO = PIO0_2.
 
@@ -852,12 +851,59 @@ struct AnalogReadingRelated {
 
 (uint32_t*) 0x100010d8 - Related to USB callbacks? Interrupt disabled in order to check...
 
-
 (uint16_t*) 0x10001140 - HID EP3 related?
  (uint8_t*) 0x10001142 - HID EP3 related?
  (uint8_t*) 0x10001143 - HID EP3 related?
 
-(uint32_t*) 0x10001c2c - Callback related to USB_IRQ (if GPREG1 is 0).
+ (uint8_t*) 0x10001143 - HID EP3 related?
+
+ (uint8_t*) 0x10001700 - Flag related to ??
+ (uint8_t*) 0x10001701 - Flag related to ??
+ (uint8_t*) 0x10001702 - Flag related to ??
+ (uint8_t*) 0x10001703 - Flag related to ??
+ (uint8_t*) 0x10001704 - Flag related to ??
+ (uint8_t*) 0x10001705 - Flag related to ??
+ (uint8_t*) 0x10001706 - Flag related to ??
+ (uint8_t*) 0x10001707 - Flag related to ??
+ (uint8_t*) 0x10001708 - Flag related to ??
+ (uint8_t*) 0x10001709 - Flag related to ??
+ (uint8_t*) 0x1000170a - Flag related to ??
+ (uint8_t*) 0x1000170b - Flag related to ??
+ (uint8_t*) 0x1000170c - Flag related to ??
+ (uint8_t*) 0x1000170d - Flag related to ??
+ (uint8_t*) 0x1000170e - Flag related to ??
+ (uint8_t*) 0x1000170f - Flag related to ??
+ (uint8_t*) 0x10001710 - Flag related to ??
+ (uint8_t*) 0x10001711 - Flag related to ??
+ (uint8_t*) 0x10001712 - Flag related to ??
+ (uint8_t*) 0x10001713 - Flag related to ??
+ (uint8_t*) 0x10001714 - Flag related to ??
+ (uint8_t*) 0x10001715 - Flag related to ??
+ (uint8_t*) 0x10001716 - Flag related to ??
+ (uint8_t*) 0x10001717 - Flag related to ??
+ (uint8_t*) 0x10001718 - Flag related to ??
+ (uint8_t*) 0x10001719 - Flag related to ??
+ (uint8_t*) 0x1000171a - Flag related to ??
+ (uint8_t*) 0x1000171b - Flag related to ??
+ (uint8_t*) 0x1000171c - Flag related to ??
+ (uint8_t*) 0x1000171d - Flag related to ??
+ (uint8_t*) 0x1000171e - Flag related to ??
+ (uint8_t*) 0x1000171f - Flag related to ??
+ (uint8_t*) 0x10001720 - Flag related to ??
+ (uint8_t*) 0x10001721 - Flag related to ??
+ (uint8_t*) 0x10001722 - Flag related to ??
+ (uint8_t*) 0x10001723 - Flag related to ??
+ (uint8_t*) 0x10001724 - Flag related to ??
+ (uint8_t*) 0x10001725 - Flag related to ??
+ (uint8_t*) 0x10001726 - Flag related to ??
+ (uint8_t*) 0x10001727 - Flag related to ??
+ (uint8_t*) 0x10001728 - Flag related to ??
+ (uint8_t*) 0x10001729 - Flag related to ??
+ (uint8_t*) 0x1000172a - Flag related to ??
+ (uint8_t*) 0x1000172b - Flag related to ??
+ (uint8_t*) 0x1000172c - Flag related to ??
+ (uint8_t*) 0x1000172d - Flag related to ??
+ (uint8_t*) 0x1000172e - Flag related to ??
 
   (int8_t*) 0x20000000 - Related to Haptics/SSP0?
 
@@ -868,6 +914,7 @@ struct AnalogReadingRelated {
 
  (uint8_t*) 0x20000075 - Counter?? Related to Joystick X/Y position?
 
+(uint16_t*) 0x200002a0 - Related to CT16B1 MR0 calculation?
 (uint16_t*) 0x200002a2 - Related to CT16B1 MR0 calculation?
 
 (uint32_t*) 0x200002c0 - Related to Joystick X/Y position? Callback?

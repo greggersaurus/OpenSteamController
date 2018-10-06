@@ -1441,7 +1441,13 @@ void fnc0x00009ad0();
  */
 void fnc0x000053f8();
 
-?? fnc0x00006e14( arg0x00006e14_0, arg0x00006e14_1, arg0x00006e14_2, arg0x00006e14_3, arg0x00006e14_4, arg0x00006e14_5, arg0x00006e14_6, arg0x00006e14_12, )
+/**
+ * Related to ADC readings and CT16B1. Maybe something to do with DR6 readings
+ *	and power to board?
+ *
+ * \return None.
+ */
+void fnc0x00006e14();
 
 /**
  * Call function to choose between enabling JTAG or Analog Triggers 
@@ -1532,19 +1538,66 @@ void fnc0x00003500(arg0x00003500_0);
  */
 void fnc0x0000627c(arg0x0000627c_0, arg0x0000627c_1);
 
-?? fnc0x0000a3b4( arg0x0000a3b4_0, arg0x0000a3b4_1, arg0x0000a3b4_2, arg0x0000a3b4_3, arg0x0000a3b4_4, arg0x0000a3b4_5, arg0x0000a3b4_6, arg0x0000a3b4_12, )
+/**
+ * Check flag 0x20000008. If non-zero then...?
+ *
+ * \return None.
+ */
+void fnc0x0000a3b4();
 
-?? fnc0x00006a58( arg0x00006a58_0, arg0x00006a58_1, arg0x00006a58_2, arg0x00006a58_3, arg0x00006a58_4, arg0x00006a58_5, arg0x00006a58_6, arg0x00006a58_12, )
+/**
+ * Check flag 0x10000281. If non-zer then...?
+ *
+ * \return None.
+ */
+void fnc0x00006a58();
 
-?? fnc0x00006dd4( arg0x00006dd4_0, arg0x00006dd4_1, arg0x00006dd4_2, arg0x00006dd4_3, arg0x00006dd4_4, arg0x00006dd4_5, arg0x00006dd4_6, arg0x00006dd4_12, )
+/**
+ * Call fnc0x00006d64() to check 0x10001700 to 0x1000172e.
+ *  If fnc0x00006d64() returns non-zero...?
+ *
+ * \retturn None.
+ */
+void fnc0x00006dd4();
 
-?? fnc0x00006d64( arg0x00006d64_0, arg0x00006d64_1, arg0x00006d64_2, arg0x00006d64_3, arg0x00006d64_4, arg0x00006d64_5, arg0x00006d64_6, arg0x00006d64_7, arg0x00006d64_12, )
+/**
+ * Check flags from 0x10001700 to 0x1000172e.
+ *
+ * \return 0 if all flags are 0.
+ */
+uint8_t fnc0x00006d64();
 
-?? fnc0x00009914( arg0x00009914_0, arg0x00009914_1, arg0x00009914_2, arg0x00009914_3, arg0x00009914_4, arg0x00009914_5, arg0x00009914_6, arg0x00009914_12, )
+/**
+ * Related to CT16B1?
+ *
+ * \return None.
+ */
+void fnc0x00009914();
 
-?? fnc0x0000743c( arg0x0000743c_0, arg0x0000743c_1, arg0x0000743c_2, arg0x0000743c_3, arg0x0000743c_4, arg0x0000743c_5, arg0x0000743c_6, arg0x0000743c_12, )
+/**
+ * Related to CT16B1?
+ *
+ * \return None.
+ */
+void fnc0x0000743c();
 
-?? fnc0x0000d71c( arg0x0000d71c_0, arg0x0000d71c_1, arg0x0000d71c_2, arg0x0000d71c_3, arg0x0000d71c_4, arg0x0000d71c_5, arg0x0000d71c_6, arg0x0000d71c_12, )
+/**
+ * Some (floating point) compuatations related to CT16B1
+ *
+ * \param arg0x0000d71c_0 uint32_t Unknown purpose
+ * \param arg0x0000d71c_1 uint32_t Unknown purpose
+ * \param arg0x0000d71c_2 uint32_t Unknown purpose
+ *
+ * \return None.
+ */
+uint16_t fnc0x0000d71c(arg0x0000d71c_0, arg0x0000d71c_1, arg0x0000d71c_2);
+
+/**
+ * CT16B1 Related? Compare 0x1000005c >= 0x10000330 then...?
+ *
+ * \return 0 if 0x1000005c < 0x10000330
+ */
+int fnc0x000073dc();
 
 /** AKA \fn void ISR(USBD_HANDLE_T hUsb)                                          
  *  Function to USB device controller interrupt events.                       
@@ -1558,3 +1611,7 @@ void fnc0x0000627c(arg0x0000627c_0, arg0x0000627c_1);
  *  \return Nothing.                                                          
  */                                                                           
 void fnc0x1fff3654(arg0x1fff3654_0);
+
+?? fnc0x00006584( arg0x00006584_0, arg0x00006584_1, arg0x00006584_2, arg0x00006584_3, arg0x00006584_4, arg0x00006584_5, arg0x00006584_6, arg0x00006584_12, )
+
+?? fnc0x00007df8( arg0x00007df8_0, arg0x00007df8_1, arg0x00007df8_2, arg0x00007df8_3, arg0x00007df8_4, arg0x00007df8_5, arg0x00007df8_6, arg0x00007df8_12, )
