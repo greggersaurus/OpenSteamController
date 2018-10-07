@@ -1615,3 +1615,14 @@ void fnc0x1fff3654(arg0x1fff3654_0);
 ?? fnc0x00006584( arg0x00006584_0, arg0x00006584_1, arg0x00006584_2, arg0x00006584_3, arg0x00006584_4, arg0x00006584_5, arg0x00006584_6, arg0x00006584_12, )
 
 ?? fnc0x00007df8( arg0x00007df8_0, arg0x00007df8_1, arg0x00007df8_2, arg0x00007df8_3, arg0x00007df8_4, arg0x00007df8_5, arg0x00007df8_6, arg0x00007df8_12, )
+
+?? fnc0x00007904( arg0x00007904_0, arg0x00007904_1, arg0x00007904_2, arg0x00007904_3, arg0x00007904_4, arg0x00007904_5, arg0x00007904_6, arg0x00007904_7, arg0x00007904_12, )
+
+/**
+ * Check state of a controller button.
+ *
+ * \param arg0x00009e08_0
+ *
+ * \return True if button is being depressed, false otherwise.
+ */
+int fnc0x00009e08(arg0x00009e08_0);

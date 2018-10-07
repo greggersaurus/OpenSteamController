@@ -72,6 +72,9 @@ This section is a running list of priorities to focus on in hopes of reaching
                 1. Low priority as figuring out details on math used to convert ADC samples is not super important to end goal.
         1. CT16B1 (and relation to ADC DR6 reading?)
             1. Maybe more apparent when we simulate IRQ for CT16B1?
+        1. Button GPIO states checked during init
+            1. What does it really affect if certain buttons are depressed on power up? 
+                1. Special more select or something maybe?
 1. Understand USART/Radio communications protocol?
     1. Try to reverse engineer protocol to leverage comms with dongle??
 1. List more details about hardware [Luna_maiboard_V000456-00_rev3.md](./Luna_maiboard_V000456-00_rev3.md)

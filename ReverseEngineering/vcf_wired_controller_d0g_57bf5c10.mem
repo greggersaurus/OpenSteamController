@@ -413,53 +413,53 @@ USB_HID2 HID Report Descriptor (len 0x21):
 (uint32_t*) 0x100008b0 - Related to Joystick?
 (uint32_t*) 0x100008b4 - Related to Joystick?
 
- (uint8_t*) 0x10000924 - Flag? related to S6 RT Button
- (uint8_t*) 0x10000925 - Flag? related to S3 LT Button
- (uint8_t*) 0x10000926 - Flag? related to S9 Y Button
- (uint8_t*) 0x10000927 - Flag? related to S4 B Button
- (uint8_t*) 0x10000928 - Flag? related to S7 X Button
- (uint8_t*) 0x10000929 - Flag? related to S1 A Button
- (uint8_t*) 0x1000092a - Flag? related to S10 Right Bumper Button
- (uint8_t*) 0x1000092b - Flag? related to S8 Left Bumper Button
- (uint8_t*) 0x1000092c - Flag? related to S2 Left Trackpad Click Button
- (uint8_t*) 0x1000092d - Flag? related to S19 Front Right Arrow Button
- (uint8_t*) 0x1000092e - Flag? related to S18 Steam Button
- (uint8_t*) 0x1000092f - Flag? related to S17 Front Left Arrow Button
- (uint8_t*) 0x10000930 - Flag? related to ?? Button
- (uint8_t*) 0x10000931 - Flag? related to ?? Button
- (uint8_t*) 0x10000932 - Flag? related to ?? Button
- (uint8_t*) 0x10000933 - Flag? related to ?? Button
- (uint8_t*) 0x10000934 - Flag? related to ?? Button
- (uint8_t*) 0x10000935 - Flag? related to ?? Button
- (uint8_t*) 0x10000936 - Flag? related to ?? Button
- (uint8_t*) 0x10000937 - Flag? related to ?? Button
- (uint8_t*) 0x10000938 - Flag? related to S14 Left Inner Grip Button
- (uint8_t*) 0x10000939 - Flag? related to S16 Right Inner Grip Button
- (uint8_t*) 0x1000093a - Flag? related to ?? Button
- (uint8_t*) 0x1000093b - Flag? related to ?? Button
- (uint8_t*) 0x1000093c - Flag? related to ?? Button
- (uint8_t*) 0x1000093d - Flag? related to ?? Button
- (uint8_t*) 0x1000093e - Flag? related to ?? Button
- (uint8_t*) 0x1000093f - Flag? related to ?? Button
- (uint8_t*) 0x10000940 - Flag? related to ?? Button
- (uint8_t*) 0x10000941 - Flag? related to ?? Button
- (uint8_t*) 0x10000942 - Flag? related to ?? Button
- (uint8_t*) 0x10000943 - Flag? related to ?? Button
- (uint8_t*) 0x10000944 - Flag? related to ?? Button
- (uint8_t*) 0x10000945 - Flag? related to ?? Button
- (uint8_t*) 0x10000946 - Flag? related to ?? Button
- (uint8_t*) 0x10000947 - Flag? related to ?? Button
- (uint8_t*) 0x10000948 - Flag? related to ?? Button
- (uint8_t*) 0x10000949 - Flag? related to ?? Button
- (uint8_t*) 0x1000094a - Flag? related to ?? Button
- (uint8_t*) 0x1000094b - Flag? related to ?? Button
- (uint8_t*) 0x1000094c - Flag? related to ?? Button
- (uint8_t*) 0x1000094d - Flag? related to ?? Button
- (uint8_t*) 0x1000094e - Flag? related to S? Analog Joystick Click Button
- (uint8_t*) 0x1000094f - Flag? related to S5 Right Trackpad Click Button
- (uint8_t*) 0x10000950 - Flag? related to ?? Button
- (uint8_t*) 0x10000951 - Flag? related to ?? Button
- (uint8_t*) 0x10000952 - Flag? related to ?? Button
+ (uint8_t*) 0x10000924 - Enabled/Configured Flag? related to S6 RT Button
+ (uint8_t*) 0x10000925 - Enabled/Configured Flag? related to S3 LT Button
+ (uint8_t*) 0x10000926 - Enabled/Configured Flag? related to S9 Y Button
+ (uint8_t*) 0x10000927 - Enabled/Configured Flag? related to S4 B Button
+ (uint8_t*) 0x10000928 - Enabled/Configured Flag? related to S7 X Button
+ (uint8_t*) 0x10000929 - Enabled/Configured Flag? related to S1 A Button
+ (uint8_t*) 0x1000092a - Enabled/Configured Flag? related to S10 Right Bumper Button
+ (uint8_t*) 0x1000092b - Enabled/Configured Flag? related to S8 Left Bumper Button
+ (uint8_t*) 0x1000092c - Enabled/Configured Flag? related to S2 Left Trackpad Click Button
+ (uint8_t*) 0x1000092d - Enabled/Configured Flag? related to S19 Front Right Arrow Button
+ (uint8_t*) 0x1000092e - Enabled/Configured Flag? related to S18 Steam Button
+ (uint8_t*) 0x1000092f - Enabled/Configured Flag? related to S17 Front Left Arrow Button
+ (uint8_t*) 0x10000930 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000931 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000932 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000933 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000934 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000935 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000936 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000937 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000938 - Enabled/Configured Flag? related to S14 Left Inner Grip Button
+ (uint8_t*) 0x10000939 - Enabled/Configured Flag? related to S16 Right Inner Grip Button
+ (uint8_t*) 0x1000093a - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000093b - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000093c - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000093d - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000093e - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000093f - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000940 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000941 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000942 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000943 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000944 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000945 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000946 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000947 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000948 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000949 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000094a - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000094b - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000094c - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000094d - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x1000094e - Enabled/Configured Flag? related to S? Analog Joystick Click Button
+ (uint8_t*) 0x1000094f - Enabled/Configured Flag? related to S5 Right Trackpad Click Button
+ (uint8_t*) 0x10000950 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000951 - Enabled/Configured Flag? related to ?? Button
+ (uint8_t*) 0x10000952 - Enabled/Configured Flag? related to ?? Button
  (uint8_t*) 0x10000953 - S6 Right Trigger Button GPIO group/base
  (uint8_t*) 0x10000954 - S6 Right Trigger Button GPIO num/offset
  (uint8_t*) 0x10000955 - S3 Left Trigger Button GPIO group/base
