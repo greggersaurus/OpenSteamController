@@ -1612,17 +1612,248 @@ int fnc0x000073dc();
  */                                                                           
 void fnc0x1fff3654(arg0x1fff3654_0);
 
-?? fnc0x00006584( arg0x00006584_0, arg0x00006584_1, arg0x00006584_2, arg0x00006584_3, arg0x00006584_4, arg0x00006584_5, arg0x00006584_6, arg0x00006584_12, )
+/**
+ * Call fnc0x00007df8 to check states of a series of buttons. EP1 related?
+ *
+ * \return None.
+ */
+void fnc0x00006584();
 
-?? fnc0x00007df8( arg0x00007df8_0, arg0x00007df8_1, arg0x00007df8_2, arg0x00007df8_3, arg0x00007df8_4, arg0x00007df8_5, arg0x00007df8_6, arg0x00007df8_12, )
+/**
+ * Check states of a series of buttons (S19 - FRONT_R, S17 - FRONT_L, 
+ *	S1 - A Button, S4 - B Button, and not-enabled buttons). EP1 related?
+ *
+ * \return 0 on sucecss??
+ */
+int fnc0x00007df8()
 
-?? fnc0x00007904( arg0x00007904_0, arg0x00007904_1, arg0x00007904_2, arg0x00007904_3, arg0x00007904_4, arg0x00007904_5, arg0x00007904_6, arg0x00007904_7, arg0x00007904_12, )
+/**
+ * Check state of a controller button (by calling fnc0x00009e08()).
+ * 
+ * \param arg0x00007904_0 See fnc0x00009e08() for further details.
+ *
+ * \return See fnc0x00009e08() for further details.
+ */
+int fnc0x00007904(arg0x00007904_0);
 
 /**
  * Check state of a controller button.
  *
- * \param arg0x00009e08_0
+ * \param arg0x00009e08_0 Index of button to query where:
+ *	 [0] = S6 RT Button
+ *	 [1] = S3 LT Button
+ *	 [2] = S9 Y Button
+ *	 [3] = S4 B Button
+ *	 [4] = S7 X Button
+ *	 [5] = S1 A Button
+ *	 [6] = S10 Right Bumper Button
+ *	 [7] = S8 Left Bumper Button
+ *	 [8] = S2 Left Trackpad Click Button
+ *	 [9] = S19 Front Right Arrow Button
+ *	[10] = S18 Steam Button
+ *	[11] = S17 Front Left Arrow Button
+ *	[12] = ?? Button
+ *	[13] = ?? Button
+ *	[14] = ?? Button
+ *	[15] = ?? Button
+ *	[16] = ?? Button
+ *	[17] = ?? Button
+ *	[18] = ?? Button
+ *	[19] = ?? Button
+ *	[20] = S14 Left Inner Grip Button
+ *	[21] = S16 Right Inner Grip Button
+ *	[22] = ?? Button
+ *	[23] = ?? Button
+ *	[24] = ?? Button
+ *	[25] = ?? Button
+ *	[26] = ?? Button
+ *	[27] = ?? Button
+ *	[28] = ?? Button
+ *	[29] = ?? Button
+ *	[30] = ?? Button
+ *	[31] = ?? Button
+ *	[32] = ?? Button
+ *	[33] = ?? Button
+ *	[34] = ?? Button
+ *	[35] = ?? Button
+ *	[36] = ?? Button
+ *	[37] = ?? Button
+ *	[38] = ?? Button
+ *	[39] = ?? Button
+ *	[40] = ?? Button
+ *	[41] = ?? Button
+ *	[42] = S? Analog Joystick Click Button
+ *	[43] = S5 Right Trackpad Click Button
+ *	[44] = ?? Button
+ *	[45] = ?? Button
+ *	[46] = ?? Button
  *
  * \return True if button is being depressed, false otherwise.
  */
 int fnc0x00009e08(arg0x00009e08_0);
+
+/**
+ * Compare two uint8_t arrays.
+ *
+ * \param arg0x000021ee_0 Address of array 0.
+ * \param arg0x000021ee_1 Address of array 1.
+ * \param arg0x000021ee_2 Length of arrays.
+ *
+ * \return 0 if the arrays match.
+ */
+int fnc0x000021ee(arg0x000021ee_0, arg0x000021ee_1, arg0x000021ee_2);
+
+/**
+ * Call fnc0x00007f04() to check states on a variety of inputs. EP2 related?
+ *
+ * \return None.
+ */
+void fnc0x000072b8();
+
+/**
+ * Check states of inputs (S6 - RT (Right trigger digital), S3 - LT (Left trigger
+ *	 digital), not enabled other (analog?)). EP2 related?
+ * 
+ * \return 0 on success??
+ */
+int fnc0x00007f04();
+
+/**
+ * Execute callback for given peripheral/behavior index.
+ *
+ * \param arg0x000078e6_0 Same as arg0x000078e6_1. Never actually referenced in 
+ *	function.
+ * \param arg0x000078e6_1 Index used to determine what callback to attempt.
+ *	See callbacks array starting at 0x10000858 for further details.
+ *
+ * \return Return value produced by callback?
+ */
+uint8_t fnc0x000078e6(arg0x000078e6_0, arg0x000078e6_1);
+
+/**
+ * EP3 related checking of inputs/interfaces?? Primarily calls fnc0x0000807c().
+ *
+ * \return None.
+ */
+void fnc0x0000b84c()
+
+/**
+ *
+ * Check results for a variety of inputs (EP3 related?)
+ * 	S6 - RT (Right trigger digital), S3 - LT (Left trigger digital), S8 - LB (Left bumper), S10 - RB (Right bumper), 
+ *	S1 - A Button, S4 - B Button, S7 - X Button, S9 - Y Button, Not enabled/configured buttons,
+ *	S19 - FRONT_R (Front right arrow button), S18 - Steam button, S17 - FRONT_L (Front left arrow button), 
+ *	S14 - Left inner grip button, S16 - Right inner grip button, S5 - Right trackpad click, 
+ *	Joystick X (AD1), Joystick Click, S2 - Left trackpad click, Left Analog Trigger (AD0),
+ *	Right Analog Trigger (AD2), 
+ *
+ * \return 0 on success..??
+ */
+int fnc0x0000807c()
+
+/**
+ * Compute values related to AD. Calls fnc0x0000b0f0().
+ * 
+ * \param arg0x00006308_0 See arg0x0000b0f0_0 for details.
+ *
+ * \return None.
+ */
+void fnc0x00006308(arg0x00006308_0);
+
+/**
+ * Compute values related to AD
+ * 
+ * \param arg0x0000b0f0_0 Using 0x10000026 as base this determine 16-bit offset
+ *	of values to be used (and updated?) in computation.
+ *
+ * \return None.
+ */
+void fnc0x0000b0f0(arg0x0000b0f0_0);
+
+/**
+ * Unknown floating point math. Calls fnc0x0000288e().
+ * 
+ * \parma arg0x0000e8e0_0 A floating point number...
+ * 
+ * \return ??
+ */
+float fnc0x0000e8e0(arg0x0000e8e0_0);
+
+/**
+ * Unknown floating point math.
+ * 
+ * \parma arg0x0000288e_0 A floating point number...
+ * 
+ * \return ??
+ */
+float fnc0x0000288e(arg0x0000288e_0);
+
+/**
+ * A bunch of floating point math.
+ * 
+ * \param arg0x00009074_0 A floating point number...
+ * \param arg0x00009074_1 A floating point number...
+ *
+ * \return ??
+ */
+float fnc0x00009074(arg0x00009074_0, arg0x00009074_1);
+
+/**
+ * Related to EP3 and 0x20000034 as base address?
+ * 
+ * \param arg0x0000a28c_0 Offset from 0x20000034...
+ * \param arg0x0000a28c_1 Address where something is written...
+ * \param arg0x0000a28c_2 Unused?
+ * \param arg0x0000a28c_3 ADdress where something is written...
+ *
+ * \return None.
+ */
+void fnc0x0000a28c(arg0x0000a28c_0, arg0x0000a28c_1, arg0x0000a28c_2, arg0x0000a28c_3);
+
+/**
+ * EP3 related?
+ *
+ * \param arg0x0000221e_0 Address?
+ * \param arg0x0000221e_1 ??
+ * 
+ * \return ??
+ */
+int fnc0x0000221e(arg0x0000221e_0, arg0x0000221e_1);
+
+/**
+ * Check 0x10000280 flag...
+ * 
+ * \return State of flag?
+ */
+int fnc0x00006880();
+
+/**
+ * Set some variables... EP3 related?
+ *
+ * \return None.
+ */ 
+void fnc0x0000b338();
+
+/**
+ * Check and set some variable. EP3 related??
+ *
+ * \return 0 on success??
+ */
+int fnc0x0000b5a0();
+
+/**
+ * Check 0x10000344 for ?? purpose...
+ * 
+ * \return None.
+ */
+void fnc0x00003138();
+
+// Check some flags and SysTick related vairable, then wfi...
+?? fnc0x00007ca0( arg0x00007ca0_0, arg0x00007ca0_1, arg0x00007ca0_2, arg0x00007ca0_3, arg0x00007ca0_4, arg0x00007ca0_5, arg0x00007ca0_6, arg0x00007ca0_12, )
+
+/**
+ * Compute the different between SysTick (and maybe EP3?) related variables...
+ *
+ * \return ((*(uint32_t*)0x10000338) - (*(uint32_t*)0x100002c8))
+ */
+int fnc0x00007c7c()

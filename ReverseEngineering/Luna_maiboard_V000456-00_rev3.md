@@ -87,7 +87,7 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            61 | PIO0_18               | PIO0_18          | In            | If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB). | 
 |            62 | PIO0_19               | PIO0_19          | Out           | Set as output during init and driven low. (trace leads to... TODO)|
 |            63 | PIO1_16               | PIO1_16          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Left Trackpad/Haptic. |
-|            64 | PIO1_6                | PIO1_6           | In            | Chip Select/SS for Left Trackpad/Haptic (active low) |
+|            64 | PIO1_6                | PIO1_6           | Out           | Chip Select/SS for Left Trackpad/Haptic (active low) |
 
 
 # MPU-6500

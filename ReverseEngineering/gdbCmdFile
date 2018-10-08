@@ -906,17 +906,17 @@ else
 
 
 	# Setup watchpoint right before wfi after compare of *(uint8_t*)0x100002b7 and *(uint8_t*)0x100002b4
-###	watch $pc == 0x000043d0
+	watch $pc == 0x000043d0
 
 	# Execute until watchpoint
-###	continue
+	continue
 
 # TODO: Simulate USB callback and other interrupts...
 
 	##
-###	set $lr = $pc
+	set $lr = $pc
 	# ADC IRQ 
-###	set $pc = 0x00000204
+	set $pc = 0x00000204
 
 	##
 	##set $lr = $pc
@@ -945,7 +945,7 @@ else
 	##
 
 	# Remove watchpoint
-###	delete 
+	delete 
 
 
 	#------------------------------------------------------------------------------#
