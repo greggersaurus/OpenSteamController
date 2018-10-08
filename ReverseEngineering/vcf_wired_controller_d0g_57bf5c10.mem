@@ -285,7 +285,7 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x100002b4 - Checked on loop once init reaches a certain point...
 			 Check if is equal to 0x100002b7. Also, checked if is
 			 0 by fnc0x00005204().
-
+ (uint8_t*) 0x100002b5 - Related to 0x100002b4?
  (uint8_t*) 0x100002b6 - Related to reading AD6 DR6?? Some sort of flag/bool?
  (uint8_t*) 0x100002b7 - Checked on loop once init reaches a certain point...
 			 Check if is equal to 0x100002b4

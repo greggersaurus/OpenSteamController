@@ -1848,8 +1848,13 @@ int fnc0x0000b5a0();
  */
 void fnc0x00003138();
 
-// Check some flags and SysTick related vairable, then wfi...
-?? fnc0x00007ca0( arg0x00007ca0_0, arg0x00007ca0_1, arg0x00007ca0_2, arg0x00007ca0_3, arg0x00007ca0_4, arg0x00007ca0_5, arg0x00007ca0_6, arg0x00007ca0_12, )
+/**
+ * Check some flags and SysTick related vairable, then wfi... then set
+ *	*(uint8_t*)0x100002b5 = *(uint8_t*)0x100002b4 and exit.
+ * 
+ * \return None.
+ */
+void fnc0x00007ca0();
 
 /**
  * Compute the different between SysTick (and maybe EP3?) related variables...
