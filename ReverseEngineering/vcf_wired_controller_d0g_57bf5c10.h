@@ -1693,7 +1693,7 @@ int fnc0x00007904(arg0x00007904_0);
 int fnc0x00009e08(arg0x00009e08_0);
 
 /**
- * Compare two uint8_t arrays.
+ * Compare two uint8_t arrays (memcmp?).
  *
  * \param arg0x000021ee_0 Address of array 0.
  * \param arg0x000021ee_1 Address of array 1.
@@ -1861,4 +1861,29 @@ void fnc0x00007ca0();
  *
  * \return ((*(uint32_t*)0x10000338) - (*(uint32_t*)0x100002c8))
  */
-int fnc0x00007c7c()
+int fnc0x00007c7c();
+
+?? fnc0x00004e58( arg0x00004e58_0, arg0x00004e58_1, arg0x00004e58_2, arg0x00004e58_3, arg0x00004e58_4, arg0x00004e58_5, arg0x00004e58_6, arg0x00004e58_12, )
+
+?? fnc0x00004f60( arg0x00004f60_0, arg0x00004f60_1, arg0x00004f60_2, arg0x00004f60_3, arg0x00004f60_4, arg0x00004f60_5, arg0x00004f60_6, arg0x00004f60_12, )
+
+?? fnc0x000095b8( arg0x000095b8_0, arg0x000095b8_1, arg0x000095b8_2, arg0x000095b8_3, arg0x000095b8_4, arg0x000095b8_5, arg0x000095b8_6, arg0x000095b8_7, arg0x000095b8_12, )
+
+?? fnc0x0000a894( arg0x0000a894_0, arg0x0000a894_1, arg0x0000a894_2, arg0x0000a894_3, arg0x0000a894_4, arg0x0000a894_5, arg0x0000a894_6, arg0x0000a894_12, )
+
+?? fnc0x000076d4( arg0x000076d4_0, arg0x000076d4_1, arg0x000076d4_2, arg0x000076d4_3, arg0x000076d4_4, arg0x000076d4_5, arg0x000076d4_6, arg0x000076d4_12, )
+
+/** AKA uint32_t WriteEP(USBD_HANDLE_T hUsb, uint32_t EPNum, uint8_t *pData, uint32_t cnt)
+*  Function to write data to be sent on the requested endpoint.              
+*                                                                            
+*  This function is called by USB stack and the application layer to send data
+*  on the requested endpoint.                                                
+*                                                                            
+*  \param[in] hUsb Handle to the USB device stack.                           
+*  \param[in] EPNum  Endpoint number as per USB specification.               
+*                    ie. An EP1_IN is represented by 0x81 number.            
+*  \param[in] pData Pointer to the data buffer from where data is to be copied. 
+*  \param[in] cnt  Number of bytes to write.                                 
+*  \return Returns the number of bytes written.                              
+*/                                                                           
+uint32_t fnc0x1fff3386(arg0x1fff3386_0, arg0x1fff3386_1, arg0x1fff3386_2, arg0x1fff3386_3);

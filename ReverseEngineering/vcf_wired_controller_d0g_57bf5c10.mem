@@ -366,7 +366,7 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 after early init). Effectively a locking mechanism
 			 (i.e. counting semaphore).
 
- (uint8_t*) 0x10000344 - 
+ (uint8_t*) 0x10000344 - Flag set when USB_Configure_Event executes.
 
 (uint32_t*) 0x10000348 - Function pointer? Related to I2C or CT16B1?
 (uint32_t*) 0x1000034c - USBD_HANDLE_T (is typedef void*)
@@ -404,8 +404,11 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000371 - EP3 related?
  (uint8_t*) 0x10000372 - EP3 related?
 
-(uint32_t*) 0x1000037c - USB HID3 related? Related to 0x10000330??
-(uint32_t*) 0x10000380 - USB HID3 related?
+(uint32_t*) 0x10000374 - Stores address of EP3 (0x83) data buffer (i.e. place
+			 where updates message data is stored).
+
+(uint32_t*) 0x1000037c - EP3 related? Related to 0x10000330??
+(uint32_t*) 0x10000380 - EP3 related?
 
 (uint32_t*) 0x10000388 - EP3 related?
 (uint32_t*) 0x1000038c - EP3 related?
@@ -982,51 +985,88 @@ struct AnalogReadingRelated {
 
 (uint32_t*) 0x100010d8 - Related to USB callbacks? Interrupt disabled in order to check...
 
- (uint8_t*) 0x10001104 - EP3 related?
- (uint8_t*) 0x10001105 - EP3 related?
- (uint8_t*) 0x10001106 - EP3 related?
- (uint8_t*) 0x10001107 - EP3 related?
- (uint8_t*) 0x10001108 - array[0] EP3 related?
- (uint8_t*) 0x10001109 - array[1] EP3 related?
- (uint8_t*) 0x1000110a - array[2] EP3 related?
- (uint8_t*) 0x1000110b - array[3] EP3 related?
- (uint8_t*) 0x1000110c - array[4] EP3 related?
- (uint8_t*) 0x1000110d - array[5] EP3 related?
- (uint8_t*) 0x1000110e - array[6] EP3 related?
- (uint8_t*) 0x1000110f - array[7] EP3 related?
-(uint16_t*) 0x10001110 - array[8] EP3 related?
-(uint16_t*) 0x10001112 - array[9] EP3 related?
-(uint16_t*) 0x10001114 - array[10] EP3 related? 
-(uint16_t*) 0x10001116 - array[11] EP3 related? 
-(uint16_t*) 0x10001118 - array[12] EP3 related? Left analog trigger (AD0) related?
-(uint16_t*) 0x1000111a - array[13] EP3 related? Right analog trigger (AD2) related?
-(uint16_t*) 0x1000111c - array[14] EP3 related? 
-(uint16_t*) 0x1000111e - array[15] EP3 related? 
-(uint16_t*) 0x10001120 - EP3 related? 
-(uint16_t*) 0x10001122 - EP3 related? 
-(uint16_t*) 0x10001124 - EP3 related? 
-(uint16_t*) 0x10001126 - EP3 related? 
-(uint16_t*) 0x10001128 - EP3 related? 
-(uint16_t*) 0x1000112a - EP3 related? 
-(uint16_t*) 0x1000112c - EP3 related? 
-(uint16_t*) 0x1000112e - EP3 related? 
-(uint16_t*) 0x10001130 - EP3 related? 
-(uint16_t*) 0x10001132 - EP3 related? Left Analog Trigger (AD0).
-(uint16_t*) 0x10001134 - EP3 related? Right Analog Trigger (AD2).
-(uint16_t*) 0x10001136 - EP3 related? Joystick X position (AD1).
-(uint16_t*) 0x10001138 - EP3 related? Joystick Y position (AD3).
-(uint16_t*) 0x1000113a - EP3 related? 0x2000006c related?
-(uint16_t*) 0x1000113c - EP3 related? 0x20000070 related?
-(uint16_t*) 0x1000113e - EP3 related? 0x100002b8 related?
-
-(uint16_t*) 0x10001140 - HID EP3 related?
- (uint8_t*) 0x10001142 - HID EP3 related?
- (uint8_t*) 0x10001143 - HID EP3 related?
-(uint32_t*) 0x10001144 - HID EP3 related? Related to 0x10001104?
-(uint32_t*) 0x10001148 - HID EP3 related? Related to 0x10001108?
-(uint32_t*) 0x1000114c - HID EP3 related? Related to 0x1000110c?
-(uint16_t*) 0x10001150 - HID EP3 related? Related to 0x10001110?
-(uint16_t*) 0x10001152 - HID EP3 related? Related to 0x10001112?
+struct EP3UpdateMsg { // Buffer where updated data is stored to compare to last sent
+(uint16_t*) 0x10001100 - Unused due to being comparison copy?.
+ (uint8_t*) 0x10001102 - Unused due to being comparison copy?
+ (uint8_t*) 0x10001103 - Unused due to being comparison copy?
+ (uint8_t*) 0x10001104 - Unknown purpose...
+ (uint8_t*) 0x10001105 - Unknown purpose...
+ (uint8_t*) 0x10001106 - Unknown purpose...
+ (uint8_t*) 0x10001107 - Unknown purpose...
+ (uint8_t*) 0x10001108 - Unknown purpose...
+ (uint8_t*) 0x10001109 - Unknown purpose...
+ (uint8_t*) 0x1000110a - Unknown purpose...
+ (uint8_t*) 0x1000110b - Unknown purpose...
+ (uint8_t*) 0x1000110c - Unknown purpose...
+ (uint8_t*) 0x1000110d - Unknown purpose...
+ (uint8_t*) 0x1000110e - Unknown purpose...
+ (uint8_t*) 0x1000110f - Unknown purpose...
+(uint16_t*) 0x10001110 - Unknown purpose...
+(uint16_t*) 0x10001112 - Unknown purpose...
+(uint16_t*) 0x10001114 - Unknown purpose...
+(uint16_t*) 0x10001116 - Unknown purpose...
+(uint16_t*) 0x10001118 - Left analog trigger (AD0) related?
+(uint16_t*) 0x1000111a - Right analog trigger (AD2) related?
+(uint16_t*) 0x1000111c - Unknown purpose...
+(uint16_t*) 0x1000111e - Unknown purpose...
+(uint16_t*) 0x10001120 - Unknown purpose...
+(uint16_t*) 0x10001122 - Unknown purpose...
+(uint16_t*) 0x10001124 - Unknown purpose...
+(uint16_t*) 0x10001126 - Unknown purpose...
+(uint16_t*) 0x10001128 - Unknown purpose...
+(uint16_t*) 0x1000112a - Unknown purpose...
+(uint16_t*) 0x1000112c - Unknown purpose...
+(uint16_t*) 0x1000112e - Unknown purpose...
+(uint16_t*) 0x10001130 - Unknown purpose...
+(uint16_t*) 0x10001132 - Left Analog Trigger (AD0).
+(uint16_t*) 0x10001134 - Right Analog Trigger (AD2).
+(uint16_t*) 0x10001136 - Joystick X position (AD1).
+(uint16_t*) 0x10001138 - Joystick Y position (AD3).
+(uint16_t*) 0x1000113a - 0x2000006c related?
+(uint16_t*) 0x1000113c - 0x20000070 related?
+(uint16_t*) 0x1000113e - 0x100002b8 related?
+}
+struct EP3UpdateMsg { // This is a copy of last update message sent
+(uint16_t*) 0x10001140 - Header info that does not change?
+ (uint8_t*) 0x10001142 - Header info that does not change?
+ (uint8_t*) 0x10001143 - Header info that does not change?
+ (uint8_t*) 0x10001144 - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x10001145 - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x10001146 - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x10001147 - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x10001148 - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x10001149 - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x1000114a - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x1000114b - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x1000114c - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x1000114d - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x1000114e - See struct EP3UpdateMsg at 0x10001100 for details.
+ (uint8_t*) 0x1000114f - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001150 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001152 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001154 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001156 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001158 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x1000115a - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x1000115c - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x1000115e - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001160 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001162 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001164 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001166 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001168 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x1000116a - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x1000116c - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x1000116e - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001170 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001172 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001174 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001176 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x10001178 - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x1000117a - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x1000117c - See struct EP3UpdateMsg at 0x10001100 for details.
+(uint16_t*) 0x1000117e - See struct EP3UpdateMsg at 0x10001100 for details.
+}
 
  (uint8_t*) 0x10001700 - Flag related to ??
  (uint8_t*) 0x10001701 - Flag related to ??

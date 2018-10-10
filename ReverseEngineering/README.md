@@ -25,6 +25,27 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Things to try immediately (see farther below for more details)
+    1. Look into getting details on fields in 0x10001100 struct EP3UpdateMsg
+        1, Look into what this contains when controller is connected with Valve FW (and no driver/Steam in new ubuntu vm)
+            1. Holes where trackpad data exist or accelerometer??
+    1. What about functions checking periph related to EP1 and EP2?
+        1. Are these not generating messages because nothing was perceived to change? Or is it just a different USB HID interface (i.e. not interrupt)?
+        1. Try re-running simulation with different inputs (i.e. related buttons pressed...)
+    1. Finish rev eng details of USB_Configure_Event rev eng
+    1. Send 64 bytes message defined in https://gitlab.com/Pilatomic/SteamControllerSinger/blob/master/main.cpp to EP3_HID_GetReport (or is it SetReport??) Or is it EP1 or EP2?
+        1. We know from SteamControllerSinger that this causes haptics to vibrate
+            1. Info on how to communicate with haptics
+            1. Info on memory and setup related to haptics/SPI?
+    1. Revisit gdbCmdFile watchpoints
+        1. Rather than settings and removing watchpoints one by one, can we watch multiple and react differently based on pc?
+            1. This will make repeated steps that need intervention (i.e. skipping WriteEP or making it through SPI transactions) cleaner (less code duplication)
+        1. Can gdb command files have functions and loops?
+            1. Make functions to visit different IRQs and callbacks (so we are not constantly removing or changing code...)
+    1. Consider: How do we get to path where startup tune is sent to haptics?
+        1. Review what makes startup tune play (USB pwr only, USB computer no steam, USB computer steam)
+        1. Can use usbmon to isolate message that causes tune to play on startup?
+            1. Is there one?
+
     1. (Fresh look) Make sure all valid paths in all enabled IRQs are covered
         1. PINT0
         1. PINT1
