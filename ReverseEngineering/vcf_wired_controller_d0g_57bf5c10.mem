@@ -368,7 +368,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
  (uint8_t*) 0x10000344 - Flag set when USB_Configure_Event executes.
 
-(uint32_t*) 0x10000348 - Function pointer? Related to I2C or CT16B1?
+(uint32_t*) 0x10000348 - Function pointer. Called in USB_Configure_Event() and
+			 then cleared after called... Call once only?
 (uint32_t*) 0x1000034c - USBD_HANDLE_T (is typedef void*)
 (uint32_t*) 0x10000350 - (const USBD_API_T *)LPC_ROM_API->usbdApiBase (0x1fff1f24)
 (uint32_t*) 0x10000354 - Tracks bottom of USB stack, as HID devices/eps are added 
@@ -983,10 +984,15 @@ struct AnalogReadingRelated {
 			 for USB_VBUS = 1 case...). Maybe just used to wakeup
 			 processor in main loop from wfi?
 
-(uint32_t*) 0x100010d8 - Related to USB callbacks? Interrupt disabled in order to check...
+(uint32_t*) 0x100010d4 - Read in USB_Configure_Event()
+(uint32_t*) 0x100010d8 - Interrupt disabled in order to check in main...
+			 Incrmeneted in USB_Configure_Event() if 0x10000348 
+			 callback is not NULL.
+(uint32_t*) 0x100010dc - Set in USB_Configure_Event(). callback maybe?
+(uint32_t*) 0x100010e0 - Set in USB_Configure_Event()
 
 struct EP3UpdateMsg { // Buffer where updated data is stored to compare to last sent
-(uint16_t*) 0x10001100 - Unused due to being comparison copy?.
+(uint16_t*) 0x10001100 - Unused due to being comparison copy?
  (uint8_t*) 0x10001102 - Unused due to being comparison copy?
  (uint8_t*) 0x10001103 - Unused due to being comparison copy?
  (uint8_t*) 0x10001104 - Unknown purpose...
@@ -1027,9 +1033,9 @@ struct EP3UpdateMsg { // Buffer where updated data is stored to compare to last 
 (uint16_t*) 0x1000113e - 0x100002b8 related?
 }
 struct EP3UpdateMsg { // This is a copy of last update message sent
-(uint16_t*) 0x10001140 - Header info that does not change?
- (uint8_t*) 0x10001142 - Header info that does not change?
- (uint8_t*) 0x10001143 - Header info that does not change?
+(uint16_t*) 0x10001140 - Header info? Always 0x0001.
+ (uint8_t*) 0x10001142 - Header info? Always 0x01.
+ (uint8_t*) 0x10001143 - Header info? Always 0x3c.
  (uint8_t*) 0x10001144 - See struct EP3UpdateMsg at 0x10001100 for details.
  (uint8_t*) 0x10001145 - See struct EP3UpdateMsg at 0x10001100 for details.
  (uint8_t*) 0x10001146 - See struct EP3UpdateMsg at 0x10001100 for details.
@@ -1186,5 +1192,7 @@ struct EP3UpdateMsg { // This is a copy of last update message sent
 (uint16_t*) 0x200002a4 - Related to EP3 and Joystick X/Y?
 (uint16_t*) 0x200002a8 - Related to EP3?
 (uint16_t*) 0x200002aa - Related to EP3?
+
+(uint16_t*) 0x200002ae - Related to USB Configuration.
 
 (uint32_t*) 0x200002c0 - Related to Joystick X/Y position? Callback?

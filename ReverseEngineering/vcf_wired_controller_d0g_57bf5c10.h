@@ -1863,15 +1863,51 @@ void fnc0x00007ca0();
  */
 int fnc0x00007c7c();
 
-?? fnc0x00004e58( arg0x00004e58_0, arg0x00004e58_1, arg0x00004e58_2, arg0x00004e58_3, arg0x00004e58_4, arg0x00004e58_5, arg0x00004e58_6, arg0x00004e58_12, )
+/**
+ * Handle USB_Configure_Event()
+ *
+ * \return None.
+ */
+void fnc0x00004e58();
 
-?? fnc0x00004f60( arg0x00004f60_0, arg0x00004f60_1, arg0x00004f60_2, arg0x00004f60_3, arg0x00004f60_4, arg0x00004f60_5, arg0x00004f60_6, arg0x00004f60_12, )
+/**
+ * USB_Configure_Event related. Check bounds on arguments, then set some 
+ * 	variables....
+ *
+ * \param arg0x00004f60_0 TBD use. A number?
+ * \param arg0x00004f60_1 TBD use. A number?
+ * 
+ * \return None.
+ */
+void fnc0x00004f60(arg0x00004f60_0, arg0x00004f60_1);
 
-?? fnc0x000095b8( arg0x000095b8_0, arg0x000095b8_1, arg0x000095b8_2, arg0x000095b8_3, arg0x000095b8_4, arg0x000095b8_5, arg0x000095b8_6, arg0x000095b8_7, arg0x000095b8_12, )
+/**
+ * Check if input argument is equal to a value... Not sure what happens if it
+ *	is. Do nothing return if not.
+ *
+ * \param arg0x000095b8_0 Number to check.
+ *
+ * \return None.
+ */
+void fnc0x000095b8(arg0x000095b8_0);
 
-?? fnc0x0000a894( arg0x0000a894_0, arg0x0000a894_1, arg0x0000a894_2, arg0x0000a894_3, arg0x0000a894_4, arg0x0000a894_5, arg0x0000a894_6, arg0x0000a894_12, )
+/**
+ * USB_Configure_Event() related. Called via callback. Calls fnc0x000076d4()
+ *	with a particular value.
+ *
+ * \return None.
+ */
+void fnc0x0000a894();
 
-?? fnc0x000076d4( arg0x000076d4_0, arg0x000076d4_1, arg0x000076d4_2, arg0x000076d4_3, arg0x000076d4_4, arg0x000076d4_5, arg0x000076d4_6, arg0x000076d4_12, )
+/**
+ * USB_Configure_Event() related. Do some maths, check some variables and 
+ *	increment a counter.
+ *
+ * \param arg0x000076d4_0 Value to set variable. Callback address maybe?
+ *
+ * \return None.
+ */
+void fnc0x000076d4(arg0x000076d4_0);
 
 /** AKA uint32_t WriteEP(USBD_HANDLE_T hUsb, uint32_t EPNum, uint8_t *pData, uint32_t cnt)
 *  Function to write data to be sent on the requested endpoint.              
