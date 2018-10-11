@@ -1892,16 +1892,16 @@ void fnc0x00004f60(arg0x00004f60_0, arg0x00004f60_1);
 void fnc0x000095b8(arg0x000095b8_0);
 
 /**
- * USB_Configure_Event() related. Called via callback. Calls fnc0x000076d4()
- *	with a particular value.
+ * USB_Configure_Event() related. Called via callback 0x10000348. Calls 
+ *	fnc0x000076d4() with a particular value.
  *
  * \return None.
  */
 void fnc0x0000a894();
 
 /**
- * USB_Configure_Event() related. Do some maths, check some variables and 
- *	increment a counter.
+ * USB_Configure_Event()/USB_Suspend_Event() related. Do some maths, check 
+ *	some variables and increment a counter.
  *
  * \param arg0x000076d4_0 Value to set variable. Callback address maybe?
  *
@@ -1923,3 +1923,17 @@ void fnc0x000076d4(arg0x000076d4_0);
 *  \return Returns the number of bytes written.                              
 */                                                                           
 uint32_t fnc0x1fff3386(arg0x1fff3386_0, arg0x1fff3386_1, arg0x1fff3386_2, arg0x1fff3386_3);
+
+/**
+ * Handle USB_Suspend_Event().
+ *
+ * \return None.
+ */
+void fnc0x0000995c();
+
+/**
+ * Handle USB_Resume_Event().
+ *
+ * \return None.
+ */
+void fnc0x00008de4();

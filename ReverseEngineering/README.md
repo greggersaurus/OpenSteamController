@@ -25,6 +25,9 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Things to try immediately (see farther below for more details)
+    1. What if 0x100010d8 is >= 5?
+        1. Check main loop
+        1. Check USB_Configure_Event and USB_Resume_Event
     1. Consider: How do we get to path where startup tune is sent to haptics?
         1. Connecting to Linux causes jingle (just power over USB does not)
             1. USB HID related exchange causes this to happen?

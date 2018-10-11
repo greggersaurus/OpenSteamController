@@ -289,6 +289,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x100002b6 - Related to reading AD6 DR6?? Some sort of flag/bool?
  (uint8_t*) 0x100002b7 - Checked on loop once init reaches a certain point...
 			 Check if is equal to 0x100002b4
+			 Cleared upon USB Resume (i.e. by USB_Resume_Event()
+			 if USB suspended flag (0x10000345) is set).
 (uint16_t*) 0x100002b8 - Voltage related to DR6 in mV? Checked if is greater 
 			 than or equal to 0x000005dc if PIO0_2=1 during boot 
 			 when USB_VBUS=0, PIO0_18=1, PIO1_12=1.
@@ -367,6 +369,9 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 (i.e. counting semaphore).
 
  (uint8_t*) 0x10000344 - Flag set when USB_Configure_Event executes.
+ (uint8_t*) 0x10000345 - Flag that indicates if USB is suspended. 
+			 Is set when USB_Suspend_Event executes. 
+			 Is cleared if set when USB_Resume_Event executes.
 
 (uint32_t*) 0x10000348 - Function pointer. Called in USB_Configure_Event() and
 			 then cleared after called... Call once only?
@@ -988,8 +993,10 @@ struct AnalogReadingRelated {
 (uint32_t*) 0x100010d8 - Interrupt disabled in order to check in main...
 			 Incrmeneted in USB_Configure_Event() if 0x10000348 
 			 callback is not NULL.
-(uint32_t*) 0x100010dc - Set in USB_Configure_Event(). callback maybe?
-(uint32_t*) 0x100010e0 - Set in USB_Configure_Event()
+			 Incrmeneted in USB_Resume_Event().
+(uint32_t*) 0x100010dc - Set in USB_Configure_Event() and USB_Suspend_Event(). 
+			 callback maybe?
+(uint32_t*) 0x100010e0 - Set in USB_Configure_Event() and USB_Suspend_Event().
 
 struct EP3UpdateMsg { // Buffer where updated data is stored to compare to last sent
 (uint16_t*) 0x10001100 - Unused due to being comparison copy?
