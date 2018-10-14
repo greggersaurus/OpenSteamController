@@ -27,7 +27,13 @@ This section is a running list of priorities to focus on in hopes of reaching
 1. Things to try immediately (see farther below for more details)
     1. What if 0x100010d8 is >= 5?
         1. Check main loop
+            1. This is leading us down a new path. Keep digging!
         1. Check USB_Configure_Event and USB_Resume_Event
+    1. Revisit gdbCmdFile watchpoints
+        1. Rather than settings and removing watchpoints one by one, can we watch multiple and react differently based on pc?
+            1. This will make repeated steps that need intervention (i.e. skipping WriteEP or making it through SPI transactions) cleaner (less code duplication)
+        1. Can gdb command files have functions and loops?
+            1. Make functions to visit different IRQs and callbacks (so we are not constantly removing or changing code...)
     1. Consider: How do we get to path where startup tune is sent to haptics?
         1. Connecting to Linux causes jingle (just power over USB does not)
             1. USB HID related exchange causes this to happen?
@@ -45,11 +51,9 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. We know from SteamControllerSinger that this causes haptics to vibrate
             1. Info on how to communicate with haptics
             1. Info on memory and setup related to haptics/SPI?
-    1. Revisit gdbCmdFile watchpoints
-        1. Rather than settings and removing watchpoints one by one, can we watch multiple and react differently based on pc?
-            1. This will make repeated steps that need intervention (i.e. skipping WriteEP or making it through SPI transactions) cleaner (less code duplication)
-        1. Can gdb command files have functions and loops?
-            1. Make functions to visit different IRQs and callbacks (so we are not constantly removing or changing code...)
+    1. Is AD6 battery gauge/power?
+        1. Try putting dead (or nearly dead) battery in and checking
+            1. But maybe GPIOs, etc. need to be set differently?
 
     1. (Fresh look) Make sure all valid paths in all enabled IRQs are covered
         1. PINT0

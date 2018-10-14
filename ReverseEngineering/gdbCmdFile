@@ -814,6 +814,15 @@ else
 	# Write EP is using this as a buffer...
 ##	set {int} 0x200040c0 = 0x20004700
 
+	# Simulate USB_Configure_Event() has fired
+	set {int}0x100010d8 = 0x00000001 
+	set {int}0x100010dc = 0x0000a8ad
+
+
+#!!!!!!!
+##TODO: need to handle CT16B0 to clear multiple times...? But where exactly do we need to insert it...?
+##	Is this the reason to dig into more generic way of handling these interrupts (i.e. having multiple watch points?)
+#!!!!!!!
 
 		#------------------------------------------------------------------------------#
 
@@ -909,6 +918,120 @@ else
 		#------------------------------------------------------------------------------#
 
 
+		# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+		#  In path for controller not connected to USB cable, CT16B0 is used for ... TODO
+		watch *(int*)0x4000c008
+
+		# Execute until watchpoint
+		continue
+
+		# Assumption is we have broken for watch on CT16B1 Timer Counter register
+		#  Set back to zero to fake wrap around so code can continue
+		set {int}0x4000c008 = 0
+
+		# Remove watchpoint
+		delete 
+
+
+		#------------------------------------------------------------------------------#
+
+
+		# Setup watchpoint for wfi instruction.
+		watch $pc == 0x000051aa
+		
+		# Execute until watchpoint
+		continue
+		
+		# Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
+		#  fired and was handled properly).
+		
+		##
+		# CT16B0: An interrupt is generated when MR0 matches the value in the TC.
+		# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
+		#  interrupt. Vector Table entry is 0x00000129.
+		##set $lr = $pc
+		##set $pc = 0x000001a0
+		# Set Interrupt Register to indicate Interrupt flag for match channel 0
+		##set {int}0x4000c000 = 1
+		# TODO: Try adding watch for clearing IR once it's written? Or are we confident we have ISR mapped?
+		#TODO: Might want to try making not destructive (if need to simulate it or other
+		#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
+		#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
+		##
+		
+		##
+		# Change states as though CT16B0 interrupt ran as desired:
+		# Set PC to move past wfi (as simulator cannot handle it)
+		set $pc = 0x000051ac
+		# Set flag to indicate that ISR for CT16B0 has fired
+		set {char}0x10000001 = 1
+		##
+		
+		# Remove watchpoint
+		delete 
+
+
+		#------------------------------------------------------------------------------#
+
+
+			# Handle SPI responses for ... Command for Right Haptic
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			#  Fill byte for 0x83 write command
+			set {int}0x40040008 = 0x000000FB
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			#  Fill byte for 0x02 register specification following write command 
+			set {int}0x40040008 = 0x000000FB
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+			set {int}0x4004000C = 0x00000003
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+
+			#------------------------------------------------------------------------------#
+
+
+			#CT16B0 wait needed next...
+
 	#------------------------------------------------------------------------------#
 
 
@@ -920,11 +1043,10 @@ else
 	continue
 
 	##
-###	set $lr = $pc
+	##set $lr = $pc
 	# ADC IRQ 
-###	set $pc = 0x00000204
+	##set $pc = 0x00000204
 
-	##
 	##set $lr = $pc
 	# arg0 = hUsb
 	##set $r0 = 0x20004118
@@ -952,12 +1074,6 @@ else
 	##set {int}0x100010d8 = 0x00000001 
 	# USB_Resume_Event
 	##set $pc = 0x00008de4
-
-	##
-# TODO: Change states so that wfi does not occur?
-	# Set PC to move past wfi (as simulator cannot handle it)
-#	set $pc = 0x0000d85a
-	##
 
 	# Remove watchpoint
 	delete 
