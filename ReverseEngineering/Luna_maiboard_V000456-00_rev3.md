@@ -10,9 +10,11 @@ Note that this [Teardown of Steam Controller](https://www.ifixit.com/Teardown/St
 
 # LPC11U37F/501
 
-This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam Controller. 
+This is an ARM Cortex-M0, and seems to be the main/master processor of the Steam Controller. 
 
 ## Resources 
+
+This sections tracks useful documentation related to the processor.
 
 * [Product Information](https://www.nxp.com/part/LPC11U37FBD64?lang_cd=en)
 
@@ -21,6 +23,8 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 * [User Manual](http://www.nxp.com/documents/user_manual/UM10462.pdf)
 
 ## Pinout
+
+This sections details how the pins of the process are configured and (potentially) used.
 
 | Pin Number 	| Datasheet Name	| Pin Function	   | Pin Direction | Notes 	|
 |--------------:|-----------------------|------------------|---------------|---------------|
@@ -89,6 +93,80 @@ This is a ARM Cortex-M0, and seems to be the main/master processor of the Steam 
 |            63 | PIO1_16               | PIO1_16          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Left Trackpad/Haptic. |
 |            64 | PIO1_6                | PIO1_6           | Out           | Chip Select/SS for Left Trackpad/Haptic (active low) |
 
+## Peripherals
+
+This section details what peripherals are used for on this processor.
+
+* I2C Bus
+    * Interface to MPU-6650?
+    * TODO: Not confirmed yet.
+* WWDT
+    * TODO: unknown.
+* USART/SMART CARD
+    * Interface to nRF51822 (Radio Chip)?
+    * TODO: Not confirmed yet.
+* 16-bit counter/timer 0 (CT16B0)
+    * Timer for implementing a sleep function.
+* 16-bit counter/timer 1 (CT16B1)
+    * PWM for controlling Steam Button LED brightness.
+* 32-bit counter/timer 0 (CT32B0)
+    * Unused?
+* 32-bit counter/timer 1 (CT32B1)
+    * Unused?
+* ADC
+    * AD0
+        * Left Analog Trigger Position
+    * AD1
+        * Analog Joystick X Position
+    * AD2
+        * Right Analog Trigger Position
+    * AD3
+        * Analog Joystick Y Position
+    * AD4
+        * Unused?
+    * AD5
+        * Unused?
+    * AD6
+        * Battery charge level?
+        * TODO: Not confirmed yet.
+    * AD7
+        * Unused?
+* flash/EEPROM controller
+    * TODO: List settings stored in flash.
+* SSP0
+    * Interface to Cirque Pinnacle Touch Controllers (Left and Right Trackpad (TODO: and haptics?))
+* SSP1
+    * Unused?
+* GPIOs
+    * See Pinout section
+    * TODO: List pins that are actually used as GPIOs??
+* Pin Interrupts
+    * PIN_INT0
+        * Related to USB cable disconnect?
+        * TODO: Not confirmed yet.
+    * PIN_INT1
+        * Related to Brown Out Detect (BOD)?
+        * TODO: Not confirmed yet.
+    * PIN_INT2
+        * Related to USART/Radio Chip?
+        * TODO: Not confirmed yet.
+    * PIN_INT3
+        * Unused?
+    * PIN_INT4
+        * Unused?
+    * PIN_INT5
+        * Unused?
+    * PIN_INT6
+        * Unused?
+    * PIN_INT7
+        * Unused?
+* USB
+    * USB HID (see [usbInterface.md](./usbInterface.md) for details)
+        * EP1 = Keyboard
+        * EP2 = Mouse
+        * EP3 = Controller
+    * Firmware Programming
+        * See [How to Manually Load Firmware](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074) or AN11305v1 from NXP for details.
 
 # MPU-6500
 
