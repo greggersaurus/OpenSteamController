@@ -30,11 +30,6 @@
 #  SOFTWARE.
 ###############################################################################
 
-#TODO: Can we add local gdb variables for defining behavior: 
-#	USB cable present (PIO0_3 will read 1 if cable is present)
-#	brown out detect (0x40048030)
-#	simulating interrupt(s)
-#	Other hw inputs?
 
 # Note: standard breakpoints seem to be broken (gdb issue?) so instead 
 #	watchpoints are set for $pc == instruction_addr. The main issue with 
@@ -44,11 +39,20 @@
 
 
 #------------------------------------------------------------------------------#
-# Begin: Simulation Run Configuration Variables.                               #
-#                                                                              #
 
-# 32-bit word read from EEPROM byte offset 0xXXX (see MEM LAYOUT in 
-#  vcf_wired_controller_d0g_57bf5c10.c for details on value significance):
+
+# Set preferred gdb layout
+layout reg
+
+# Connect to remote simulator (i.e. pinkySim) being run on port 3333 of local machine
+target remote localhost:3333
+
+
+#------------------------------------------------------------------------------#
+
+
+# 32-bit word read from EEPROM byte offset 0xXXX (see EEPROM.mem for details on
+#  value significance):
 
 set $eeprom_0x000 = 0x0005a55a 
 set $eeprom_0x004 = 0x0000000a 
@@ -85,17 +89,6 @@ set $eeprom_0x07C = 0xFFFFFFFF
 set $eeprom_0x080 = 0xFFFFFFFF 
 
 set $eeprom_0x500 = 0x00000000
-
-#                                                                              #
-# End: Simulation Run Configuration Variables.                                 #
-#------------------------------------------------------------------------------#
-
-
-# Set preferred gdb layout
-layout reg
-
-# Connect to remote simulator (i.e. pinkySim) being run on port 3333 of local machine
-target remote localhost:3333
 
 
 #------------------------------------------------------------------------------#
@@ -381,9 +374,15 @@ restore LPC11U3x16kBbootROM.bin binary 0x1fff0000
 #------------------------------------------------------------------------------#
 
 
+# This occurs immediately after fnc0x00000bdc() is called by fnc0x00000d04().
+
 # Setup watchpoint for instruction immediately before checking values first
 #  read from EEPROM (i.e. magic number and hw version)
 watch $pc == 0x00000d10
+
+echo \n
+echo Waiting for first EEPROM read to get HW version to complete \n
+echo \n
 
 # Execute until watchpoint
 continue
@@ -399,9 +398,17 @@ delete
 #------------------------------------------------------------------------------#
 
 
+# This occurs right before PC = 0x000015bf (after fnc0x00000bdc() is called
+#	for second time).
+
+
 # Setup watchpoint for instruction immediately before checking values first
 #  read from EEPROM offset 0x500 (TODO: purpose of this data?)
 watch $pc == 0x000015be
+
+echo \n
+echo Waiting for second EEPROM read to get data at 0x500 \n
+echo \n
 
 # Execute until watchpoint
 continue
@@ -416,9 +423,16 @@ delete
 #------------------------------------------------------------------------------#
 
 
+# This occurs immediately after fnc0x1fff1ff0() is called by fnc0x00005d10()
+#  (which is called by fnc0x000051c4(), which is called by fnc0x00006644().
+
 # Setup watchpoint for instruction immediately after reading 0x84 bytes from
 #  offset 0x0 of EEPROM, after basic init and power up
 watch $pc == 0x00005d28
+
+echo \n
+echo Waiting for EEPROM read of first 0x80 of data \n
+echo \n
 
 # Execute until watchpoint
 continue
@@ -465,10 +479,16 @@ delete
 #------------------------------------------------------------------------------#
 
 
+# This occurs in fnc0x00007388().
+
 # Set watch point for 16-bit Timer 1 (CT16B1) Timer Counter register
 #  In path for controller not connected to USB cable, CT16B1 is used as PWM
 #   for Steam Controller Button LED.
 watch *(int*)0x40010008
+
+echo \n
+echo Waiting for CT16B1 (LED PWM) setup \n
+echo \n
 
 # Execute until watchpoint
 continue
@@ -569,9 +589,14 @@ else
 	#------------------------------------------------------------------------------#
 
 
+	# Handle Sleep (fnc0x0000a934() called before fnc0x0000a388()):
+
 	# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
-	#  In path for controller not connected to USB cable, CT16B0 is used for ... TODO
 	watch *(int*)0x4000c008
+
+	echo \n
+	echo Waiting for sleep before trackpad sleep \n
+	echo \n
 
 	# Execute until watchpoint
 	continue
@@ -584,31 +609,11 @@ else
 	delete 
 
 
-	#------------------------------------------------------------------------------#
-
-
 	# Setup watchpoint for wfi instruction.
 	watch $pc == 0x000051aa
 	
 	# Execute until watchpoint
 	continue
-	
-	# Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
-	#  fired and was handled properly).
-	
-	##
-	# CT16B0: An interrupt is generated when MR0 matches the value in the TC.
-	# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
-	#  interrupt. Vector Table entry is 0x00000129.
-	##set $lr = $pc
-	##set $pc = 0x000001a0
-	# Set Interrupt Register to indicate Interrupt flag for match channel 0
-	##set {int}0x4000c000 = 1
-	# TODO: Try adding watch for clearing IR once it's written? Or are we confident we have ISR mapped?
-	#TODO: Might want to try making not destructive (if need to simulate it or other
-	#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
-	#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
-	##
 	
 	##
 	# Change states as though CT16B0 interrupt ran as desired:
@@ -625,10 +630,15 @@ else
 	#------------------------------------------------------------------------------#
 
 
-	# Handle SPI responses for Shutdown/Standby Command for Right Haptic
+	# Handle SPI responses for Shutdown/Standby Command for Right Haptic (called by fnc0x0000a388()):
+
 
 	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
 	watch $pc == 0x00008f34
+
+	echo \n
+	echo Waiting for SPI command for Shutdown/Standby Command for Right Haptic \n
+	echo \n
 	
 	# Execute until watchpoint
 	continue
@@ -682,10 +692,15 @@ else
 	#------------------------------------------------------------------------------#
 
 	
-	# Handle SPI responses for Shutdown/Standby Command for Left Haptic
+	# Handle SPI responses for Shutdown/Standby Command for Left Haptic (called by fnc0x0000a388()):
+
 
 	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
 	watch $pc == 0x00008f34
+
+	echo \n
+	echo Waiting for SPI command for Shutdown/Standby Command for Left Haptic \n
+	echo \n
 	
 	# Execute until watchpoint
 	continue
@@ -737,28 +752,20 @@ else
 
 
 	#------------------------------------------------------------------------------#
+
+	
+	# Handle command to put MPU-6500 into sleep mode (called by fnc0x00005fbc()):
 
 
 	# Setup watchpoint for busy wait on checking value of I2C_XFER_T.status (0x10000d94)
 	watch $pc == 0x0000425c
 
+	echo \n
+	echo Waiting for I2C command for sleep to MPU-6500 \n
+	echo \n
+
 	# Execute until watchpoint
 	continue
-
-	##
-	# NOTE: We don't need to simulate I2C interrupt as we can abstract 
-	#  communications at higher level since lpc_chip_11uxx_lib is being used
-	#  for I2C comms. Leaving this here for history's sake.
-	#
-	# I2C: (IRQ15) An interrupt is generated by I2C controller when the I2C
-	#  state changes.
-	# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
-	#  interrupt. Vector Table entry is 0x00000199.
-	##set $lr = $pc
-	##set $pc = 0x00000198
-	# Set I2C STAT code: A START condition has been transmitted.
-	##set {int}0x40000004 = 0x08
-	##
 
 	# Set I2C_XFER_T.status to I2C_STATUS_DONE (to indicate successful transfer)
 	set {int}0x10000d94 = 0
@@ -770,18 +777,115 @@ else
 	#------------------------------------------------------------------------------#
 
 
+	# Get ADC readings (battery level?) fnc0x00002cf0()? (called after fnc0x000098f0()):
+
 	# Setup watchpoint before code waits for ADC interrupt to have run its
 	#  initial course for AD6
 	watch $pc == 0x00002d00
 
+	echo \n
+	echo Waiting for initial ADC read for AD6 only \n
+	echo \n
+
 	# Execute until watchpoint
 	continue
 
+	# Counter for how many times interrupt fires initially before AD values
+	#  start being accumulated
+	set {int}0x10000014 = 0x0000012d
+	# Counter for how many times interrupt fires for accumulating AD6 values
+	set {int}0x10000018 = 0x00000007
+
+	# Set flag to indicate ADC ISR has served its purpose and ADC is shutdown
+	set {char}0x10000010 = 1
+
+	# Set value of 8 accumulated channel 6 ADC values
+	#  ADC Chanel 6 reads ~0x03ac when polled via adcRead command in custom firmware.
+	set {short}0x10000f8c = 0x1d60
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Wait for SysTick to be setup by fnc0x00009b28():
+	watch $pc == 0x00009b3a
+
+	echo \n
+	echo Waiting for SysTick to be enabled \n
+	echo \n
+
+	# Execute until watchpoint
+	continue
+
+	# This flag is set by SysTick after a number of executions. 
+	#  This seems to allow main loop to proceed with some periodic 
+	#  behaviors (i.e. should (and can) HID update messages me sent?)
+	set {char}0x10000074 = 1
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Handle Sleep (fnc0x0000a934() called by fnc0x00006e14() related to checking ADC readings):
+
+	# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+	watch *(int*)0x4000c008
+
+	echo \n
+	echo Waiting for Sleep before checking ADC reading for AD0-4 + 6 \n
+	echo \n
+
+	# Execute until watchpoint
+	continue
+
+	# Assumption is we have broken for watch on CT16B1 Timer Counter register
+	#  Set back to zero to fake wrap around so code can continue
+	set {int}0x4000c008 = 0
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for wfi instruction.
+	watch $pc == 0x000051aa
+	
+	# Execute until watchpoint
+	continue
+	
 	##
-	# ADC Interrupt Execution:
-	# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
-	#  interrupt. Vector Table entry is 0x00000205.
-	##set $lr = $pc
+	# Change states as though CT16B0 interrupt ran as desired:
+	# Set PC to move past wfi (as simulator cannot handle it)
+	set $pc = 0x000051ac
+	# Set flag to indicate that ISR for CT16B0 has fired
+	set {char}0x10000001 = 1
+	##
+	
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Read ADCs now that AD0-3 are enabled (called by fnc0x00006e14()):
+
+	# Setup watchpoint before code waits for ADC interrupt to have run its
+	#  initial course for AD6
+	watch $pc == 0x00002d00
+
+	echo \n
+	echo Waiting for ADC read of AD0-4 + 6 \n
+	echo \n
+
+	# Execute until watchpoint
+	continue
+
 	##set $pc = 0x00000204
 	# Counter for how many times interrupt fires initially before AD values
 	#  start being accumulated
@@ -790,13 +894,12 @@ else
 	set {int}0x10000018 = 0x00000007
 	# Set flag to indicate ADC ISR has served its purpose and ADC is shutdown
 	set {char}0x10000010 = 1
-	# Set value of 8 accumulated channel 6 ADC values
+
+	# TODO: Add setting values accumulated for other enabled channels (AD0-AD3?)
+
+	# Set value of 8 accumulated AD6 values
 	#  ADC Chanel 6 reads ~0x03ac when polled via adcRead command in custom firmware.
 	set {short}0x10000f8c = 0x1d60
-	#TODO: Might want to try making not destructive (if need to simulate it or other
-	#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
-	#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
-	## 
 
 	# Remove watchpoint
 	delete 
@@ -805,275 +908,22 @@ else
 	#------------------------------------------------------------------------------#
 
 
-	# This flag is set by SysTick after a number of executions. 
-	set {char}0x10000074 = 1
+	# Wait for USB to be connected and enabled by fnc0x00002fd8() AND for 
+	#  one iteration of main loop to complete (i.e fnc0x0000b84c() has just
+	#  finished which checks if HID message needed to be sent for EP).
+	watch $pc == 0x0000d818
 
-	# This flag indicates that USB_Configure_Event has fired
-##	set {char}0x10000344 = 1
-
-	# Write EP is using this as a buffer...
-##	set {int} 0x200040c0 = 0x20004700
-
-	# Simulate USB_Configure_Event() has fired
-	set {int}0x100010d8 = 0x00000001 
-	set {int}0x100010dc = 0x0000a8ad
-
-
-#!!!!!!!
-##TODO: need to handle CT16B0 to clear multiple times...? But where exactly do we need to insert it...?
-##	Is this the reason to dig into more generic way of handling these interrupts (i.e. having multiple watch points?)
-#!!!!!!!
-
-		#------------------------------------------------------------------------------#
-
-		# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
-		#  In path for controller not connected to USB cable, CT16B0 is used for ... TODO
-		watch *(int*)0x4000c008
-
-		# Execute until watchpoint
-		continue
-
-		# Assumption is we have broken for watch on CT16B1 Timer Counter register
-		#  Set back to zero to fake wrap around so code can continue
-		set {int}0x4000c008 = 0
-
-		# Remove watchpoint
-		delete 
-
-
-		#------------------------------------------------------------------------------#
-
-
-		# Setup watchpoint for wfi instruction.
-		watch $pc == 0x000051aa
-		
-		# Execute until watchpoint
-		continue
-		
-		# Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
-		#  fired and was handled properly).
-		
-		##
-		# CT16B0: An interrupt is generated when MR0 matches the value in the TC.
-		# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
-		#  interrupt. Vector Table entry is 0x00000129.
-		##set $lr = $pc
-		##set $pc = 0x000001a0
-		# Set Interrupt Register to indicate Interrupt flag for match channel 0
-		##set {int}0x4000c000 = 1
-		# TODO: Try adding watch for clearing IR once it's written? Or are we confident we have ISR mapped?
-		#TODO: Might want to try making not destructive (if need to simulate it or other
-		#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
-		#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
-		##
-		
-		##
-		# Change states as though CT16B0 interrupt ran as desired:
-		# Set PC to move past wfi (as simulator cannot handle it)
-		set $pc = 0x000051ac
-		# Set flag to indicate that ISR for CT16B0 has fired
-		set {char}0x10000001 = 1
-		##
-		
-		# Remove watchpoint
-		delete 
-
-
-		#------------------------------------------------------------------------------#
-
-
-		# Setup watchpoint before code waits for ADC interrupt to have run its
-		#  initial course for AD6
-		watch $pc == 0x00002d00
-
-		# Execute until watchpoint
-		continue
-
-		##
-		# ADC Interrupt Execution:
-		# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
-		#  interrupt. Vector Table entry is 0x00000205.
-		##set $lr = $pc
-		##set $pc = 0x00000204
-		# Counter for how many times interrupt fires initially before AD values
-		#  start being accumulated
-		set {int}0x10000014 = 0x0000012d
-		# Counter for how many times interrupt fires for accumulating AD6 values
-		set {int}0x10000018 = 0x00000007
-		# Set flag to indicate ADC ISR has served its purpose and ADC is shutdown
-		set {char}0x10000010 = 1
-		# Set value of 8 accumulated channel 6 ADC values
-		#  ADC Chanel 6 reads ~0x03ac when polled via adcRead command in custom firmware.
-		set {short}0x10000f8c = 0x1d60
-##TODO: add reading values from analog stick and analog triggers?
-		#TODO: Might want to try making not destructive (if need to simulate it or other
-		#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
-		#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
-		## 
-
-		# Remove watchpoint
-		delete 
-
-
-		#------------------------------------------------------------------------------#
-
-
-		# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
-		#  In path for controller not connected to USB cable, CT16B0 is used for ... TODO
-		watch *(int*)0x4000c008
-
-		# Execute until watchpoint
-		continue
-
-		# Assumption is we have broken for watch on CT16B1 Timer Counter register
-		#  Set back to zero to fake wrap around so code can continue
-		set {int}0x4000c008 = 0
-
-		# Remove watchpoint
-		delete 
-
-
-		#------------------------------------------------------------------------------#
-
-
-		# Setup watchpoint for wfi instruction.
-		watch $pc == 0x000051aa
-		
-		# Execute until watchpoint
-		continue
-		
-		# Simulate interrupt(s) (either for C conversion, or to carry on sim as though 
-		#  fired and was handled properly).
-		
-		##
-		# CT16B0: An interrupt is generated when MR0 matches the value in the TC.
-		# NOTE: This is DESTRUCTIVE of processor state. Use only to obtain simulation of 
-		#  interrupt. Vector Table entry is 0x00000129.
-		##set $lr = $pc
-		##set $pc = 0x000001a0
-		# Set Interrupt Register to indicate Interrupt flag for match channel 0
-		##set {int}0x4000c000 = 1
-		# TODO: Try adding watch for clearing IR once it's written? Or are we confident we have ISR mapped?
-		#TODO: Might want to try making not destructive (if need to simulate it or other
-		#  interrupts in the future). See Fig 81 in UM10462 for what to save to stack, 
-		#  and update LR. Then when we get back to PC of wfi we manually pop off stack. 
-		##
-		
-		##
-		# Change states as though CT16B0 interrupt ran as desired:
-		# Set PC to move past wfi (as simulator cannot handle it)
-		set $pc = 0x000051ac
-		# Set flag to indicate that ISR for CT16B0 has fired
-		set {char}0x10000001 = 1
-		##
-		
-		# Remove watchpoint
-		delete 
-
-
-		#------------------------------------------------------------------------------#
-
-
-			# Handle SPI responses for ... Command for Right Haptic
-
-			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
-			watch $pc == 0x00008f34
-			
-			# Execute until watchpoint
-			continue
-
-			# Write SPI response data and mark FIFO as not empty
-			set {int}0x4004000C = 0x00000007
-			#  Fill byte for 0x83 write command
-			set {int}0x40040008 = 0x000000FB
-
-			# Make sure we move past this instruction before next watch
-			stepi
-
-			# Remove watchpoint
-			delete 
-
-			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
-			watch $pc == 0x00008f34
-			
-			# Execute until watchpoint
-			continue
-
-			# Write SPI response data and mark FIFO as not empty
-			set {int}0x4004000C = 0x00000007
-			#  Fill byte for 0x02 register specification following write command 
-			set {int}0x40040008 = 0x000000FB
-
-			# Make sure we move past this instruction before next watch
-			stepi
-
-			# Remove watchpoint
-			delete 
-
-
-			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
-			watch $pc == 0x00008f34
-			
-			# Execute until watchpoint
-			continue
-
-			# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
-			set {int}0x4004000C = 0x00000003
-
-			# Make sure we move past this instruction before next watch
-			stepi
-
-			# Remove watchpoint
-			delete 
-
-
-			#------------------------------------------------------------------------------#
-
-
-			#CT16B0 wait needed next...
-
-	#------------------------------------------------------------------------------#
-
-
-	# Setup watchpoint right after PMU:PCON write (and before wfi)
-	# Note that going past this loops us back to 0x10000074 check and so on...
-	watch $pc == 0x000043d0
+	echo \n
+	echo Waiting for pass of main loop before simulating USB_Configure_Event \n
+	echo \n
 
 	# Execute until watchpoint
 	continue
 
-	##
-	##set $lr = $pc
-	# ADC IRQ 
-	##set $pc = 0x00000204
-
-	##set $lr = $pc
-	# arg0 = hUsb
-	##set $r0 = 0x20004118
-	# USB_Configure_Event
-	##set $pc = 0x00004e58
-
-	##set $lr = $pc
-	# arg0 = hUsb
-	##set $r0 = 0x20004118
-	# USB_Reset_Event
-	##set $pc = 0x00008d8a
-
-	##set $lr = $pc
-	# arg0 = hUsb
-	##set $r0 = 0x20004118
-	# USB_Suspend_Event
-	##set $pc = 0x0000995c
-
-	##set $lr = $pc
-	# arg0 = hUsb
-	##set $r0 = 0x20004118
-	# Simulate USB_Suspend_Event has executed
-	##set {char}0x10000345 = 1
-	##set {int}0x100010dc = 0x00009989
-	##set {int}0x100010d8 = 0x00000001 
-	# USB_Resume_Event
-	##set $pc = 0x00008de4
+	# Simulate USB_Configure_Event() has fired:
+	#  This allows for main loop to perform some additional init.
+	set {int}0x100010d8 = 0x00000001 
+	set {int}0x100010dc = 0x0000a8ad
 
 	# Remove watchpoint
 	delete 
@@ -1081,6 +931,161 @@ else
 
 	#------------------------------------------------------------------------------#
 
+
+#TODO: add context details
+	# Handle Sleep (fnc0x0000a934() (callled by TODO):
+
+	# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+	watch *(int*)0x4000c008
+
+	echo \n
+	echo Waiting for TODO sleep 1 \n
+	echo \n
+
+	# Execute until watchpoint
+	continue
+
+	# Assumption is we have broken for watch on CT16B1 Timer Counter register
+	#  Set back to zero to fake wrap around so code can continue
+	set {int}0x4000c008 = 0
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for wfi instruction.
+	watch $pc == 0x000051aa
+	
+	# Execute until watchpoint
+	continue
+	
+	##
+	# Change states as though CT16B0 interrupt ran as desired:
+	# Set PC to move past wfi (as simulator cannot handle it)
+	set $pc = 0x000051ac
+	# Set flag to indicate that ISR for CT16B0 has fired
+	set {char}0x10000001 = 1
+	##
+	
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+#TODO: add context details
+	# Handle SPI responses for TODO... Command for Right Haptic
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+
+	echo \n
+	echo Waiting for TODO SPI Write 1 \n
+	echo \n
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Fill byte for 0x83 write command
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Fill byte for 0x02 register specification following write command 
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+	set {int}0x4004000C = 0x00000003
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+#TODO: add context details
+	# Handle Sleep (fnc0x0000a934() (callled by TODO):
+
+	# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+	watch *(int*)0x4000c008
+
+	echo \n
+	echo Waiting for TODO sleep 2 \n
+	echo \n
+
+	# Execute until watchpoint
+	continue
+
+	# Assumption is we have broken for watch on CT16B1 Timer Counter register
+	#  Set back to zero to fake wrap around so code can continue
+	set {int}0x4000c008 = 0
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for wfi instruction.
+	watch $pc == 0x000051aa
+	
+	# Execute until watchpoint
+	continue
+	
+	##
+	# Change states as though CT16B0 interrupt ran as desired:
+	# Set PC to move past wfi (as simulator cannot handle it)
+	set $pc = 0x000051ac
+	# Set flag to indicate that ISR for CT16B0 has fired
+	set {char}0x10000001 = 1
+	##
+	
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+#TODO: Add SPI read response
+
+
+	#------------------------------------------------------------------------------#
+
+
+	echo \n
+	echo Continuing execution until... \n
+	echo \n
 
 	# Resume execution until...?
 	continue

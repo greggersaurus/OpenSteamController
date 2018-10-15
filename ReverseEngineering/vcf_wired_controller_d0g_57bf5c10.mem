@@ -110,7 +110,9 @@ USB_HID2 HID Report Descriptor (len 0x21):
 	HID_Feature(HID_Variable) // 0x02
 	HID_EndCollection
 
- (uint8_t*) 0x10000000 - Related to CT16B0
+ (uint8_t*) 0x10000000 - Related to CT16B0. Dictates if CT16B0 has previously
+			 been setup for sleep (so that less work has to be
+			 done for current sleep() call).
  (uint8_t*) 0x10000001 - Flag to indicate CT16B0 interrupt has fired and been
 			 handled.
  (uint8_t*) 0x10000002 - Counter variable? Related to CT16B1?
@@ -434,8 +436,7 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
 (uint32_t*) 0x100007e8 - Related to CT16B0?
 
-(uint32_t*) 0x10000818 - Related to CT16B0. Callback function? First entry in
-			 array of callback functions?
+(uint32_t*) 0x10000818 - Callback function for CT16B0. 
 
 
 (uint32_t*) 0x10000834 - Related to CT16B1 MR3??

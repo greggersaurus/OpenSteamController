@@ -834,7 +834,7 @@ float fnc0x0000231c(arg0x0000231c_0, arg0x0000231c_1, arg0x0000231c_2);
 void fnc0x00007404(arg0x00007404_0, arg0x00007404_1);
 
 /**
- * Configure CT16B0 and delay for specified amount.
+ * Sleep fucntion. Configure CT16B0 and delay for specified amount.
  * 
  * \param arg0x0000a934_0 Defines length of delay before interrupt fires TODO:
  *	understand and have this make more sense (i.e. units on delay)?
@@ -874,9 +874,9 @@ void fnc0x0000600c();
 void fnc0x0000a0fc(arg0x0000a0fc_0, arg0x0000a0fc_1, arg0x0000a0fc_2, arg0x0000a0fc_3);
 
 /**
- * Enable clock for a given counter/timer
+ * Disable clock for a given counter/timer
  * 
- * \param arg0x00004574_0 Base address of counter/timer to have clock enabled for.
+ * \param arg0x00004574_0 Base address of counter/timer to have clock disabled for.
  * 
  * \return None.
  */
@@ -1443,7 +1443,7 @@ void fnc0x000053f8();
 
 /**
  * Related to ADC readings and CT16B1. Maybe something to do with DR6 readings
- *	and power to board?
+ *	and power to board and Steam Button LED?
  *
  * \return None.
  */

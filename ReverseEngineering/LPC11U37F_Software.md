@@ -55,7 +55,7 @@ The following command launches the emulator with the proper memory map for the
 
 The following command launches gbd (installed by LPCXpresso IDE on OSX at /Applications/lpcxpresso_8.2.2_650/lpcxpresso/tools/bin/arm-none-eabi-gdb) and executes the commands in gdbCmdFile:
 
-* ./gdb -ex "source -v gdbCmdFile"
+* ./gdb -ex "source gdbCmdFile"
     * See comments in [gdbCmdFile](./gdbCmdFile) for details on simulation is doing, and can be configured to do.
     * A binary file named LPC11U3x16kBbootROM.bin is expected to exist (in the current directory). The file should contain the binary dump of 0x1FFF0000 to 0x1FFF4000 from an LPC11U37.
         * This can be obtained from a Steam Controller using custom firmware from the [Development Board](../DevBoard) project. Use read commands to peek at the 16 kB boot ROM.
