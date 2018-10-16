@@ -431,7 +431,7 @@ delete
 watch $pc == 0x00005d28
 
 echo \n
-echo Waiting for EEPROM read of first 0x80 of data \n
+echo Waiting for EEPROM read of 0x80 bytes of data from offset 0x000 \n
 echo \n
 
 # Execute until watchpoint
@@ -595,7 +595,7 @@ else
 	watch *(int*)0x4000c008
 
 	echo \n
-	echo Waiting for sleep before trackpad sleep \n
+	echo Waiting for sleep before send of trackpad shutdown SPI command \n
 	echo \n
 
 	# Execute until watchpoint
@@ -637,7 +637,7 @@ else
 	watch $pc == 0x00008f34
 
 	echo \n
-	echo Waiting for SPI command for Shutdown/Standby Command for Right Haptic \n
+	echo Waiting for SPI write of Shutdown/Standby Command for Right Haptic \n
 	echo \n
 	
 	# Execute until watchpoint
@@ -699,7 +699,7 @@ else
 	watch $pc == 0x00008f34
 
 	echo \n
-	echo Waiting for SPI command for Shutdown/Standby Command for Left Haptic \n
+	echo Waiting for SPI write of Shutdown/Standby Command for Left Haptic \n
 	echo \n
 	
 	# Execute until watchpoint
@@ -838,7 +838,7 @@ else
 	watch *(int*)0x4000c008
 
 	echo \n
-	echo Waiting for Sleep before checking ADC reading for AD0-4 + 6 \n
+	echo Waiting for Sleep before checking ADC reading for AD0-4 & 6 \n
 	echo \n
 
 	# Execute until watchpoint
@@ -880,7 +880,7 @@ else
 	watch $pc == 0x00002d00
 
 	echo \n
-	echo Waiting for ADC read of AD0-4 + 6 \n
+	echo Waiting for ADC read of AD0-4 & 6 \n
 	echo \n
 
 	# Execute until watchpoint
@@ -914,7 +914,7 @@ else
 	watch $pc == 0x0000d818
 
 	echo \n
-	echo Waiting for pass of main loop before simulating USB_Configure_Event \n
+	echo Waiting for pass of main loop before simulating USB_Configure_Event has occurred \n
 	echo \n
 
 	# Execute until watchpoint
@@ -932,14 +932,13 @@ else
 	#------------------------------------------------------------------------------#
 
 
-#TODO: add context details
-	# Handle Sleep (fnc0x0000a934() (callled by TODO):
+	# Handle Sleep (fnc0x0000a934() before resetting Right trackpad:
 
 	# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
 	watch *(int*)0x4000c008
 
 	echo \n
-	echo Waiting for TODO sleep 1 \n
+	echo Waiting for sleep before resetting Right Trackpad \n
 	echo \n
 
 	# Execute until watchpoint
@@ -974,14 +973,13 @@ else
 	#------------------------------------------------------------------------------#
 
 
-#TODO: add context details
-	# Handle SPI responses for TODO... Command for Right Haptic
+	# Handle SPI responses for Writing 0x1 (normal mode, Active, Reset) to SysConfig1 Register (Addr = 0x3) for Right Haptic
 
 	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
 	watch $pc == 0x00008f34
 
 	echo \n
-	echo Waiting for TODO SPI Write 1 \n
+	echo Waiting for Writing 0x1 (normal mode, Active, Reset) to SysConfig1 Register (Addr = 0x3) for Right Haptic \n
 	echo \n
 	
 	# Execute until watchpoint
@@ -1035,14 +1033,13 @@ else
 	#------------------------------------------------------------------------------#
 
 
-#TODO: add context details
-	# Handle Sleep (fnc0x0000a934() (callled by TODO):
+	# Handle Sleep (fnc0x0000a934() after sending reset commadn to Right Trackpad:
 
 	# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
 	watch *(int*)0x4000c008
 
 	echo \n
-	echo Waiting for TODO sleep 2 \n
+	echo Waiting for sleep after sending reset commadn to Right Trackpad \n
 	echo \n
 
 	# Execute until watchpoint
@@ -1077,11 +1074,554 @@ else
 	#------------------------------------------------------------------------------#
 
 
-#TODO: Add SPI read response
+	# Handle SPI response for read of Status1 (Addr = 0x02) Pinnacle ASIC register for Right Trackpad
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+
+	echo \n
+	echo Waiting for SPI read of Status1 (Addr = 0x02) Pinnacle ASIC register for Right Trackpad \n
+	echo \n
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 0
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 1
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 2
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	# Value of register 0x02 (based on following this sequence with Dev Board FW)
+	set {int}0x40040008 = 0x00000008
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# SPI transaction complete
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+	set {int}0x4004000C = 0x00000003
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
 
 
 	#------------------------------------------------------------------------------#
 
+
+	# Handle SPI responses for Writing 0x00 (Clear HW_DR) to Status1 Register (Addr = 0x2) for Right Haptic
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+
+	echo \n
+	echo Waiting for Writing 0x00 (Clear HW_DR) to Status1 Register (Addr = 0x2) for Right Haptic \n
+	echo \n
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 0
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 1
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+	set {int}0x4004000C = 0x00000003
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Handle Sleep (fnc0x0000a934() before query of Firmware ASIC ID of Right Trackpad:
+
+	# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+	watch *(int*)0x4000c008
+
+	echo \n
+	echo Waiting for sleep before query of Firmware ASIC ID of Right Trackpad \n
+	echo \n
+
+	# Execute until watchpoint
+	continue
+
+	# Assumption is we have broken for watch on CT16B1 Timer Counter register
+	#  Set back to zero to fake wrap around so code can continue
+	set {int}0x4000c008 = 0
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for wfi instruction.
+	watch $pc == 0x000051aa
+	
+	# Execute until watchpoint
+	continue
+	
+	##
+	# Change states as though CT16B0 interrupt ran as desired:
+	# Set PC to move past wfi (as simulator cannot handle it)
+	set $pc = 0x000051ac
+	# Set flag to indicate that ISR for CT16B0 has fired
+	set {char}0x10000001 = 1
+	##
+	
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Handle SPI response for read of Firmware ID (Addr = 0x00) Pinnacle ASIC register for Right Trackpad
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+
+	echo \n
+	echo Waiting for SPI read of Firmware ID (Addr = 0x00) Pinnacle ASIC register for Right Trackpad \n
+	echo \n
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 0
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 1
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 2
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	# Value of register 0x00 (based on following this sequence with Dev Board FW)
+	set {int}0x40040008 = 0x00000007
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# SPI transaction complete
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+	set {int}0x4004000C = 0x00000003
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Handle SPI response for read of Firmware Version (Addr = 0x01) Pinnacle ASIC register for Right Trackpad
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+
+	echo \n
+	echo Waiting for SPI read of Firmware Version (Addr = 0x01) Pinnacle ASIC register for Right Trackpad \n
+	echo \n
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 0
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 1
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 2
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	# Value of register 0x01 (based on following this sequence with Dev Board FW)
+	set {int}0x40040008 = 0x0000003a
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# SPI transaction complete
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+	set {int}0x4004000C = 0x00000003
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Handle SPI responses for Writing 0x08 (undocumented bit, normal mode, active, no reset) to SysConfig1 Register (Addr = 0x03) for Right Haptic
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+
+	echo \n
+	echo Waiting for Writing 0x08 (undocumented bit, normal mode, active, no reset) to SysConfig1 Register (Addr = 0x03) for Right Haptic \n
+	echo \n
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 0
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 1
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+	set {int}0x4004000C = 0x00000003
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Handle Sleep (fnc0x0000a934() before clearing HW_DR (again):
+
+	# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+	watch *(int*)0x4000c008
+
+	echo \n
+	echo Waiting for sleep before clearing HW_DR (again) \n
+	echo \n
+
+	# Execute until watchpoint
+	continue
+
+	# Assumption is we have broken for watch on CT16B1 Timer Counter register
+	#  Set back to zero to fake wrap around so code can continue
+	set {int}0x4000c008 = 0
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for wfi instruction.
+	watch $pc == 0x000051aa
+	
+	# Execute until watchpoint
+	continue
+	
+	##
+	# Change states as though CT16B0 interrupt ran as desired:
+	# Set PC to move past wfi (as simulator cannot handle it)
+	set $pc = 0x000051ac
+	# Set flag to indicate that ISR for CT16B0 has fired
+	set {char}0x10000001 = 1
+	##
+	
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+	# Handle SPI responses for Writing 0x00 (clear HW_DR) to Status1 Register (Addr = 0x02) for Right Haptic
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+
+	echo \n
+	echo Waiting for Writing 0x00 (clear HW_DR) to Status1 Register (Addr = 0x02) for Right Haptic \n
+	echo \n
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 0
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI response data and mark FIFO as not empty
+	set {int}0x4004000C = 0x00000007
+	#  Filler byte 1
+	set {int}0x40040008 = 0x000000FB
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+	watch $pc == 0x00008f34
+	
+	# Execute until watchpoint
+	continue
+
+	# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+	set {int}0x4004000C = 0x00000003
+
+	# Make sure we move past this instruction before next watch
+	stepi
+
+	# Remove watchpoint
+	delete 
+
+
+	#------------------------------------------------------------------------------#
+
+
+# TODO: Add code for handling write of value 0x00 to register 0x05
+
+
+	#------------------------------------------------------------------------------#
 
 	echo \n
 	echo Continuing execution until... \n
