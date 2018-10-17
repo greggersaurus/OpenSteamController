@@ -1084,6 +1084,20 @@ struct EP3UpdateMsg { // This is a copy of last update message sent
 (uint16_t*) 0x1000117e - See struct EP3UpdateMsg at 0x10001100 for details.
 }
 
+ (uint8_t*) 0x10001200 - EEPROM Read Data 0x800 - Uknown purpose. Checked if
+			 is value 0xad.
+			 If EEPROM data reads zeros this is set to 0x100003b8.
+ (uint8_t*) 0x10001201 - EEPROM Read Data 0x801 - Uknown purpose. Checked if
+			 is value 0xbe.
+			 If EEPROM data reads zeros this is set to 0x100003b9.
+ (uint8_t*) 0x10001202 - EEPROM Read Data 0x802 - Uknown purpose.
+
+TODO: fill in each word/byte between
+
+ (uint8_t*) 0x100015f9 - EEPROM Read Data 0xbf9 - Uknown purpose
+			 If EEPROM data reads zeros this is set to 0x100007b1.
+ (uint8_t*) 0x100015ff - EEPROM Read Data 0xbff - Uknown purpose
+
  (uint8_t*) 0x10001700 - Flag related to ??
  (uint8_t*) 0x10001701 - Flag related to ??
  (uint8_t*) 0x10001702 - Flag related to ??
