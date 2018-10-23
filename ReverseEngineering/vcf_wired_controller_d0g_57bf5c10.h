@@ -1937,3 +1937,12 @@ void fnc0x0000995c();
  * \return None.
  */
 void fnc0x00008de4();
+
+// Initialize Trackpad/Haptic?
+?? fnc0x000074e8(arg0x000074e8_0)
+
+// Trackpad ASIC Register Read
+?? fnc0x0000491c( arg0x0000491c_0, arg0x0000491c_1, arg0x0000491c_2, arg0x0000491c_3, arg0x0000491c_4, arg0x0000491c_5, arg0x0000491c_6, arg0x0000491c_7, arg0x0000491c_12, )
+
+// Trackpad ASIC Extended Register Access (ERA) Write with Address Increment
+?? fnc0x00004c14( arg0x00004c14_0, arg0x00004c14_1, arg0x00004c14_2, arg0x00004c14_3, arg0x00004c14_4, arg0x00004c14_5, arg0x00004c14_6, arg0x00004c14_7, arg0x00004c14_12, )

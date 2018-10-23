@@ -24,6 +24,9 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Update pinkySim simplified C output to handle pop's where registers are not restored (pop should still occur for value, but it will be lost, right?)
+1. Check EEPROM read values at 0x800 and 0x600 on both controllers...
+    1. Update gdbCmdFile with values (see TODOs)
 1. Things to try immediately (see farther below for more details)
     1. What if 0x100010d8 is >= 5?
         1. Check main loop
