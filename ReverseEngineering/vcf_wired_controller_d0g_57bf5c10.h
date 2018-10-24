@@ -1938,6 +1938,39 @@ void fnc0x0000995c();
  */
 void fnc0x00008de4();
 
+// Function called from main loop if USB_Configure_Event has occurred? (Will do a whole lot of stuff (i.e. setup trackpads?)
+?? fnc0x0000a8ac( arg0x0000a8ac_0, arg0x0000a8ac_1, arg0x0000a8ac_2, arg0x0000a8ac_3, arg0x0000a8ac_4, arg0x0000a8ac_5, arg0x0000a8ac_6, arg0x0000a8ac_12, )
+
+// Watchdog/powerdown related?
+?? fnc0x0000b9d0( arg0x0000b9d0_0, arg0x0000b9d0_1, arg0x0000b9d0_2, arg0x0000b9d0_3, arg0x0000b9d0_4, arg0x0000b9d0_5, arg0x0000b9d0_6, arg0x0000b9d0_12, )
+
+// Power/battery check related?
+?? fnc0x00006f8c( arg0x00006f8c_0, arg0x00006f8c_1, arg0x00006f8c_2, arg0x00006f8c_3, arg0x00006f8c_4, arg0x00006f8c_5, arg0x00006f8c_6, arg0x00006f8c_12, )
+
+// Setup callback for TODO purpose
+?? fnc0x000037c0( arg0x000037c0_0, arg0x000037c0_1, arg0x000037c0_2, arg0x000037c0_3, arg0x000037c0_4, arg0x000037c0_5, arg0x000037c0_6, arg0x000037c0_12, )
+
+// Read EEPROM at offset 0x400 and fill in some SRAM based on values read?
+?? fnc0x000038dc( arg0x000038dc_0, arg0x000038dc_1, arg0x000038dc_2, arg0x000038dc_3, arg0x000038dc_4, arg0x000038dc_5, arg0x000038dc_6, arg0x000038dc_12, )
+
+// Fill in some SRAM (related to EEPROM read of offset 0x400?)
+?? fnc0x000065c0( arg0x000065c0_0, arg0x000065c0_1, arg0x000065c0_2, arg0x000065c0_3, arg0x000065c0_4, arg0x000065c0_5, arg0x000065c0_6, arg0x000065c0_12, )
+
+// Even high level function for trackpad/haptics init?
+?? fnc0x0000a308( arg0x0000a308_0, arg0x0000a308_1, arg0x0000a308_2, arg0x0000a308_3, arg0x0000a308_4, arg0x0000a308_5, arg0x0000a308_6, arg0x0000a308_12, )
+
+// Initialize some SRAM1 variables
+?? fnc0x00005f90( arg0x00005f90_0, arg0x00005f90_1, arg0x00005f90_2, arg0x00005f90_3, arg0x00005f90_4, arg0x00005f90_5, arg0x00005f90_6, arg0x00005f90_7, arg0x00005f90_12, )
+
+// Initialize some SRAM1 variables
+?? fnc0x00005eb8( arg0x00005eb8_0, arg0x00005eb8_1, arg0x00005eb8_2, arg0x00005eb8_3, arg0x00005eb8_4, arg0x00005eb8_5, arg0x00005eb8_6, arg0x00005eb8_7, arg0x00005eb8_12, )
+
+// Initialize both trackpads/haptics?
+?? fnc0x000047a4( arg0x000047a4_0, arg0x000047a4_1, arg0x000047a4_2, arg0x000047a4_3, arg0x000047a4_4, arg0x000047a4_5, arg0x000047a4_6, arg0x000047a4_7, arg0x000047a4_12, )
+
+// CT16B0 sleep related
+?? fnc0x00009604( arg0x00009604_0, arg0x00009604_1, arg0x00009604_2, arg0x00009604_3, arg0x00009604_4, arg0x00009604_5, arg0x00009604_6, arg0x00009604_7, arg0x00009604_12, )
+
 // Initialize Trackpad/Haptic?
 ?? fnc0x000074e8(arg0x000074e8_0)
 
@@ -1946,3 +1979,31 @@ void fnc0x00008de4();
 
 // Trackpad ASIC Extended Register Access (ERA) Write with Address Increment
 ?? fnc0x00004c14( arg0x00004c14_0, arg0x00004c14_1, arg0x00004c14_2, arg0x00004c14_3, arg0x00004c14_4, arg0x00004c14_5, arg0x00004c14_6, arg0x00004c14_7, arg0x00004c14_12, )
+
+// Clear SW_DR and HW_DR by writing 0x00 to Status1 trackpad ASIC register
+?? fnc0x00004cb0( arg0x00004cb0_0, arg0x00004cb0_1, arg0x00004cb0_2, arg0x00004cb0_3, arg0x00004cb0_4, arg0x00004cb0_5, arg0x00004cb0_6, arg0x00004cb0_7, arg0x00004cb0_12, )
+
+// Initialize registers for Trackpad (i.e. write ERAs, etc.)
+?? fnc0x0000777c( arg0x0000777c_0, arg0x0000777c_1, arg0x0000777c_2, arg0x0000777c_3, arg0x0000777c_4, arg0x0000777c_5, arg0x0000777c_6, arg0x0000777c_7, arg0x0000777c_12, )
+
+// Update a number of ASIC Trackpad registers (0x05, 0x06, 0x07, 0x08, 0x09)
+?? fnc0x00002be0( arg0x00002be0_0, arg0x00002be0_1, arg0x00002be0_2, arg0x00002be0_3, arg0x00002be0_4, arg0x00002be0_5, arg0x00002be0_6, arg0x00002be0_7, arg0x00002be0_12, )
+
+// Update ASIC Trackpad register (check if value differs from shadow copy and send update via SPI if necessary)
+?? fnc0x0000c094( arg0x0000c094_0, arg0x0000c094_1, arg0x0000c094_2, arg0x0000c094_3, arg0x0000c094_4, arg0x0000c094_5, arg0x0000c094_6, arg0x0000c094_7, arg0x0000c094_12, )
+
+// Update a number of ASIC Trackpad registers (0x13, 0x014, 0x015, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x0a, 0x0b, 0x0e)
+//  AND then read 0x10 and 0x11 and concatenate into a single word and return result
+?? fnc0x00002d9c( arg0x00002d9c_0, arg0x00002d9c_1, arg0x00002d9c_2, arg0x00002d9c_3, arg0x00002d9c_4, arg0x00002d9c_5, arg0x00002d9c_6, arg0x00002d9c_7, arg0x00002d9c_12, )
+
+?? fnc0x0000975c( arg0x0000975c_0, arg0x0000975c_1, arg0x0000975c_2, arg0x0000975c_3, arg0x0000975c_4, arg0x0000975c_5, arg0x0000975c_6, arg0x0000975c_7, arg0x0000975c_12, )
+
+?? fnc0x00002c4c( arg0x00002c4c_0, arg0x00002c4c_1, arg0x00002c4c_2, arg0x00002c4c_3, arg0x00002c4c_4, arg0x00002c4c_5, arg0x00002c4c_6, arg0x00002c4c_7, arg0x00002c4c_12, )
+
+?? fnc0x00003f3c( arg0x00003f3c_0, arg0x00003f3c_1, arg0x00003f3c_2, arg0x00003f3c_3, arg0x00003f3c_4, arg0x00003f3c_5, arg0x00003f3c_6, arg0x00003f3c_7, arg0x00003f3c_12, )
+
+?? fnc0x00007d6c( arg0x00007d6c_0, arg0x00007d6c_1, arg0x00007d6c_2, arg0x00007d6c_3, arg0x00007d6c_4, arg0x00007d6c_5, arg0x00007d6c_6, arg0x00007d6c_7, arg0x00007d6c_12, )
+
+?? fnc0x00006cb8( arg0x00006cb8_0, arg0x00006cb8_1, arg0x00006cb8_2, arg0x00006cb8_3, arg0x00006cb8_4, arg0x00006cb8_5, arg0x00006cb8_6, arg0x00006cb8_7, arg0x00006cb8_12, )
+
+?? fnc0x0000b97c( arg0x0000b97c_0, arg0x0000b97c_1, arg0x0000b97c_2, arg0x0000b97c_3, arg0x0000b97c_4, arg0x0000b97c_5, arg0x0000b97c_6, arg0x0000b97c_7, arg0x0000b97c_12, )

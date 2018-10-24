@@ -231,7 +231,10 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 Pointer to store xfer when bus is busy
 (uint32_t*) 0x100000c0 - static struct i2c_interface i2c[0].flags
 			 Flags used by I2C master and slave
-
+ (uint8_t*) 0x100000c4 - Value written to register 0x05 of Right Haptic ASIC
+ (uint8_t*) 0x100000c5 - Value written to register 0x06 of Right Haptic ASIC
+ (uint8_t*) 0x100000c6 - Value written to register 0x07 of Right Haptic ASIC
+ (uint8_t*) 0x100000c7 - Value written to register 0x08 of Right Haptic ASIC
  (uint8_t*) 0x100000c8 - Value written to register 0x09 of Right Haptic ASIC
  (uint8_t*) 0x100000c9 - Value written to register 0x13 of Right Haptic ASIC
  (uint8_t*) 0x100000ca - Value written to register 0x14 of Right Haptic ASIC

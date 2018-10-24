@@ -24,7 +24,14 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Push through Right haptic init via gdbCmdFile, then fix pinkysim simplified logging?
+    1. Go back and add landmarks for functions being called, etc. so we can find our way back through later (i.e. if we need to try a different path)
 1. Update pinkySim simplified C output to handle pop's where registers are not restored (pop should still occur for value, but it will be lost, right?)
+    1. Seems that we need to handle special case of writing SP (reg13) and how that might wipe out values pushed onto it...
+    1. Perhaps solution is to remove each regs entry being an array and instead make a stack array that handles holding data dynamically
+        1. i.e. on push store value/string and const specifier to stack, on pop write those to register, on SP adjust... Do anything? (i.e. use SP value as way of calculating index into SP array?)
+        1. Make sure to have side-by-side test to see how simplified.c test output changes... (i.e. did we miss anything before or screw up anything with this *fix*)
+    1. Also think about special cases of setting LR and PC and other special registers and how we want to handle that??
 1. Check EEPROM read values at 0x800 and 0x600 on both controllers...
     1. Update gdbCmdFile with values (see TODOs)
 1. Things to try immediately (see farther below for more details)
@@ -66,6 +73,7 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. I2C0
         1. CT16B0
         1. USART0 
+        1. CT32B0
     1. Decode functions from new sim data now that variable changed by SysTick handler moves us forward
         1. Don't lose track of other variables checked in previous wfi path. They might still matter...
     1. Dev Board comms with Radio Chip via UART
