@@ -26,6 +26,9 @@ This section is a running list of priorities to focus on in hopes of reaching
 
 1. Push through Right haptic init via gdbCmdFile, then fix pinkysim simplified logging?
     1. Go back and add landmarks for functions being called, etc. so we can find our way back through later (i.e. if we need to try a different path)
+        1. Add echos and fnc0x...() names and '{''}' to show how we simulate through certain function calls
+        1. Echo after each watch point?? (sometimes screen is just filled with watchpoints and we don't know where we are in execution...)
+    1. Need to simulate PINT3 IRQ?
 1. Update pinkySim simplified C output to handle pop's where registers are not restored (pop should still occur for value, but it will be lost, right?)
     1. Seems that we need to handle special case of writing SP (reg13) and how that might wipe out values pushed onto it...
     1. Perhaps solution is to remove each regs entry being an array and instead make a stack array that handles holding data dynamically
@@ -66,6 +69,8 @@ This section is a running list of priorities to focus on in hopes of reaching
             1. But maybe GPIOs, etc. need to be set differently?
 
     1. (Fresh look) Make sure all valid paths in all enabled IRQs are covered
+        1. PINT3!!
+            1. Sets 0x1000024a to non-zero when complete?
         1. PINT0
         1. PINT1
         1. PINT2

@@ -41,6 +41,13 @@
 #------------------------------------------------------------------------------#
 
 
+# To stop "Type <return> to continue, or q <return> to quit" from occurring
+set pagination off
+
+
+#------------------------------------------------------------------------------#
+
+
 # Connect to remote simulator (i.e. pinkySim) being run on port 3333 of local machine
 target remote localhost:3333
 
@@ -3455,13 +3462,12 @@ else
 
 	set $wr_cntr = 0
 
-#TODO: see how far this gets us, we know there is at least 1 write at end of fnc0x00002d9c call, but what's next??
-	while (1)
+	while ($wr_cntr < 6)
 
 		set $wr_cntr = $wr_cntr + 1
 
 		echo \n
-		echo Waiting for Right Haptic ASIC Register Write of ?? in calls to fnc0x00002d9c() \n
+		echo Waiting for Right Haptic ASIC Register Write of 6 in to finish fnc0x00002d9c() and then some other stuff \n
 		echo \n
 
 		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
@@ -3520,9 +3526,69 @@ else
 
 
 	#------------------------------------------------------------------------------#
+#TODO: simulate PINT3!
+	#------------------------------------------------------------------------------#
 
-#TODO: CT16B0 sleep comes after we figure out how many SPI writes we need to handle
 
+	# {
+
+	# fnc0x0000b97c() is called multiple times to accumulate readings from Right Trackpad??
+
+# TODO: count how many times this needs to run...
+	while (1)
+
+		# Handle Sleep:
+
+		# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+		watch *(int*)0x4000c008
+
+		echo \n
+		echo Waiting for sleep 3 after Right Trackpad ERAs, etc.  \n
+		echo \n
+
+		# Execute until watchpoint
+		continue
+
+		# Assumption is we have broken for watch on CT16B1 Timer Counter register
+		#  Set back to zero to fake wrap around so code can continue
+		set {int}0x4000c008 = 0
+
+		# Remove watchpoint
+		delete 
+
+
+		# Setup watchpoint for wfi instruction.
+		watch $pc == 0x000051aa
+		
+		# Execute until watchpoint
+		continue
+		
+		##
+		# Change states as though CT16B0 interrupt ran as desired:
+		# Set PC to move past wfi (as simulator cannot handle it)
+		set $pc = 0x000051ac
+		# Set flag to indicate that ISR for CT16B0 has fired
+		set {char}0x10000001 = 1
+		##
+		
+		# Remove watchpoint
+		delete 
+
+		
+		# Set flag to indicate that PINT3 has occurred? TODO: verify this and see what other variables should have changed...
+		set {char}0x1000024a = 1
+
+		echo \n
+		echo Setting 0x1000024a = 1 to indicate PINT3 occurred \n
+		echo \n
+
+	end
+
+	# }
+
+
+	#------------------------------------------------------------------------------#
+#TODO: handle EEPROM read of 38 bytes from offset 0x600 to 0x10001e90
 	#------------------------------------------------------------------------------#
 
 

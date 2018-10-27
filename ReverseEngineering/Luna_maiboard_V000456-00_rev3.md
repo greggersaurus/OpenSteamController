@@ -83,7 +83,7 @@ This sections details how the pins of the process are configured and (potentiall
 |            53 | PIO0_16               |                  |               | | 
 |            54 | V<sub>SS</sub>        | V<sub>SS</sub>   | In            | V<sub>SS</sub> |
 |            55 | PIO1_9                | PIO1_9           | In            | S7 - X Button |
-|            56 | PIO0_23               | PIO0_23          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Right Trackpad/Haptic? |
+|            56 | PIO0_23               | PIO0_23          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Right Trackpad/Haptic. |
 |            57 | PIO1_15               | PIO1_15          | Out           | Chip Select/SS for Right Trackpad/Haptic (active low) |
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            59 | PIO1_12               | PIO1_12          | In            | Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. |
@@ -142,16 +142,20 @@ This section details what peripherals are used for on this processor.
     * TODO: List pins that are actually used as GPIOs??
 * Pin Interrupts
     * PIN_INT0
+        * Triggers on TODO of USB_VBUS (PIO0_3)..
         * Related to USB cable disconnect?
         * TODO: Not confirmed yet.
     * PIN_INT1
+        * Triggers on TODO of PIO0_2.
         * Related to Brown Out Detect (BOD)?
         * TODO: Not confirmed yet.
     * PIN_INT2
+        * Triggers on TODO of PIO1_5.
         * Related to USART/Radio Chip?
         * TODO: Not confirmed yet.
     * PIN_INT3
-        * Unused?
+        * Triggers on rising edge of PIO0_23.
+        * Related to Right Haptic Data Ready.
     * PIN_INT4
         * Unused?
     * PIN_INT5

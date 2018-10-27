@@ -266,10 +266,12 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x1000023b - GPIO group/port for Left Haptic Chip Select (PIO1_6).
  (uint8_t*) 0x1000023c - GPIO number/offset for Right Haptic Chip Selet (PIO1_15).
  (uint8_t*) 0x1000023d - GPIO number/offset for Left Haptic Chip Selet (PIO1_6).
- (uint8_t*) 0x1000023e - GPIO group/port for Right Haptic Data Ready (PIO0_23)?
+ (uint8_t*) 0x1000023e - GPIO group/port for Right Haptic Data Ready (PIO0_23).
  (uint8_t*) 0x1000023f - GPIO group/port for Left Haptic Data Ready (PIO1_16)?
- (uint8_t*) 0x10000240 - GPIO number/offset for Right Haptic Data Ready (PIO0_23)?
+ (uint8_t*) 0x10000240 - GPIO number/offset for Right Haptic Data Ready (PIO0_23).
  (uint8_t*) 0x10000241 - GPIO number/offset for Left Haptic Data Ready (PIO1_16)?
+
+ (uint8_t*) 0x1000024a - Flag related to PINT3 (PIO0_23 - DR for Right Hatpci)?
 
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
