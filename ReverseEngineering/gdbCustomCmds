@@ -8,6 +8,7 @@
 #
 # Execute in gdb using "source" command.
 #  For details refer to: https://sourceware.org/gdb/onlinedocs/gdb/Command-Files.html
+# Note: This needs to be sourced before any script that might use these commands.
 #	
 # Note: These functions may be specific to simulations for firmware version 
 #	vcf_wired_controller_d0g_57bf5c10.bin.
@@ -42,26 +43,28 @@
 ###############################################################################
 
 ## 
-# Calling functions may clear all watchpoints that are set to trigger at 
-#	beginning of functions that need simulation assistance.  This function 
-#	makes sure they get reset. 
-#	TODO: replace with enable instead of deletes throughout all functions?
-### define reset_top_level_watchpoints
-### end
+# Calling commands below will clear all watchpoints (i.e. that are set to  
+#	trigger at beginning of functions that need simulation assistance). 
+#	This command makes sure the watchpoints get reset and execution 
+#	continues until a watchpoint occurs.
+define reset_top_level_watchpoints
+	# Entry point of CT16B0 Sleep Function fnc0x00005174()
+	watch $pc == 0x00005174
+
+	# Entry point of Trackpad ASIC Register Write Function fnc0x00004c7e()
+	watch $pc == 0x00004c7e
+
+	# Entry point of Trackpad ASIC Register Read Function fnc0x0000491c()
+	watch $pc == 0x0000491c
+
+	continue
+end
 
 ##
 # This command handles simulating through CT16B0 Sleep Function fnc0x00005174().
 #	This function configures CT16B0 and then waits for an the CT16B0 IRQ
 #	to fire (which changes a global variable).
 define check_ct16b0_sleep
-
-	# TODO: move this to reset_top_level_watchpoints??
-	# Wait until entry point of CT16B0 Sleep Function fnc0x00005174()
-	watch $pc == 0x00005174
-
-	continue
-
-
 
 	# Check if we stopped at entry to CT16B0 Sleep Function fnc0x00005174()
 	if $pc == 0x00005174
@@ -120,14 +123,6 @@ end
 #	and then expects a response of exactly two bytes from the SPI MISO FIFO.
 define check_trackpad_asic_reg_write
 
-	# TODO: move this to reset_top_level_watchpoints??
-	# Wait until entry point of Trackpad ASIC Register Write Function fnc0x00004c7e()
-	watch $pc == 0x00004c7e
-
-	continue
-
-
-
 	# Check if we stopped at entry to Trackpad ASIC Register Write Function fnc0x00004c7e()
 	if $pc == 0x00004c7e
 
@@ -182,7 +177,7 @@ define check_trackpad_asic_reg_write
 		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
 		watch $pc == 0x00008f34
 
-		echo Waiting to change SPI MISO FIFO status after 2 response bytes \n
+		echo Waiting to change SPI MISO FIFO status after 2 response bytes for Reg Write command \n
 		
 		# Execute until watchpoint
 		continue
@@ -202,3 +197,302 @@ define check_trackpad_asic_reg_write
 		echo \n
 	end
 end
+
+
+
+##
+# This command handles simulating through Trackpad ASIC Register Read Function 
+#	fnc0x0000491c(). This function writes four SPI bytes to the SPI MOSI FIFO
+#	and then expects a response of exactly four bytes from the SPI MISO FIFO, 
+#	with the fourth byte being the value "read" from the register specified
+#	in the byte 1 write.
+define check_trackpad_asic_reg_read
+
+	# Check if we stopped at entry to Trackpad ASIC Register Read Function fnc0x0000491c()
+	if $pc == 0x0000491c
+
+		echo \n
+		echo DETECTED fnc0x0000491c(): Trackpad ASIC Reg Read. \n
+		echo \n
+
+		# Extract ASIC register read address
+		set $asic_rd_addr = $r1
+
+		# Set default value for ASIC register read value
+		set $asic_rd_val = 0
+
+		if ($asic_rd_addr == 0x00)
+			echo Reading ASIC Firmware ID Register \n
+			set $asic_rd_val = 0x07
+		end
+		if ($asic_rd_addr == 0x01)
+			echo Reading ASIC Firmware Version Register \n
+			set $asic_rd_val = 0x3a
+		end
+		if ($asic_rd_addr == 0x02)
+			echo Reading ASIC Status1 Register \n
+			set $asic_rd_val = 0x08
+		end
+		if ($asic_rd_addr == 0x03)
+			echo Reading ASIC SysConfig1 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x04)
+			echo Reading ASIC FeedConfig1 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x05)
+			echo Reading ASIC FeedConfig2 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x06)
+			echo Reading ASIC FeedConfig3 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x07)
+			echo Reading ASIC CalConfig1 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x08)
+			echo Reading ASIC PS/2 Aux Control Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x09)
+			echo Reading ASIC Sample Rate Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x0a)
+			echo Reading ASIC ZIdle Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x0b)
+			echo Reading ASIC Z Scaler Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x0c)
+			echo Reading ASIC Sleep Interval Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x0d)
+			echo Reading ASIC Sleep Timer Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x0e)
+			echo Reading ASIC Dynamic EMI Adjust Threshold Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x0f)
+			echo Reading ASIC 0x0f RESERVED Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x10)
+			echo Reading ASIC 0x10 RESERVED Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x11)
+			echo Reading ASIC 0x11 RESERVED Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x12)
+			echo Reading ASIC PacketByte_0 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x13)
+			echo Reading ASIC PacketByte_1 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x14)
+			echo Reading ASIC PacketByte_2 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x15)
+			echo Reading ASIC PacketByte_3 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x16)
+			echo Reading ASIC PacketByte_4 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x17)
+			echo Reading ASIC PacketByte_5 Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x18)
+			echo Reading ASIC Port A GPIO Control Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x19)
+			echo Reading ASIC Port A GPIO Data Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x1a)
+			echo Reading ASIC Port B GPIO Control and Data Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x1b)
+			echo Reading ASIC ERA Value Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x1c)
+			echo Reading ASIC ERA Address High Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x1d)
+			echo Reading ASIC ERA Address Low Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x1e)
+			echo Reading ASIC ERA Address Control Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+		if ($asic_rd_addr == 0x1f)
+			echo Reading ASIC Product ID Register \n
+			#TODO: non-zero value? What does devBoard FW show?
+			set $asic_rd_val = 0
+		end
+
+		
+		# Remove all watchpoints
+		delete
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 1 of Reg Read command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 1 (or could technically be response to previous command)
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 2 of Reg Read command \n
+	
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 2
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 3 of Reg Read command \n
+	
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 3
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 4 of Reg Read command \n
+	
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		# Value "read" from ASIC register 
+		set {int}0x40040008 = $asic_rd_val
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# SPI transaction complete
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to change SPI MISO FIFO status after 4 response bytes for Reg Read command \n
+	
+		# Execute until watchpoint
+		continue
+
+		# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+		set {int}0x4004000C = 0x00000003
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		echo \n
+		echo HANDLED fnc0x0000491c(): Trackpad ASIC Reg Read. \n
+		echo \n
+	end
+end
+
+##
+#TODO: fnc0x00004c14()
+# define check_trackpad_asic_era_write_multiple
+
+## 
+#TODO: fnc0x0000573c()
+# define check_trackpad_asic_reg_read_autoinc
