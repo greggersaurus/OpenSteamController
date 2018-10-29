@@ -970,7 +970,7 @@ void fnc0x00004c7e(arg0x00004c7e_0, arg0x00004c7e_1, arg0x00004c7e_2);
 void fnc0x00009840(arg0x00009840_0);
 
 /**
- * SPI blocking polling read/write. Similar to 
+ * SPI blocking polling write. Similar to 
  *  uint32_t Chip_SSP_RWFrames_Blocking(LPC_SSP_T *pSSP, Chip_SSP_DATA_SETUP_T *xf_setup),
  *  except it looks like a lot is trimmed and some instructions re-ordered (i.e. 
  *  clearing interrupt status register and checking for overrun errors.
@@ -2015,3 +2015,15 @@ void fnc0x00008de4();
 ?? fnc0x0000977c( arg0x0000977c_0, arg0x0000977c_1, arg0x0000977c_2, arg0x0000977c_3, arg0x0000977c_4, arg0x0000977c_5, arg0x0000977c_6, arg0x0000977c_7, arg0x0000977c_12, )
 
 ?? fnc0x00002d14( arg0x00002d14_0, arg0x00002d14_1, arg0x00002d14_2, arg0x00002d14_3, arg0x00002d14_4, arg0x00002d14_5, arg0x00002d14_6, arg0x00002d14_7, arg0x00002d14_12, )
+
+// PINT3 IRQ 
+?? fnc0x00005402( arg0x00005402_0, arg0x00005402_1, arg0x00005402_2, arg0x00005402_3, arg0x00005402_4, arg0x00005402_5, arg0x00005402_6, arg0x00005402_7, arg0x00005402_12, )
+
+// PINT3 related?
+?? fnc0x0000763c( arg0x0000763c_0, arg0x0000763c_1, arg0x0000763c_2, arg0x0000763c_3, arg0x0000763c_4, arg0x0000763c_5, arg0x0000763c_6, arg0x0000763c_7, arg0x0000763c_12, )
+
+// SPI Auto-Increment READ for Sequential Addresses?
+?? fnc0x0000573c( arg0x0000573c_0, arg0x0000573c_1, arg0x0000573c_2, arg0x0000573c_3, arg0x0000573c_4, arg0x0000573c_5, arg0x0000573c_6, arg0x0000573c_7, arg0x0000573c_12, )
+
+// Called in PINT3. Checks some PINT3 global variables for TODO purpose...
+?? fnc0x00009798( arg0x00009798_0, arg0x00009798_1, arg0x00009798_2, arg0x00009798_3, arg0x00009798_4, arg0x00009798_5, arg0x00009798_6, arg0x00009798_7, arg0x00009798_12, )

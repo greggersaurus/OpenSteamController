@@ -1,0 +1,204 @@
+###############################################################################
+# Command file that contains user-defined commands for helping simulate
+#	Steam Controller Firmware. There are a number of instances where the
+#	firmware interacts with peripherals and appropriate behavior needs to
+#	be added for the simulation to continue. These functions help to
+#	encapsulate these behaviors as they may need to be called multiple
+#	times and under different circumstances.
+#
+# Execute in gdb using "source" command.
+#  For details refer to: https://sourceware.org/gdb/onlinedocs/gdb/Command-Files.html
+#	
+# Note: These functions may be specific to simulations for firmware version 
+#	vcf_wired_controller_d0g_57bf5c10.bin.
+#
+# Execute in gdb using "source" command.
+#  For details refer to: https://sourceware.org/gdb/onlinedocs/gdb/Command-Files.html
+#
+# Note this was developed by simulating vcf_wired_controller_d0g_57bf5c10.bin,
+#  and may not work properly with other firmware.
+#
+#  MIT License
+# 
+#  Copyright (c) 2018 Gregory Gluszek
+# 
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+# 
+#  The above copyright notice and this permission notice shall be included in all
+#  copies or substantial portions of the Software.
+# 
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#  SOFTWARE.
+###############################################################################
+
+## 
+# Calling functions may clear all watchpoints that are set to trigger at 
+#	beginning of functions that need simulation assistance.  This function 
+#	makes sure they get reset. 
+#	TODO: replace with enable instead of deletes throughout all functions?
+### define reset_top_level_watchpoints
+### end
+
+##
+# This command handles simulating through CT16B0 Sleep Function fnc0x00005174().
+#	This function configures CT16B0 and then waits for an the CT16B0 IRQ
+#	to fire (which changes a global variable).
+define check_ct16b0_sleep
+
+	# TODO: move this to reset_top_level_watchpoints??
+	# Wait until entry point of CT16B0 Sleep Function fnc0x00005174()
+	watch $pc == 0x00005174
+
+	continue
+
+
+
+	# Check if we stopped at entry to CT16B0 Sleep Function fnc0x00005174()
+	if $pc == 0x00005174
+
+		echo \n
+		echo DETECTED fnc0x00005174(): sleep via CT16B0 IRQ. \n
+		echo \n
+
+		# Remove all watchpoints
+		delete
+
+
+		# Set watch point for 16-bit Timer 0 (CT16B0) Timer Counter register
+		watch *(int*)0x4000c008
+
+		echo Waiting for CT16B0 TC to be set to simulate wrap around \n
+
+		# Execute until watchpoint
+		continue
+
+		# Set back to zero to simulate wrap around so code can continue
+		set {int}0x4000c008 = 0
+
+		# Remove all watchpoint
+		delete 
+
+
+		# Setup watchpoint for wfi instruction.
+		watch $pc == 0x000051aa
+
+		echo Waiting for wfi related to CT16B0 IRQ \n
+		
+		# Execute until watchpoint
+		continue
+		
+		# Change states as though CT16B0 interrupt ran as desired:
+		# Set PC to move past wfi (as simulator cannot handle it)
+		set $pc = 0x000051ac
+		# Set flag to indicate that ISR for CT16B0 has fired
+		set {char}0x10000001 = 1
+		
+		# Remove all watchpoints
+		delete 
+
+		echo \n
+		echo HANDLED fnc0x00005174(): sleep via CT16B0 IRQ. \n
+		echo \n
+
+	end
+end
+
+
+##
+# This command handles simulating through Trackpad ASIC Register Write Function 
+#	fnc0x00004c7e(). This function writes two SPI bytes to the SPI MOSI FIFO
+#	and then expects a response of exactly two bytes from the SPI MISO FIFO.
+define check_trackpad_asic_reg_write
+
+	# TODO: move this to reset_top_level_watchpoints??
+	# Wait until entry point of Trackpad ASIC Register Write Function fnc0x00004c7e()
+	watch $pc == 0x00004c7e
+
+	continue
+
+
+
+	# Check if we stopped at entry to Trackpad ASIC Register Write Function fnc0x00004c7e()
+	if $pc == 0x00004c7e
+
+		echo \n
+		echo DETECTED fnc0x00004c7e(): Trackpad ASIC Reg Write. \n
+		echo \n
+
+		# Remove all watchpoints
+		delete
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 1 of Reg Write command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark SPI MISO FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte (or could be response to previous command technically)
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 2 of Reg Write command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark SPI MISO FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove watchpoint
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to change SPI MISO FIFO status after 2 response bytes \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Mark SPI MISO FIFO as empty so code stops reading it (and does not overflow...)
+		set {int}0x4004000C = 0x00000003
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		echo \n
+		echo HANDLED fnc0x00004c7e(): Trackpad ASIC Reg Write. \n
+		echo \n
+	end
+end

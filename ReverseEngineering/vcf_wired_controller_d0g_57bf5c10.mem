@@ -270,8 +270,19 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x1000023f - GPIO group/port for Left Haptic Data Ready (PIO1_16)?
  (uint8_t*) 0x10000240 - GPIO number/offset for Right Haptic Data Ready (PIO0_23).
  (uint8_t*) 0x10000241 - GPIO number/offset for Left Haptic Data Ready (PIO1_16)?
+ (uint8_t*) 0x10000242 - PINT3 related? Enable for reading ASIC registers 0x11
+			 and 0x12 maybe?
+
+ (uint8_t*) 0x10000246 - PINT3/Right Haptic ASIC related. Counts how many times
+			 times ASIC registers 0x11 and 0x12 are read. Counts
+			 up to 10.
 
  (uint8_t*) 0x1000024a - Flag related to PINT3 (PIO0_23 - DR for Right Hatpci)?
+
+ (uint8_t*) 0x1000024c - Flag related to PINT3/Right Haptic ASIC. Set after a 
+			 certain number (10?) of runs of PINT3.
+
+ (uint8_t*) 0x1000024e - PINT3/Right Haptic ASIC related?
 
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
@@ -783,6 +794,10 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000a35 - EEPROM Read Data 0x081 - Uknown purpose
  (uint8_t*) 0x10000a36 - EEPROM Read Data 0x082 - Uknown purpose
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
+ (uint8_t*) 0x10000a38 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by calls in PINT3
+ (uint8_t*) 0x10000a39 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by calls in PINT3
 
  (uint8_t*) 0x10000d80 - I2C_XFER_T.slaveAddr; 7-bit I2C Slave address 
 
@@ -1007,6 +1022,8 @@ struct AnalogReadingRelated {
 			 Initially setup callback that does nothing... (at least
 			 for USB_VBUS = 1 case...). Maybe just used to wakeup
 			 processor in main loop from wfi?
+(uint32_t*) 0x100010c0 - Callback function. Related to PINT3 (PIO0_23 change).
+                     
 
 (uint32_t*) 0x100010d4 - Read in USB_Configure_Event()
 (uint32_t*) 0x100010d8 - Interrupt disabled in order to check in main...
