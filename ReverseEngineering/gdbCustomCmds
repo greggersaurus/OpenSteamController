@@ -48,14 +48,21 @@
 #	This command makes sure the watchpoints get reset and execution 
 #	continues until a watchpoint occurs.
 define reset_top_level_watchpoints
-	# Entry point of CT16B0 Sleep Function fnc0x00005174()
+
+	echo Entry point of CT16B0 Sleep Function fnc0x00005174() \n
 	watch $pc == 0x00005174
 
-	# Entry point of Trackpad ASIC Register Write Function fnc0x00004c7e()
+	echo Entry point of Trackpad ASIC Register Write Function fnc0x00004c7e() \n
 	watch $pc == 0x00004c7e
 
-	# Entry point of Trackpad ASIC Register Read Function fnc0x0000491c()
+	echo Entry point of Trackpad ASIC Register Read Function fnc0x0000491c() \n
 	watch $pc == 0x0000491c
+
+	echo Entry point of Trackpad ASIC Extenda Register Access (ERA) Write Auto Increment Function fnc0x00004c14() \n
+	watch $pc == 0x00004c14
+
+	echo Entry point of Trackpad ASIC Data Ready Interrupt Function fnc0x0000b97c() \n
+	watch $pc == 0x0000b97c
 
 	continue
 end
@@ -197,7 +204,6 @@ define check_trackpad_asic_reg_write
 		echo \n
 	end
 end
-
 
 
 ##
@@ -489,9 +495,408 @@ define check_trackpad_asic_reg_read
 	end
 end
 
+
 ##
-#TODO: fnc0x00004c14()
-# define check_trackpad_asic_era_write_multiple
+# This command handles simulatinng through Trackpad ASIC Extended Register 
+#	Access Write with Auto Incrementation (i.e. writing to multiple 
+#	sequentially addressed extended registers) fnc0x00004c14(). This 
+#	consists of writing the ERA address registers (high and low) and then, 
+#	for each write, writing the value, the ERA control, then reading the 
+#	ERA control until it indicates the write is complete.
+define check_trackpad_asic_era_write_autoinc
+	# Check if we stopped at entry to Trackpad ASIC Extended Register Access (ERA) Write Auto Increment Function fnc0x0000491c()
+	if $pc == 0x00004c14
+
+		echo \n
+		echo DETECTED fnc0x00004c14(): Trackpad ASIC ERA Write Auto Increment. \n
+		echo \n
+
+		# Keep track of how many ERAs to expect
+		set $era_cnt = $r2
+
+		# Write 0x1c (ERA Address High Byte):
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 1 of Write command for ERA Address High Byte \n
+
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 0
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove watchpoint
+		delete 
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 2 of Write command for ERA Address High Byte \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 1
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove watchpoint
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to change SPI MISO FIFO status after 2 response bytes for Reg Write command for ERA Address High Byte \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+		set {int}0x4004000C = 0x00000003
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove watchpoint
+		delete 
+
+
+		# Write 0x1d (ERA Address Low Byte):
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 1 of Write command for ERA Address Low Byte \n
+
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 0
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove watchpoint
+		delete 
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 2 of Write command for ERA Address Low Byte \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 1
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove watchpoint
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to change SPI MISO FIFO status after 2 response bytes for Reg Write command for ERA Address Low Byte \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+		set {int}0x4004000C = 0x00000003
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove watchpoint
+		delete 
+
+
+		# Loop over the specified number of consecutive accesses
+		set $seq_cntr = 0
+
+		while ($seq_cntr < $era_cnt)
+
+			set $seq_cntr = $seq_cntr + 1
+
+			# Write 0x1b (ERA Value):
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to set SPI MISO response for Byte 1 of Write command for ERA Value \n
+
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			#  Filler byte 0
+			set {int}0x40040008 = 0x000000FB
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to set SPI MISO response for Byte 2 of Write command for ERA Value \n
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			#  Filler byte 1
+			set {int}0x40040008 = 0x000000FB
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to change SPI MISO FIFO status after 2 response bytes for Reg Write command for ERA Value \n
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+			set {int}0x4004000C = 0x00000003
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+
+			# Write 0x1e (ERA Control):
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to set SPI MISO response for Byte 1 of Write command for ERA Control \n
+
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			#  Filler byte 0
+			set {int}0x40040008 = 0x000000FB
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to set SPI MISO response for Byte 2 of Write command for ERA Control \n
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			#  Filler byte 1
+			set {int}0x40040008 = 0x000000FB
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to change SPI MISO FIFO status after 2 response bytes for Reg Write command for ERA Control \n
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+			set {int}0x4004000C = 0x00000003
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+
+			# Read 0x1e (ERA Control)
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to set SPI MISO response for Byte 1 of Reg Read command of ERA Control \n
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			#  Filler byte 0
+			set {int}0x40040008 = 0x000000FB
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to set SPI MISO response for Byte 2 of Reg Read command of ERA Control \n
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			#  Filler byte 1
+			set {int}0x40040008 = 0x000000FB
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to set SPI MISO response for Byte 3 of Reg Read command of ERA Control \n
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			#  Filler byte 2
+			set {int}0x40040008 = 0x000000FB
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to set SPI MISO response for Byte 4 of Reg Read command of ERA Control \n
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI response data and mark FIFO as not empty
+			set {int}0x4004000C = 0x00000007
+			# Write that ERA Control returns 0x00 indicating extended register access is complete
+			set {int}0x40040008 = 0x00000000
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+			# SPI transaction complete
+			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+			watch $pc == 0x00008f34
+
+			echo Waiting to change SPI MISO FIFO status after 4 response bytes for Reg Read command of ERA Control \n
+			
+			# Execute until watchpoint
+			continue
+
+			# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+			set {int}0x4004000C = 0x00000003
+
+			# Make sure we move past this instruction before next watch
+			stepi
+
+			# Remove watchpoint
+			delete 
+
+		end
+
+		echo \n
+		echo HANDLED fnc0x00004c14()): Trackpad ASIC ERA Write Auto Increment. \n
+		echo \n
+	end
+end
+
+
+##
+# This command handles simulating through function that is expecting PINT3/4 to
+#	fire fnc0x0000b97c(). These IRQs are related to Right and Left Haptics 
+#	ASIC respectively. This may be related to calibrating the EMI settings 
+#	for the haptics so that they trigger properly (i.e. on finger down, etc.)
+define check_trackpad_asic_dr_interrupts
+	# Check if we stopped at entry to fnc0x0000b97c(), which is waiting for
+	#  either PINT3 or PINT4 to fire to get trackpad ASIC update data
+	if $pc == 0x0000b97c
+
+		echo \n
+		echo DETECTED fnc0x0000b97c(): Trackpad ASIC Data Ready Interrupt. \n
+		echo \n
+
+		# Remove all watchpoints
+		delete
+
+
+		# Record which trackpad ASIC we are talking to
+		set $trackpad_num = $r0
+
+		if $trackpad_num == 0
+			set {char}0x1000024a = 1
+		end
+		if $trackpad_num == 1
+			set {char}0x1000024b = 1
+		end
+
+
+		echo \n
+		echo HANDLED fnc0x0000b97c(): Trackpad ASIC Data Ready Interrupt. \n
+		echo \n
+	end
+end
+
 
 ## 
 #TODO: fnc0x0000573c()

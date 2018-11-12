@@ -1996,6 +1996,7 @@ void fnc0x00008de4();
 //  AND then read 0x10 and 0x11 and concatenate into a single word and return result
 ?? fnc0x00002d9c( arg0x00002d9c_0, arg0x00002d9c_1, arg0x00002d9c_2, arg0x00002d9c_3, arg0x00002d9c_4, arg0x00002d9c_5, arg0x00002d9c_6, arg0x00002d9c_7, arg0x00002d9c_12, )
 
+// Related to PINT3/4 (i.e. new results from Right/Left Trackpad)?
 ?? fnc0x0000975c( arg0x0000975c_0, arg0x0000975c_1, arg0x0000975c_2, arg0x0000975c_3, arg0x0000975c_4, arg0x0000975c_5, arg0x0000975c_6, arg0x0000975c_7, arg0x0000975c_12, )
 
 ?? fnc0x00002c4c( arg0x00002c4c_0, arg0x00002c4c_1, arg0x00002c4c_2, arg0x00002c4c_3, arg0x00002c4c_4, arg0x00002c4c_5, arg0x00002c4c_6, arg0x00002c4c_7, arg0x00002c4c_12, )
@@ -2006,7 +2007,7 @@ void fnc0x00008de4();
 
 ?? fnc0x00006cb8( arg0x00006cb8_0, arg0x00006cb8_1, arg0x00006cb8_2, arg0x00006cb8_3, arg0x00006cb8_4, arg0x00006cb8_5, arg0x00006cb8_6, arg0x00006cb8_7, arg0x00006cb8_12, )
 
-// Wait for PINT3 to fire??
+// Wait for PINT3/4 to fire??
 ?? fnc0x0000b97c( arg0x0000b97c_0, arg0x0000b97c_1, arg0x0000b97c_2, arg0x0000b97c_3, arg0x0000b97c_4, arg0x0000b97c_5, arg0x0000b97c_6, arg0x0000b97c_7, arg0x0000b97c_12, )
 
 // EEPROM read related
@@ -2027,3 +2028,12 @@ void fnc0x00008de4();
 
 // Called in PINT3. Checks some PINT3 global variables for TODO purpose...
 ?? fnc0x00009798( arg0x00009798_0, arg0x00009798_1, arg0x00009798_2, arg0x00009798_3, arg0x00009798_4, arg0x00009798_5, arg0x00009798_6, arg0x00009798_7, arg0x00009798_12, )
+
+// Related to playing jingle via haptics???
+?? fnc0x00003934( arg0x00003934_0, arg0x00003934_1, arg0x00003934_2, arg0x00003934_3, arg0x00003934_4, arg0x00003934_5, arg0x00003934_6, arg0x00003934_12, )
+
+// Related to jingle via haptics...?
+?? fnc0x000079b0( arg0x000079b0_0, arg0x000079b0_1, arg0x000079b0_2, arg0x000079b0_3, arg0x000079b0_4, arg0x000079b0_5, arg0x000079b0_6, arg0x000079b0_7, arg0x000079b0_12, )
+
+// Function called on connect (USB or Radio?). Stop LED from blinking and play startup jingle?
+?? fnc0x00007a10( arg0x00007a10_0, arg0x00007a10_1, arg0x00007a10_2, arg0x00007a10_3, arg0x00007a10_4, arg0x00007a10_5, arg0x00007a10_6, arg0x00007a10_12, )

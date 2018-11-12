@@ -24,10 +24,26 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Dig through function that seems to be related to jingle (fnc0x00003934, fnc0x000079b0)
+    1. Need to simulate CT32B0 IRQ to figure out what actually makes haptic vibrate?
+    1. Work back and see where values are being pulled from on-chip flash and try modifying?
+    1. Looks like there is also path where jingles can come from EEPROM...????
+        1. Did Valve implement a USB function to write to EEPROM generically (or specifically for this purpose)?
+1. Add I2C related handling function to gdbCmdFile and gdbCustomCmds
+    1. Common sub-function in fnc0x00005fbc()?
+1. Dig into results of SPI intialization simulation data
+    1. May need to run more sim to try other paths (there may be some sort of EMI related calibration adjustment routine (which may explain results I was getting...))
+        1. What if PINT3/4 times out (i.e. fnc0x0000b97c())
+1. Handle all of the new simulation data in detail
+    1. Make sure it all ends up in vcf_wired_controller_d0g_57bf5c10.c file.
+1. Clean, clean, clean
+    1. gdbCmdFile, gdbCustomCmds, gdbOldRef
+1. Clean, organize and (re-)assess items below
+
 1. Push through Right haptic init via gdbCmdFile, then fix pinkysim simplified logging?
     1. Slowely convert to gdbCmdFile being single loop calling gdbCustomCmds to handle things dynamically
         1. Add watchpoints for functions that are simply landmarks regarding how far we have made it??
-    1. Get all details togther on paths for PINT3
+    1. Get all details togther on paths for PINT3 into vcf_wired_controller_d0g_57bf5c10.c
     1. Go back and add landmarks for functions being called, etc. so we can find our way back through later (i.e. if we need to try a different path)
         1. Add echos and fnc0x...() names and '{''}' to show how we simulate through certain function calls
         1. Echo after each watch point?? (sometimes screen is just filled with watchpoints and we don't know where we are in execution...)

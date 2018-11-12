@@ -155,9 +155,10 @@ This section details what peripherals are used for on this processor.
         * TODO: Not confirmed yet.
     * PIN_INT3
         * Triggers on rising edge of PIO0_23.
-        * Related to Right Haptic Data Ready.
+        * Related to Right Trackpad ASIC Data Ready.
     * PIN_INT4
-        * Unused?
+        * Triggers on rising edge of PIO1_16.
+        * Related to Left Trackpad ASIC Data Ready.
     * PIN_INT5
         * Unused?
     * PIN_INT6
