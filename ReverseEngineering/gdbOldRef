@@ -1,4 +1,5 @@
 # TODO: Migrate this to gdbCustomCmds file (and add details for simulating all IRQs and callbacks there)
+# 	Or will this not work because user-define commands defined in gdbCustomCmds cannot be called by commands defined in gdbCustomCmds??
 
 
 # Related to main loop:

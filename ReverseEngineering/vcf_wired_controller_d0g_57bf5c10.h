@@ -1404,9 +1404,9 @@ void fnc0x00007728();
 int fnc0x00007734();
 
 /**
- * Disable interrupts and check some (USB related?) variable.
+ * Check if USB_Configure_Event() has fired.
  * 
- * \return 1 if variable is not set...
+ * \return 1 USB_Configure_Event() has not fired, 0 if it has.
  */
 int fnc0x0000625c();
 
@@ -2037,3 +2037,13 @@ void fnc0x00008de4();
 
 // Function called on connect (USB or Radio?). Stop LED from blinking and play startup jingle?
 ?? fnc0x00007a10( arg0x00007a10_0, arg0x00007a10_1, arg0x00007a10_2, arg0x00007a10_3, arg0x00007a10_4, arg0x00007a10_5, arg0x00007a10_6, arg0x00007a10_12, )
+
+// CT32B0 Interrupt Handler?
+?? fnc0x00009d2c( arg0x00009d2c_0, arg0x00009d2c_1, arg0x00009d2c_2, arg0x00009d2c_3, arg0x00009d2c_4, arg0x00009d2c_5, arg0x00009d2c_6, arg0x00009d2c_12, )
+
+// CT32B0 Interrupt Handler related?
+?? fnc0x00006130( arg0x00006130_0, arg0x00006130_1, arg0x00006130_2, arg0x00006130_3, arg0x00006130_4, arg0x00006130_5, arg0x00006130_6, arg0x00006130_12, )
+
+?? fnc0x00006ebe( arg0x00006ebe_0, arg0x00006ebe_1, arg0x00006ebe_2, arg0x00006ebe_3, arg0x00006ebe_4, arg0x00006ebe_5, arg0x00006ebe_6, arg0x00006ebe_12, )
+
+?? fnc0x00006ecc( arg0x00006ecc_0, arg0x00006ecc_1, arg0x00006ecc_2, arg0x00006ecc_3, arg0x00006ecc_4, arg0x00006ecc_5, arg0x00006ecc_6, arg0x00006ecc_12, )

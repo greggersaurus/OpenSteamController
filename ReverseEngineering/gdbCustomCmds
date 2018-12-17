@@ -64,6 +64,9 @@ define reset_top_level_watchpoints
 	echo Entry point of Trackpad ASIC Data Ready Interrupt Function fnc0x0000b97c() \n
 	watch $pc == 0x0000b97c
 
+##	echo Return from fnc0x00007a10(): CT32B0 Interrupt Handler Jump \n
+##	watch $pc == 0x00007a38
+
 	continue
 end
 
@@ -893,6 +896,34 @@ define check_trackpad_asic_dr_interrupts
 
 		echo \n
 		echo HANDLED fnc0x0000b97c(): Trackpad ASIC Data Ready Interrupt. \n
+		echo \n
+	end
+end
+
+##
+# This command handles simulating the CT32B0 IRQ firing. 
+#  	TODO: more details (i.e. related to haptics and jingle)
+define check_ct32b0_irq_fire
+	# Check if everything related to CT32B0 firing has been setup
+	if $pc == 0x00007a38
+
+		echo \n
+		echo DETECTED Return from fnc0x00007a10(): CT32B0 Interrupt Handler Jump \n
+		echo \n
+
+		# Remove all watchpoints
+		delete
+
+		echo \n
+		echo Jumping to CT32B0 Interrupt Handler \n
+		echo \n
+
+		# Jump to CT32B0 Interrupt Handler
+		set $lr = $pc
+		set $pc = 0x000001b0
+
+		echo \n
+		echo HANDLED Return from fnc0x00007a10(): CT32B0 Interrupt Handler Jump \n
 		echo \n
 	end
 end

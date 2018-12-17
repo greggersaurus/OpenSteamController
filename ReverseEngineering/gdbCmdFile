@@ -917,6 +917,7 @@ else
 		check_trackpad_asic_reg_read
 		check_trackpad_asic_era_write_autoinc
 		check_trackpad_asic_dr_interrupts
+		check_ct32b0_irq_fire
 
 	end
 

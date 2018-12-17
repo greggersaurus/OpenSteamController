@@ -25,9 +25,15 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Dig through function that seems to be related to jingle (fnc0x00003934, fnc0x000079b0)
+    1. Looks like GPIO0_18 is related to haptics somehow?
+        1. Ohm it out!
+        1. Maybe need to get Trackpad ASIC setup before haptics work???
     1. Need to simulate CT32B0 IRQ to figure out what actually makes haptic vibrate?
+        1. Make sure this gets captured appropriately in vcf_wired_controller_d0g_57bf5c10.c
+        1. Look back through PIO0_18 being set as input and being read...
+            1. Looks like this may be how haptics are activated?
     1. Work back and see where values are being pulled from on-chip flash and try modifying?
-    1. Looks like there is also path where jingles can come from EEPROM...????
+    1. Looks like there is also path where jingles can come from EEPROM... (i.e. looking for magic work 0xbead from 0x800 in EEPROM)????
         1. Did Valve implement a USB function to write to EEPROM generically (or specifically for this purpose)?
 1. Add I2C related handling function to gdbCmdFile and gdbCustomCmds
     1. Common sub-function in fnc0x00005fbc()?
@@ -35,10 +41,12 @@ This section is a running list of priorities to focus on in hopes of reaching
     1. May need to run more sim to try other paths (there may be some sort of EMI related calibration adjustment routine (which may explain results I was getting...))
         1. What if PINT3/4 times out (i.e. fnc0x0000b97c())
 1. Handle all of the new simulation data in detail
-    1. Make sure it all ends up in vcf_wired_controller_d0g_57bf5c10.c file.
+    1. Make sure it all ends up (cleanly) in vcf_wired_controller_d0g_57bf5c10.c file and each function has a description.
 1. Clean, clean, clean
     1. gdbCmdFile, gdbCustomCmds, gdbOldRef
-1. Clean, organize and (re-)assess items below
+    1. PINT3 dump
+    1. Cleaning other ISRs and looping paths so that they make when I come back after I have forgotten everything.
+1. Clean, organize and (re-)assess items below:
 
 1. Push through Right haptic init via gdbCmdFile, then fix pinkysim simplified logging?
     1. Slowely convert to gdbCmdFile being single loop calling gdbCustomCmds to handle things dynamically
