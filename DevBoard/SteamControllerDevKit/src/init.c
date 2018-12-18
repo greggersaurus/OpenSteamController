@@ -225,7 +225,8 @@ void stage2Init(uint32_t hwVersion){
 	initAdc();
 	//ad6_start_val = adcReadChan(6);
 
-	Chip_GPIO_WritePortBit(LPC_GPIO, 1, 1, true);
+//TODO: This is active low enable for analog triggers... Move to adc_read??
+	Chip_GPIO_WritePortBit(LPC_GPIO, 1, 1, false); //true);
 	Chip_GPIO_WriteDirBit(LPC_GPIO, 1, 1, true);
 	Chip_IOCON_PinMux(LPC_IOCON, 1, 1, IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 

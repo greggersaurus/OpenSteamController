@@ -62,15 +62,17 @@ int adcReadCmdFnc(int argc, const char* argv[]) {
 
 //TODO
 
-	consolePrint("ADC Channel 6 Reads 0x%04x\n\n", adcReadChan(ADC_CH6));
+while (1) {
+	consolePrint("ADC[6] = 0x%04x, ", adcReadChan(ADC_CH6));
 
-	consolePrint("ADC Channel 0 Reads 0x%04x\n", adcReadChan(ADC_CH0));
-	consolePrint("ADC Channel 2 Reads 0x%04x\n\n", adcReadChan(ADC_CH2));
+	consolePrint("ADC[0] = 0x%04x, ", adcReadChan(ADC_CH0));
+	consolePrint("ADC[2] = 0x%04x, ", adcReadChan(ADC_CH2));
 
 	// Joystick X direction (left = 0x338, neutral = 0x20a right = 0x0f0)
-	consolePrint("ADC Channel 1 Reads 0x%04x\n", adcReadChan(ADC_CH1));
+	consolePrint("ADC[1] = 0x%04x, ", adcReadChan(ADC_CH1));
 	// Joystick Y direction (up = 0x32a, neutral = 0x207, down = 0xf8)
-	consolePrint("ADC Channel 3 Reads 0x%04x\n\n", adcReadChan(ADC_CH3));
+	consolePrint("ADC[3] = 0x%04x\n", adcReadChan(ADC_CH3));
+}
 
 	return 0;
 }
@@ -146,6 +148,7 @@ void ADC_IRQHandler (void) {
 /*
 	if (blah > 8) {
 //TODO: this shouldn't be necessary, right? This is here so IRQ does not starve user thread (i.e. UART I/O) from running...
+// Think through and understand why Valve does this. Probably to save power (no need to keep sampling ADCs if controller doesn't need to report updates, right?).
 		Chip_ADC_SetBurstCmd(adcRegs, DISABLE);
 		blah = 0;
 	}

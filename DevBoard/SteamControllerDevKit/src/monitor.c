@@ -85,6 +85,14 @@ int monitorCmdFnc(int argc, const char* argv[]) {
 	consolePrint("Right Bumper State: %d\n", getRightBumperState());
 	consolePrint("Left Bumper State: %d\n\n", getLeftBumperState());
 
+	for (int cnt = 0; cnt < 64; cnt++) {
+		char* ptr_c = (char*)(0x50000000 + cnt);
+		int* ptr_i = (int*)(0x50001000 + cnt*4);
+
+		consolePrint("0x%p: 0x%02x\t", ptr_c, *ptr_c);
+		consolePrint("0x%p: 0x%08x\n", ptr_i, *ptr_i);
+	}
+
 //TODO: Add ADC channels, etc.
 
 	return 0;

@@ -188,7 +188,7 @@ void initTrackpad(void) {
 //	however, the datahsheet states: "Request additional instructions from 
 //	Cirque for exiting Sleep and Shutdown modes if your application requires 
 //	SPI at 1 MHZ or greater." Figure this out later via further rev eng?
-//	writePinnacleReg(R_TRACKPAD, 0x03, 0x02);
+	writePinnacleReg(R_TRACKPAD, 0x03, 0x02);
 
 
 	// Chip select is active low
@@ -204,11 +204,12 @@ void initTrackpad(void) {
 
 	// Place Left Trackpad in shutdown mode
 //TODO: See note above 
-//	writePinnacleReg(L_TRACKPAD, 0x03, 0x02);
+	writePinnacleReg(L_TRACKPAD, 0x03, 0x02);
 
 
 	// Test to setup Right trackpad to get data...
 
+/*
 	// Clear Flags 
 	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
 	// Configures SysConfig1(normal mode, active)
@@ -217,6 +218,9 @@ void initTrackpad(void) {
 	writePinnacleReg(R_TRACKPAD, 0x05, 0x1F);
 	// Configures FeedConfig1(absolute mode, enable feed)
 	writePinnacleReg(R_TRACKPAD, 0x04, 0x03);
+	// Configures Z-idle
+	writePinnacleReg(R_TRACKPAD, 0x0A, 0x05);
+*/
 
 //TODO
 //	NVIC_EnableIRQ(SSP0_IRQn);
@@ -242,6 +246,62 @@ void FLEX_INT0_IRQHandler(void) {
 int trackpadCmdFnc(int argc, const char* argv[]) {
 	int retval = 0;
 
+	// Reset right trackpad ASIC
+	writePinnacleReg(R_TRACKPAD, 0x03, 0x01);
+
+	consolePrint("Reset ASIC\n");
+
+	// Sleep
+	for (volatile int cnt = 0; cnt < 0x20000; cnt++) {
+	}
+
+	uint8_t status1 = 0;
+
+	while (status1 != 0x08) {
+		status1 = readPinnacleReg(R_TRACKPAD, 0x02);
+
+		consolePrint("status1 = 0x%02x\n", status1);
+	}
+
+	// Clear HW_DR
+	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
+
+
+	//TODO: sleep
+
+
+	uint8_t fw_asic_id = readPinnacleReg(R_TRACKPAD, 0x00);
+
+	consolePrint("fw_asic_id = 0x%02x\n", fw_asic_id);
+
+	uint8_t fw_ver = readPinnacleReg(R_TRACKPAD, 0x01);
+
+	consolePrint("fw_ver = 0x%02x\n", fw_ver);
+
+	// Set undocument bit, normal mode, active, no reset
+	writePinnacleReg(R_TRACKPAD, 0x03, 0x08);
+
+
+	//TODO: sleep
+
+
+	// Clear HW_DR
+	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
+
+	// Enable Intellimouse, etc.
+	writePinnacleReg(R_TRACKPAD, 0x05, 0x00);
+
+	// FeedConfig3
+	writePinnacleReg(R_TRACKPAD, 0x06, 0x00);
+
+	// CalConfig1
+	writePinnacleReg(R_TRACKPAD, 0x07, 0x00);
+
+	// PS/2 Aux Control
+	writePinnacleReg(R_TRACKPAD, 0x08, 0x00);
+
+	return 0;
+
 //TODO
 	uint8_t data[5];
 
@@ -251,11 +311,32 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 	consolePrint("Firmware ID = 0x%02x\n", data[0]);
 	consolePrint("Firmware Version = 0x%02x\n\n", data[1]);
 
+	// Wait for trackpad to say it has new data
+	while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {
+		//consolePrint("DR Low for Right Trackpad\n");
+	}
+
+	// Clear Flags 
+	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
+	// Configures SysConfig1(normal mode, active)
+	writePinnacleReg(R_TRACKPAD, 0x03, 0x00);
+	// Configures FeedConfig2(disable relative mode features)
+	writePinnacleReg(R_TRACKPAD, 0x05, 0x1F);
+	// Configures FeedConfig1(absolute mode, enable feed)
+	writePinnacleReg(R_TRACKPAD, 0x04, 0x03);
+	// Configures Z-idle
+	writePinnacleReg(R_TRACKPAD, 0x0A, 0x05);
+
 // TODO: This shouldn't just lockup and loop like this... Provide exit capability (maybe even clearing/backspacing on screen to stop infinite scroll?)
 // 	This does seem to give sane data, but it is kind of sporadic (i.e. you might get no samples, even if finger is down).
 //	When samples are coming in data seems to track finger location properly. Probably more settings needed here for this to work better??
 //	(i.e. sensitivity or sample timing? Look into what might be going on here? Or maybe this has to do with pull-down on GPIO being too strong?)
+//
+// 	Ideas of where the problem lies:
+//		1. Bad Setup - Reverse engineering Valve's setup procedure for different modes (i.e. intellimouse)
+//		2. Printing is leading to too long a delay in handling new data which messes things up...
 while(1) {
+
 	// Wait for trackpad to say it has new data
 	while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {
 		//consolePrint("DR Low for Right Trackpad\n");

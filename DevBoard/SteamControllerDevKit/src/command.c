@@ -27,6 +27,9 @@
 
 #include "command.h"
 
+#include "chip.h"
+#include "gpio_11xx_1.h"
+
 #include "console.h"
 
 #include "eeprom_access.h"
@@ -42,6 +45,47 @@
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
+#define GPIO_HAPTICS_R 0, 18
+
+int hapticCmdFnc(int argc, const char* argv[]) {
+	if (argc != 4) {
+		consolePrint("Err: wrong # args\n");
+		return -1;
+	}
+
+	// Haptic enable?
+	Chip_GPIO_WritePortBit(LPC_GPIO, 1, 12, false);
+
+	Chip_GPIO_SetPinDIROutput(LPC_GPIO, 1, 12);
+
+	Chip_IOCON_PinMux(LPC_IOCON, 1, 12, IOCON_DIGMODE_EN, 
+		IOCON_FUNC0);
+
+	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_HAPTICS_R, false);
+
+	Chip_GPIO_SetPinDIROutput(LPC_GPIO, GPIO_HAPTICS_R);
+
+	Chip_IOCON_PinMux(LPC_IOCON, GPIO_HAPTICS_R, IOCON_DIGMODE_EN, 
+		IOCON_FUNC0);
+
+	// Haptic enable?
+	Chip_GPIO_WritePortBit(LPC_GPIO, 1, 7, false);
+
+	uint32_t on_len = strtol(argv[1], NULL, 0);
+	uint32_t off_len = strtol(argv[2], NULL, 0);
+	uint32_t rep_len = strtol(argv[3], NULL, 0);
+
+	for (int rep_cnt = 0; rep_cnt < rep_len; rep_cnt++) {
+		for (int on_cnt = 0; on_cnt < on_len; on_cnt++) {
+			Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_HAPTICS_R, true);
+		}
+
+		for (int off_cnt = 0; off_cnt < off_len; off_cnt++) {
+			Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_HAPTICS_R, false);
+		}
+	}
+}
+
 typedef struct {
 	const char* cmdName;
 	int (*cmdFnc)(int argc, const char* argv[]);
@@ -55,6 +99,7 @@ static Cmd cmds[] = {
 	{.cmdName = "adcRead", .cmdFnc = adcReadCmdFnc},
 	{.cmdName = "monitor", .cmdFnc = monitorCmdFnc},
 	{.cmdName = "trackpad", .cmdFnc = trackpadCmdFnc},
+	{.cmdName = "haptic", .cmdFnc = hapticCmdFnc},
 //TODO: organize into alphabetical order?
 //TODO: help fnc?
 };

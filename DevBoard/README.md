@@ -63,6 +63,9 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
+1. Create sleep function
+    1. Use CT16B0 like official Valve FW does?
+1. Now that we know PIO1_1 is active low enable of analog triggers (L = AD0 and R = AD2), clean up and organize!
 1. Get controller to act as PowerA wired
     1. Clean up naming in changes...
 1. Add details on different firmware build types (i.e. intentions and commands/control layouts)
@@ -72,6 +75,8 @@ This is a running list of items I would like to prioritize and not lose track
     1. Is this related to ADC IRQ always running?
     1. Is this related to monitor command lock up?
 1. Check clean build works (i.e. from fresh clone)
+1. Look into having USB UART CDC still be active for controller build... (This might not be possible. Need to learn more about USB in general I think...)
+    1. This could be an awesome debug option to be able plug controller into PC to get stats, etc. via UART after usage...
 1. (finish) ADC command
     1. Have it use interrupt like Valve's firmware does
         1. Make sure IRQ is not starving anything running in normal execution context (i.e. not IRQ)
