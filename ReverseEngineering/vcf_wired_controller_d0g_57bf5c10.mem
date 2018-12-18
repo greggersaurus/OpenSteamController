@@ -250,11 +250,15 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
  (uint8_t*) 0x10000200 - GPIO Bank/Group for TODO GPIO (PIO1_7)
  (uint8_t*) 0x10000201 - GPIO Number for TODO GPIO (PIO1_7)
+ (uint8_t*) 0x10000202 - Related to CT32B0/Haptics?
 
  (uint8_t*) 0x10000203 - GPIO Bank/Group for TODO (power related?) GPIO (PIO1_12)
  (uint8_t*) 0x10000204 - GPIO Bank/Group for TODO (power related?) GPIO (PIO0_18)
  (uint8_t*) 0x10000205 - GPIO Number for TODO (power related?) GPIO (PIO1_12)
  (uint8_t*) 0x10000206 - GPIO Number for TODO (power related?) GPIO (PIO0_18)
+
+(uint32_t*) 0x1000020c - Related to PIO0_12?
+(uint32_t*) 0x10000210 - Related to PIO0_12?
 
 
  (uint8_t*) 0x10000234 - Number of active haptics or haptics to configure.
@@ -465,10 +469,15 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
 (uint32_t*) 0x100007e8 - Related to CT16B0?
 
+(uint32_t*) 0x100007f0 - Related to CT32B0.
+
 (uint32_t*) 0x10000818 - Callback function for CT16B0. 
 
 
 (uint32_t*) 0x10000834 - Related to CT16B1 MR3??
+
+(uint32_t*) 0x1000083c - Callback related to CT32B0.
+(uint32_t*) 0x10000840 - Callback related to CT32B0.
 
 (uint32_t*) 0x10000858 - Callback[0] related to Joystick?
 (uint32_t*) 0x1000085c - Callback[1] related to Joystick?
@@ -821,6 +830,10 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 Controller Buttons?)
 (uint32_t*) 0x10000de4 - Fourth in array of function pointers (related to 
 			 Radio/USART?)
+(uint32_t*) 0x10000de8 - Fifth in array of function pointers (related to 
+			 CT32B0/Haptics)
+(uint32_t*) 0x10000dec - Sixth in array of function pointers (related to 
+			 TBD)
 
  (uint8_t*) 0x10000f00 - Circular USART TX Buffer[0]. Used to queue TX Data 
 			 for USART when USART (HW) TX FIFO is full?

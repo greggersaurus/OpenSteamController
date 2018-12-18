@@ -1938,17 +1938,38 @@ void fnc0x0000995c();
  */
 void fnc0x00008de4();
 
-// Function called from main loop if USB_Configure_Event has occurred? (Will do a whole lot of stuff (i.e. setup trackpads?)
+// Function called from main loop if USB_Configure_Event has occurred? (Setup trackpad ASIC, kickoff jingle, setup gyro/accelerometer?, and more...?)
 ?? fnc0x0000a8ac( arg0x0000a8ac_0, arg0x0000a8ac_1, arg0x0000a8ac_2, arg0x0000a8ac_3, arg0x0000a8ac_4, arg0x0000a8ac_5, arg0x0000a8ac_6, arg0x0000a8ac_12, )
 
-// Watchdog/powerdown related?
-?? fnc0x0000b9d0( arg0x0000b9d0_0, arg0x0000b9d0_1, arg0x0000b9d0_2, arg0x0000b9d0_3, arg0x0000b9d0_4, arg0x0000b9d0_5, arg0x0000b9d0_6, arg0x0000b9d0_12, )
+/**
+ * Power down watchdog.
+ *
+ * \return None.
+ */
+void fnc0x0000b9d0();
 
-// Power/battery check related?
-?? fnc0x00006f8c( arg0x00006f8c_0, arg0x00006f8c_1, arg0x00006f8c_2, arg0x00006f8c_3, arg0x00006f8c_4, arg0x00006f8c_5, arg0x00006f8c_6, arg0x00006f8c_12, )
+/**
+ * CT32B0/Haptics setup related?
+ * 
+ * \return None.
+ */
+void fnc0x00006f8c();
 
-// Setup callback for TODO purpose
-?? fnc0x000037c0( arg0x000037c0_0, arg0x000037c0_1, arg0x000037c0_2, arg0x000037c0_3, arg0x000037c0_4, arg0x000037c0_5, arg0x000037c0_6, arg0x000037c0_12, )
+/**
+ * Drive PIO1_7.
+ * 
+ * \param arg0x00005c40_0 Inverse of value to drive PIO1_7.
+ * 
+ * \return None.
+ */
+void fnc0x00005c40(arg0x00005c40_0);
+
+/**
+ * Setup callback for TODO purpose
+ * 
+ * \return None.
+ */
+void fnc0x000037c0();
 
 // Read EEPROM at offset 0x400 and fill in some SRAM based on values read?
 ?? fnc0x000038dc( arg0x000038dc_0, arg0x000038dc_1, arg0x000038dc_2, arg0x000038dc_3, arg0x000038dc_4, arg0x000038dc_5, arg0x000038dc_6, arg0x000038dc_12, )
@@ -1968,8 +1989,14 @@ void fnc0x00008de4();
 // Initialize both trackpads/haptics?
 ?? fnc0x000047a4( arg0x000047a4_0, arg0x000047a4_1, arg0x000047a4_2, arg0x000047a4_3, arg0x000047a4_4, arg0x000047a4_5, arg0x000047a4_6, arg0x000047a4_7, arg0x000047a4_12, )
 
-// CT16B0 sleep related
-?? fnc0x00009604( arg0x00009604_0, arg0x00009604_1, arg0x00009604_2, arg0x00009604_3, arg0x00009604_4, arg0x00009604_5, arg0x00009604_6, arg0x00009604_7, arg0x00009604_12, )
+/**
+ * CT16B0 sleep related (usleep or msleep type function maybe?).
+ *
+ * \param arg0x00009604_0 Related to time to sleep (us or ms maybe?)
+ *
+ * \return None.
+ */
+void fnc0x00009604(arg0x00009604_0);
 
 // Initialize Trackpad/Haptic?
 ?? fnc0x000074e8(arg0x000074e8_0)
