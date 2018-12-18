@@ -33,7 +33,7 @@ This sections details how the pins of the process are configured and (potentiall
 |             3 | PIO1_19               | PIO1_19          | In            | S18 - Steam button |
 |             4 | PIO0_0/nRESET         |                  |               | |
 |             5 | PIO0_1                |                  |               | Connected to S6 - RT (Right trigger digital) for purpose of enacting USB In-Systen Programming (i.e. update firwmare via "FAT" file system) |
-|             6 | PIO1_7                | PIO1_7           | Out           | Set as output GPIO and driven high during init (trace leads to... TODO). Haptics/CT32B0 related? |
+|             6 | PIO1_7                | PIO1_7           | Out           | Haptics enable (possibly). Set as output GPIO and driven high during init (trace leads to... TODO). Driven low later, during... haptics init? |
 |             7 | V<sub>SS</sub>        | V<sub>SS</sub>   | In            | V<sub>SS</sub> |
 |             8 | XTALIN                |                  |               | |
 |             9 | XTALOUT               |                  |               | |
@@ -86,9 +86,9 @@ This sections details how the pins of the process are configured and (potentiall
 |            56 | PIO0_23               | PIO0_23          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Right Trackpad/Haptic. |
 |            57 | PIO1_15               | PIO1_15          | Out           | Chip Select/SS for Right Trackpad/Haptic (active low) |
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
-|            59 | PIO1_12               | PIO1_12          | Out           | Haptics/CT32B0 related? Initially input. Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. Later set to output and driven low (before PIO0_18 is set to output and driven low). |
+|            59 | PIO1_12               | PIO1_12          | Out           | Haptics enable (possibly). Initially input. Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. Later set to output and driven low (before PIO0_18 is set to output and driven low). |
 |            60 | PIO0_17               | PIO0_17          | In            | S1 - A Button |
-|            61 | PIO0_18               | PIO0_18          | Out           | Haptics/CT32B0 related? Initially input (If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB))? Later output related to hatpics? | 
+|            61 | PIO0_18               | PIO0_18          | Out           | Left Haptic Activate. Toggle to generate vibrations (TODO: need better details on this). Initially input (If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB))? Later output related to hatpics? | 
 |            62 | PIO0_19               | PIO0_19          | Out           | Set as output during init and driven low. (trace leads to... TODO)|
 |            63 | PIO1_16               | PIO1_16          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Left Trackpad/Haptic. |
 |            64 | PIO1_6                | PIO1_6           | Out           | Chip Select/SS for Left Trackpad/Haptic (active low) |

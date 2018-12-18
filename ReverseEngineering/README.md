@@ -25,9 +25,9 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Dig through function that seems to be related to jingle (fnc0x00003934, fnc0x000079b0)
-    1. Looks like GPIO0_18 is related to haptics somehow?
-        1. Ohm it out!
-        1. Maybe need to get Trackpad ASIC setup before haptics work???
+    1. GPIO0_18 is activate for left haptic
+        1. Understand how PIO1_7 and PIO1_12 are enables (or not)
+        1. What about right haptic?
     1. Need to simulate CT32B0 IRQ to figure out what actually makes haptic vibrate?
         1. Make sure this gets captured appropriately in vcf_wired_controller_d0g_57bf5c10.c
         1. Look back through PIO0_18 being set as input and being read...
