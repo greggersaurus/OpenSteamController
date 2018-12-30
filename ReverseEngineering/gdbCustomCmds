@@ -922,6 +922,14 @@ define check_ct32b0_irq_fire
 		set $lr = $pc
 		set $pc = 0x000001b0
 
+		# Indicate which MR has caused interrupt 
+		# MR1 = right haptic
+		set {int}0x40014000 = 0x2
+		# MR2 = left haptic
+		##set {int}0x40014000 = 0x4
+
+##TODO: add special cases for handling clearing of interrupts?? 
+
 		echo \n
 		echo HANDLED Return from fnc0x00007a10(): CT32B0 Interrupt Handler Jump \n
 		echo \n

@@ -2068,9 +2068,15 @@ void fnc0x00009604(arg0x00009604_0);
 // CT32B0 Interrupt Handler?
 ?? fnc0x00009d2c( arg0x00009d2c_0, arg0x00009d2c_1, arg0x00009d2c_2, arg0x00009d2c_3, arg0x00009d2c_4, arg0x00009d2c_5, arg0x00009d2c_6, arg0x00009d2c_12, )
 
-// CT32B0 Interrupt Handler related?
+// CT32B0 Interrupt Handler related (callback called by interrupt handler?)?
 ?? fnc0x00006130( arg0x00006130_0, arg0x00006130_1, arg0x00006130_2, arg0x00006130_3, arg0x00006130_4, arg0x00006130_5, arg0x00006130_6, arg0x00006130_12, )
 
+// Related to right haptics interrupt handling (i.e. CT32B0 MR1)
+?? fnc0x00006eb2( arg0x00006eb2_0, arg0x00006eb2_1, arg0x00006eb2_2, arg0x00006eb2_3, arg0x00006eb2_4, arg0x00006eb2_5, arg0x00006eb2_6, arg0x00006eb2_12, )
+
+// Related to right haptics interrupt handling (i.e. CT32B0 MR2)
 ?? fnc0x00006ebe( arg0x00006ebe_0, arg0x00006ebe_1, arg0x00006ebe_2, arg0x00006ebe_3, arg0x00006ebe_4, arg0x00006ebe_5, arg0x00006ebe_6, arg0x00006ebe_12, )
 
+// Generic function for toggling GPIO for haptics
 ?? fnc0x00006ecc( arg0x00006ecc_0, arg0x00006ecc_1, arg0x00006ecc_2, arg0x00006ecc_3, arg0x00006ecc_4, arg0x00006ecc_5, arg0x00006ecc_6, arg0x00006ecc_12, )
+
