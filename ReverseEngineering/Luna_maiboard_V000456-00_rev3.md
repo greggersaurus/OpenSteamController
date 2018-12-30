@@ -110,9 +110,9 @@ This section details what peripherals are used for on this processor.
 * 16-bit counter/timer 1 (CT16B1)
     * PWM for controlling Steam Button LED brightness.
 * 32-bit counter/timer 0 (CT32B0)
-    * Related to haptics (and jingle)?
-    * MR1 related to right haptic
-    * MR2 related to left haptic
+    * Related to haptics (and jingle)
+    * MR1 related to right haptic (PIO1_12)
+    * MR2 related to left haptic (PIO0_18)
 * 32-bit counter/timer 1 (CT32B1)
     * Unused?
 * ADC

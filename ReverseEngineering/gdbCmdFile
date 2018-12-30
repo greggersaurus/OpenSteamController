@@ -223,7 +223,7 @@ set {int}0x50001048 = 0
 set {char}0x50000014 = 1
 set {int}0x50001050 = 0xffffffff
 
-# PIO0_23: Connected to Data Ready on Right Trackpad/Haptic?
+# PIO0_23: Connected to Data Ready on Right Trackpad ASIC
 set {char}0x50000017 = 1
 set {int}0x5000105c = 0xffffffff
 
@@ -271,7 +271,7 @@ set {int}0x500010b4 = 0xffffffff
 set {char}0x5000002e = 1
 set {int}0x500010b8 = 0xffffffff
 
-# PIO1_16: Connected to Data Ready on Left Trackpad/Haptic.
+# PIO1_16: Connected to Data Ready on Left Trackpad ASIC
 set {char}0x50000030 = 1
 set {int}0x500010c0 = 0xffffffff
 
@@ -1084,7 +1084,7 @@ else
 			set $wr_cntr = $wr_cntr + 1
 
 			echo \n
-			echo Waiting for Right Haptic ASIC Register Write of 6 in to finish fnc0x00002d9c() and then some other stuff \n
+			echo Waiting for Right Trackpad ASIC Register Write of 6 in to finish fnc0x00002d9c() and then some other stuff \n
 			echo \n
 
 			# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit

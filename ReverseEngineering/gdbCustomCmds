@@ -867,9 +867,9 @@ end
 
 ##
 # This command handles simulating through function that is expecting PINT3/4 to
-#	fire fnc0x0000b97c(). These IRQs are related to Right and Left Haptics 
+#	fire fnc0x0000b97c(). These IRQs are related to Right and Left Trackpad
 #	ASIC respectively. This may be related to calibrating the EMI settings 
-#	for the haptics so that they trigger properly (i.e. on finger down, etc.)
+#	for the Trackpad ASICs so that they trigger properly (i.e. on finger down, etc.)
 define check_trackpad_asic_dr_interrupts
 	# Check if we stopped at entry to fnc0x0000b97c(), which is waiting for
 	#  either PINT3 or PINT4 to fire to get trackpad ASIC update data

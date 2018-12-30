@@ -182,6 +182,11 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000062 - Bank/Group for TODO GPIO (PIO1_8) (Radio/USART?)
  (uint8_t*) 0x10000063 - GPIO Number for TODO Power GPIO (PIO1_8) (Radio/USART?)
 
+ (uint8_t*) 0x10000068 - Related to right haptic and end of haptic pulse?
+ (uint8_t*) 0x10000069 - Related to left haptic and ending of haptic pulse?
+
+(uint32_t*) 0x1000006c - Related to right haptic and end of haptic pulse?
+(uint32_t*) 0x10000070 - Related to left haptic and ending of haptic pulse?
  (uint8_t*) 0x10000074 - Related to USB being connected or maybe WWDT? Flag set
 			 by SysTick handler after a certain number of 
 			 executions.
@@ -231,62 +236,66 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 Pointer to store xfer when bus is busy
 (uint32_t*) 0x100000c0 - static struct i2c_interface i2c[0].flags
 			 Flags used by I2C master and slave
- (uint8_t*) 0x100000c4 - Value written to register 0x05 of Right Haptic ASIC
- (uint8_t*) 0x100000c5 - Value written to register 0x06 of Right Haptic ASIC
- (uint8_t*) 0x100000c6 - Value written to register 0x07 of Right Haptic ASIC
- (uint8_t*) 0x100000c7 - Value written to register 0x08 of Right Haptic ASIC
- (uint8_t*) 0x100000c8 - Value written to register 0x09 of Right Haptic ASIC
- (uint8_t*) 0x100000c9 - Value written to register 0x13 of Right Haptic ASIC
- (uint8_t*) 0x100000ca - Value written to register 0x14 of Right Haptic ASIC
- (uint8_t*) 0x100000cb - Value written to register 0x15 of Right Haptic ASIC
- (uint8_t*) 0x100000cc - Value written to register 0x16 of Right Haptic ASIC
- (uint8_t*) 0x100000cd - Value written to register 0x17 of Right Haptic ASIC
- (uint8_t*) 0x100000ce - Value written to register 0x18 of Right Haptic ASIC
- (uint8_t*) 0x100000cf - Value written to register 0x19 of Right Haptic ASIC
- (uint8_t*) 0x100000d0 - Value written to register 0x1a of Right Haptic ASIC
- (uint8_t*) 0x100000d1 - Value written to register 0x0a of Right Haptic ASIC
- (uint8_t*) 0x100000d2 - Value written to register 0x0b of Right Haptic ASIC
- (uint8_t*) 0x100000d3 - Value written to register 0x0e of Right Haptic ASIC?
+ (uint8_t*) 0x100000c4 - Value written to register 0x05 of Right Trackpad ASIC
+ (uint8_t*) 0x100000c5 - Value written to register 0x06 of Right Trackpad ASIC
+ (uint8_t*) 0x100000c6 - Value written to register 0x07 of Right Trackpad ASIC
+ (uint8_t*) 0x100000c7 - Value written to register 0x08 of Right Trackpad ASIC
+ (uint8_t*) 0x100000c8 - Value written to register 0x09 of Right Trackpad ASIC
+ (uint8_t*) 0x100000c9 - Value written to register 0x13 of Right Trackpad ASIC
+ (uint8_t*) 0x100000ca - Value written to register 0x14 of Right Trackpad ASIC
+ (uint8_t*) 0x100000cb - Value written to register 0x15 of Right Trackpad ASIC
+ (uint8_t*) 0x100000cc - Value written to register 0x16 of Right Trackpad ASIC
+ (uint8_t*) 0x100000cd - Value written to register 0x17 of Right Trackpad ASIC
+ (uint8_t*) 0x100000ce - Value written to register 0x18 of Right Trackpad ASIC
+ (uint8_t*) 0x100000cf - Value written to register 0x19 of Right Trackpad ASIC
+ (uint8_t*) 0x100000d0 - Value written to register 0x1a of Right Trackpad ASIC
+ (uint8_t*) 0x100000d1 - Value written to register 0x0a of Right Trackpad ASIC
+ (uint8_t*) 0x100000d2 - Value written to register 0x0b of Right Trackpad ASIC
+ (uint8_t*) 0x100000d3 - Value written to register 0x0e of Right Trackpad ASIC?
 
- (uint8_t*) 0x10000200 - GPIO Bank/Group for TODO GPIO (PIO1_7)
- (uint8_t*) 0x10000201 - GPIO Number for TODO GPIO (PIO1_7)
+ (uint8_t*) 0x10000200 - GPIO Bank/Group for Haptic Enable GPIO (PIO1_7)
+ (uint8_t*) 0x10000201 - GPIO Number for Haptic Enable GPIO (PIO1_7)
  (uint8_t*) 0x10000202 - Related to CT32B0/Haptics?
+ (uint8_t*) 0x10000203 - GPIO Bank/Group for Right Haptic GPIO (PIO1_12)
+ (uint8_t*) 0x10000204 - GPIO Bank/Group for Left Haptic GPIO (PIO0_18)
+ (uint8_t*) 0x10000205 - GPIO Number for Right Haptic GPIO (PIO1_12)
+ (uint8_t*) 0x10000206 - GPIO Number for Left Haptic GPIO (PIO0_18)
 
- (uint8_t*) 0x10000203 - GPIO Bank/Group for TODO (power related?) GPIO (PIO1_12)
- (uint8_t*) 0x10000204 - GPIO Bank/Group for TODO (power related?) GPIO (PIO0_18)
- (uint8_t*) 0x10000205 - GPIO Number for TODO (power related?) GPIO (PIO1_12)
- (uint8_t*) 0x10000206 - GPIO Number for TODO (power related?) GPIO (PIO0_18)
+(uint32_t*) 0x1000020c - Related to Right Haptic, CT32B0:MR1, PIO1_12. Count related to how long current pulse pattern should continue?
+(uint32_t*) 0x10000210 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Count related to how long current pulse pattern should continue?
+(uint32_t*) 0x10000214 - Related to Right Haptic, CT32B0:MR1, PIO1_12. Checked only if GPIO is low on interrupt. Count related to how long GPIO should be set high?
+(uint32_t*) 0x10000218 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Check only if GPIO is low on interrupt. Count related to how long GPIO should be set high?
+(uint32_t*) 0x1000021c - Related to Right Haptic, CT32B0:MR1, PIO1_12. Count related to how long GPIO should be set low?
+(uint32_t*) 0x10000220 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Count related to how long GPIO should be set low?
+(uint32_t*) 0x10000214 - Related to Right Haptic, CT32B0:MR1, PIO1_12. Related to ending of haptic pulse?
+(uint32_t*) 0x10000228 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Related to ending of haptic pulse?
 
-(uint32_t*) 0x1000020c - Related to PIO0_12?
-(uint32_t*) 0x10000210 - Related to PIO0_12?
-
-
- (uint8_t*) 0x10000234 - Number of active haptics or haptics to configure.
+ (uint8_t*) 0x10000234 - Number of Trackpad ASICs to configure.
 			 Related to SSP0. Copy of 0x20000002.
 
  (uint8_t*) 0x10000236 - Bit number for SSP0 SYSAHBCLKCTRL clock enable/disable.
 
- (uint8_t*) 0x1000023a - GPIO group/port for Right Haptic Chip Select (PIO1_15).
- (uint8_t*) 0x1000023b - GPIO group/port for Left Haptic Chip Select (PIO1_6).
- (uint8_t*) 0x1000023c - GPIO number/offset for Right Haptic Chip Selet (PIO1_15).
- (uint8_t*) 0x1000023d - GPIO number/offset for Left Haptic Chip Selet (PIO1_6).
- (uint8_t*) 0x1000023e - GPIO group/port for Right Haptic Data Ready (PIO0_23).
- (uint8_t*) 0x1000023f - GPIO group/port for Left Haptic Data Ready (PIO1_16)?
- (uint8_t*) 0x10000240 - GPIO number/offset for Right Haptic Data Ready (PIO0_23).
- (uint8_t*) 0x10000241 - GPIO number/offset for Left Haptic Data Ready (PIO1_16)?
+ (uint8_t*) 0x1000023a - GPIO group/port for Right Trackpad ASIC Chip Select (PIO1_15).
+ (uint8_t*) 0x1000023b - GPIO group/port for Left Trackpad ASIC Chip Select (PIO1_6).
+ (uint8_t*) 0x1000023c - GPIO number/offset for Right Trackpad ASIC Chip Selet (PIO1_15).
+ (uint8_t*) 0x1000023d - GPIO number/offset for Left Trackpad ASIC Chip Selet (PIO1_6).
+ (uint8_t*) 0x1000023e - GPIO group/port for Right Trackpad ASIC Data Ready (PIO0_23).
+ (uint8_t*) 0x1000023f - GPIO group/port for Left Trackpad ASIC Data Ready (PIO1_16)?
+ (uint8_t*) 0x10000240 - GPIO number/offset for Right Trackpad ASIC Data Ready (PIO0_23).
+ (uint8_t*) 0x10000241 - GPIO number/offset for Left Trackpad ASIC Data Ready (PIO1_16)?
  (uint8_t*) 0x10000242 - PINT3 related? Enable for reading ASIC registers 0x11
 			 and 0x12 maybe?
 
- (uint8_t*) 0x10000246 - PINT3/Right Haptic ASIC related. Counts how many times
+ (uint8_t*) 0x10000246 - PINT3/Right Trackpad ASIC related. Counts how many times
 			 times ASIC registers 0x11 and 0x12 are read. Counts
 			 up to 10.
 
  (uint8_t*) 0x1000024a - Flag related to PINT3 (PIO0_23 - DR for Right Hatpci)?
 
- (uint8_t*) 0x1000024c - Flag related to PINT3/Right Haptic ASIC. Set after a 
+ (uint8_t*) 0x1000024c - Flag related to PINT3/Right Trackpad ASIC. Set after a 
 			 certain number (10?) of runs of PINT3.
 
- (uint8_t*) 0x1000024e - PINT3/Right Haptic ASIC related?
+ (uint8_t*) 0x1000024e - PINT3/Right Trackpad ASIC related?
 
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
@@ -1236,9 +1245,9 @@ TODO: fill in each word/byte between
  (uint8_t*) 0x10001756 - Button Index for ?? (Not configured...?)
 			 See arg0x00009e08_0 for details on Button Index.
 
-  (int8_t*) 0x20000000 - Related to Haptics/SSP0?
+  (int8_t*) 0x20000000 - Related to Trackpad ASIC/SSP0?
 
- (uint8_t*) 0x20000002 - Number of active haptics or haptics to configure.
+ (uint8_t*) 0x20000002 - Number of active Trackpad ASICs to configure.
 			 Related to SSP0
 
  (uint8_t*) 0x20000005 - EP2 related?

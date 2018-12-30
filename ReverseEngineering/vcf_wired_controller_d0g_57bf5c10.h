@@ -144,6 +144,8 @@ void fnc0x00000f90(arg0x00000f90_0);
  *  memory is filled via constant data from value stored in code, other times
  *  it is zeroed.
  *
+ * TODO: This might be where default jingles are read from flash into RAM.
+ *
  * \param arg0x00002a2a_0 Base address of non-zero constant values to write.
  * \param arg0x00002a2a_1 Base addess of RAM to initialize.
  * \param arg0x00002a2a_2 Number of bytes to write.
@@ -527,7 +529,7 @@ void fnc0x00007c90();
 
 /**
  * Peripheral initialization (i.e. BOD, peripheral control related GPIOs, 
- *	Steam Button LED Control, CT16B0, Haptics (via SPI), 
+ *	Steam Button LED Control, CT16B0, Trackpad ASICs (via SPI), Haptics, 
  *	MPU-6500 gyo/accelerometer, ADC channel for power related stuff, 
  *	ADC channels for analog triggers (maybe?), ADC channels for analog 
  *	Joystick
@@ -883,19 +885,20 @@ void fnc0x0000a0fc(arg0x0000a0fc_0, arg0x0000a0fc_1, arg0x0000a0fc_2, arg0x0000a
 void fnc0x00004574(arg0x00004574_0);
 
 /**
- * Initialize comms to trackpad/haptics and place in shutdown mode
+ * Initialize comms to Trackpad ASICs and place in shutdown mode
  * 
  * \return None.
  */
 void fnc0x0000a388();
 
 /**
- * Initialize comms to specified number of haptics/trackpads and place all in shutdown mode
+ * Initialize comms to specified number of Trackpad ASICs and place all in 
+ * shutdown mode.
  */
 void fnc0x000048bc(arg0x000048bc_0);
 
 /**
- * Configure SSP0 for haptics communications and enable for polling mode 
+ * Configure SSP0 for Trackpad ASIC communications and enable for polling mode 
  *  (i.e. interrupts not enabled)
  *
  * \return None.
@@ -936,9 +939,9 @@ void fnc0x0000445c(arg0x0000445c_0, arg0x0000445c_1);
 void fnc0x000044b4(arg0x000044b4_0, arg0x000044b4_1, arg0x000044b4_2);
 
 /**
- * Configure Chip Select and Data Ready pins for specified haptic.
+ * Configure Chip Select and Data Ready pins for specified Trackpad ASIC.
  *
- * \param arg0x00007498_0 Specifies which haptic to configure 0 = Right,
+ * \param arg0x00007498_0 Specifies which Trackpad ASIC to configure 0 = Right,
  *	1 = Left.
  *
  * \return None.
@@ -946,9 +949,9 @@ void fnc0x000044b4(arg0x000044b4_0, arg0x000044b4_1, arg0x000044b4_2);
 void fnc0x00007498(arg0x00007498_0);
 
 /**
- * Write to trackpad/haptics controller (i.e. Cirque Pinnacle ASIC) register
+ * Write to Trackpad ASIC register
  *
- * \param arg0x00004c7e_0 Specifies which haptic to configure 0 = Right,
+ * \param arg0x00004c7e_0 Specifies which Trackpad ASIC to configure 0 = Right,
  *	1 = Left.
  * \param arg0x00004c7e_1 Cirque Pinnacle ASIC register to write to.
  * \param arg0x00004c7e_2 Cirque Pinnacle ASIC register value to be written.
@@ -958,11 +961,11 @@ void fnc0x00007498(arg0x00007498_0);
 void fnc0x00004c7e(arg0x00004c7e_0, arg0x00004c7e_1, arg0x00004c7e_2);
 
 /**
- * Enable communications to given haptic (i.e. pull chip select low, disable
+ * Enable communications to given Trackpad ASIC (i.e. pull chip select low, disable
  *  interrupts, enable clock for SSP0 and increment 0x10000340 (i.e. mutex or
  *  counting semaphore).
  *
- * \param arg0x00009840_0 Specifies which haptic to configure 0 = Right,
+ * \param arg0x00009840_0 Specifies which Trackpad ASIC to configure 0 = Right,
  *	1 = Left.
  *
  * \return None.
@@ -983,11 +986,11 @@ void fnc0x00009840(arg0x00009840_0);
 uint32_t fnc0x00008efc(arg0x00008efc_0);
 
 /**
- * Disable communications to given haptic (i.e. pull chip select high, enable 
+ * Disable communications to given Trackpad ASIC (i.e. pull chip select high, enable 
  *  interrupts, disable clock for SSP0 and decrement 0x10000340 (i.e. mutex or
  *  counting semaphore). Effectively inverse of fnc0x00009840().
  *
- * \param arg0x0000991c_0 Specifies which haptic to configure 0 = Right,
+ * \param arg0x0000991c_0 Specifies which Trackpad ASIC to configure 0 = Right,
  *	1 = Left.
  *
  * \return None.
@@ -1977,7 +1980,7 @@ void fnc0x000037c0();
 // Fill in some SRAM (related to EEPROM read of offset 0x400?)
 ?? fnc0x000065c0( arg0x000065c0_0, arg0x000065c0_1, arg0x000065c0_2, arg0x000065c0_3, arg0x000065c0_4, arg0x000065c0_5, arg0x000065c0_6, arg0x000065c0_12, )
 
-// Even high level function for trackpad/haptics init?
+// Even high level function for Trackpad ASIC init?
 ?? fnc0x0000a308( arg0x0000a308_0, arg0x0000a308_1, arg0x0000a308_2, arg0x0000a308_3, arg0x0000a308_4, arg0x0000a308_5, arg0x0000a308_6, arg0x0000a308_12, )
 
 // Initialize some SRAM1 variables
@@ -1986,7 +1989,7 @@ void fnc0x000037c0();
 // Initialize some SRAM1 variables
 ?? fnc0x00005eb8( arg0x00005eb8_0, arg0x00005eb8_1, arg0x00005eb8_2, arg0x00005eb8_3, arg0x00005eb8_4, arg0x00005eb8_5, arg0x00005eb8_6, arg0x00005eb8_7, arg0x00005eb8_12, )
 
-// Initialize both trackpads/haptics?
+// Initialize both Trackpad ASICs?
 ?? fnc0x000047a4( arg0x000047a4_0, arg0x000047a4_1, arg0x000047a4_2, arg0x000047a4_3, arg0x000047a4_4, arg0x000047a4_5, arg0x000047a4_6, arg0x000047a4_7, arg0x000047a4_12, )
 
 /**
@@ -1998,7 +2001,7 @@ void fnc0x000037c0();
  */
 void fnc0x00009604(arg0x00009604_0);
 
-// Initialize Trackpad/Haptic?
+// Initialize Trackpad ASIC?
 ?? fnc0x000074e8(arg0x000074e8_0)
 
 // Trackpad ASIC Register Read
@@ -2074,9 +2077,14 @@ void fnc0x00009604(arg0x00009604_0);
 // Related to right haptics interrupt handling (i.e. CT32B0 MR1)
 ?? fnc0x00006eb2( arg0x00006eb2_0, arg0x00006eb2_1, arg0x00006eb2_2, arg0x00006eb2_3, arg0x00006eb2_4, arg0x00006eb2_5, arg0x00006eb2_6, arg0x00006eb2_12, )
 
-// Related to right haptics interrupt handling (i.e. CT32B0 MR2)
+// Related to left haptics interrupt handling (i.e. CT32B0 MR2)
 ?? fnc0x00006ebe( arg0x00006ebe_0, arg0x00006ebe_1, arg0x00006ebe_2, arg0x00006ebe_3, arg0x00006ebe_4, arg0x00006ebe_5, arg0x00006ebe_6, arg0x00006ebe_12, )
 
 // Generic function for toggling GPIO for haptics
 ?? fnc0x00006ecc( arg0x00006ecc_0, arg0x00006ecc_1, arg0x00006ecc_2, arg0x00006ecc_3, arg0x00006ecc_4, arg0x00006ecc_5, arg0x00006ecc_6, arg0x00006ecc_12, )
 
+// Related to Haptics/CT32B0 Interrupt handler and switching/ending of pulse being sent to haptic via GPIO
+?? fnc0x000079f0( arg0x000079f0_0, arg0x000079f0_1, arg0x000079f0_2, arg0x000079f0_3, arg0x000079f0_4, arg0x000079f0_5, arg0x000079f0_6, arg0x000079f0_7, arg0x000079f0_12, )
+
+// Related to Haptics/CT32B0 Interrupt handler and switching/ending of pulse being sent to haptic via GPIO
+?? fnc0x00003894( arg0x00003894_0, arg0x00003894_1, arg0x00003894_2, arg0x00003894_3, arg0x00003894_4, arg0x00003894_5, arg0x00003894_6, arg0x00003894_7, arg0x00003894_12, )

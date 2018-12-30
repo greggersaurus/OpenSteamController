@@ -24,6 +24,9 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Find where default jingle data is read from flash and written into RAM
+    1. void fnc0x00002a2a(arg0x00002a2a_0, arg0x00002a2a_1, arg0x00002a2a_2);
+    1. Also track down implication that non-default jingle could exist in EEPROM
 1. Dig through function that seems to be related to jingle (fnc0x00003934, fnc0x000079b0)
     1. GPIO0_18 is activate for left haptic
         1. Understand how PIO1_7 and PIO1_12 are enables (or not)
