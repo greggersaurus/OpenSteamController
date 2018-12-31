@@ -24,6 +24,12 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Need more details on jingle and interrupt
+    1. Start filling out paths on CT32B0 interrupt code
+    1. Track down how interrupt handler transitions from one pulse to next
+        1. How does it know where to get pulse info from next?
+        1. How does it know when to stop?
+        1. What about this business of checking if the other haptic is active? (what if it isn't?!)
 1. Find where default jingle data is read from flash and written into RAM
     1. void fnc0x00002a2a(arg0x00002a2a_0, arg0x00002a2a_1, arg0x00002a2a_2);
     1. Also track down implication that non-default jingle could exist in EEPROM

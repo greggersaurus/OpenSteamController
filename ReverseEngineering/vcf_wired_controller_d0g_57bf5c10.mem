@@ -26,6 +26,18 @@
  * SOFTWARE.
  */
 
+Jingle Memory Breakdown (TODO:WIP):
+	Each jingle has separate notes for left and right haptics
+	Each "note" is 6 bytes
+		uint8_t Related to width of high portion of pulse?
+		uint8_t UNUSED
+		uint16_t (bytes are swapped) Related to width of low portion of pulse?
+		uint16_t (bytes are swapped) Duration of note in TODO units
+	1st 16-bit word is number of notes in Right Jingle (bytes are swapped)
+	2nd 16-bit word is number of notes in Left Jingle (bytes are swapped)
+	Next byte is start of Note[0] for Right Jingle
+	
+
 USB_HID0 HID Report Descriptor (len 0x41):
 0x0000eeaa - 0x0000eeea
 	 HID_UsagePage(HID_USAGE_PAGE_GENERIC)
@@ -182,8 +194,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000062 - Bank/Group for TODO GPIO (PIO1_8) (Radio/USART?)
  (uint8_t*) 0x10000063 - GPIO Number for TODO Power GPIO (PIO1_8) (Radio/USART?)
 
- (uint8_t*) 0x10000068 - Related to right haptic and end of haptic pulse?
- (uint8_t*) 0x10000069 - Related to left haptic and ending of haptic pulse?
+ (uint8_t*) 0x10000068 - Related to right haptic and end of haptic pulse? Flag to indicate pulse/tone is currently being output?
+ (uint8_t*) 0x10000069 - Related to left haptic and ending of haptic pulse? Flag to indicate pulse/tone is currently being output?
 
 (uint32_t*) 0x1000006c - Related to right haptic and end of haptic pulse?
 (uint32_t*) 0x10000070 - Related to left haptic and ending of haptic pulse?
@@ -260,6 +272,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000204 - GPIO Bank/Group for Left Haptic GPIO (PIO0_18)
  (uint8_t*) 0x10000205 - GPIO Number for Right Haptic GPIO (PIO1_12)
  (uint8_t*) 0x10000206 - GPIO Number for Left Haptic GPIO (PIO0_18)
+ (uint8_t*) 0x10000207 - Related to Right Haptic?
+ (uint8_t*) 0x10000208 - Related to Left Haptic?
 
 (uint32_t*) 0x1000020c - Related to Right Haptic, CT32B0:MR1, PIO1_12. Count related to how long current pulse pattern should continue?
 (uint32_t*) 0x10000210 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Count related to how long current pulse pattern should continue?
@@ -475,6 +489,13 @@ USB_HID2 HID Report Descriptor (len 0x21):
 					     */
 (uint32_t*) 0x10000394 - USB_HID_REPORT_T field for HID EP3
 			  uint8_t* desc; /**< Report descriptor. */
+
+(uint32_t*) 0x100003a4 - Related to haptics?
+(uint16_t*) 0x100003a8 - Index of note in jingle currently being played on right haptic.
+(uint16_t*) 0x100003aa - Index of note in jingle currently being played on left haptic.
+
+(uint32_t*) 0x100003b0 - Stores base address for notes of selected Right Haptic Jingle
+(uint32_t*) 0x100003b4 - Stores base address for notes of selected Left Haptic Jingle
 
 (uint32_t*) 0x100007e8 - Related to CT16B0?
 
@@ -1148,6 +1169,16 @@ struct EP3UpdateMsg { // This is a copy of last update message sent
 			 is value 0xbe.
 			 If EEPROM data reads zeros this is set to 0x100003b9.
  (uint8_t*) 0x10001202 - EEPROM Read Data 0x802 - Uknown purpose.
+
+TODO: fill in each word/byte between
+
+(uint16_t*) 0x100012de - EEPROM Read Data 0x8de or 0x10000496 (If EEPROM data is invalid) - Number of notes in Right Jingle[2]. (bytes are swapped)
+(uint16_t*) 0x100012e0 - EEPROM Read Data 0x8de or 0x10000498 (If EEPROM data is invalid) - Number of notes in Left Jingle[2]. (bytes are swapped)
+    (Note*) 0x100012e2 - EEPROM Read Data 0x8e2 or 0x1000049a (If EEPROM data is invalid) - Note[0] for Right Jingle[2]
+    (Note*) 0x100012e8 - EEPROM Read Data 0x8e8 or 0x100004a0 (If EEPROM data is invalid) - Note[1] for Right Jingle[2]
+
+    (Note*) 0x1000131e - EEPROM Read Data 0x91e or 0x100004d6 (If EEPROM data is invalid) - Note[0] for Left Jingle[2]
+    (Note*) 0x10001324 - EEPROM Read Data 0x924 or 0x100004dc (If EEPROM data is invalid) - Note[1] for Left Jingle[2]
 
 TODO: fill in each word/byte between
 

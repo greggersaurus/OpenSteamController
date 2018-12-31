@@ -2062,8 +2062,16 @@ void fnc0x00009604(arg0x00009604_0);
 // Related to playing jingle via haptics???
 ?? fnc0x00003934( arg0x00003934_0, arg0x00003934_1, arg0x00003934_2, arg0x00003934_3, arg0x00003934_4, arg0x00003934_5, arg0x00003934_6, arg0x00003934_12, )
 
-// Related to jingle via haptics...?
+// Related to jingle via haptics...? (setup next pulse/tone to be output?)
 ?? fnc0x000079b0( arg0x000079b0_0, arg0x000079b0_1, arg0x000079b0_2, arg0x000079b0_3, arg0x000079b0_4, arg0x000079b0_5, arg0x000079b0_6, arg0x000079b0_7, arg0x000079b0_12, )
+
+// Related to jingle via haptics?
+// Setup note to be played
+// \param arg0x000037fc_0 Indicates which haptic
+// \param arg0x000037fc_1 byte[0] of note to be played
+// \param arg0x000037fc_2 byte[3] and byte[2] of note to be played
+// \param arg0x000037fc_2 byte[5] and byte[4] of note to be played
+?? fnc0x000037fc( arg0x000037fc_0, arg0x000037fc_1, arg0x000037fc_2, arg0x000037fc_3, arg0x000037fc_4, arg0x000037fc_5, arg0x000037fc_6, arg0x000037fc_7, arg0x000037fc_12, )
 
 // Function called on connect (USB or Radio?). Stop LED from blinking and play startup jingle?
 ?? fnc0x00007a10( arg0x00007a10_0, arg0x00007a10_1, arg0x00007a10_2, arg0x00007a10_3, arg0x00007a10_4, arg0x00007a10_5, arg0x00007a10_6, arg0x00007a10_12, )
