@@ -1162,29 +1162,43 @@ struct EP3UpdateMsg { // This is a copy of last update message sent
 (uint16_t*) 0x1000117e - See struct EP3UpdateMsg at 0x10001100 for details.
 }
 
- (uint8_t*) 0x10001200 - EEPROM Read Data 0x800 - Uknown purpose. Checked if
-			 is value 0xad.
-			 If EEPROM data reads zeros this is set to 0x100003b8.
- (uint8_t*) 0x10001201 - EEPROM Read Data 0x801 - Uknown purpose. Checked if
-			 is value 0xbe.
-			 If EEPROM data reads zeros this is set to 0x100003b9.
- (uint8_t*) 0x10001202 - EEPROM Read Data 0x802 - Uknown purpose.
+struct JingleData {
+(uint16_t*) 0x10001200 - Stores Magic Word (0xbead).
+			 If Magic Word matches indicates this data is Jingle 
+			 Data (i.e. when read from EEPROM).
+			 (bytes are swapped).
+			 EEPROM 0x800 or 0x100003b8 (If EEPROM data is invalid).
 
-TODO: fill in each word/byte between
+ (uint8_t*) 0x10001204 - Number of Jingles in JingleData.
+			 EEPROM 0x804 or 0x100003bc (If EEPROM data is invalid).
 
-(uint16_t*) 0x100012de - EEPROM Read Data 0x8de or 0x10000496 (If EEPROM data is invalid) - Number of notes in Right Jingle[2]. (bytes are swapped)
-(uint16_t*) 0x100012e0 - EEPROM Read Data 0x8de or 0x10000498 (If EEPROM data is invalid) - Number of notes in Left Jingle[2]. (bytes are swapped)
-    (Note*) 0x100012e2 - EEPROM Read Data 0x8e2 or 0x1000049a (If EEPROM data is invalid) - Note[0] for Right Jingle[2]
-    (Note*) 0x100012e8 - EEPROM Read Data 0x8e8 or 0x100004a0 (If EEPROM data is invalid) - Note[1] for Right Jingle[2]
+(uint16_t*) 0x10001206 - Byte offset of Jingle[0] from beginning of JingleData.
+			 EEPROM 0x806 or 0x100003be (If EEPROM data is invalid).
+(uint16_t*) 0x10001208 - Byte offset of Jingle[1] from beginning of JingleData.
+			 EEPROM 0x808 or 0x100003c0 (If EEPROM data is invalid).
+(uint16_t*) 0x1000120a - Byte offset of Jingle[2] from beginning of JingleData.
+			 EEPROM 0x80a or 0x100003c2 (If EEPROM data is invalid).
 
-    (Note*) 0x1000131e - EEPROM Read Data 0x91e or 0x100004d6 (If EEPROM data is invalid) - Note[0] for Left Jingle[2]
-    (Note*) 0x10001324 - EEPROM Read Data 0x924 or 0x100004dc (If EEPROM data is invalid) - Note[1] for Left Jingle[2]
+(uint16_t*) 0x100012de - Number of notes in Right Jingle[2]. 
+			 (bytes are swapped)
+			 EEPROM 0x8de or 0x10000496 (If EEPROM data is invalid).
+(uint16_t*) 0x100012e0 - Number of notes in Left Jingle[2]. 
+			 (bytes are swapped)
+			 EEPROM 0x8de or 0x10000498 (If EEPROM data is invalid).
+    (Note*) 0x100012e2 - Note[0] for Right Jingle[2].
+			 EEPROM 0x8e2 or 0x1000049a (If EEPROM data is invalid).
+    (Note*) 0x100012e8 - Note[1] for Right Jingle[2].
+			 EEPROM 0x8e8 or 0x100004a0 (If EEPROM data is invalid).
 
-TODO: fill in each word/byte between
+    (Note*) 0x1000131e - Note[0] for Left Jingle[2].
+			 EEPROM 0x91e or 0x100004d6 (If EEPROM data is invalid).
+    (Note*) 0x10001324 - Note[1] for Left Jingle[2].
+			 EEPROM 0x924 or 0x100004dc (If EEPROM data is invalid).
 
  (uint8_t*) 0x100015f9 - EEPROM Read Data 0xbf9 - Uknown purpose
 			 If EEPROM data reads zeros this is set to 0x100007b1.
  (uint8_t*) 0x100015ff - EEPROM Read Data 0xbff - Uknown purpose
+}
 
  (uint8_t*) 0x10001700 - Flag related to ??
  (uint8_t*) 0x10001701 - Flag related to ??
