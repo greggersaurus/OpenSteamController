@@ -44,6 +44,7 @@
 #include "adc_read.h"
 #include "buttons.h"
 #include "trackpad.h"
+#include "haptic.h"
 
 /* System oscillator rate and clock rate on the CLKIN pin */                    
 //TODO: is this correct?
@@ -97,7 +98,6 @@ void stage1Init(void){
 	// Division ration is 2 x 4. Feedback divider value is 3 + 1.
 	Chip_Clock_SetupUSBPLL(3, 1);
 
-
 	// Set USB PLL and USB transceiver to powered
 	Chip_SYSCTL_PowerUp(SYSCTL_POWERDOWN_USBPLL_PD | SYSCTL_POWERDOWN_USBPAD_PD);
 
@@ -106,6 +106,8 @@ void stage1Init(void){
 
 	// Enable IOCON clock
 	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_IOCON);
+
+	SystemCoreClockUpdate();
 }
 
 // Local variables to values of GPIOs, etc. early in boot process
@@ -204,10 +206,6 @@ void stage2Init(uint32_t hwVersion){
 	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_USBRAM);
 
 	// Drive some GPIOs according to simulation results (not sure why exactly...)
-	Chip_GPIO_WritePortBit(LPC_GPIO, 1, 7, true);
-	Chip_GPIO_WriteDirBit(LPC_GPIO, 1, 7, true);
-	Chip_IOCON_PinMux(LPC_IOCON, 1, 7, IOCON_MODE_PULLDOWN, IOCON_FUNC0);
-
 	Chip_GPIO_WritePortBit(LPC_GPIO, 0, 19, false);
 	Chip_GPIO_WriteDirBit(LPC_GPIO, 0, 19, true);
 	Chip_IOCON_PinMux(LPC_IOCON, 0, 19, IOCON_MODE_PULLDOWN, IOCON_FUNC0);
@@ -239,6 +237,8 @@ void stage2Init(uint32_t hwVersion){
 	initButtons();
 
 	initTrackpad();
+
+	initHaptics();
 }
 
 
