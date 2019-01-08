@@ -28,11 +28,11 @@
 
 Jingle Memory Breakdown (TODO:WIP):
 	Each jingle has separate notes for left and right haptics
-	Each "note" is 6 bytes
-		uint8_t Related to width of high portion of pulse?
+	Each "Note" is 6 bytes
+		uint8_t dutyCycle Percentage of time pulse is high (0.8 fixed point)
 		uint8_t UNUSED
-		uint16_t (bytes are swapped) Related to width of low portion of pulse?
-		uint16_t (bytes are swapped) Duration of note in TODO units
+		uint16_t Frequency Frequency of pulse repeation (in Hz)
+		uint16_t Duration Duration of note (in ms)
 	1st 16-bit word is number of notes in Right Jingle (bytes are swapped)
 	2nd 16-bit word is number of notes in Left Jingle (bytes are swapped)
 	Next byte is start of Note[0] for Right Jingle
@@ -194,11 +194,17 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000062 - Bank/Group for TODO GPIO (PIO1_8) (Radio/USART?)
  (uint8_t*) 0x10000063 - GPIO Number for TODO Power GPIO (PIO1_8) (Radio/USART?)
 
- (uint8_t*) 0x10000068 - Related to right haptic and end of haptic pulse? Flag to indicate pulse/tone is currently being output?
- (uint8_t*) 0x10000069 - Related to left haptic and ending of haptic pulse? Flag to indicate pulse/tone is currently being output?
+ (uint8_t*) 0x10000068 - Indicates Right Haptic is in process of playing a Note.
+ (uint8_t*) 0x10000069 - Indicates Left Haptic is in process of playing a Note.
 
-(uint32_t*) 0x1000006c - Related to right haptic and end of haptic pulse?
-(uint32_t*) 0x10000070 - Related to left haptic and ending of haptic pulse?
+(uint32_t*) 0x1000006c - Callback. Address of function to call when Note 
+			 finishes being played on Right Haptic (i.e. Called from
+			 IRQ context and used to setup next note in Jingle
+			 Note sequence).
+(uint32_t*) 0x10000070 - Callback. Address of function to call when Note 
+			 finishes being played on Left Haptic (i.e. called from
+			 IRQ context and used to setup next note in Jingle
+			 Note sequence).
  (uint8_t*) 0x10000074 - Related to USB being connected or maybe WWDT? Flag set
 			 by SysTick handler after a certain number of 
 			 executions.
@@ -267,7 +273,7 @@ USB_HID2 HID Report Descriptor (len 0x21):
 
  (uint8_t*) 0x10000200 - GPIO Bank/Group for Haptic Enable GPIO (PIO1_7)
  (uint8_t*) 0x10000201 - GPIO Number for Haptic Enable GPIO (PIO1_7)
- (uint8_t*) 0x10000202 - Related to CT32B0/Haptics?
+ (uint8_t*) 0x10000202 - Related to Haptics begin enabled?
  (uint8_t*) 0x10000203 - GPIO Bank/Group for Right Haptic GPIO (PIO1_12)
  (uint8_t*) 0x10000204 - GPIO Bank/Group for Left Haptic GPIO (PIO0_18)
  (uint8_t*) 0x10000205 - GPIO Number for Right Haptic GPIO (PIO1_12)
@@ -275,13 +281,25 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000207 - Related to Right Haptic?
  (uint8_t*) 0x10000208 - Related to Left Haptic?
 
-(uint32_t*) 0x1000020c - Related to Right Haptic, CT32B0:MR1, PIO1_12. Count related to how long current pulse pattern should continue?
-(uint32_t*) 0x10000210 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Count related to how long current pulse pattern should continue?
-(uint32_t*) 0x10000214 - Related to Right Haptic, CT32B0:MR1, PIO1_12. Checked only if GPIO is low on interrupt. Count related to how long GPIO should be set high?
-(uint32_t*) 0x10000218 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Check only if GPIO is low on interrupt. Count related to how long GPIO should be set high?
-(uint32_t*) 0x1000021c - Related to Right Haptic, CT32B0:MR1, PIO1_12. Count related to how long GPIO should be set low?
-(uint32_t*) 0x10000220 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Count related to how long GPIO should be set low?
-(uint32_t*) 0x10000214 - Related to Right Haptic, CT32B0:MR1, PIO1_12. Related to ending of haptic pulse?
+(uint32_t*) 0x1000020c - Related to Right Haptic, CT32B0:MR1, PIO1_12. Number
+			 of times Haptic GPIO is to be pulsed high then low
+			 for current Note.
+(uint32_t*) 0x10000210 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Number
+			 of times Haptic GPIO is to be pulsed high then low
+			 for current Note.
+(uint32_t*) 0x10000214 - Related to Right Haptic, CT32B0:MR1, PIO1_12. Number 
+			 of microseconds for which haptic GPIO should be high
+			 for single pulse of current Note.
+(uint32_t*) 0x10000218 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Number
+			 of microseconds for which haptic GPIO should be high
+			 for single pulse of current Note.
+(uint32_t*) 0x1000021c - Related to Right Haptic, CT32B0:MR1, PIO1_12. Number 
+			 of microseconds for which haptic GPIO should be low
+			 for single pulse of current Note.
+(uint32_t*) 0x10000220 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Number
+			 of microseconds for which haptic GPIO should be low
+			 for single pulse of current Note.
+(uint32_t*) 0x10000224 - Related to Right Haptic, CT32B0:MR1, PIO1_12. Related to ending of haptic pulse?
 (uint32_t*) 0x10000228 - Related to Left Haptic, CT32B0:MR2, PIO0_18. Related to ending of haptic pulse?
 
  (uint8_t*) 0x10000234 - Number of Trackpad ASICs to configure.

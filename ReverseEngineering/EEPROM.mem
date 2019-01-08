@@ -33,3 +33,5 @@
 (uint8_t*)  0x075 - Power-off Jingle Index
 
 (uint32_t*) 0x500 - Think this might affect use of watchdog somehow, but not 100% sure
+
+(uint32_t*) 0x800 - Start of Jingle Data (0x200 bytes)? (TODO add more details and verify (i.e. write our own custom Jingles here)

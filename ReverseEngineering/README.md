@@ -24,7 +24,12 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. TODO: clean this all up now that we have a complete (enough) understanding of the Haptic and Jingles
 1. Need more details on jingle and interrupt
+    1. How is offset to Jingle[n] deteremined?
+        1. Each jingle has maximum number of notes for right and left combined?
+    1. See if pilatomic singer can provide details on Note structure
+        1. Maybe it was the same for what is sent via USB?
     1. Start filling out paths on CT32B0 interrupt code
     1. Track down how interrupt handler transitions from one pulse to next
         1. How does it know where to get pulse info from next?
