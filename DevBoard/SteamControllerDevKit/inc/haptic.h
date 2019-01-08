@@ -43,13 +43,12 @@ typedef enum Haptic {
  *  the Steam Controller haptics.                                       
  */                                                                     
 typedef struct Note {                                                           
-	uint16_t highDuration; //!< Number of nanoseconds for     
-		//!< which waveform sent to haptics is logic high.      
-	uint16_t lowDuration; //!< Number of nanoseconds for      
-		//!< which waveform sent to haptics is logic low.       
-	uint16_t repeatCnt; //!< Number of times to generate pulse      
-		//!< (i.e. drive haptic logic high for highDuration     
-		//!< followed by driving haptic low for lowDuration)    
+	uint8_t dutyCycle; //!< Percentage time that pulse is high, where 
+		//!< value with 0% = 0 and 100% = 511
+	uint8_t RSVD;
+	uint16_t pulseFreq; //!< Frequency of the pulse being generated for
+		//!< this note in Hz.
+	uint16_t duration; //!< Duration of the note in milliseconds.
 } Note;
 
 void initHaptics(void);
