@@ -63,11 +63,21 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
+1. Create help command
+    1. Need to provide help functions for all cmds
+    1. Make sure output format for each function is consistent (i.e. surround {} to designate variables)
+1. Dig into infinite pulse on haptic bug
+    1. There was a bug where Note was pointing to bogus data that resulted in a interrupt that never seemed to end
+        1. Need bounds check on how interrupt variables are setup to stop this from happening???
 1. Create sleep function
     1. Use CT16B0 like official Valve FW does?
 1. Now that we know PIO1_1 is active low enable of analog triggers (L = AD0 and R = AD2), clean up and organize!
 1. Get controller to act as PowerA wired
     1. Clean up naming in changes...
+1. Revisist console/CDC uart
+    1. Look for interrupt related bugs/race conditions
+        1. Think back to issues that occur when ADC interrupts are enabled
+    1. create putc(), getc(), tstc() and (re)build from there?
 1. Add details on different firmware build types (i.e. intentions and commands/control layouts)
 1. Add details for each specific firwmare build type to this README
 1. Figure out interrupt related issues as to why Console output gets weird
@@ -75,9 +85,18 @@ This is a running list of items I would like to prioritize and not lose track
     1. Is this related to ADC IRQ always running?
     1. Is this related to monitor command lock up?
 1. Check clean build works (i.e. from fresh clone)
+1. Revisit and clean init()
+    1. What GPIOs, etc. do we still not understand?
+1. Make template or something for communicating with Radio chip
+    1. via UART?
+    1. Mostly just a reference to RevEng efforts to get more data?
+1. Update led command to allow LED to blink?
+    1. Use another counter?
 1. Look into having USB UART CDC still be active for controller build... (This might not be possible. Need to learn more about USB in general I think...)
     1. This could be an awesome debug option to be able plug controller into PC to get stats, etc. via UART after usage...
 1. (finish) ADC command
+    1. Make sure interrupts are working as expected
+        1. Always be converting? or no for power reasons?
     1. Have it use interrupt like Valve's firmware does
         1. Make sure IRQ is not starving anything running in normal execution context (i.e. not IRQ)
     1. Add safety checks, timeouts, etc.
@@ -85,13 +104,9 @@ This is a running list of items I would like to prioritize and not lose track
         1. See how sim results configure PIOs
     1. Polling mode where adc results are refreshed automatically until 'q' is pressed
     1. Better comments
-1. Help command
 1. READMEs for lpcexpresso projects
     1. Details on where lpc project came from
     1. Intention and requirements (i.e. lpc project) for SteamControllerDevKit project
-1. Command for communication with haptics
-    1. It seems SPI may be the interface
-    1. [Sample Interface Code](https://github.com/cirque-corp/Cirque_Pinnacle_1CA027) to use as starting point?
 1. Command for communication with gyro sensor
 1. Command for monitoring controller state
     1. Gyro info?

@@ -1,6 +1,8 @@
 /**
- * \file haptic.h
- * \brief Encompasses functions for interfacing with haptics.
+ * \file jingle_data.h
+ * \brief Encompasses utilities for interfacing with Jingle data format used
+ *	in official Steam Controller firmware. A Jingle is a series of Notes
+ *	played via the left and right haptics.
  *
  * MIT License
  *
@@ -25,36 +27,29 @@
  * SOFTWARE.
  */
 
-#ifndef _HAPTIC_ 
-#define _HAPTIC_
+#ifndef _JINGLE_DATA_
+#define _JINGLE_DATA_
+
+#include "haptic.h"
+
+#include "lpc_types.h"
 
 #include <stdint.h>
 
-/**
- * Defines which haptic we are communicating with.
- */
-typedef enum Haptic {
-	R_HAPTIC = 0,
-	L_HAPTIC = 1
-} Haptic;
+uint8_t getNumJingles();
+uint16_t getNumJingleNotes(enum Haptic haptic, uint8_t idx);
+Note* getJingleNotes(enum Haptic haptic, uint8_t idx);
+uint16_t getNumJingleBytesFree();
+int addJingle(uint16_t numNotesRight, uint16_t numNotesLeft);
+int delJingle(uint8_t idx);
+bool jingleDataIsValid();
+int playJingle(uint8_t idx);
 
-/**                                                                     
- * Contains information needed to produce a tone for a duration via     
- *  the Steam Controller haptics.                                       
- */                                                                     
-typedef struct Note {                                                           
-	uint8_t dutyCycle; //!< Percentage time that pulse is high, where 
-		//!< value with 0% = 0 and 100% = 511
-	uint8_t RSVD;
-	uint16_t pulseFreq; //!< Frequency of the pulse being generated for
-		//!< this note in Hz.
-	uint16_t duration; //!< Duration of the note in milliseconds.
-} Note;
+int loadJingleEEPROM();
+int saveJingleEEPROM();
 
-void initHaptics(void);
-void hapticCmdUsage(void);
-int hapticCmdFnc(int argc, const char* argv[]);
-int playHaptic(enum Haptic haptic, const struct Note* notes, uint32_t numNotes);
+void jingleCmdUsage(void);
+int jingleCmdFnc(int argc, const char* argv[]);
 
-#endif /* _HAPTIC_ */
+#endif /* _JINGLE_DATA_ */
 

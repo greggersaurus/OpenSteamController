@@ -40,6 +40,7 @@
 #include "monitor.h"
 #include "trackpad.h"
 #include "haptic.h"
+#include "jingle_data.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -56,6 +57,7 @@ static Cmd cmds[] = {
 	{.cmdName = "eeprom", .cmdFnc = eepromCmdFnc},
 	{.cmdName = "haptic", .cmdFnc = hapticCmdFnc},
 	{.cmdName = "initStats", .cmdFnc = initStatsCmdFnc},
+	{.cmdName = "jingle", .cmdFnc = jingleCmdFnc},
 	{.cmdName = "led", .cmdFnc = ledCmdFnc},
 	{.cmdName = "mem", .cmdFnc = memCmdFnc},
 	{.cmdName = "monitor", .cmdFnc = monitorCmdFnc},
