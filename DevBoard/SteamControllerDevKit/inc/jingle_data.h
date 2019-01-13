@@ -36,17 +36,8 @@
 
 #include <stdint.h>
 
-uint8_t getNumJingles();
-uint16_t getNumJingleNotes(enum Haptic haptic, uint8_t idx);
-Note* getJingleNotes(enum Haptic haptic, uint8_t idx);
-uint16_t getNumJingleBytesFree();
-int addJingle(uint16_t numNotesRight, uint16_t numNotesLeft);
-int delJingle(uint8_t idx);
-bool jingleDataIsValid();
+uint8_t getNumJingles(void);
 int playJingle(uint8_t idx);
-
-int loadJingleEEPROM();
-int saveJingleEEPROM();
 
 void jingleCmdUsage(void);
 int jingleCmdFnc(int argc, const char* argv[]);

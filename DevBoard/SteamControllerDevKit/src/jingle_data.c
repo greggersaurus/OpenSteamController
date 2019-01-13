@@ -33,14 +33,24 @@
 #include <string.h>
 
 #include "console.h"
+#include "eeprom_access.h"
 
 #define JINGLE_DATA_MAX_BYTES (0x400)
+
+#define JINGLE_DATA_EEPROM_OFFSET (0x800)
+
+static const uint16_t JD_MAGIC_WORD = 0xbead; //!< First 16 bits of Jingle
+	//!< Data blob. Preliminary check to verify is blob is valid.
+
+static uint16_t numJingleBytesFree = 0; //!< Updated when adding/removing
+	//!< jingle from data blob. Defines how much space is left in
+	//!< the Jingle Data blob for adding more Jingles.
 
 /**
  * This is the jingle data in store in raw form. This makes for easier 
  *  initialization and loading/saving from/to EEPROM, etc.
  *
- * Use getJingleData8/16 and setJingleData8/16 to access this data.
+ * Use setJingleData16()/getJingleData16() to access 16-bit words in this blob.
  *
  * Note that the default initialization values were taken from simulation of
  *  official Steam Controller firmware version 
@@ -53,9 +63,11 @@
  *  looks like a feature Valve did not add support for.
  *
  * Regarding the format of this raw data:
- *	byte[0] and byte[1] form a uint16_t that is a magic word (0xbead).
+ *	Header {
+ *	 byte[0] and byte[1] form a uint16_t that is a magic word (0xbead).
  *	  This is used to check if EEPROM 0x800 has valid Jingle Data.
- *	byte[4] is the number of Jingles in the data blob
+ *	 byte[4] is the number of Jingles in the data blob
+ *	}
  *	byte[6] and bytes[7] form a uint16_t that is the byte offset from the
  *	  beginning of the data blob to Jingle 0 (assuming there is a jingle 0)
  *	This is followed by uint16_t values that are offsets for each of the
@@ -326,27 +338,12 @@ static uint32_t rawJingleData32[JINGLE_DATA_MAX_BYTES/sizeof(uint32_t)] = {
 	 0x00000000
 };
 
-static uint8_t* rawJingleData = rawJingleData32;
-
-static const uint16_t JD_MAGIC_WORD = 0xbead; //!< First 16 bits of Jingle
-	//!< Data blob. Preliminary check to verify is blob is valid.
-
-static uint16_t numJingleBytesFree = 0; //!< Updated when adding/removing
-	//!< jingle from data blob. 
+static uint8_t* rawJingleData = (uint8_t*)rawJingleData32; //!< Granular access
+	//!< to Jingle Data.
 
 /**
- * \param offset Byte offset from start of Jingle Data blob.
- * 
- * \return Byte value at given offset.
- */
-static uint8_t getJingleData8(uint16_t offset) {
-	if (offset >= JINGLE_DATA_MAX_BYTES)
-		return 0;
-
-	return rawJingleData[offset];
-}
-
-/**
+ * Read 16-bit words from Jingle Data blob.
+ *
  * \param offset Byte offset from start of Jingle Data blob.
  * 
  * \return Byte value at given offset.
@@ -359,21 +356,8 @@ static uint16_t getJingleData16(uint16_t offset) {
 }
 
 /**
- * \param offset Byte offset from start of Jingle Data blob.
- * \param data value to write to Jingle Data blob.
- * 
- * \return 0 on success.
- */
-static int setJingleData8(uint16_t offset, uint8_t data) {
-	if (offset >= JINGLE_DATA_MAX_BYTES)
-		return -1;
-
-	rawJingleData[offset] = data;
-	
-	return 0;
-}
-
-/**
+ * Write 16-bit words to Jingle Data blob.
+ *
  * \param offset Byte offset from start of Jingle Data blob.
  * \param data value to write to Jingle Data blob.
  * 
@@ -391,62 +375,181 @@ static int setJingleData16(uint16_t offset, uint16_t data) {
 }
 
 /**
- * \return The number of jingles 
+ * Read the Magic Word field of the Jingle Data blob Header portion.
+ *
+ * \return The Magic Word. Will be JD_MAGIC_WORD if blob contains valid Jingle 
+ *	Data.
  */
-uint8_t getNumJingles() {
+static uint16_t getMagicWord(void) {
+	return *((uint16_t*)rawJingleData);
+}
+
+/**
+ * Write the Magic Word field of the Jingle Data blob Header portion.
+ *
+ * \param magicWord The Magic Word. Should be JD_MAGIC_WORD to indicate the
+ *	Jingle Data blob contains valid Jingle Data.
+ * 
+ * \return None.
+ */
+static void setMagicWord(uint16_t magicWord) {
+	*((uint16_t*)rawJingleData) = magicWord;
+}
+
+/**
+ * \return The number of jingles as specified by the Jingle Data.
+ */
+uint8_t getNumJingles(void) {
 	return rawJingleData[4];
 }
 
-uint16_t getJingleOffset(uint8_t idx) {
-	uint16_t* jingleOffsets = (uint16_t*)&rawJingleData[6];
-	return jingleOffsets[idx];
-}
-
-uint16_t getNumJingleNotes(enum Haptic haptic, uint8_t idx) {
-	uint16_t offset = getJingleOffset(idx);
-	if (haptic == L_HAPTIC) 
-		offset += sizeof(uint16_t);
-	return getJingleData16(offset);
-}
-
-Note* getJingleNotes(enum Haptic haptic, uint8_t idx) {
-	uint16_t offset = getJingleOffset(idx) + 2 * sizeof(uint16_t);
-	if (haptic == L_HAPTIC)
-		offset += getNumJingleNotes(R_HAPTIC, idx) * sizeof(Note);
-	return (Note*)&rawJingleData[offset];
-}
-
-uint16_t getNumJingleBytesFree() {
-	return numJingleBytesFree;
-}
-
-int addJingle(uint16_t numNotesRight, uint16_t numNotesLeft) {
-	return -1;
-}	
-
-int delJingle(uint8_t idx) {
-	return -1;
+/**
+ * Set how many Jingles are stored in the Jingle Data.
+ *
+ * \param numJingles The number of jingles in the Jingle Data. This is used to
+ *	index to the Jingle Data offset values, etc. So make sure the data this
+ *	implies is there, is actually there and within the Jingle Data bounds.
+ *
+ * \return None.
+ */
+static void setNumJingles(uint8_t numJingles) {
+	rawJingleData[4] = numJingles;
 }
 
 /**
  * \return True if the Jingle Data blob seems to contain valid data.
  */
-bool jingleDataIsValid() {
+static bool jingleDataIsValid() {
+	if (getMagicWord() != JD_MAGIC_WORD) {
+		return false;
+	}
 
-//TODO: sanity check offsets are incrementing and match number of jingles, etc.
+	//TODO: Check that offsets are incrementing
 
-	return false;
+	//TODO: validate location of each jingle
+
+	return true;
 }
 
-int playJingle(uint8_t idx) {
+/**
+ * Initialize Jingle Data to known empty and valid state.
+ *
+ * \return None.
+ */
+static void initJingleData(void) {
+	setMagicWord(JD_MAGIC_WORD);
+	setNumJingles(0);
+	// Leave room for header (i.e. Magic Word, Number of Jingles, packing
+	//  and alignment bytes).
+	numJingleBytesFree = JINGLE_DATA_MAX_BYTES - 6;
+}
+
+/**
+ * \param idx Index of the Jingle begin referred to.
+ * 
+ * \return 0 on error, or the byte offset from the start of the Jingle Data to 
+ *	where the Jingle related memory starts on success.
+ */
+static uint16_t getJingleOffset(uint8_t idx) {
+	if (idx >= getNumJingles()) {
+		return 0;
+	}
+	uint16_t* jingleOffsets = (uint16_t*)&rawJingleData[6];
+	if (jingleOffsets[idx] >= JINGLE_DATA_MAX_BYTES) {
+		return 0;
+	}
+	return jingleOffsets[idx];
+}
+
+/**
+ * \param haptic Specifies which haptic is being referred to.
+ * \param idx Index of the Jingle being referred to.
+ *
+ * \return The number of notes for the specified Channel for the specified
+ *	Jingle.
+ */
+static uint16_t getNumJingleNotes(enum Haptic haptic, uint8_t idx) {
+	uint16_t offset = getJingleOffset(idx);
+	if (!offset)
+		return 0;
+	if (haptic == L_HAPTIC) 
+		offset += sizeof(uint16_t);
+	return getJingleData16(offset);
+}
+
+/**
+ * \param haptic Specifies which haptic is being referred to.
+ * \param idx Index of the Jingle being referred to.
+ *
+ * \return Pointer to the notes for the specified Channel for the specified  
+ *	Jingle or NULL on error.
+ */
+static Note* getJingleNotes(enum Haptic haptic, uint8_t idx) {
+	uint16_t offset = getJingleOffset(idx);
+	if (!offset)
+		return NULL;
+	offset += 2 * sizeof(uint16_t);
+	if (haptic == L_HAPTIC)
+		offset += getNumJingleNotes(R_HAPTIC, idx) * sizeof(Note);
+	return (Note*)&rawJingleData[offset];
+}
+
+//TODO
+static int addJingle(uint8_t idx, uint16_t numNotesRight, uint16_t numNotesLeft) {
+	// check if there is enough room in blob for another Jingle
+	// add offset for new Jingle
+	//	move all jingle data by 2 bytes
+	//	adjust all jingle offsets
+	// Set number of notes for right and left jingle
+	// Increment number of Jingles
+	// Clear notes
+	// update number of free bytes
+	return -1;
+}	
+
+//TODO
+static int delJingle(uint8_t idx) {
+	// decrement number of jingles
+	// move all jingle data down by 2 bytes
+	// adjust all remaining offsets
+	// Compute/adjust how much room is left in blob
+	return -1;
+}
+
+/**
+ * Print information on Jingle Data Blob.
+ * 
+ * \return 0 on success.
+ */
+static int printJingleData(void) {
+	consolePrint("Magic Word = 0x%04x\n", getMagicWord());
+	consolePrint("Number of Jingles = %d\n", getNumJingles());
+	for (int idx = 0; idx < getNumJingles(); idx++) {
+		consolePrint("Jingle[0] offset = 0x%03x\n", getJingleOffset(idx));
+	}
+	consolePrint("Bytes free in blob = 0x%03x\n", numJingleBytesFree);
+	return 0;
+}
+
+/**
+ * Print to console details on a particular Jingle.
+ *
+ * \param idx Indicates which Jingle is being referred to.
+ * 
+ * \return 0 on success.
+ */
+static int printJingle(uint8_t idx) {
 	if (idx >= getNumJingles()) {
 		consolePrint("jingleNum %d too large\n", idx);
 		return -1;
 	}
 
-	consolePrint("sizeof(Note) = %d\n", sizeof(Note));
-
 	uint16_t offset = getJingleOffset(idx);
+	if (!offset) {
+		consolePrint("Invalid offset (0x%04x)\n", offset);
+		return -1;
+	}
+
 	consolePrint("offset = 0x%03x\n", offset);
 	uint16_t numNotesRight = getNumJingleNotes(R_HAPTIC, idx);
 	consolePrint("numNotesRight = %d\n", numNotesRight);
@@ -458,43 +561,280 @@ int playJingle(uint8_t idx) {
 	consolePrint("notesLeft = 0x%08x\n", notesLeft);
 
 	for (int idx = 0; idx < numNotesRight; idx++) {
-		consolePrint("Note[%d] = 0x%04x (0x%08x), 0x%04x (0x%08x), 0x%04x (0x%08x)\n", idx,
-			notesRight[idx].dutyCycle, &notesRight[idx].dutyCycle,
-			notesRight[idx].pulseFreq, &notesRight[idx].pulseFreq,
-			notesRight[idx].duration, &notesRight[idx].duration);
+		if (!notesRight)
+			break;
+
+		consolePrint("Note[%d] = 0x%04x, 0x%04x, 0x%04x\n", idx,
+			notesRight[idx].dutyCycle, 
+			notesRight[idx].pulseFreq, 
+			notesRight[idx].duration);
 	}
 	for (int idx = 0; idx < numNotesLeft; idx++) {
-		consolePrint("Note[%d] = 0x%04x (0x%08x), 0x%04x (0x%08x), 0x%04x (0x%08x)\n", idx,
-			notesLeft[idx].dutyCycle, &notesLeft[idx].dutyCycle,
-			notesLeft[idx].pulseFreq, &notesLeft[idx].pulseFreq,
-			notesLeft[idx].duration, &notesLeft[idx].duration);
-	}
+		if (!notesLeft)
+			break;
 
-	playHaptic(R_HAPTIC, notesRight, numNotesRight);
-	playHaptic(L_HAPTIC, notesLeft, numNotesLeft);
+		consolePrint("Note[%d] = 0x%04x, 0x%04x, 0x%04x\n", idx,
+			notesLeft[idx].dutyCycle,
+			notesLeft[idx].pulseFreq,
+			notesLeft[idx].duration);
+	}
 
 	return 0;
 }
 
-int loadJingleEEPROM() {
-	return -1;
+/**
+ * Play a specified Jingle using the haptics.
+ * 
+ * \param idx Indicates which Jingle is being referred to. 
+ * 
+ * \return 0 on success.
+ */
+int playJingle(uint8_t idx) {
+	if (idx >= getNumJingles())
+		return -1;
+
+	uint16_t offset = getJingleOffset(idx);
+	if (!offset)
+		return -1;
+
+	uint16_t numNotesRight = getNumJingleNotes(R_HAPTIC, idx);
+	uint16_t numNotesLeft = getNumJingleNotes(L_HAPTIC, idx);
+	struct Note* notesRight = getJingleNotes(R_HAPTIC, idx);
+	struct Note* notesLeft = getJingleNotes(L_HAPTIC, idx);
+
+	if (numNotesRight && notesRight)
+		playHaptic(R_HAPTIC, notesRight, numNotesRight);
+	if (numNotesLeft && notesLeft)
+		playHaptic(L_HAPTIC, notesLeft, numNotesLeft);
+
+	return 0;
 }
 
-int saveJingleEEPROM() {
-	return -1;
-}
+/**
+ * Load Jingle Data from EEPROM. This will attempt to replace Jingle Data with 
+ *  data from EEPROM. If EEPROM data is invalid, local Jingle Data will be
+ *  cleared.
+ * 
+ * \return 0 on success.
+ */
+static int loadJingleEEPROM(void) {
+	int retval = eepromRead(JINGLE_DATA_EEPROM_OFFSET, rawJingleData, 
+		JINGLE_DATA_MAX_BYTES);
 
-void jingleCmdUsage(void) {
-
-}
-
-int jingleCmdFnc(int argc, const char* argv[]) {
-	if (argc != 2) {
-		consolePrint("# args needs to be 2\n");
+	if (retval) {
+		initJingleData();
 		return -1;
 	}
 
-	playJingle(strtol(argv[1], NULL, 0));
+	if (!jingleDataIsValid()) {
+		initJingleData();
+		return -2;
+	}
+
+	return 0;
+}
+
+/**
+ * Save Jingle Data to EEPROM. This will write current Jingle Data to EEPROM. 
+ *  Note: This will PERSIST even after updating firmware and may affect how the
+ *  official firmware functions. Use \"clear\" to erase.
+ * 
+ * \return 0 on success.
+ */
+static int saveJingleEEPROM(void) {
+	int retval = eepromWrite(JINGLE_DATA_EEPROM_OFFSET, rawJingleData, 
+		JINGLE_DATA_MAX_BYTES);
+	if (retval) {
+		return -1;
+	}
+
+	return 0;
+}
+
+/**
+ * Clear out Jingle Data saved to EEPROM. This will cause official firmware to
+ *   use default Jingle Data embedded in firmware.
+ * 
+ * \return 0 on success.
+ */
+static int clearJingleEEPROM(void) {
+	uint16_t empty_word = 0;
+	// Clear out header bytes for Jingle Data blob
+	int retval = eepromWrite(JINGLE_DATA_EEPROM_OFFSET, &empty_word, 
+		sizeof(empty_word));
+	if (retval) {
+		return -1;
+	}
+	retval = eepromWrite(JINGLE_DATA_EEPROM_OFFSET+2, &empty_word, 
+		sizeof(empty_word));
+	if (retval) {
+		return -2;
+	}
+	retval = eepromWrite(JINGLE_DATA_EEPROM_OFFSET+4, &empty_word, 
+		sizeof(empty_word));
+	if (retval) {
+		return -3;
+	}
+
+	return 0;
+}
+
+/**
+ * Prints details to console regarding how to use the haptic command line 
+ *  function.
+ *
+ * \return None.
+ */
+void jingleCmdUsage(void) {
+	consolePrint(
+		"usage: jingle play {jingleIdx}\n"
+		"       jingle print [{jingleIdx}]\n"
+		"       jingle delete {jingleIdx}\n"
+		"       jingle clear\n"
+		"       jingle add {jingleIdx} {numNotesRight} {numNotesLeft}\n"
+		"	jingle note {jingleIdx} {hapticId} {dutyCycle} {frequency} {duration}\n"
+		"	jingle eeprom {cmd}\n"
+//TODO: allows for input of "raw" Jingle Data (maybe test interface for Qt GUI or someting?)
+//		"	jingle raw ...\n" 
+		"\n"
+		"play = play the jingle associated with the given jingleIdx\n"
+		"print = Print info on all the jingles, or details on the notes\n"
+		"       for a jingle associated with a given jingleIdx\n"
+		"delete = Delete Jingle associated with the given jingleIdx\n"
+		"clear = Initialize the Jingle Data structure to have 0 Jingles\n"
+		"add = Add a new jingle with the specified number of notes\n"
+		"	for each channel (i.e. haptic)\n"
+		"note = Change a particular note in a particular jingle\n"
+		"	See \"haptic\" command for parameter details\n"
+		"eeprom = Allows access to EEPROM where custom Jingle Data\n"
+		"	can persist, even if firmware is updated.\n"
+		"	Below are descriptions of supported commands:\n"
+		" 	\"load\" Load Jingle Data from EEPROM. This will \n"
+		"	 attempt to replace Jingle Data with data from EEPROM.\n"
+		"	 If EEPROM data is invalid, local Jingle Data will be\n"
+		"	 cleared.\n"
+		"	\"save\"  Save Jingle Data to EEPROM. This will write\n"
+		"	 current Jingle Data to EEPROM. Note: This will PERSIST\n"
+		"	 even after updating firmware and may affect how the\n"
+		"	 official firmware functions. Use \"clear\" to erase\n"
+		"	\"clear\" Clear out Jingle Data saved to EEPROM. This\n"
+		"	 will cause official firmware to use default Jingle\n"
+		"	 Data embedded in firmware.\n"
+	);
+
+}
+
+/**
+ * Handle Haptic control command line function.
+ *
+ * \param argc Number of arguments (i.e. size of argv)
+ * \param argv Command line entry broken into array argument strings.
+ *
+ * \return 0 on success.
+ */
+int jingleCmdFnc(int argc, const char* argv[]) {
+	uint32_t idx = 0;
+	int retval = 0;
+	if (argc < 2) {
+		jingleCmdUsage();
+		return -1;
+	}
+
+	if (!strcmp("play", argv[1])) {
+		if (argc != 3) {
+			jingleCmdUsage();
+			return -1;
+		}
+
+		idx = strtol(argv[2], NULL, 0);
+		if (idx > 255) {
+			consolePrint("jingleIdx must bein range 0 to 255\n");
+			return -1;
+		}
+		retval = playJingle(idx);
+		if (retval) {
+			consolePrint("Error playing Jingle (err = %d)\n", retval);
+			return -1;
+		}
+	} else if (!strcmp("print", argv[1])) {
+		if (argc == 2) {
+			printJingleData();	
+		} else if (argc == 3) {
+			idx = strtol(argv[2], NULL, 0);
+			if (idx > 255) {
+				consolePrint("jingleIdx must bein range 0 to 255\n");
+				return -1;
+			}
+			retval = printJingle(idx);
+			if (retval) {
+				consolePrint("Error pringting Jingle (err = %d)\n", retval);
+				return -1;
+			}
+		} else { 
+			jingleCmdUsage();
+			return -1;
+		}
+	} else if (!strcmp("delete", argv[1])) {
+		if (argc != 3) {
+			jingleCmdUsage();
+			return -1;
+		}
+
+		idx = strtol(argv[2], NULL, 0);
+		if (idx > 255) {
+			consolePrint("jingleIdx must bein range 0 to 255\n");
+			return -1;
+		}
+		retval = delJingle(idx);
+		if (retval) {
+			consolePrint("Error deleting Jingle (err = %d)\n", retval);
+			return -1;
+		}
+	} else if (!strcmp("clear", argv[1])) {
+		if (argc != 2) {
+			jingleCmdUsage();
+			return -1;
+		}
+		initJingleData();
+	} else if (!strcmp("add", argv[1])) {
+		//TODO
+	} else if (!strcmp("note", argv[1])) {
+		//TODO
+	} else if (!strcmp("eeprom", argv[1])) {
+		if (argc != 3) {
+			jingleCmdUsage();
+			return -1;
+		}
+
+		if (!strcmp("load", argv[2])) {
+			retval = loadJingleEEPROM();
+			if (retval) {
+				consolePrint("Loading from EEPROM failed (err = %d).\n",
+					retval);
+				return -1;
+			}
+		} else if (!strcmp("save", argv[2])) {
+			retval = saveJingleEEPROM();
+			if (retval) {
+				consolePrint("Saving to EEPROM failed (err = %d).\n",
+					retval);
+				return -1;
+			}
+		} else if (!strcmp("clear", argv[2])) {
+			retval = clearJingleEEPROM();
+			if (retval) {
+				consolePrint("Clearing EEPROM failed (err = %d).\n",
+					retval);
+				return -1;
+			}
+		} else {
+			jingleCmdUsage();
+			return -1;
+		}
+	} else {
+		jingleCmdUsage();
+		return -1;
+	}
 
 	return 0;
 }
