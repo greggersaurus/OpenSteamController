@@ -63,6 +63,16 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
+1. Dig into inaccurace in haptic output
+    1. Use violin tuner app and notice how the higher the frequencey the larger the gap in frequency output and what app measures...
+1. Revisist console/CDC uart
+    1. Limitation on print length 
+        1. try help for jingle command
+    1. Limitation on input length
+        1. try pasting a series of commands into the console
+    1. Look for interrupt related bugs/race conditions
+        1. Think back to issues that occur when ADC interrupts are enabled
+    1. create putc(), getc(), tstc() and (re)build from there?
 1. Create help command
     1. Need to provide help functions for all cmds
     1. Make sure output format for each function is consistent (i.e. surround {} to designate variables)
@@ -74,10 +84,6 @@ This is a running list of items I would like to prioritize and not lose track
 1. Now that we know PIO1_1 is active low enable of analog triggers (L = AD0 and R = AD2), clean up and organize!
 1. Get controller to act as PowerA wired
     1. Clean up naming in changes...
-1. Revisist console/CDC uart
-    1. Look for interrupt related bugs/race conditions
-        1. Think back to issues that occur when ADC interrupts are enabled
-    1. create putc(), getc(), tstc() and (re)build from there?
 1. Add details on different firmware build types (i.e. intentions and commands/control layouts)
 1. Add details for each specific firwmare build type to this README
 1. Figure out interrupt related issues as to why Console output gets weird

@@ -689,10 +689,10 @@ void jingleCmdUsage(void) {
 	consolePrint(
 		"usage: jingle play {jingleIdx}\n"
 		"       jingle print [{jingleIdx}]\n"
-		"       jingle delete {jingleIdx}\n"
 		"       jingle clear\n"
+		"       jingle delete {jingleIdx}\n"
 		"       jingle add {jingleIdx} {numNotesRight} {numNotesLeft}\n"
-		"	jingle note {jingleIdx} {hapticId} {dutyCycle} {frequency} {duration}\n"
+		"	jingle note {jingleIdx} {hapticId} {notdeIdx} {dutyCycle} {frequency} {duration}\n"
 		"	jingle eeprom {cmd}\n"
 //TODO: allows for input of "raw" Jingle Data (maybe test interface for Qt GUI or someting?)
 //		"	jingle raw ...\n" 
@@ -733,7 +733,7 @@ void jingleCmdUsage(void) {
  * \return 0 on success.
  */
 int jingleCmdFnc(int argc, const char* argv[]) {
-	uint32_t idx = 0;
+	uint32_t jingle_idx = 0;
 	int retval = 0;
 	if (argc < 2) {
 		jingleCmdUsage();
@@ -746,12 +746,17 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 			return -1;
 		}
 
-		idx = strtol(argv[2], NULL, 0);
-		if (idx > 255) {
+		jingle_idx = strtol(argv[2], NULL, 0);
+		if (jingle_idx > 255) {
 			consolePrint("jingleIdx must bein range 0 to 255\n");
 			return -1;
 		}
-		retval = playJingle(idx);
+		if (jingle_idx >= getNumJingles()) {
+			consolePrint("Only %d jingles available\n", 
+				getNumJingles());
+			return -1;
+		}
+		retval = playJingle(jingle_idx);
 		if (retval) {
 			consolePrint("Error playing Jingle (err = %d)\n", retval);
 			return -1;
@@ -760,12 +765,17 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 		if (argc == 2) {
 			printJingleData();	
 		} else if (argc == 3) {
-			idx = strtol(argv[2], NULL, 0);
-			if (idx > 255) {
+			jingle_idx = strtol(argv[2], NULL, 0);
+			if (jingle_idx > 255) {
 				consolePrint("jingleIdx must bein range 0 to 255\n");
 				return -1;
 			}
-			retval = printJingle(idx);
+			if (jingle_idx >= getNumJingles()) {
+				consolePrint("Only %d jingles available\n", 
+					getNumJingles());
+				return -1;
+			}
+			retval = printJingle(jingle_idx);
 			if (retval) {
 				consolePrint("Error pringting Jingle (err = %d)\n", retval);
 				return -1;
@@ -774,32 +784,124 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 			jingleCmdUsage();
 			return -1;
 		}
-	} else if (!strcmp("delete", argv[1])) {
-		if (argc != 3) {
-			jingleCmdUsage();
-			return -1;
-		}
-
-		idx = strtol(argv[2], NULL, 0);
-		if (idx > 255) {
-			consolePrint("jingleIdx must bein range 0 to 255\n");
-			return -1;
-		}
-		retval = delJingle(idx);
-		if (retval) {
-			consolePrint("Error deleting Jingle (err = %d)\n", retval);
-			return -1;
-		}
 	} else if (!strcmp("clear", argv[1])) {
 		if (argc != 2) {
 			jingleCmdUsage();
 			return -1;
 		}
 		initJingleData();
+	} else if (!strcmp("delete", argv[1])) {
+		if (argc != 3) {
+			jingleCmdUsage();
+			return -1;
+		}
+
+		jingle_idx = strtol(argv[2], NULL, 0);
+		if (jingle_idx > 255) {
+			consolePrint("jingleIdx must bein range 0 to 255\n");
+			return -1;
+		}
+		if (jingle_idx >= getNumJingles()) {
+			consolePrint("Only %d jingles available\n", 
+				getNumJingles());
+			return -1;
+		}
+		retval = delJingle(jingle_idx);
+		if (retval) {
+			consolePrint("Error deleting Jingle (err = %d)\n", retval);
+			return -1;
+		}
 	} else if (!strcmp("add", argv[1])) {
-		//TODO
+		if (argc != 5) {
+			jingleCmdUsage();
+			return -1;
+		}
+
+		jingle_idx = strtol(argv[2], NULL, 0);
+		if (jingle_idx > 255) {
+			consolePrint("jingleIdx must bein range 0 to 255\n");
+			return -1;
+		}
+		if (jingle_idx >= getNumJingles()) {
+			consolePrint("Only %d jingles available\n", 
+				getNumJingles());
+			return -1;
+		}
+		uint32_t num_notes_right = strtol(argv[3], NULL, 0);
+		if (num_notes_right > 65535) {
+			consolePrint("numNotesRight must be in range 0 to 65535\n");
+			return -1;
+		}
+		uint32_t num_notes_left = strtol(argv[4], NULL, 0);
+		if (num_notes_left > 65535) {
+			consolePrint("numNotesLeft must be in range 0 to 65535\n");
+			return -1;
+		}
+		retval = addJingle(jingle_idx, num_notes_right, num_notes_left);
+		if (retval) {
+			consolePrint("Error adding Jingle (err = %d)\n", retval);
+			return -1;
+		}
 	} else if (!strcmp("note", argv[1])) {
-		//TODO
+		if (argc != 8) {
+			jingleCmdUsage();
+			return -1;
+		}
+
+		jingle_idx = strtol(argv[2], NULL, 0);
+		if (jingle_idx > 255) {
+			consolePrint("jingleIdx must bein range 0 to 255\n");
+			return -1;
+		}
+		if (jingle_idx >= getNumJingles()) {
+			consolePrint("Only %d jingles available\n", 
+				getNumJingles());
+			return -1;
+		}
+
+		Haptic hapticId = L_HAPTIC;
+		if (!strcmp(argv[3], "left")) {
+			hapticId = L_HAPTIC;
+		} else if (!strcmp(argv[3], "right")) {
+			hapticId = R_HAPTIC;
+		} else {
+			consolePrint("Invalid hapticId of \'%s\'\n", argv[3]);
+			return -1;
+		}
+
+		uint32_t note_idx = strtol(argv[4], NULL, 0);
+		uint32_t duty_cycle = strtol(argv[5], NULL, 0);
+		if (duty_cycle > 255) {
+			consolePrint("dutyCycle must be in range 0 to 255\n");
+			return -1;
+		}
+		uint32_t frequency = strtol(argv[6], NULL, 0);
+		if (frequency > 65535) {
+			consolePrint("frequency must be in range 0 to 65535\n");
+			return -1;
+		}
+		uint32_t duration = strtol(argv[7], NULL, 0);
+		if (duration > 65535) {
+			consolePrint("duration must be in range 0 to 65535\n");
+			return -1;
+		}
+
+		uint16_t num_notes = getNumJingleNotes(hapticId, jingle_idx);
+		if (note_idx >= num_notes) {
+			consolePrint("Invalid noteIdx of %d. Only %d notes for given channel\n", 
+				note_idx, num_notes);
+			return -1;
+		}
+		
+		Note* notes = getJingleNotes(hapticId, jingle_idx);
+		if (!notes) {
+			consolePrint("Error getting notes.\n");
+			return -1;
+		}
+
+		notes[note_idx].dutyCycle = duty_cycle;
+		notes[note_idx].pulseFreq = frequency;
+		notes[note_idx].duration = duration;
 	} else if (!strcmp("eeprom", argv[1])) {
 		if (argc != 3) {
 			jingleCmdUsage();
