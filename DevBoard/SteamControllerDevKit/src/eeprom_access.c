@@ -174,10 +174,11 @@ int eepromCmdFnc(int argc, const char* argv[]) {
  * Wrapper around IAP command for EEPROM read.
  *
  * \param offset EEPROM address to read from (EEPROM is 4 kB)
- * \param readData Location of where to store read data.
+ * \param[out] readData Location of where to store read data.
  * \param numBytes Number of bytes to read.
  *
- * \return CMD_SUCCESS | SRC_ADDR_NOT_MAPPED | DST_ADDR_NOT_MAPPED.
+ * \return CMD_SUCCESS | SRC_ADDR_NOT_MAPPED | DST_ADDR_NOT_MAPPED |
+ *	INVALID_COMMAND.
  */
 int eepromRead(uint32_t offset, void* readData, uint32_t numBytes){
 	unsigned int command_param[5];
@@ -202,9 +203,36 @@ int eepromRead(uint32_t offset, void* readData, uint32_t numBytes){
 }
 
 /**
- * //TODO: document this
+ * Wrapper around IAP command for EEPROM write.
+ *
+ * \param offset EEPROM address to read from (EEPROM is 4 kB)
+ * \param[in] writeData Location of where to store read data.
+ * \param numBytes Number of bytes to write.
+ *
+ * \return CMD_SUCCESS | SRC_ADDR_NOT_MAPPED | DST_ADDR_NOT_MAPPED | 
+ *	INVALID_COMMAND.
  */
 int eepromWrite(uint32_t offset, const void* writeData, uint32_t numBytes){
-	//TODO: implement this
-	return INVALID_COMMAND;
+	unsigned int command_param[5];
+	unsigned int status_result[4];
+
+	if (!writeData)
+		return INVALID_COMMAND;
+
+	status_result[0] = INVALID_COMMAND;
+
+	// Command 61 for EEPROM Write
+	command_param[0] = 61;
+	// EEPROM address (4 kB available)
+	command_param[1] = offset;
+	// RAM address where to read data to write to EEPROM
+	command_param[2] = (unsigned int)writeData;
+	// Number of bytes to write
+	command_param[3] = numBytes;
+	// System clock frequency in kHz
+	command_param[4] = 46875;
+
+	iap_entry(command_param, status_result);
+
+	return status_result[0];
 }

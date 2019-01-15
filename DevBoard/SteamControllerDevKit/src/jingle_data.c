@@ -915,6 +915,7 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 					retval);
 				return -1;
 			}
+			consolePrint("Load complete\n");
 		} else if (!strcmp("save", argv[2])) {
 			retval = saveJingleEEPROM();
 			if (retval) {
@@ -922,6 +923,7 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 					retval);
 				return -1;
 			}
+			consolePrint("Save complete\n");
 		} else if (!strcmp("clear", argv[2])) {
 			retval = clearJingleEEPROM();
 			if (retval) {
@@ -929,6 +931,7 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 					retval);
 				return -1;
 			}
+			consolePrint("Clear complete\n");
 		} else {
 			jingleCmdUsage();
 			return -1;
