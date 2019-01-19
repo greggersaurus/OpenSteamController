@@ -27,11 +27,11 @@
 
 #include "adc_read.h"
 
-#include "console.h"
-
 #include "lpc_types.h"
 #include "chip.h"
 #include "adc_11xx.h"
+
+#include <stdio.h>
 
 static LPC_ADC_T* adcRegs = LPC_ADC;
 static ADC_CLOCK_SETUP_T adcSetup; 
@@ -42,7 +42,7 @@ static ADC_CLOCK_SETUP_T adcSetup;
  * \return None.
  */
 static void printUsage(void) {
-	consolePrint(
+	printf(
 		"usage: adc\n"
 		"\n"
 //TODO
@@ -63,15 +63,15 @@ int adcReadCmdFnc(int argc, const char* argv[]) {
 //TODO
 
 while (1) {
-	consolePrint("ADC[6] = 0x%04x, ", adcReadChan(ADC_CH6));
+	printf("ADC[6] = 0x%04x, ", adcReadChan(ADC_CH6));
 
-	consolePrint("ADC[0] = 0x%04x, ", adcReadChan(ADC_CH0));
-	consolePrint("ADC[2] = 0x%04x, ", adcReadChan(ADC_CH2));
+	printf("ADC[0] = 0x%04x, ", adcReadChan(ADC_CH0));
+	printf("ADC[2] = 0x%04x, ", adcReadChan(ADC_CH2));
 
 	// Joystick X direction (left = 0x338, neutral = 0x20a right = 0x0f0)
-	consolePrint("ADC[1] = 0x%04x, ", adcReadChan(ADC_CH1));
+	printf("ADC[1] = 0x%04x, ", adcReadChan(ADC_CH1));
 	// Joystick Y direction (up = 0x32a, neutral = 0x207, down = 0xf8)
-	consolePrint("ADC[3] = 0x%04x\n", adcReadChan(ADC_CH3));
+	printf("ADC[3] = 0x%04x\n", adcReadChan(ADC_CH3));
 }
 
 	return 0;

@@ -29,11 +29,11 @@
 
 #include "jingle_data.h"
 
+#include "eeprom_access.h"
+
 #include <stdlib.h>
 #include <string.h>
-
-#include "console.h"
-#include "eeprom_access.h"
+#include <stdio.h>
 
 #define JINGLE_DATA_MAX_BYTES (0x400)
 
@@ -522,12 +522,12 @@ static int delJingle(uint8_t idx) {
  * \return 0 on success.
  */
 static int printJingleData(void) {
-	consolePrint("Magic Word = 0x%04x\n", getMagicWord());
-	consolePrint("Number of Jingles = %d\n", getNumJingles());
+	printf("Magic Word = 0x%04x\n", getMagicWord());
+	printf("Number of Jingles = %d\n", getNumJingles());
 	for (int idx = 0; idx < getNumJingles(); idx++) {
-		consolePrint("Jingle[0] offset = 0x%03x\n", getJingleOffset(idx));
+		printf("Jingle[0] offset = 0x%03x\n", getJingleOffset(idx));
 	}
-	consolePrint("Bytes free in blob = 0x%03x\n", numJingleBytesFree);
+	printf("Bytes free in blob = 0x%03x\n", numJingleBytesFree);
 	return 0;
 }
 
@@ -540,31 +540,31 @@ static int printJingleData(void) {
  */
 static int printJingle(uint8_t idx) {
 	if (idx >= getNumJingles()) {
-		consolePrint("jingleNum %d too large\n", idx);
+		printf("jingleNum %d too large\n", idx);
 		return -1;
 	}
 
 	uint16_t offset = getJingleOffset(idx);
 	if (!offset) {
-		consolePrint("Invalid offset (0x%04x)\n", offset);
+		printf("Invalid offset (0x%04x)\n", offset);
 		return -1;
 	}
 
-	consolePrint("offset = 0x%03x\n", offset);
+	printf("offset = 0x%03x\n", offset);
 	uint16_t numNotesRight = getNumJingleNotes(R_HAPTIC, idx);
-	consolePrint("numNotesRight = %d\n", numNotesRight);
+	printf("numNotesRight = %d\n", numNotesRight);
 	uint16_t numNotesLeft = getNumJingleNotes(L_HAPTIC, idx);
-	consolePrint("numNotesLeft = %d\n", numNotesLeft);
+	printf("numNotesLeft = %d\n", numNotesLeft);
 	struct Note* notesRight = getJingleNotes(R_HAPTIC, idx);
-	consolePrint("notesRight = 0x%08x\n", notesRight);
+	printf("notesRight = 0x%08x\n", notesRight);
 	struct Note* notesLeft = getJingleNotes(L_HAPTIC, idx);
-	consolePrint("notesLeft = 0x%08x\n", notesLeft);
+	printf("notesLeft = 0x%08x\n", notesLeft);
 
 	for (int idx = 0; idx < numNotesRight; idx++) {
 		if (!notesRight)
 			break;
 
-		consolePrint("Note[%d] = 0x%04x, 0x%04x, 0x%04x\n", idx,
+		printf("Note[%d] = 0x%04x, 0x%04x, 0x%04x\n", idx,
 			notesRight[idx].dutyCycle, 
 			notesRight[idx].pulseFreq, 
 			notesRight[idx].duration);
@@ -573,7 +573,7 @@ static int printJingle(uint8_t idx) {
 		if (!notesLeft)
 			break;
 
-		consolePrint("Note[%d] = 0x%04x, 0x%04x, 0x%04x\n", idx,
+		printf("Note[%d] = 0x%04x, 0x%04x, 0x%04x\n", idx,
 			notesLeft[idx].dutyCycle,
 			notesLeft[idx].pulseFreq,
 			notesLeft[idx].duration);
@@ -686,16 +686,14 @@ static int clearJingleEEPROM(void) {
  * \return None.
  */
 void jingleCmdUsage(void) {
-	consolePrint(
+	printf(
 		"usage: jingle play {jingleIdx}\n"
 		"       jingle print [{jingleIdx}]\n"
 		"       jingle clear\n"
 		"       jingle delete {jingleIdx}\n"
 		"       jingle add {jingleIdx} {numNotesRight} {numNotesLeft}\n"
-		"	jingle note {jingleIdx} {hapticId} {notdeIdx} {dutyCycle} {frequency} {duration}\n"
-		"	jingle eeprom {cmd}\n"
-//TODO: allows for input of "raw" Jingle Data (maybe test interface for Qt GUI or someting?)
-//		"	jingle raw ...\n" 
+		"       jingle note {jingleIdx} {hapticId} {notdeIdx} {dutyCycle} {freq} {dur}\n"
+		"       jingle eeprom {cmd}\n"
 		"\n"
 		"play = play the jingle associated with the given jingleIdx\n"
 		"print = Print info on all the jingles, or details on the notes\n"
@@ -748,17 +746,17 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 
 		jingle_idx = strtol(argv[2], NULL, 0);
 		if (jingle_idx > 255) {
-			consolePrint("jingleIdx must bein range 0 to 255\n");
+			printf("jingleIdx must bein range 0 to 255\n");
 			return -1;
 		}
 		if (jingle_idx >= getNumJingles()) {
-			consolePrint("Only %d jingles available\n", 
+			printf("Only %d jingles available\n", 
 				getNumJingles());
 			return -1;
 		}
 		retval = playJingle(jingle_idx);
 		if (retval) {
-			consolePrint("Error playing Jingle (err = %d)\n", retval);
+			printf("Error playing Jingle (err = %d)\n", retval);
 			return -1;
 		}
 	} else if (!strcmp("print", argv[1])) {
@@ -767,17 +765,17 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 		} else if (argc == 3) {
 			jingle_idx = strtol(argv[2], NULL, 0);
 			if (jingle_idx > 255) {
-				consolePrint("jingleIdx must bein range 0 to 255\n");
+				printf("jingleIdx must bein range 0 to 255\n");
 				return -1;
 			}
 			if (jingle_idx >= getNumJingles()) {
-				consolePrint("Only %d jingles available\n", 
+				printf("Only %d jingles available\n", 
 					getNumJingles());
 				return -1;
 			}
 			retval = printJingle(jingle_idx);
 			if (retval) {
-				consolePrint("Error pringting Jingle (err = %d)\n", retval);
+				printf("Error pringting Jingle (err = %d)\n", retval);
 				return -1;
 			}
 		} else { 
@@ -798,17 +796,17 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 
 		jingle_idx = strtol(argv[2], NULL, 0);
 		if (jingle_idx > 255) {
-			consolePrint("jingleIdx must bein range 0 to 255\n");
+			printf("jingleIdx must bein range 0 to 255\n");
 			return -1;
 		}
 		if (jingle_idx >= getNumJingles()) {
-			consolePrint("Only %d jingles available\n", 
+			printf("Only %d jingles available\n", 
 				getNumJingles());
 			return -1;
 		}
 		retval = delJingle(jingle_idx);
 		if (retval) {
-			consolePrint("Error deleting Jingle (err = %d)\n", retval);
+			printf("Error deleting Jingle (err = %d)\n", retval);
 			return -1;
 		}
 	} else if (!strcmp("add", argv[1])) {
@@ -819,27 +817,27 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 
 		jingle_idx = strtol(argv[2], NULL, 0);
 		if (jingle_idx > 255) {
-			consolePrint("jingleIdx must bein range 0 to 255\n");
+			printf("jingleIdx must bein range 0 to 255\n");
 			return -1;
 		}
 		if (jingle_idx >= getNumJingles()) {
-			consolePrint("Only %d jingles available\n", 
+			printf("Only %d jingles available\n", 
 				getNumJingles());
 			return -1;
 		}
 		uint32_t num_notes_right = strtol(argv[3], NULL, 0);
 		if (num_notes_right > 65535) {
-			consolePrint("numNotesRight must be in range 0 to 65535\n");
+			printf("numNotesRight must be in range 0 to 65535\n");
 			return -1;
 		}
 		uint32_t num_notes_left = strtol(argv[4], NULL, 0);
 		if (num_notes_left > 65535) {
-			consolePrint("numNotesLeft must be in range 0 to 65535\n");
+			printf("numNotesLeft must be in range 0 to 65535\n");
 			return -1;
 		}
 		retval = addJingle(jingle_idx, num_notes_right, num_notes_left);
 		if (retval) {
-			consolePrint("Error adding Jingle (err = %d)\n", retval);
+			printf("Error adding Jingle (err = %d)\n", retval);
 			return -1;
 		}
 	} else if (!strcmp("note", argv[1])) {
@@ -850,11 +848,11 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 
 		jingle_idx = strtol(argv[2], NULL, 0);
 		if (jingle_idx > 255) {
-			consolePrint("jingleIdx must bein range 0 to 255\n");
+			printf("jingleIdx must bein range 0 to 255\n");
 			return -1;
 		}
 		if (jingle_idx >= getNumJingles()) {
-			consolePrint("Only %d jingles available\n", 
+			printf("Only %d jingles available\n", 
 				getNumJingles());
 			return -1;
 		}
@@ -865,43 +863,45 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 		} else if (!strcmp(argv[3], "right")) {
 			hapticId = R_HAPTIC;
 		} else {
-			consolePrint("Invalid hapticId of \'%s\'\n", argv[3]);
+			printf("Invalid hapticId of \'%s\'\n", argv[3]);
 			return -1;
 		}
 
 		uint32_t note_idx = strtol(argv[4], NULL, 0);
 		uint32_t duty_cycle = strtol(argv[5], NULL, 0);
 		if (duty_cycle > 255) {
-			consolePrint("dutyCycle must be in range 0 to 255\n");
+			printf("dutyCycle must be in range 0 to 255\n");
 			return -1;
 		}
 		uint32_t frequency = strtol(argv[6], NULL, 0);
 		if (frequency > 65535) {
-			consolePrint("frequency must be in range 0 to 65535\n");
+			printf("frequency must be in range 0 to 65535\n");
 			return -1;
 		}
 		uint32_t duration = strtol(argv[7], NULL, 0);
 		if (duration > 65535) {
-			consolePrint("duration must be in range 0 to 65535\n");
+			printf("duration must be in range 0 to 65535\n");
 			return -1;
 		}
 
 		uint16_t num_notes = getNumJingleNotes(hapticId, jingle_idx);
 		if (note_idx >= num_notes) {
-			consolePrint("Invalid noteIdx of %d. Only %d notes for given channel\n", 
+			printf("Invalid noteIdx of %d. Only %d notes for given channel\n", 
 				note_idx, num_notes);
 			return -1;
 		}
 		
 		Note* notes = getJingleNotes(hapticId, jingle_idx);
 		if (!notes) {
-			consolePrint("Error getting notes.\n");
+			printf("Error getting notes.\n");
 			return -1;
 		}
 
 		notes[note_idx].dutyCycle = duty_cycle;
 		notes[note_idx].pulseFreq = frequency;
 		notes[note_idx].duration = duration;
+
+		printf("Note updated successfully.\n");
 	} else if (!strcmp("eeprom", argv[1])) {
 		if (argc != 3) {
 			jingleCmdUsage();
@@ -911,27 +911,27 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 		if (!strcmp("load", argv[2])) {
 			retval = loadJingleEEPROM();
 			if (retval) {
-				consolePrint("Loading from EEPROM failed (err = %d).\n",
+				printf("Loading from EEPROM failed (err = %d).\n",
 					retval);
 				return -1;
 			}
-			consolePrint("Load complete\n");
+			printf("Load complete\n");
 		} else if (!strcmp("save", argv[2])) {
 			retval = saveJingleEEPROM();
 			if (retval) {
-				consolePrint("Saving to EEPROM failed (err = %d).\n",
+				printf("Saving to EEPROM failed (err = %d).\n",
 					retval);
 				return -1;
 			}
-			consolePrint("Save complete\n");
+			printf("Save complete\n");
 		} else if (!strcmp("clear", argv[2])) {
 			retval = clearJingleEEPROM();
 			if (retval) {
-				consolePrint("Clearing EEPROM failed (err = %d).\n",
+				printf("Clearing EEPROM failed (err = %d).\n",
 					retval);
 				return -1;
 			}
-			consolePrint("Clear complete\n");
+			printf("Clear complete\n");
 		} else {
 			jingleCmdUsage();
 			return -1;

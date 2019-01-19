@@ -27,11 +27,10 @@
 
 #include "mem_access.h"
 
-#include "console.h"
-
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 /**
  * Print command usage details to console.
@@ -39,7 +38,7 @@
  * \return None.
  */
 static void printUsage() {
-	consolePrint(
+	printf(
 		"usage: mem read word_size address num_words\n"
 		"       mem write word_size address value\n"
 		"\n"
@@ -65,11 +64,11 @@ static int memReadToConsole(uint32_t wordSize, uint32_t addr,
 	uint32_t curr_addr = addr;
 
 	if (wordSize != 8 && wordSize != 16 && wordSize != 32) {
-		consolePrint("Invalid word size %d\n", wordSize);
+		printf("Invalid word size %d\n", wordSize);
 		return -1;
 	}
 	
-	consolePrint("Reading %d %d-bit words starting at 0x%X from memory "
+	printf("Reading %d %d-bit words starting at 0x%X from memory "
 		"mapped region\n", numWords, wordSize, addr);
 
 	void* read_data = (void*)addr;
@@ -78,25 +77,25 @@ static int memReadToConsole(uint32_t wordSize, uint32_t addr,
 	{
 		if (!(word_cnt % 8))
 		{
-			consolePrint("\n%08X: ", curr_addr);
+			printf("\n%08X: ", curr_addr);
 		}
 
 		if (wordSize == 8)
 		{
-			consolePrint("%02X ", ((uint8_t*)read_data)[word_cnt]);
+			printf("%02X ", ((uint8_t*)read_data)[word_cnt]);
 		}
 		else if (wordSize == 16)
 		{
-			consolePrint("%04X ", ((uint16_t*)read_data)[word_cnt]);
+			printf("%04X ", ((uint16_t*)read_data)[word_cnt]);
 		}
 		else if (wordSize == 32)
 		{
-			consolePrint("%08X ", ((uint32_t*)read_data)[word_cnt]);
+			printf("%08X ", ((uint32_t*)read_data)[word_cnt]);
 		}
 
 		curr_addr += bytes_per_word;
 	}
-	consolePrint("\n");
+	printf("\n");
 
 	return 0;
 }
@@ -125,10 +124,10 @@ int memCmdFnc(int argc, const char* argv[]) {
 		retval = memReadToConsole(word_size, addr, num_words);
 	} else if (!strcmp("write", argv[1])) {
 		//TODO: implement this
-		consolePrint("memory mapped writing not implemented yet\n");
+		printf("memory mapped writing not implemented yet\n");
 		return -1;
 	} else {
-		consolePrint("Invalid argument \"%s\"\n", argv[1]);
+		printf("Invalid argument \"%s\"\n", argv[1]);
 		return -1;
 	}
 

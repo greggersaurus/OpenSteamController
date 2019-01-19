@@ -44,7 +44,20 @@
 
 #include "chip.h"
 
+#include "led_ctrl.h"
+
 #include <string.h>
+#include <stdio.h>
+
+#if (__REDLIB_INTERFACE_VERSION__ >= 20000)
+/* We are using new Redlib_v2 semihosting interface */
+	#define WRITEFUNC __sys_write
+	#define READFUNC __sys_readc
+#else
+/* We are using original Redlib semihosting interface */
+	#define WRITEFUNC __write
+	#define READFUNC __readc
+#endif
 
 const USBD_API_T *g_pUsbApi; //!< Through a series of non-ideal associations
 	//!< this is used to access boot ROM code for USB functions. See
@@ -90,14 +103,29 @@ typedef struct USB_UART_DATA {
 	volatile uint8_t rxOverflow; //!< Data was dropped because rxBuf was
 		//!< not drained quickly enough (i.e. calls to getUsbSerialData)
 
-	uint8_t* txBuf;	//!< USB CDC UART buffer where data to be transfered is stored
-	uint8_t txLen; //!< Number of bytes to send from txBuf in total
-	uint8_t txSent; //!< Number of bytes already sent from txBuf
-	volatile uint8_t txBusy; /*!< USB is busy sending previous packet */
+	volatile int txBusy; //!< Indicates transmission is in progress. This 
+		//!< does not guarantee that txFifo will be drained (use 
+		//!< usb_flush() for this).
+	uint8_t* txFifo; //!< Buffer treated as a FIFO which stores character
+		//!< data to be transmitted via USB CDC UART
+	uint32_t txRdIdx; //!< The index of where the next read sample
+		//!< exists in txFifo
+	uint32_t txWrIdx; //!< The index of where the next write 
+		//!< sample will be put in txFifo
+	uint32_t txSent; //!< Number of bytes WriteEP reports it last 
+		//!< sent.
 } USB_UART_DATA_T;
 
-// Virtual Comm port control data instance. 
-static USB_UART_DATA_T usbUartData;
+static USB_UART_DATA_T usbUartData; //!< Virtual Comm port control data 
+	//!< instance. 
+
+static const uint32_t USB_UART_TXFIFO_SZ = 256; //!< Number of bytes in txFifo.
+	//!< This must be a power of 2!
+static const uint32_t USB_UART_TXFIFO_THRESH = 128; //!< Determines when
+	//!< transmission of txFifo data starts automatically.
+
+static const uint32_t USB_MAX_PACKET_SZ = USB_FS_MAX_BULK_PACKET; //!< Maximum 
+	//!< number of bytes in packet that can be sent or received via USB.
 
 // Number of bytes for buffer tx and rx for USB CDC UART
 static const uint32_t USB_UART_BUFF_SIZE = 64;
@@ -218,7 +246,7 @@ ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 	USB_ENDPOINT_DESCRIPTOR_TYPE, /* bDescriptorType */
 	USB_CDC_IN_EP, /* bEndpointAddress */
 	USB_ENDPOINT_TYPE_BULK, /* bmAttributes */
-	WBVAL(64), /* wMaxPacketSize */
+	WBVAL(USB_FS_MAX_BULK_PACKET), /* wMaxPacketSize */
 	0x00, /* bInterval: ignore for Bulk transfer */
 	/* Terminator */
 	0 /* bLength */
@@ -270,6 +298,181 @@ ALIGNED(4) const uint8_t USB_StringDescriptor[] = {
 };
 
 /**
+ * \param[in] uartData Contains details on Virtual Comm to transmit via.
+ *
+ * \return The number of bytes in txFifo ready to be sent.
+ */
+static uint32_t usbTxFifoNumBytes(const USB_UART_DATA_T* uartData) {
+	if (uartData->txWrIdx >= uartData->txRdIdx) {
+		return uartData->txWrIdx - uartData->txRdIdx;
+	}
+
+	return 1 + uartData->txRdIdx + USB_UART_TXFIFO_SZ - uartData->txWrIdx;
+}
+
+/**
+ * Start a (series of) transmission(s) via USB with as much txFifo data as
+ *  possible. This will do nothing if a transmission is already in progress
+ *  or txFIFO is empty.
+ *
+ * \param[inout] uartData Contains details on Virtual Comm to transmit via.
+ *
+ * \return None.
+ */
+static void usbUartTxStart(USB_UART_DATA_T* uartData) {
+	// Make sure we are not already busy with a transmit
+	if (uartData->txBusy) {
+		return;
+	}
+
+	// Mark that we are busy now
+	uartData->txBusy = 1;
+
+	// Check if there is any data to send
+	uint32_t bytes_to_send = usbTxFifoNumBytes(uartData);
+
+	// Make sure there is no wrap around in send request
+	if (bytes_to_send + uartData->txRdIdx >= USB_UART_TXFIFO_SZ) {
+		bytes_to_send = USB_UART_TXFIFO_SZ - uartData->txRdIdx;
+	}
+
+	// Make sure we actually have data to send
+	if (!bytes_to_send) {
+		uartData->txBusy = 0;
+		return;
+	}
+
+	// Seems we can enter an error state (i.e. interrupt does not fire or
+	//  keeps firing continuously) if we tell WriteEP() that it should send
+	//  number of bytes larger than what is specified for wMaxPacketSize
+	if (bytes_to_send > USB_MAX_PACKET_SZ) {
+		bytes_to_send = USB_MAX_PACKET_SZ;
+	}
+
+	// Send the data to the USB EP (the interrupt handler will adjust rxIdx)
+	uartData->txSent = USBD_API->hw->WriteEP(uartData->usbHandle, 
+		USB_CDC_IN_EP, &uartData->txFifo[uartData->txRdIdx], 
+		bytes_to_send);
+
+	// Just in case something went wrong
+	if (!uartData->txSent) {
+		uartData->txBusy = 0;
+	}
+}
+
+/**
+ * Queue character to be transmitted via USB CDC UART. This does not guarantee
+ *  character will be sent upon function return (use usb_flush() to guarantee).
+ *
+ * \param character Character to write out via virtual UART.
+ * 
+ * \return Character queued. Function will stall until character is queued.
+ */
+int usb_putc(int character) {
+	uint32_t next_wr_idx = 0;
+	// Wait until FIFO is not full
+	// Note: this is a wasteful "full" calculation as there is still
+	//  one byte left in the FIFO, however, this makes calculating the
+	//  number of bytes in the FIFO simpler.
+	do {
+		next_wr_idx = (usbUartData.txWrIdx + 1) % USB_UART_TXFIFO_SZ;
+	} while (next_wr_idx == usbUartData.txRdIdx);
+
+	// Put new character info FIFO
+	usbUartData.txFifo[usbUartData.txWrIdx] = character;
+	usbUartData.txWrIdx = next_wr_idx;
+
+	// Check if transmit should be initiated
+	if (usbUartData.txBusy) {
+		// Transmit is already taking place. New character may or may
+		//  not make it out
+		return character;
+	}
+
+	// Request starting a new (series of) transmission(s) if the FIFO has
+	//  filled up adequately
+	if (usbTxFifoNumBytes(&usbUartData) >= USB_UART_TXFIFO_THRESH) {
+		usbUartTxStart(&usbUartData);
+	}
+
+	return character;
+}
+
+/**
+ * Queue the data in the buffer for output via USB CDC UART. Useful for cases
+ *  in which we want to only print some characters of a string, or print from
+ *  a buffer that is not necessarily null terminated.
+ *
+ * \param[in] buff Buffer storing data to write out via virtual serial.
+ * \param len Numbers of chars in buff.
+ * 
+ * \return None.
+ */
+void usb_putb(const char* buff, uint32_t len) {
+	for (int idx = 0; idx < len; idx++){
+		usb_putc(buff[idx]);
+	}
+}
+
+/**
+ * Make sure any character currently in the transmit FIFO are transmitted via
+ *  USB.
+ *
+ * \return 0 on success. Function will stall until flushing of data in transmit
+ *  FIFO is initiated.
+ */
+int usb_flush(void) {
+	// Wait for any ongoing transmissions to finish
+	while (usbUartData.txBusy);
+
+	// Start a new transmission that will make sure all data currently in
+	//  txFifo is sent
+	usbUartTxStart(&usbUartData);
+
+	return 0;
+}
+
+/**
+ * Called by bottom level of printf routine within RedLib C library to print
+ *  characters. 
+ * 
+ * \parma iFileHandle Ignored.
+ * \param[in] pcBuffer Stores characters to be printed.
+ * \parma iLength Number of characters in pcBuffer.
+ * 
+ * \return Number of characters queued for printing.
+ */
+int WRITEFUNC(int iFileHandle, char *pcBuffer, int iLength)
+{
+	for (int idx = 0; idx < iLength; idx++) {
+		usb_putc(pcBuffer[idx]);
+		// Need to add carriage return and flush after each newline
+		if (pcBuffer[idx] == '\n') {
+			usb_putc('\r');
+			usb_flush();
+		}
+	}
+
+	return iLength;
+}
+
+//TODO:
+/* Called by bottom level of scanf routine within RedLib C library to read
+   a character. With the default semihosting stub, this would read the character
+   from the debugger console window (which acts as stdin). But this version reads
+   the character from the LPC1768/RDB1768 UART. */
+int READFUNC(void)
+{
+#if defined(DEBUG_ENABLE)
+	char c = Board_UARTGetChar();
+	return (int) c;
+
+#else
+	return (int) -1;
+#endif
+}
+
+/**
  * USB CDC UART bulk EP_IN and EP_OUT endpoints handler 
  *
  * \param[in] usbHandle Handle to USB device stack.
@@ -281,26 +484,20 @@ ALIGNED(4) const uint8_t USB_StringDescriptor[] = {
  */
 static ErrorCode_t usbUartBulkHandler(USBD_HANDLE_T usbHandle, void* data, 
 	uint32_t event) {
-	USB_UART_DATA_T* usb_uart_data = (USB_UART_DATA_T *) data;
+	USB_UART_DATA_T* usb_uart_data = (USB_UART_DATA_T *)data;
 	uint32_t count = 0;
 
 	switch (event) {
 	// A transfer from us to the USB host that we queued has completed
 	case USB_EVT_IN:
-		// Calculate how much data needs to be sent
-		count = usb_uart_data->txLen - usb_uart_data->txSent;
-		if (count > 0) {
-			// Request to send more data
-			usb_uart_data->txSent += USBD_API->hw->WriteEP(
-				usbHandle, USB_CDC_IN_EP, 
-				&usb_uart_data->txBuf[usb_uart_data->txSent], 
-				count);
-		} else {
-			// Transmission request complete
-			usb_uart_data->txSent = 0;
-			usb_uart_data->txLen = 0;
-			usb_uart_data->txBusy = 0;
-		}
+		// Update read index
+		usb_uart_data->txRdIdx = (usb_uart_data->txRdIdx + 
+			usb_uart_data->txSent) % USB_UART_TXFIFO_SZ;
+		usb_uart_data->txSent = 0;
+		usb_uart_data->txBusy = 0;
+
+		// Attempt to start another transmission
+		usbUartTxStart(usb_uart_data);
 		break;
 
 	// We received a transfer from the USB host. 
@@ -445,6 +642,7 @@ static ErrorCode_t usbUartSetLineCode(USBD_HANDLE_T hCDC, CDC_LINE_CODING *line_
 		break;
 	}
 
+// TODO: Should this still be here...?
 	if (line_coding->dwDTERate < 3125000) {
 		Chip_UART_SetBaud(LPC_USART, line_coding->dwDTERate);
 	}
@@ -488,10 +686,10 @@ static ErrorCode_t usbUartInit(USBD_HANDLE_T usbHandle,
 	ret = USBD_API->cdc->init(usbHandle, &cdc_param, &usbUartData.cdcHandle);
 
 	if (ret == LPC_OK) {
-		/* allocate transfer buffers */
-		usbUartData.txBuf = (uint8_t *) cdc_param.mem_base;
-		cdc_param.mem_base += USB_UART_BUFF_SIZE;
-		cdc_param.mem_size -= USB_UART_BUFF_SIZE;
+		// Allocate buffer for transmit FIFO
+		usbUartData.txFifo = (uint8_t *) cdc_param.mem_base;
+		cdc_param.mem_base += USB_UART_TXFIFO_SZ;
+		cdc_param.mem_size -= USB_UART_TXFIFO_SZ;
 		usbUartData.rxBuf = (uint8_t *) cdc_param.mem_base;
 		// Make rxBuf twice as big to avoid potential overflow. We are
 		//  using this buffer to build commands, as a USB packet of 
@@ -593,42 +791,6 @@ int usbConfig(void){
 	USBD_API->hw->Connect(usbHandle, 1);
 
 	return 0;
-}
-
-/**
- * Function for sending data out the CDC UART interface.
- *  Does not return until all the data has been sent.
- *
- * \param[in] data The data to transmit.
- * \param len The number of bytes in the data buffer.
- *
- * \return None.
- */
-void sendUsbSerialData(const uint8_t* data, uint32_t len)
-{
-	// Transmission may need to be broken up given txBuf size
-	for (uint32_t sent = 0; sent < len; sent+=USB_UART_BUFF_SIZE)
-	{
-		// Calculate how much to send in this request
-		uint32_t to_send = len - sent;
-		if (to_send > USB_UART_BUFF_SIZE)
-		{
-			usbUartData.txLen = USB_UART_BUFF_SIZE;
-		}
-		else
-		{
-			usbUartData.txLen = to_send;
-		}
-
-		memcpy(usbUartData.txBuf, &data[sent], usbUartData.txLen);
-
-		usbUartData.txBusy = 1;
-		usbUartData.txSent = USBD_API->hw->WriteEP(usbUartData.usbHandle, 
-			USB_CDC_IN_EP, usbUartData.txBuf, usbUartData.txLen);
-
-		// Wait for request to completely finish
-		while(usbUartData.txBusy);
-	}
 }
 
 /**

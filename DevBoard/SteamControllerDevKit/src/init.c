@@ -39,12 +39,13 @@
 #include "chip.h"
 #include "gpio_11xx_1.h"
 
-#include "console.h"
 #include "led_ctrl.h"
 #include "adc_read.h"
 #include "buttons.h"
 #include "trackpad.h"
 #include "haptic.h"
+
+#include <stdio.h>
 
 /* System oscillator rate and clock rate on the CLKIN pin */                    
 //TODO: is this correct?
@@ -249,15 +250,15 @@ void stage2Init(uint32_t hwVersion){
  * \return 0 on success.
  */
 int initStatsCmdFnc(int argc, const char* argv[]) { 
-	consolePrint("PIO0_3 was %d on startup. Is %d now.\n", 
+	printf("PIO0_3 was %d on startup. Is %d now.\n", 
 		pio0_3_start_val, Chip_GPIO_GetPinState(LPC_GPIO, 0, 3));
-	consolePrint("AD6 was %d on startup. Is %d now.\n", 
+	printf("AD6 was %d on startup. Is %d now.\n", 
 		ad6_start_val, adcReadChan(6));
-	consolePrint("PIO0_2 was %d on startup. Is %d now.\n", 
+	printf("PIO0_2 was %d on startup. Is %d now.\n", 
 		pio0_2_start_val, Chip_GPIO_GetPinState(LPC_GPIO, 0, 2));
-	consolePrint("PIO1_12 was %d on startup. Is %d now.\n", 
+	printf("PIO1_12 was %d on startup. Is %d now.\n", 
 		pio1_12_start_val, Chip_GPIO_GetPinState(LPC_GPIO, 1, 12));
-	consolePrint("PIO0_18 was %d on startup. Is %d now.\n", 
+	printf("PIO0_18 was %d on startup. Is %d now.\n", 
 		pio0_18_start_val, Chip_GPIO_GetPinState(LPC_GPIO, 0, 18));
 
 	return 0;

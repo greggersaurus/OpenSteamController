@@ -41,7 +41,7 @@
 	// string
 
 typedef struct {
-	uint8_t str[MAX_ENTRY_LEN]; // String of data received for console
+	char str[MAX_ENTRY_LEN]; // String of data received for console
 		// entry 
 	uint32_t len; // Number of valid characters in str
 } ConsoleEntry;
@@ -69,21 +69,21 @@ static uint32_t oldestHistoryIdx = 0; // If entriesRdIdx is set to this value
  *
  * \return None.
  */
-static void printHex(const uint8_t* buff, uint32_t len){
-	consolePrint("\n");
+static void printHex(const char* buff, uint32_t len){
+	printf("\n");
 	for (int idx = 0; idx < len; idx++) {
 		char c = buff[idx];
 		if (idx == cursorIdx) {
-			consolePrint("[");
+			printf("[");
 		}
-		consolePrint("0x%x", c);
+		printf("0x%x", c);
 		if (idx == cursorIdx) {
-			consolePrint("]");
+			printf("]");
 		}
-		consolePrint(" ");
+		printf(" ");
 	}
-	consolePrint("\n");
-	consolePrint("\n");
+	printf("\n");
+	printf("\n");
 }
 
 /**
@@ -94,7 +94,7 @@ static void printHex(const uint8_t* buff, uint32_t len){
  *
  * \return 0 on successful handle. Non-zero indicates incomplete sequence.
  */
-static int handleEscSeq(const uint8_t* seq, uint32_t len) {
+static int handleEscSeq(const char* seq, uint32_t len) {
 
 	if (len < 3) {
 		return -1;
@@ -104,10 +104,12 @@ static int handleEscSeq(const uint8_t* seq, uint32_t len) {
 		// Up arrow key 
 		if (entriesRdIdx == oldestHistoryIdx) {
 			// Sound to indicate we are at limit 
-			consolePrint("\a");
+			printf("\a");
+			usb_flush();
 		} else {
 			// Clear line
-			consolePrint("\r\x1B[2K");
+			printf("\r\x1B[2K");
+			usb_flush();
 
 			// Copy and display entry from history
 			if (!entriesRdIdx) {
@@ -121,17 +123,20 @@ static int handleEscSeq(const uint8_t* seq, uint32_t len) {
 			entries[entriesWrIdx].len = entries[entriesRdIdx].len;
 			cursorIdx = entries[entriesRdIdx].len;
 	
-			sendUsbSerialData(entries[entriesWrIdx].str, 
+			usb_putb(entries[entriesWrIdx].str, 
 				entries[entriesWrIdx].len);
+			usb_flush();
 		}
 	} else if (seq[1] == '[' && seq[2] == 'B') {
 		// Down arrow key 
 		if (entriesRdIdx == entriesWrIdx) {
 			// Sound to indicate we are at limit 
-			consolePrint("\a");
+			printf("\a");
+			usb_flush();
 		} else {
 			// Clear line
-			consolePrint("\r\x1B[2K");
+			printf("\r\x1B[2K");
+			usb_flush();
 
 			// (Possibly) Copy and display entry from history
 			entriesRdIdx++;
@@ -147,27 +152,32 @@ static int handleEscSeq(const uint8_t* seq, uint32_t len) {
 					entries[entriesRdIdx].len;
 				cursorIdx = entries[entriesRdIdx].len;
 
-				sendUsbSerialData(entries[entriesWrIdx].str,
+				usb_putb(entries[entriesWrIdx].str,
 					entries[entriesWrIdx].len);
+				usb_flush();
 			}
 		}
 	} else if (seq[1] == '[' && seq[2] == 'C') {
 		// Forward arrow key 
 		if (cursorIdx < entries[entriesWrIdx].len) {
 			cursorIdx++;
-			sendUsbSerialData(seq, 3);
+			usb_putb(seq, 3);
+			usb_flush();
 		} else {
 			// Sound to indicate we are at limit 
-			consolePrint("\a");
+			printf("\a");
+			usb_flush();
 		}
 	} else if (seq[1] == '[' && seq[2] == 'D') {
 		// Back arrow key
 		if (cursorIdx > 0) {
 			cursorIdx--;
-			sendUsbSerialData(seq, 3);
+			usb_putb(seq, 3);
+			usb_flush();
 		} else {
 			// Sound to indicate we are at limit 
-			consolePrint("\a");
+			printf("\a");
+			usb_flush();
 		}
 	}
 
@@ -181,27 +191,28 @@ static int handleEscSeq(const uint8_t* seq, uint32_t len) {
  */
 static void delChar() {
 	if (cursorIdx > 0) {
-		consolePrint("\b");
+		printf("\b");
 
 		entries[entriesWrIdx].len--;
 		cursorIdx--;
 
 		for (int idx = cursorIdx; idx < entries[entriesWrIdx].len; 
 			idx++) {
-			consolePrint("%c", entries[entriesWrIdx].str[idx+1]);
+			printf("%c", entries[entriesWrIdx].str[idx+1]);
 			entries[entriesWrIdx].str[idx] = 
 				entries[entriesWrIdx].str[idx+1];
 		}
-		consolePrint(" \b");
+		printf(" \b");
 
 		for (int cnt = 0; cnt < entries[entriesWrIdx].len - cursorIdx; 
 			cnt++) {
-			consolePrint("\b");
+			printf("\b");
 		}
 	} else {
 		// Sound to indicate we are at limit and del must be ignored
-		consolePrint("\a");
+		printf("\a");
 	}
+	usb_flush();
 }
 
 /**
@@ -213,7 +224,7 @@ static void delChar() {
  *
  * \return None.
  */
-static void insertEntryData(const uint8_t* data, uint32_t len) {
+static void insertEntryData(const char* data, uint32_t len) {
 	// Print newly received characters (up to entry limit)
 	uint32_t insert_len = len;
 	if (insert_len > MAX_ENTRY_LEN - cursorIdx) {
@@ -222,11 +233,13 @@ static void insertEntryData(const uint8_t* data, uint32_t len) {
 
 	if (!insert_len) {
 		// Sound to indicate we are at limit 
-		consolePrint("\a");
+		printf("\a");
+		usb_flush();
 		return;
 	}
 
-	sendUsbSerialData(data, insert_len);
+	usb_putb(data, insert_len);
+	usb_flush();
 
 	// Keep track of adjusted cursor location
 	uint32_t new_cursor_idx = cursorIdx + insert_len;
@@ -236,17 +249,19 @@ static void insertEntryData(const uint8_t* data, uint32_t len) {
 	if (cpy_len > MAX_ENTRY_LEN - new_cursor_idx) {
 		cpy_len = MAX_ENTRY_LEN - new_cursor_idx;
 		// Sound to indicate we are at limit 
-		consolePrint("\a");
+		printf("\a");
+		usb_flush();
 	}
 
 	if (cpy_len) {
-		sendUsbSerialData(&entries[entriesWrIdx].str[cursorIdx], 
-			cpy_len);
+		usb_putb(&entries[entriesWrIdx].str[cursorIdx], cpy_len);
+		usb_flush();
 		int wr_idx = new_cursor_idx + cpy_len - 1;
 		int rd_idx = cursorIdx + cpy_len - 1;
 		for (int cnt = 0; cnt < cpy_len; cnt++) {
 			// Back up console display cursor
-			consolePrint("\b");
+			printf("\b");
+			usb_flush();
 
 			// Copy shifted characters (up to entry limit)
 			entries[entriesWrIdx].str[wr_idx--] = 
@@ -279,16 +294,17 @@ static const char** completeCmd() {
 
 	// Sound to indicate no completion matches available
 	if (!cmd_completions[0]) {
-		consolePrint("\a");
+		printf("\a");
+		usb_flush();
 		return NULL;
 	}
 
 	// If only single match, insert completion data into current entry
 	if (cmd_completions[0] && !cmd_completions[1]) {
 		int insert_len = strlen(cmd_completions[0]) - cursorIdx;
-		insertEntryData((const uint8_t*)&cmd_completions[0][cursorIdx],
+		insertEntryData(&cmd_completions[0][cursorIdx],
 			insert_len);
-		insertEntryData((const uint8_t*)" ", 1);
+		insertEntryData(" ", 1);
 		return NULL;
 	}
 
@@ -303,17 +319,18 @@ static const char** completeCmd() {
  * \return None.
  */
 static void printCmdCompletions(const char** cmdCompletions) {
-	consolePrint("\n");
+	printf("\n");
 	for (int idx = 0; cmdCompletions[idx]; idx++) {
-		consolePrint("%s\t\t", cmdCompletions[idx]);
+		printf("%s\n", cmdCompletions[idx]);
 	}
-	consolePrint("\n");
+	printf("\n");
 
 	// Reprint current entry (putting cursor in proper position)
-	sendUsbSerialData(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
+	usb_putb(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
 	for (int cnt = 0; cnt < entries[entriesWrIdx].len - cursorIdx; cnt++) {
-		consolePrint("\b");
+		printf("\b");
 	}
+	usb_flush();
 }
 
 /**
@@ -323,13 +340,12 @@ static void printCmdCompletions(const char** cmdCompletions) {
  */
 static void entryComplete() {
 	// Enter or return indicates end of command
-	consolePrint("\n");
+	printf("\n");
 
 	// Debug so we see exactly what was in entry buffer
 //	printHex(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
 
-//TODO: change all uint8_t* to char* so we don't need this casting?
-	executeCmd((const char*)entries[entriesWrIdx].str, 
+	executeCmd(entries[entriesWrIdx].str, 
 		entries[entriesWrIdx].len);
 
 	// Only save history if there was content in entry
@@ -357,8 +373,8 @@ static void entryComplete() {
  *
  * \return None.
  */
-static void handleSerialChar(uint8_t c) {
-	static uint8_t esc_seq[4]; // Used to store previously recievd escape
+static void handleSerialChar(char c) {
+	static char esc_seq[4]; // Used to store previously recievd escape
 		// sequences
 	static uint32_t esc_cnt = 0; // Number of valid escape sequence 
 		// characters in esc_seq
@@ -380,7 +396,7 @@ static void handleSerialChar(uint8_t c) {
 	switch (c) {
 	case 0x3:
 		// Crtl-C
-		consolePrint("\n");
+		printf("\n");
 
 		entriesRdIdx = entriesWrIdx;
 
@@ -429,7 +445,7 @@ static void handleSerialChar(uint8_t c) {
  * \return None.
  */
 void handleConsoleInput(void) {
-	uint8_t rcv_buff[64];
+	char rcv_buff[64];
 	int bytes_rcvd = -1;
 	
 	bytes_rcvd = getUsbSerialData(rcv_buff, sizeof(rcv_buff));
@@ -438,7 +454,7 @@ void handleConsoleInput(void) {
 		return;
 
 	if (bytes_rcvd < 0) {
-		consolePrint("\n!!! Error receiving serial data. Flushing "
+		printf("\n!!! Error receiving serial data. Flushing "
 			"input stream. !!!\n");
 
 		// Flush input stream
@@ -452,39 +468,4 @@ void handleConsoleInput(void) {
 	for (int idx = 0; idx < bytes_rcvd; idx++) {
 		handleSerialChar(rcv_buff[idx]);
 	}
-}
-
-/**
- * printf-like function for printing text to console.
- *
- * \param[in] format Formatted string (same rules as printf).
- *
- * \return None.
- */
-void consolePrint(const char* format, ...) {
-	uint8_t buff[1024];
-	va_list args;
-	int num_chars = 0;
-
-	va_start(args, format);
-	num_chars = vsnprintf((char*)buff, sizeof(buff), format, args);
-//TODO: handle case where num_chars >= sizeof(buff) (maybe something to do with \r to \r\n case?
-	if (num_chars > 0) {
-		int start_idx = 0;
-		int idx = 0;
-		for (idx = 0; idx < num_chars; idx++) {
-			if (buff[idx] == '\n') {
-				// Send carriage return so we don't just drop
-				//  down a line to same offset
-				sendUsbSerialData(&buff[start_idx], 
-					idx-start_idx+1);
-				sendUsbSerialData((uint8_t*)"\r", 1);
-				start_idx = idx+1;
-			}
-		}
-		if (start_idx < num_chars) {
-			sendUsbSerialData(&buff[start_idx], num_chars-start_idx);
-		}
-	}
-	va_end(args);
 }

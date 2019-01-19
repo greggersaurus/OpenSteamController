@@ -37,4 +37,6 @@ void initLedCtrl();
 
 void setLedIntensity(uint16_t intensity);
 
+void ledSigErr(void);
+
 #endif /* _LED_CTRL_ */

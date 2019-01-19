@@ -27,11 +27,11 @@
 
 #include "trackpad.h"
 
-#include "console.h"
-
 #include "lpc_types.h"
 #include "chip.h"
 #include "ssp_11xx.h"
+
+#include <stdio.h>
 
 static LPC_SSP_T* spiRegs = LPC_SSP0;
 
@@ -51,7 +51,7 @@ typedef enum Trackpad_t {
  * \return None.
  */
 static void printUsage(void) {
-	consolePrint(
+	printf(
 		"usage: trackpad\n"
 		"\n"
 //TODO
@@ -249,7 +249,7 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 	// Reset right trackpad ASIC
 	writePinnacleReg(R_TRACKPAD, 0x03, 0x01);
 
-	consolePrint("Reset ASIC\n");
+	printf("Reset ASIC\n");
 
 	// Sleep
 	for (volatile int cnt = 0; cnt < 0x20000; cnt++) {
@@ -260,7 +260,7 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 	while (status1 != 0x08) {
 		status1 = readPinnacleReg(R_TRACKPAD, 0x02);
 
-		consolePrint("status1 = 0x%02x\n", status1);
+		printf("status1 = 0x%02x\n", status1);
 	}
 
 	// Clear HW_DR
@@ -272,11 +272,11 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 
 	uint8_t fw_asic_id = readPinnacleReg(R_TRACKPAD, 0x00);
 
-	consolePrint("fw_asic_id = 0x%02x\n", fw_asic_id);
+	printf("fw_asic_id = 0x%02x\n", fw_asic_id);
 
 	uint8_t fw_ver = readPinnacleReg(R_TRACKPAD, 0x01);
 
-	consolePrint("fw_ver = 0x%02x\n", fw_ver);
+	printf("fw_ver = 0x%02x\n", fw_ver);
 
 	// Set undocument bit, normal mode, active, no reset
 	writePinnacleReg(R_TRACKPAD, 0x03, 0x08);
@@ -308,12 +308,12 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 	data[0] = readPinnacleReg(R_TRACKPAD, 0x00);
 	data[1] = readPinnacleReg(R_TRACKPAD, 0x01);
 
-	consolePrint("Firmware ID = 0x%02x\n", data[0]);
-	consolePrint("Firmware Version = 0x%02x\n\n", data[1]);
+	printf("Firmware ID = 0x%02x\n", data[0]);
+	printf("Firmware Version = 0x%02x\n\n", data[1]);
 
 	// Wait for trackpad to say it has new data
 	while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {
-		//consolePrint("DR Low for Right Trackpad\n");
+		//printf("DR Low for Right Trackpad\n");
 	}
 
 	// Clear Flags 
@@ -339,7 +339,7 @@ while(1) {
 
 	// Wait for trackpad to say it has new data
 	while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {
-		//consolePrint("DR Low for Right Trackpad\n");
+		//printf("DR Low for Right Trackpad\n");
 	}
 
 	data[0] = readPinnacleReg(R_TRACKPAD, 0x12);
@@ -349,13 +349,13 @@ while(1) {
 	data[4] = readPinnacleReg(R_TRACKPAD, 0x17);
 
 /*
-	consolePrint("ABS Data Packets = 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n\n",
+	printf("ABS Data Packets = 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n\n",
 		data[0], data[1], data[2], data[3], data[4]);
 */
 
 	uint16_t x = (0xF&data[3]) << 8 | data[1];
 	uint16_t y = (0xF0&data[3]) << 4 | data[2];
-	consolePrint("x = %d, y = %d, z = %d\n", x, y, data[4]);
+	printf("x = %d, y = %d, z = %d\n", x, y, data[4]);
 
 	// Clear Flags 
 	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);

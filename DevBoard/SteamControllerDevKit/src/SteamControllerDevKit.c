@@ -77,7 +77,7 @@ int main(void){
 		handleConsoleInput();
 		// Sleep until next IRQ happens
 		//TODO: It should be OK to have this here right? Need to find out why it gives us weird artifacts in console output...
-		//__WFI();
+		__WFI();
 #endif
 
 #if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)

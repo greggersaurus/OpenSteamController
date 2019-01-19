@@ -27,14 +27,13 @@
 
 #include "eeprom_access.h"
 
-#include "console.h"
-
 #include "lpc_types.h"
 #include "chip.h"
 #include "romapi_11xx.h"
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #define EEPROM_SIZE (4 * 1024)
 
@@ -44,7 +43,7 @@
  * \return None.
  */
 static void printUsage() {
-	consolePrint(
+	printf(
 		"usage: eeprom read word_size address num_words\n"
 		"       eeprom write word_size address value\n"
 		"\n"
@@ -72,35 +71,35 @@ static int eepromReadToConsole(uint32_t wordSize, uint32_t addr,
 	uint32_t curr_addr = addr;
 
 	if (wordSize != 8 && wordSize != 16 && wordSize != 32) {
-		consolePrint("Invalid word size %d\n", wordSize);
+		printf("Invalid word size %d\n", wordSize);
 		return -1;
 	}
 	
 	if (addr >= EEPROM_SIZE) {
-		consolePrint("Address of 0x%x exceeds EEPROM size of 0x%0x\n",
+		printf("Address of 0x%x exceeds EEPROM size of 0x%0x\n",
 			addr, EEPROM_SIZE);
 		return -1;
 	}
 
 	if (addr + numWords > EEPROM_SIZE) {
-		consolePrint("Read request of %d words from offset 0x%x"
+		printf("Read request of %d words from offset 0x%x"
 			" exceeds EEPROM size of 0x%x\n", numWords, addr, 
 			EEPROM_SIZE);
 		return -1;
 	}
 
-	consolePrint("Reading %d %d-bit words starting at 0x%X from EEPROM\n", 
+	printf("Reading %d %d-bit words starting at 0x%X from EEPROM\n", 
 		numWords, wordSize, addr);
 
 	void* read_data = malloc(num_read_bytes);
 	if (!read_data){
-		consolePrint("malloc failed for read_data buffer\n");
+		printf("malloc failed for read_data buffer\n");
 		return -1;
 	}
 
 	int err_code = eepromRead(addr, read_data, num_read_bytes);
 	if (CMD_SUCCESS != err_code){
-		consolePrint("EEPROM Read failed with error code %d\n", 
+		printf("EEPROM Read failed with error code %d\n", 
 			err_code);
 		retval = -1;
 		goto exit;
@@ -110,25 +109,25 @@ static int eepromReadToConsole(uint32_t wordSize, uint32_t addr,
 	{
 		if (!(word_cnt % 8))
 		{
-			consolePrint("\n%03X: ", curr_addr);
+			printf("\n%03X: ", curr_addr);
 		}
 
 		if (wordSize == 8)
 		{
-			consolePrint("%02X ", ((uint8_t*)read_data)[word_cnt]);
+			printf("%02X ", ((uint8_t*)read_data)[word_cnt]);
 		}
 		else if (wordSize == 16)
 		{
-			consolePrint("%04X ", ((uint16_t*)read_data)[word_cnt]);
+			printf("%04X ", ((uint16_t*)read_data)[word_cnt]);
 		}
 		else if (wordSize == 32)
 		{
-			consolePrint("%08X ", ((uint32_t*)read_data)[word_cnt]);
+			printf("%08X ", ((uint32_t*)read_data)[word_cnt]);
 		}
 
 		curr_addr += bytes_per_word;
 	}
-	consolePrint("\n");
+	printf("\n");
 
 exit:
 	free(read_data);
@@ -160,10 +159,10 @@ int eepromCmdFnc(int argc, const char* argv[]) {
 		retval = eepromReadToConsole(word_size, addr, num_words);
 	} else if (!strcmp("write", argv[1])) {
 		//TODO: imeplement this
-		consolePrint("eeprom writing not implemented yet\n");
+		printf("eeprom writing not implemented yet\n");
 		return -1;
 	} else {
-		consolePrint("Invalid argument \"%s\"\n", argv[1]);
+		printf("Invalid argument \"%s\"\n", argv[1]);
 		return -1;
 	}
 

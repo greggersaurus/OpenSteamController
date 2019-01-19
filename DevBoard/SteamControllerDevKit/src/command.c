@@ -30,8 +30,6 @@
 #include "chip.h"
 #include "gpio_11xx_1.h"
 
-#include "console.h"
-
 #include "eeprom_access.h"
 #include "mem_access.h"
 #include "led_ctrl.h"
@@ -44,6 +42,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof(array[0]))
 
@@ -51,6 +50,74 @@ typedef struct {
 	const char* cmdName;
 	int (*cmdFnc)(int argc, const char* argv[]);
 } Cmd;
+
+/**
+ * Prints details to console regarding how to use the test print command line 
+ *  function.
+ *
+ * \return None.
+ */
+void testPrintCmdUsage(void) {
+	//TODO: add details on command how to exit
+}
+
+/**
+ * Command to stress test printing. This makes a very long string and then
+ *  continuously prints it, with null term inserted randomly. 
+ * Idea is to run this and make sure that 1) The system never locks up and
+ *  2) Upon exit printing still works fine.
+ *
+ * \param argc Number of arguments (i.e. size of argv)
+ * \param argv Command line entry broken into array argument strings.
+ *
+ * \return 0 on success.
+ */
+int testPrintCmdFnc(int argc, const char* argv[]) {
+	const uint32_t STR_SZ = 2048;
+	char* tst_str = malloc(STR_SZ);
+
+	if (!tst_str) {
+		printf("Could not allocate tst_str\n");
+		return -1;
+	}
+
+//TODO: more options for more tests (maybe allow for selecting max string length and variability or something?
+//	i.e. we want this really aggressive test to see if anything locks up and perminently screws up, but also
+//	 want test to make sure things are printing in a sane manner repeatedly... (i.e. try adcRead and see strings are cut short once in a while... what is this?)
+//	 Is that due to ADC interrupts?? (shouldn't it not affect UART output...?)
+
+	// Initialize string with characters that have printable symbols
+	for (int idx = 0; idx < STR_SZ; idx++) {
+		tst_str[idx] = (idx % 94) + 33;
+	}
+	tst_str[STR_SZ-1] = 0;
+
+	//TODO: add prompt before starting?
+
+	//TODO: switch to using usb_tstc for exiting loop
+	while (1) {
+		int rnd_idx = rand();	
+	
+		rnd_idx %= STR_SZ;	
+	
+		char tmp = tst_str[rnd_idx];
+
+		// Change length of string
+		tst_str[rnd_idx] = 0;
+
+		//TODO: why are we getting bell sound...?
+		printf("%s\n", tst_str);
+
+		// Restore length of string
+		tst_str[rnd_idx] = tmp;
+
+		//TODO: Change to using sleep function (once implemented)
+		for (volatile int cnt = 0; cnt < 0x4000; cnt++) {
+		}
+	}
+
+	free(tst_str);
+}
 
 static Cmd cmds[] = {
 	{.cmdName = "adcRead", .cmdFnc = adcReadCmdFnc},
@@ -62,7 +129,9 @@ static Cmd cmds[] = {
 	{.cmdName = "mem", .cmdFnc = memCmdFnc},
 	{.cmdName = "monitor", .cmdFnc = monitorCmdFnc},
 	{.cmdName = "trackpad", .cmdFnc = trackpadCmdFnc},
-//TODO: add help fnc?
+	{.cmdName = "testPrint", .cmdFnc = testPrintCmdFnc},
+//TODO: add version function (print version of fw, and build date, etc.)
+//TODO: add help fnc (and structure to have usage functions for each command)
 };
 
 /**
@@ -144,7 +213,7 @@ void executeCmd(const char* entry, uint32_t len) {
 	const Cmd** possible_cmds = searchCmds(entry, cmd_len);
 
 	if (!possible_cmds[0] || possible_cmds[1]) {
-		consolePrint("command not found\n");
+		printf("command not found\n");
 		return;
 	}
 
@@ -165,7 +234,7 @@ void executeCmd(const char* entry, uint32_t len) {
 			entry_cpy[idx] = 0;
 		} else if (idx && !entry_cpy[idx-1]) {
 			if (argc >= ARRAY_SIZE(argv)) {
-				consolePrint("Too many arguments for system to "
+				printf("Too many arguments for system to "
 					"handle!\n");
 				goto exit;
 			}

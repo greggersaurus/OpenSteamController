@@ -29,10 +29,10 @@
 
 #include "monitor.h"
 
-#include "console.h"
-
 #include "adc_read.h"
 #include "buttons.h"
+
+#include <stdio.h>
 
 /**
  * Print command usage details to console.
@@ -40,7 +40,7 @@
  * \return None.
  */
 static void printUsage() {
-	consolePrint(
+	printf(
 		"usage: monitor\n"
 		"\n"
 	);
@@ -57,40 +57,41 @@ static void printUsage() {
 int monitorCmdFnc(int argc, const char* argv[]) {
 /*
 	//TODO: Add ability to clear terminal and loop for predetermined amount of time (or until key press) so changes are easier to see
+	// Use usb_tstc (once it is available)
 	char clr[] = {27, '[', '2', 'J', 0};
 
-	consolePrint("%s", clr);
+	printf("%s", clr);
 */
 
-	consolePrint("Steam Button State: %d\n", getSteamButtonState());
-	consolePrint("Front Left Button State: %d\n", getFrontLeftButtonState());
-	consolePrint("Front Right Button State: %d\n\n", getFrontRightButtonState());
+	printf("Steam Button State: %d\n", getSteamButtonState());
+	printf("Front Left Button State: %d\n", getFrontLeftButtonState());
+	printf("Front Right Button State: %d\n\n", getFrontRightButtonState());
 
-	consolePrint("Joystick Click State: %d\n\n", getJoyClickState());
+	printf("Joystick Click State: %d\n\n", getJoyClickState());
 
-	consolePrint("X Button State: %d\n", getXButtonState());
-	consolePrint("Y Button State: %d\n", getYButtonState());
-	consolePrint("B Button State: %d\n", getBButtonState());
-	consolePrint("A Button State: %d\n\n", getAButtonState());
+	printf("X Button State: %d\n", getXButtonState());
+	printf("Y Button State: %d\n", getYButtonState());
+	printf("B Button State: %d\n", getBButtonState());
+	printf("A Button State: %d\n\n", getAButtonState());
 
-	consolePrint("Right Grip Button State: %d\n", getRightGripState());
-	consolePrint("Left Grip Button State: %d\n\n", getLeftGripState());
+	printf("Right Grip Button State: %d\n", getRightGripState());
+	printf("Left Grip Button State: %d\n\n", getLeftGripState());
 
-	consolePrint("Right Trackpad Click State: %d\n", getRightTrackpadClickState());
-	consolePrint("Left Trackpad Click State: %d\n\n", getLeftTrackpadClickState());
+	printf("Right Trackpad Click State: %d\n", getRightTrackpadClickState());
+	printf("Left Trackpad Click State: %d\n\n", getLeftTrackpadClickState());
 
-	consolePrint("Right Digital Trigger State: %d\n", getRightTriggerState());
-	consolePrint("Left Digital Trigger State: %d\n\n", getLeftTriggerState());
+	printf("Right Digital Trigger State: %d\n", getRightTriggerState());
+	printf("Left Digital Trigger State: %d\n\n", getLeftTriggerState());
 
-	consolePrint("Right Bumper State: %d\n", getRightBumperState());
-	consolePrint("Left Bumper State: %d\n\n", getLeftBumperState());
+	printf("Right Bumper State: %d\n", getRightBumperState());
+	printf("Left Bumper State: %d\n\n", getLeftBumperState());
 
 	for (int cnt = 0; cnt < 64; cnt++) {
 		char* ptr_c = (char*)(0x50000000 + cnt);
 		int* ptr_i = (int*)(0x50001000 + cnt*4);
 
-		consolePrint("0x%p: 0x%02x\t", ptr_c, *ptr_c);
-		consolePrint("0x%p: 0x%08x\n", ptr_i, *ptr_i);
+		printf("0x%p: 0x%02x\t", ptr_c, *ptr_c);
+		printf("0x%p: 0x%08x\n", ptr_i, *ptr_i);
 	}
 
 //TODO: Add ADC channels, etc.

@@ -27,11 +27,6 @@
 
 #include "haptic.h"
 
-#include <stdlib.h>
-#include <string.h>
-
-#include "console.h"
-
 #include "lpc_types.h"
 #include "chip.h"
 #include "timer_11xx.h"
@@ -39,6 +34,9 @@
 #define GPIO_HAPTICS_EN_N 1, 7
 #define GPIO_HAPTICS_L 0, 18
 #define GPIO_HAPTICS_R 1, 12
+
+#include <stdlib.h>
+#include <string.h>
 
 static LPC_TIMER_T* hapticTimer = LPC_TIMER32_0; //!< Timer used to toggle 
 	//!< GPIO that make haptics react.
@@ -318,7 +316,7 @@ int playHaptic(enum Haptic haptic, const struct Note* notes, uint32_t numNotes) 
  * \return None.
  */
 void hapticCmdUsage(void) {
-	consolePrint(
+	printf(
 		"usage: haptic {hapticId} {dutyCycle} {frequency} {duration}\n"
 		"\n"
 		"hapticId = \"right\" or \"left\" to specify which haptic\n"
@@ -346,20 +344,21 @@ int hapticCmdFnc(int argc, const char* argv[]) {
 	}
 
 	enum Haptic haptic = R_HAPTIC;
+//TODO: input as uint32_t, then check range...
 	note.dutyCycle = strtol(argv[2], NULL, 0);
 	note.pulseFreq = strtol(argv[3], NULL, 0);
 	note.duration = strtol(argv[4], NULL, 0);
 
 	if (note.dutyCycle < 0 || note.dutyCycle > 255) {
-		consolePrint("dutyCycle outside range 0-255\n");
+		printf("dutyCycle outside range 0-255\n");
 		return -1;
 	}
 	if (note.pulseFreq < 0 || note.pulseFreq > 65535) {
-		consolePrint("frequency outside range 0-65535\n");
+		printf("frequency outside range 0-65535\n");
 		return -1;
 	}
 	if (note.duration < 0 || note.duration > 65535) {
-		consolePrint("duration outside range 0-65535\n");
+		printf("duration outside range 0-65535\n");
 		return -1;
 	}
 
@@ -368,13 +367,13 @@ int hapticCmdFnc(int argc, const char* argv[]) {
 	} else if (!strcmp("left", argv[1])) {
 		haptic = L_HAPTIC;
 	} else {
-		consolePrint("haptId is not \"right\" or \"left\"\n");
+		printf("haptId is not \"right\" or \"left\"\n");
 		return -1;
 	}
 
 	int retval = playHaptic(haptic, &note, 1);
 	if (retval) {
-		consolePrint("Failed to play note (error = %d)\n", retval);
+		printf("Failed to play note (error = %d)\n", retval);
 		return -1;
 	}
 

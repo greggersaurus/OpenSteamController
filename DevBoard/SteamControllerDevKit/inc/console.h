@@ -29,8 +29,8 @@
 #ifndef _SC_CONSOLE_
 #define _SC_CONSOLE_
 
-void handleConsoleInput(void);
+#include <stdio.h>
 
-void consolePrint(const char* format, ...);
+void handleConsoleInput(void);
 
 #endif /* _SC_CONSOLE_ */

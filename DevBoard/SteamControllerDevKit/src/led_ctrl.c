@@ -28,10 +28,12 @@
 
 #include "led_ctrl.h"
 
-#include "console.h"
-
 #include "lpc_types.h"
 #include "chip.h"
+
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 static LPC_TIMER_T* ledPwmRegs = LPC_TIMER16_1;
 
@@ -41,7 +43,7 @@ static LPC_TIMER_T* ledPwmRegs = LPC_TIMER16_1;
  * \return None.
  */
 static void printUsage() {
-	consolePrint(
+	printf(
 		"usage: led intensity\n"
 		"\n"
 		"intensity = 16-bit value indicating intensity to drive LED at\n"
@@ -57,8 +59,6 @@ static void printUsage() {
  * \return 0 on success.
  */
 int ledCmdFnc(int argc, const char* argv[]) {
-	int retval = 0;
-
 	if (argc != 2) {
 		printUsage();
 		return -1;
@@ -111,3 +111,24 @@ void setLedIntensity(uint16_t intensity) {
 	Chip_TIMER_SetMatch(ledPwmRegs, 0, intensity);
 }
 
+/**
+ * For cases in which we want to notify user of a fatal error, but console is
+ *  dead or not present. 
+ * Note: This is an infinite loop and meant for situations in which you do
+ *  not want your code to continue;
+ *
+ * \return None.
+ */
+void ledSigErr(void) {
+	while (1) {
+		setLedIntensity(0);
+
+		for (volatile int delay = 0; delay < 0x40000; delay++) {
+		}
+
+		setLedIntensity(0xFFF);
+
+		for (volatile int delay = 0; delay < 0x40000; delay++) {
+		}
+	}
+}
