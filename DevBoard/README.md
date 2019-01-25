@@ -63,16 +63,15 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
-1. Dig into inaccurace in haptic output
-    1. Use violin tuner app and notice how the higher the frequencey the larger the gap in frequency output and what app measures...
 1. Revisist console/CDC uart
-    1. Limitation on input length
-        1. try pasting a series of commands into the console
-    1. Look for interrupt related bugs/race conditions
-        1. Think back to issues that occur when ADC interrupts are enabled
-        1. Is USB interrupt at correct priority?
-            1. Even if it is too low, it should not result in missed characters...
-    1. create putc(), getc(), tstc() and (re)build from there?
+    1. Make regression tests (i.e. testPrint)
+        1. Buffer overflow related
+        1. __disable_irq() related (i.e. ADC IRQs causing double prints or data loss...)
+    1. create getc(), tstc() and (re)build input side from there (use FIFO for better efficiency)
+        1. Make sure no limitation on input length
+            1. try pasting a series of commands into the console (i.e. add all notes for a new jingle)
+1. Dig into inaccuracy in haptic output
+    1. Use violin tuner app and notice how the higher the frequencey the larger the gap in frequency output and what app measures...
 1. Create help command
     1. Need to provide help functions for all cmds
     1. Make sure output format for each function is consistent (i.e. surround {} to designate variables)

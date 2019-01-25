@@ -37,6 +37,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 static LPC_TIMER_T* hapticTimer = LPC_TIMER32_0; //!< Timer used to toggle 
 	//!< GPIO that make haptics react.

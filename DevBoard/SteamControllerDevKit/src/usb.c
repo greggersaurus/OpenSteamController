@@ -349,10 +349,16 @@ static void usbUartTxStart(USB_UART_DATA_T* uartData) {
 		bytes_to_send = USB_MAX_PACKET_SZ;
 	}
 
+	// Apparently IRQs need to be disabled around call to WriteEP. If they
+	//  are not and other interrupts are active of (higher priority)
+	//  (i.e. ADC interrupts) we can get repeated prints or dropped data... 
+	//  Not sure why. Maybe related to built in CDC UART support?
+	__disable_irq();
 	// Send the data to the USB EP (the interrupt handler will adjust rxIdx)
 	uartData->txSent = USBD_API->hw->WriteEP(uartData->usbHandle, 
 		USB_CDC_IN_EP, &uartData->txFifo[uartData->txRdIdx], 
 		bytes_to_send);
+	__enable_irq();
 
 	// Just in case something went wrong
 	if (!uartData->txSent) {
