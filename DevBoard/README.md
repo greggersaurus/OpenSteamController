@@ -67,9 +67,13 @@ This is a running list of items I would like to prioritize and not lose track
     1. Make regression tests (i.e. testPrint)
         1. Buffer overflow related
         1. __disable_irq() related (i.e. ADC IRQs causing double prints or data loss...)
-    1. create getc(), tstc() and (re)build input side from there (use FIFO for better efficiency)
-        1. Make sure no limitation on input length
-            1. try pasting a series of commands into the console (i.e. add all notes for a new jingle)
+    1. Try to fix CDC UART overflow issues (can we without rewriting USB ROM code though...?)
+        1. The issues stems from the fact that USB ROM code ACKs data packets before calling callbacks
+            1. This means that in callback if we don't have room, we cannot tell the host to wait
+            1. Other work arounds have not worked yet (i.e. disabling EP when buffer is full and reenabling later)
+            1. Maybe we can hijack IRQ handler??
+            1. Or maybe we look into not using ROM code and writing out own (see polling example fix for this issue: http://www.eevblog.com/forum/microcontrollers/usb-cdc-_flow-control_/)
+        1. Reproduce issues by pasting entire jingle into console no longer locks it up, but it looks like some command get mangled...
 1. Dig into inaccuracy in haptic output
     1. Use violin tuner app and notice how the higher the frequencey the larger the gap in frequency output and what app measures...
 1. Create help command

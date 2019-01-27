@@ -37,10 +37,8 @@ int usbConfig(void);
 int usb_flush(void);
 int usb_putc(int character);
 void usb_putb(const char* buff, uint32_t len);
-//int usb_tstc(void);
-//int usb_getc(void);
-//TODO: remove and replace iwth usb_tstc and usb_getc
-int getUsbSerialData(uint8_t* data, uint32_t maxDataLen);
+int usb_tstc(void);
+int usb_getc(void);
 #endif
 
 #if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)

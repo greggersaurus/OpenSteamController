@@ -30,6 +30,7 @@
 
 #include "usb.h"
 #include "command.h"
+#include "led_ctrl.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -343,7 +344,7 @@ static void entryComplete() {
 	printf("\n");
 
 	// Debug so we see exactly what was in entry buffer
-//	printHex(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
+	//printHex(entries[entriesWrIdx].str, entries[entriesWrIdx].len);
 
 	executeCmd(entries[entriesWrIdx].str, 
 		entries[entriesWrIdx].len);
@@ -445,27 +446,18 @@ static void handleSerialChar(char c) {
  * \return None.
  */
 void handleConsoleInput(void) {
-	char rcv_buff[64];
-	int bytes_rcvd = -1;
-	
-	bytes_rcvd = getUsbSerialData(rcv_buff, sizeof(rcv_buff));
-
-	if (!bytes_rcvd)
-		return;
-
-	if (bytes_rcvd < 0) {
-		printf("\n!!! Error receiving serial data. Flushing "
-			"input stream. !!!\n");
-
-		// Flush input stream
-		do {
-			bytes_rcvd = getUsbSerialData(rcv_buff, 
-				sizeof(rcv_buff));
-		} while (bytes_rcvd);
-		return;
-	}
-
-	for (int idx = 0; idx < bytes_rcvd; idx++) {
-		handleSerialChar(rcv_buff[idx]);
+	while (usb_tstc()) {
+		handleSerialChar(usb_getc());
+/*
+		//TODO: Testing for overflow in CDC UART. Remove this
+		char c = usb_getc();
+		usb_putc(c);
+		if (c == '\r') {
+			usb_putc('\n');
+		} else { 
+			usb_putc('_');
+		}
+		usb_flush();
+*/
 	}
 }

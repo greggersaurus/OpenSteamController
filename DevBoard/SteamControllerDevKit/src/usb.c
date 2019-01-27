@@ -95,13 +95,25 @@ typedef struct USB_UART_DATA {
 	USBD_HANDLE_T usbHandle; //!< Handle to USB device stack 
 	USBD_HANDLE_T cdcHandle; //!< Handle to Communications Device Class controller
 
-	uint8_t* rxBuf;	//!< USB CDC UART buffer to store received uart data
-	uint8_t rxRcvd; //!< Number of valid bytes in rxBuf received by IRQ 
-	volatile uint8_t rxBusy; //!< EP event handler is busy receiving data
-	volatile uint8_t rxRdBusy; //!< rxBuf is currently being drained by
-		//!< higher level code.
-	volatile uint8_t rxOverflow; //!< Data was dropped because rxBuf was
-		//!< not drained quickly enough (i.e. calls to getUsbSerialData)
+	uint8_t* rxFifo; //!< Buffer treated as a FIFO which stores character
+		//!< data that has been received via USB CDC UART
+	volatile uint32_t rxWrapIdx; //!< Defines where rxFifo wraps around. 
+		//!< This index and anything beyond it in rxFifo does not have 
+		//!< valid data to read.  We need this because ReadEP can return
+		//!< up to USB_MAX_PACKET_SZ bytes, but we don't know ahead of 
+		//!< time how many we are actually getting.  This allows us to 
+		//!< maximize memory usage, while not overflowing rxFifo.
+	volatile uint32_t rxRdIdx; //!< Defines where next character is read
+		//!< from in rxFifo. If rxRdIdx == rxWrIdx FIFO is empty.
+	volatile uint32_t rxWrIdx; //!< Defines where next character(s) are to
+		//!< to be stored when received from USB CDC UART.
+	uint32_t rxStalled; //!< Flag that we did not have enough room for 
+		//!< incoming data in rxFifo and did not call ReadEP. We will
+		//!< need to call ReadEP to get the buffered data and have 
+		//!< interrupts start working again once room opens in txFIFO.
+		//!< Note that even though we do not call ReadEP, incoming 
+		//!< USB packets may be dropped and into data lost. Still
+		//!< looking for solutions to fix this.
 
 	volatile int txBusy; //!< Indicates transmission is in progress. This 
 		//!< does not guarantee that txFifo will be drained (use 
@@ -116,19 +128,18 @@ typedef struct USB_UART_DATA {
 		//!< sent.
 } USB_UART_DATA_T;
 
-static USB_UART_DATA_T usbUartData; //!< Virtual Comm port control data 
-	//!< instance. 
+static const uint32_t USB_MAX_PACKET_SZ = USB_FS_MAX_BULK_PACKET; //!< Maximum 
+	//!< number of bytes in packet that can be sent or received via USB.
 
 static const uint32_t USB_UART_TXFIFO_SZ = 256; //!< Number of bytes in txFifo.
 	//!< This must be a power of 2!
 static const uint32_t USB_UART_TXFIFO_THRESH = 128; //!< Determines when
 	//!< transmission of txFifo data starts automatically.
 
-static const uint32_t USB_MAX_PACKET_SZ = USB_FS_MAX_BULK_PACKET; //!< Maximum 
-	//!< number of bytes in packet that can be sent or received via USB.
+static const uint32_t USB_UART_RXFIFO_SZ = 256; //!< Number of bytes in rxFifo.
 
-// Number of bytes for buffer tx and rx for USB CDC UART
-static const uint32_t USB_UART_BUFF_SIZE = 64;
+static USB_UART_DATA_T usbUartData; //!< Virtual Comm port control data 
+	//!< instance. 
 
 /**
  * USB Standard Device Descriptor
@@ -448,8 +459,7 @@ int usb_flush(void) {
  * 
  * \return Number of characters queued for printing.
  */
-int WRITEFUNC(int iFileHandle, char *pcBuffer, int iLength)
-{
+int WRITEFUNC(int iFileHandle, char *pcBuffer, int iLength) {
 	for (int idx = 0; idx < iLength; idx++) {
 		usb_putc(pcBuffer[idx]);
 		// Need to add carriage return and flush after each newline
@@ -462,20 +472,109 @@ int WRITEFUNC(int iFileHandle, char *pcBuffer, int iLength)
 	return iLength;
 }
 
-//TODO:
-/* Called by bottom level of scanf routine within RedLib C library to read
-   a character. With the default semihosting stub, this would read the character
-   from the debugger console window (which acts as stdin). But this version reads
-   the character from the LPC1768/RDB1768 UART. */
-int READFUNC(void)
-{
-#if defined(DEBUG_ENABLE)
-	char c = Board_UARTGetChar();
-	return (int) c;
+/**
+ * Receive data from the USB CDC UART. This is called when we already know
+ *  that data is waiting for us and ReadEP needs to be called.
+ *
+ * \param[in] uartData Contains details on Virtual Comm to receive from.
+ * 
+ * \return None.
+ */
+static void rcvUartData(USB_UART_DATA_T* uartData) {
+	if (uartData->rxRdIdx <= uartData->rxWrIdx) {
+		// Check if there is enough room until end of buffer to 
+		//  contain max number of bytes we could receive
+		if (uartData->rxWrIdx + USB_MAX_PACKET_SZ >= 
+			USB_UART_TXFIFO_SZ) {
 
-#else
-	return (int) -1;
-#endif
+			// Write pointer moving to read pointer (or beyond) is 
+			//  overflow
+			if (uartData->rxRdIdx == 0) {
+				// Mark as stalled we so try again next getc()
+				uartData->rxStalled = 1;
+				return;
+			}
+
+			// There is not enough room until end of buffer so we 
+			//  establish a new wrap point and keep checking
+			uartData->rxWrapIdx = uartData->rxWrIdx;
+			uartData->rxWrIdx = 0;
+		}
+	} 
+
+	if (uartData->rxRdIdx > uartData->rxWrIdx) {
+		// Check if this write could overflow read pointer
+		if (uartData->rxWrIdx + USB_MAX_PACKET_SZ >= 
+			uartData->rxRdIdx) {
+
+			// Mark as stalled we so try again next getc()
+			uartData->rxStalled = 1;
+			return;
+		}
+	}
+
+	uint32_t bytes_rcvd = USBD_API->hw->ReadEP(usbHandle, 
+		USB_CDC_OUT_EP, 
+		&uartData->rxFifo[uartData->rxWrIdx]);
+
+	uartData->rxWrIdx += bytes_rcvd;
+
+	if (uartData->rxWrIdx > uartData->rxWrapIdx) {
+		// Update wrap index if necessary
+		uartData->rxWrapIdx = uartData->rxWrIdx;
+	} else if (uartData->rxWrIdx == uartData->rxWrapIdx) {
+		// Wrap wrIdx back to start of FIFO if necessary
+		uartData->rxWrIdx = 0;
+	}
+}
+
+/**
+ * Check if there is a character in the USB CDC UART RX FIFO.
+ * 
+ * \return 0 if no character is available.
+ */
+int usb_tstc(void) {
+	return usbUartData.rxRdIdx != usbUartData.rxWrIdx;
+}
+
+/**
+ * Get a character from the USB CDC UART RX FIFO. This will not return until
+ *  a character is received via USB.
+ * 
+ * \return The next character in the USB CDC UART RX FIFO. Will not return 
+ *  until character is available.
+ */
+int usb_getc(void) {
+	// Wait until there is a character
+	while (!usb_tstc());
+
+	char c = usbUartData.rxFifo[usbUartData.rxRdIdx];
+
+	usbUartData.rxRdIdx++;
+
+	if (usbUartData.rxRdIdx >= usbUartData.rxWrapIdx) {
+		usbUartData.rxRdIdx = 0;
+	}
+
+	// If we stalled previously, try to receive that pending data and 
+	//  startup receive callback
+	if (usbUartData.rxStalled) {
+		usbUartData.rxStalled = 0;
+		rcvUartData(&usbUartData);
+	}
+
+	return c;
+}
+
+/**
+ * Called by bottom level of scanf routine within RedLib C library to read
+ *  a character. 
+ *
+ * \return The next character in the USB CDC UART RX FIFO. Will not return 
+ *  until character is available.
+ */
+int READFUNC(void) {
+	return usb_getc();
 }
 
 /**
@@ -491,7 +590,6 @@ int READFUNC(void)
 static ErrorCode_t usbUartBulkHandler(USBD_HANDLE_T usbHandle, void* data, 
 	uint32_t event) {
 	USB_UART_DATA_T* usb_uart_data = (USB_UART_DATA_T *)data;
-	uint32_t count = 0;
 
 	switch (event) {
 	// A transfer from us to the USB host that we queued has completed
@@ -508,26 +606,11 @@ static ErrorCode_t usbUartBulkHandler(USBD_HANDLE_T usbHandle, void* data,
 
 	// We received a transfer from the USB host. 
 	case USB_EVT_OUT:
-		// Check if there is room for more data in buffer
-		if (usb_uart_data->rxRcvd >= USB_UART_BUFF_SIZE){
-			usb_uart_data->rxOverflow = 1;
-			break;
-		}
+		rcvUartData(usb_uart_data);
+		break;
 
-		// Check to make sure rxBuf is not locked
-		if (!usb_uart_data->rxRdBusy){
-			// Mark we are busy receiving data
-			usb_uart_data->rxBusy = 1;
-
-			// Add data to the receive buffer
-			count = USBD_API->hw->ReadEP(usbHandle, USB_CDC_OUT_EP, 
-				&usb_uart_data->rxBuf[usb_uart_data->rxRcvd]);
-			// Update how much data is in the receive buffer 
-			usb_uart_data->rxRcvd += count;
-
-			// Mark we are no longer busy receiving data
-			usb_uart_data->rxBusy = 0;
-		}
+	case ERR_USBD_STALL:
+		setLedIntensity(0);
 		break;
 
 	default:
@@ -696,12 +779,12 @@ static ErrorCode_t usbUartInit(USBD_HANDLE_T usbHandle,
 		usbUartData.txFifo = (uint8_t *) cdc_param.mem_base;
 		cdc_param.mem_base += USB_UART_TXFIFO_SZ;
 		cdc_param.mem_size -= USB_UART_TXFIFO_SZ;
-		usbUartData.rxBuf = (uint8_t *) cdc_param.mem_base;
-		// Make rxBuf twice as big to avoid potential overflow. We are
-		//  using this buffer to build commands, as a USB packet of 
-		//  USB_UART_BUFF_SIZE could come in to a partially filled buffer
-		cdc_param.mem_base += 2*USB_UART_BUFF_SIZE;
-		cdc_param.mem_size -= 2*USB_UART_BUFF_SIZE;
+
+		// Allocate buffer for receive FIFO
+		usbUartData.rxFifo = (uint8_t *) cdc_param.mem_base;
+		cdc_param.mem_base += USB_UART_RXFIFO_SZ;
+		cdc_param.mem_size -= USB_UART_RXFIFO_SZ;
+		usbUartData.rxWrapIdx = USB_UART_RXFIFO_SZ;
 
 		/* register endpoint interrupt handler */
 		ep_indx = (((USB_CDC_IN_EP & 0x0F) << 1) + 1);
@@ -797,43 +880,6 @@ int usbConfig(void){
 	USBD_API->hw->Connect(usbHandle, 1);
 
 	return 0;
-}
-
-/**
- * Get serial data received via CDC UART interface.
- *
- * \param[out] data Buffer to store received data in.
- * \param[in] maxDataLen Max number of bytes to copy to data.
- *
- * \return Number of bytes received. < 0  on error.
- */
-int getUsbSerialData(uint8_t* data, uint32_t maxDataLen){
-	uint8_t rxRcvd = usbUartData.rxRcvd;
-
-	// Don't want to be here if IRQ might be changing value underneath us
-	if (usbUartData.rxBusy)
-		return 0;
-
-	// Keep receive logic simple and error on cases where data cannot
-	//  handle all of data in rxBuf
-	if (rxRcvd > maxDataLen)
-		return -1;
-
-	if (rxRcvd){
-		// Mark we are busy checking the receive buffer
-		usbUartData.rxRdBusy = 1;
-
-		// Copy data to provided buffer
-		memcpy(data, usbUartData.rxBuf, rxRcvd);
-
-		// Mark that rxBuf data has been handed off to another sw layer
-		usbUartData.rxRcvd = 0;
-
-		// No longer busy with the receive buffer
-		usbUartData.rxRdBusy = 0;
-	}
-
-	return rxRcvd;
 }
 #endif
 
