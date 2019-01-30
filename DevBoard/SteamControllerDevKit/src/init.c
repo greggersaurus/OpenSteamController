@@ -44,6 +44,7 @@
 #include "buttons.h"
 #include "trackpad.h"
 #include "haptic.h"
+#include "time.h"
 
 #include <stdio.h>
 
@@ -213,11 +214,13 @@ void stage2Init(uint32_t hwVersion){
 	Chip_GPIO_WritePortBit(LPC_GPIO, 0, 7, false);
 	Chip_GPIO_WriteDirBit(LPC_GPIO, 0, 7, true);
 
+	// Call initialization routines for specific peripherals, etc.
+	initTime();
+
 	initAdc();
 	enableTriggers(true);
 	enableJoystick(true);
 
-	// Call initialization routines for specific peripherals, etc.
 	initLedCtrl();
 
 	initButtons();

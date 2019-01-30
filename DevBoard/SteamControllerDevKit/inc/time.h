@@ -1,10 +1,12 @@
 /**
- * \file adc_read.h
- * \brief Encompasses functions for reading data from ADC channels.
+ * \file time.h
+ *
+ * \brief Encompasses functions for time related tasks (i.e. sleeping, tracking
+ *  how long something took).
  *
  * MIT License
  *
- * Copyright (c) 2018 Gregory Gluszek
+ * Copyright (c) 2019 Gregory Gluszek
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,25 +27,15 @@
  * SOFTWARE.
  */
 
-#ifndef _ADC_READ_
-#define _ADC_READ_
+#ifndef _TIME_
+#define _TIME_
 
 #include <stdint.h>
-#include "lpc_types.h"
 
-void initAdc(void);
+void initTime(void);
 
-void enableTriggers(bool en);
-void enableJoystick(bool en);
+void usleep(uint32_t usec);
 
-void updateAdcVals(void);
+uint32_t getUsTickCnt(void);
 
-int getAdcVal(uint8_t chan, uint16_t* val);
-
-uint8_t getleftAnalogXPowerA(void);
-uint8_t getleftAnalogYPowerA(void);
-
-int adcReadCmdFnc(int argc, const char* argv[]);
-void adcReadCmdUsage(void);
-
-#endif /* _ADC_READ_ */
+#endif /* _TIME_ */

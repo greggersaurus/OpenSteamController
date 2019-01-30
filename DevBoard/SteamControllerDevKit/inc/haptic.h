@@ -52,9 +52,13 @@ typedef struct Note {
 } Note;
 
 void initHaptics(void);
+int playHaptic(enum Haptic haptic, const struct Note* notes, uint32_t numNotes);
+
+void usleepHaptic(uint32_t usec);
+uint32_t getUsTickCntHaptic(void);
+
 void hapticCmdUsage(void);
 int hapticCmdFnc(int argc, const char* argv[]);
-int playHaptic(enum Haptic haptic, const struct Note* notes, uint32_t numNotes);
 
 #endif /* _HAPTIC_ */
 

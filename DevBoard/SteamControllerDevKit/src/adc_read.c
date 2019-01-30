@@ -32,6 +32,7 @@
 #include "adc_11xx.h"
 #include "clock_11xx.h"
 #include "usb.h"
+#include "time.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -177,7 +178,7 @@ void updateAdcVals(void) {
  *
  * \return None.
  */
-void ADC_IRQHandler (void) {
+void ADC_IRQHandler(void) {
 	if (adcUpdateCnt < ADC_UPDATE_CNT_DONE)
 		adcUpdateCnt++;
 
@@ -205,16 +206,21 @@ void ADC_IRQHandler (void) {
 }
 
 /**
- * \param chan ADC channel to retrieve data from.
+ * Return the raw ADC value for a particular channel.
+ *
+ * Note: updateAdcVals() dicates when ADCs are sampled. Make sure it has
+ *  recently been called or returned value may be stale.
  * 
- * \return Most recently aquired data from specified ADC channel.
+ * \param chan ADC channel to retrieve data from.
+ * \param[out] val The raw ADC value.
+ * 
+ * \return 0 on success.
  */
-uint16_t adcReadChan(uint8_t chan) {
+int getAdcVal(uint8_t chan, uint16_t* val) {
+	if (chan >= 8)
+		return -1;
 
-//TODO: return status code instead?
-
-	if (chan < 8)
-		return adcData[chan];
+	*val = adcData[chan];
 
 	return 0;
 }
@@ -223,11 +229,16 @@ uint16_t adcReadChan(uint8_t chan) {
  * Convert ADC reading for X direction of analog stick to bounds expected by
  *  Wired Controller Plus (by PowerA) for Nintendo Switch.
  *
+ * Note: Make sure updateAdcVals() has been called recently so that the ADC
+ *  values used are current.
+ *
  * \return X position of Analog stick where Left=0x00, Neutral=0x80, Right=0xff
  */
 uint8_t getleftAnalogXPowerA(void) {
 	// Joystick X direction (left = 0x338, neutral = 0x20a right = 0x0f0)
-	uint16_t adcVal = adcReadChan(ADC_CH1);
+	uint16_t adcVal = 0;
+
+	getAdcVal(ADC_JOYSTICK_X, &adcVal);
 
 	if (adcVal < 0x100) {
 		adcVal = 0;
@@ -252,11 +263,16 @@ uint8_t getleftAnalogXPowerA(void) {
  * Convert ADC reading for Y direction of analog stick to bounds expected by
  *  Wired Controller Plus (by PowerA) for Nintendo Switch.
  *
+ * Note: Make sure updateAdcVals() has been called recently so that the ADC
+ *  values used are current.
+ *
  * \return X position of Analog stick where Up=0x00, Neutral=0x80, Down=0xff
  */
 uint8_t getleftAnalogYPowerA(void) {
 	// Joystick Y direction (up = 0x32a, neutral = 0x207, down = 0xf8)
-	uint16_t adcVal = adcReadChan(ADC_CH3);
+	uint16_t adcVal = 0;
+
+	getAdcVal(ADC_JOYSTICK_Y, &adcVal);
 
 	if (adcVal < 0x100) {
 		adcVal = 0;
@@ -284,9 +300,10 @@ uint8_t getleftAnalogYPowerA(void) {
  */
 void adcReadCmdUsage(void) {
 	printf(
-		"usage: adc\n"
+		"usage: adcRead\n"
 		"\n"
-//TODO
+		"Enter a loop giving updates on all raw ADC channel values.\n"
+		"Press any key to exit loop.\n"
 	);
 }
 
@@ -299,23 +316,36 @@ void adcReadCmdUsage(void) {
  * \return 0 on success.
  */
 int adcReadCmdFnc(int argc, const char* argv[]) {
+	printf("Raw ADC Values (Press any key to exit):\n");
+	printf("\n");
+	printf("Time       AD6   LTrig RTrig JoyX  JoyY\n");
+	printf("----------------------------------------\n");
 
-//TODO
+	while (!usb_tstc()) {
+		uint16_t adc_val = 0;
 
-while (!usb_tstc()) {
-	updateAdcVals();
+		updateAdcVals();
 
-	printf("ADC[6] = 0x%04x, ", adcReadChan(ADC_CH6));
+		printf("0x%08x ", getUsTickCnt());
 
-	printf("ADC[0] = 0x%04x, ", adcReadChan(ADC_CH0));
-	printf("ADC[2] = 0x%04x, ", adcReadChan(ADC_CH2));
+		getAdcVal(ADC_CH6, &adc_val);
+		printf("0x%03x ", adc_val);
 
-	// Joystick X direction (left = 0x338, neutral = 0x20a right = 0x0f0)
-	printf("ADC[1] = 0x%04x, ", adcReadChan(ADC_CH1));
-	// Joystick Y direction (up = 0x32a, neutral = 0x207, down = 0xf8)
-	printf("ADC[3] = 0x%04x\n", adcReadChan(ADC_CH3));
-}
+		getAdcVal(ADC_L_TRIG, &adc_val);
+		printf("0x%03x ", adc_val);
+		getAdcVal(ADC_R_TRIG, &adc_val);
+		printf("0x%03x ", adc_val);
+
+		getAdcVal(ADC_JOYSTICK_X, &adc_val);
+		printf("0x%03x ", adc_val);
+		getAdcVal(ADC_JOYSTICK_Y, &adc_val);
+		printf("0x%03x ", adc_val);
+
+		printf("\r");
+		usb_flush();
+
+		usleep(10000);
+	}
 
 	return 0;
 }
-
