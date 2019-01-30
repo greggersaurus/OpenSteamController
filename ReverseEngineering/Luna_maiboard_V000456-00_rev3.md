@@ -89,7 +89,7 @@ This sections details how the pins of the process are configured and (potentiall
 |            59 | PIO1_12               | PIO1_12          | Out           | Right Haptic Activate. Toggle to generate vibrations (TODO: need better details on this). Initially input. Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. Later set to output and driven low (before PIO0_18 is set to output and driven low). |
 |            60 | PIO0_17               | PIO0_17          | In            | S1 - A Button |
 |            61 | PIO0_18               | PIO0_18          | Out           | Left Haptic Activate. Toggle to generate vibrations (TODO: need better details on this). Initially input (If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB))? Later output related to hatpics? | 
-|            62 | PIO0_19               | PIO0_19          | Out           | Set as output during init and driven low. (trace leads to... TODO)|
+|            62 | PIO0_19               | PIO0_19          | Out           | Active high enable for powering Joystick to produce X and Y position ADC values. |
 |            63 | PIO1_16               | PIO1_16          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Left Trackpad/Haptic. |
 |            64 | PIO1_6                | PIO1_6           | Out           | Chip Select/SS for Left Trackpad/Haptic (active low) |
 
