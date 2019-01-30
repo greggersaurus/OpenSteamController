@@ -113,10 +113,7 @@ void stage1Init(void){
 
 // Local variables to values of GPIOs, etc. early in boot process
 static uint8_t pio0_3_start_val = 0;
-static uint16_t ad6_start_val = 0;
 static uint8_t pio0_2_start_val = 0;
-static uint8_t pio1_12_start_val = 0;
-static uint8_t pio0_18_start_val = 0;
 
 /**
  * Second stage initialization. Here we get into Steam Controller hardware 
@@ -206,11 +203,6 @@ void stage2Init(uint32_t hwVersion){
 	// Enables USB SRAM block at address 0x20004000 via System clock control register 
 	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_USBRAM);
 
-	// Drive some GPIOs according to simulation results (not sure why exactly...)
-	Chip_GPIO_WritePortBit(LPC_GPIO, 0, 19, false);
-	Chip_GPIO_WriteDirBit(LPC_GPIO, 0, 19, true);
-	Chip_IOCON_PinMux(LPC_IOCON, 0, 19, IOCON_MODE_PULLDOWN, IOCON_FUNC0);
-
 	pio0_2_start_val = Chip_GPIO_GetPinState(LPC_GPIO, 0, 2);
 
 	Chip_IOCON_PinMux(LPC_IOCON, 1, 28, IOCON_MODE_PULLDOWN, IOCON_FUNC0);
@@ -222,18 +214,11 @@ void stage2Init(uint32_t hwVersion){
 	Chip_GPIO_WriteDirBit(LPC_GPIO, 0, 7, true);
 
 	initAdc();
-	//ad6_start_val = adcReadChan(6);
-
-//TODO: This is active low enable for analog triggers... Move to adc_read??
-	Chip_GPIO_WritePortBit(LPC_GPIO, 1, 1, false); //true);
-	Chip_GPIO_WriteDirBit(LPC_GPIO, 1, 1, true);
-	Chip_IOCON_PinMux(LPC_IOCON, 1, 1, IOCON_MODE_PULLDOWN, IOCON_FUNC0);
+	enableTriggers(true);
+	enableJoystick(true);
 
 	// Call initialization routines for specific peripherals, etc.
 	initLedCtrl();
-
-	pio1_12_start_val = Chip_GPIO_GetPinState(LPC_GPIO, 1, 12);
-	pio0_18_start_val = Chip_GPIO_GetPinState(LPC_GPIO, 0, 18);
 
 	initButtons();
 
@@ -252,14 +237,8 @@ void stage2Init(uint32_t hwVersion){
 int initStatsCmdFnc(int argc, const char* argv[]) { 
 	printf("PIO0_3 was %d on startup. Is %d now.\n", 
 		pio0_3_start_val, Chip_GPIO_GetPinState(LPC_GPIO, 0, 3));
-	printf("AD6 was %d on startup. Is %d now.\n", 
-		ad6_start_val, adcReadChan(6));
 	printf("PIO0_2 was %d on startup. Is %d now.\n", 
 		pio0_2_start_val, Chip_GPIO_GetPinState(LPC_GPIO, 0, 2));
-	printf("PIO1_12 was %d on startup. Is %d now.\n", 
-		pio1_12_start_val, Chip_GPIO_GetPinState(LPC_GPIO, 1, 12));
-	printf("PIO0_18 was %d on startup. Is %d now.\n", 
-		pio0_18_start_val, Chip_GPIO_GetPinState(LPC_GPIO, 0, 18));
 
 	return 0;
 

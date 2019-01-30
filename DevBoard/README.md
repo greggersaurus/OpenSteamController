@@ -74,6 +74,12 @@ This is a running list of items I would like to prioritize and not lose track
             1. Maybe we can hijack IRQ handler??
             1. Or maybe we look into not using ROM code and writing out own (see polling example fix for this issue: http://www.eevblog.com/forum/microcontrollers/usb-cdc-_flow-control_/)
         1. Reproduce issues by pasting entire jingle into console no longer locks it up, but it looks like some command get mangled...
+1. On startup have console periodically print welcome message until key is pressed?
+    1. This way user knows they are connected to a working terminal without needing to hit enter?
+    1. Make single line with \r
+1. Dig into IRQ contention
+    1. Jingle does not work if ADC IRQ is up and running
+        1. Only run when looking to get new data like Valve does...?
 1. Dig into inaccuracy in haptic output
     1. Use violin tuner app and notice how the higher the frequencey the larger the gap in frequency output and what app measures...
 1. Create help command
