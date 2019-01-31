@@ -1,12 +1,10 @@
-# Development Board
+# Firmware
 
 The work in this directory is geared towards a completely custom firwmare for 
  the main LPC11U37 chip that will act a development environment for interfacing
- with the peripherals available on the Steam Controller hardware. 
-
-The goal of this subproject is to use the Steam Controller as a development board, 
- rather than to create a replacement for the firmware that causes the controller 
- to work like a controller that interfaces with Steam.
+ with the peripherals available on the Steam Controller hardware. This firmware
+ also acts as a jumping off point for using the Steam Controller hardware for
+ other purposes (i.e. to act as a wired controller for the Nintendo Switch).
 
 # Resources, Utilities and Influences
 
@@ -22,6 +20,16 @@ NXP provided library for easy access to LPC11U37 processor peripherals, etc.
 The custom firwmare in this subproject is based on the Steam Controller 
  Reverse Engineering subproject. See this project for details on how the
  firmware supported by Valve works, as well as details on the hardware. 
+
+## [FauxControllers](./FauxControllers)
+
+The purpose of this project is a workspace to learn about how USB HIDs work, 
+ specifically in the context of attempting to use the LPCXpresso11U37H 
+ Evaluation board OM13074 to act as a known commercial controllers (i.e.
+ Nintendo Switch Pro Controller).
+
+The idea is to merge what is learned here into the OpenSteamController Project
+ and close down this project when it is no longer useful.
 
 ## Development Environment
 
@@ -50,7 +58,7 @@ The custom firmware for the LPC11U37 has been developed in the LPCXpresso IDE
 
 # Building
 
-Open the LPCXpresso IDE and import projects [SteamControllerDevKit](./SteamControllerDevKit) 
+Open the LPCXpresso IDE and import projects [OpenSteamController](./OpenSteamController) 
  and [lpc_chip_11uxx_lib](./lpc_chip_11uxx_lib).
 
 A project can be imported into LPCXpresso by selecting: 
@@ -80,7 +88,6 @@ This is a running list of items I would like to prioritize and not lose track
     1. There was a bug where Note was pointing to bogus data that resulted in a interrupt that never seemed to end
         1. Need bounds check on how interrupt variables are setup to stop this from happening???
 1. Make all functions have usage 
-1. Change project name to OpenSteamController (or something like that)
 1. Get controller to act as PowerA wired
     1. Clean up naming in changes...
 1. Add details on different firmware build types (i.e. intentions and commands/control layouts)
@@ -97,7 +104,7 @@ This is a running list of items I would like to prioritize and not lose track
     1. This could be an awesome debug option to be able plug controller into PC to get stats, etc. via UART after usage...
 1. READMEs for lpcexpresso projects
     1. Details on where lpc project came from
-    1. Intention and requirements (i.e. lpc project) for SteamControllerDevKit project
+    1. Intention and requirements (i.e. lpc project) for OpenSteamController project
 1. Command for communication with gyro sensor
 1. Command for monitoring controller state
     1. Gyro info?
