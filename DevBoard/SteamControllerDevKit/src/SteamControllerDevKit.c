@@ -42,6 +42,7 @@
 #include "eeprom_access.h"
 #include "console.h"
 #include "usb.h"
+#include "time.h"
 
 /**
  * "Entry point" for Steam Controller dev kit. Keep in mind that you are most
@@ -70,23 +71,33 @@ int main(void){
 	usbConfig();
 //TODO: return code check and blink LED on error?
 
+#if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
+	while(!usb_tstc()) {
+		usleep(50000);
+
+		printf("    OpenSteamController Console (Ver %d.%d Uptime "
+			"0x%08x). Press any key.\r", DEV_BOARD_FW_VER_MAJOR, 
+			DEV_BOARD_FW_VER_MINOR, getUsTickCnt());
+	}
+
 	// Main execution loop
 	while(1) {
-#if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
 		// Check serial input device for new characters to process
 		handleConsoleInput();
 		// Sleep until next IRQ happens
-		//TODO: It should be OK to have this here right? Need to find out why it gives us weird artifacts in console output...
 		__WFI();
+	}
 #endif
 
 #if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
+	// Main execution loop
+	while(1) {
 		// Update USB status packet sent to Switch
 		updateControllerStatusPacket();
 		// Sleep until next IRQ happens
 		__WFI();
-#endif
 	}
+#endif
 
 	return 0 ;
 }

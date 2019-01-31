@@ -31,6 +31,10 @@
 #include "lpc_types.h"
 #include "chip.h"
 #include "gpio_11xx_1.h"
+#include "usb.h"
+#include "time.h"
+
+#include <stdio.h>
 
 #define GPIO_ANALOG_JOY_CLICK 1, 0
 #define GPIO_L_GRIP 1, 25
@@ -199,4 +203,69 @@ int getRightBumperState(void) {
  */
 int getLeftBumperState(void) {
 	return !Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_L_BUMPER);
+}
+
+/**
+ * Print command usage details to console.
+ *
+ * \return None.
+ */
+void buttonsCmdUsage(void) {
+	printf(
+		"usage: buttons\n"
+		"\n"
+		"Enter a loop giving updates on all digital button states.\n"
+		"Press any key to exit loop.\n"
+	);
+}
+
+/**
+ * Handle command line function.
+ *
+ * \param argc Number of arguments (i.e. size of argv)
+ * \param argv Command line entry broken into array argument strings.
+ *
+ * \return 0 on success.
+ */
+int buttonsCmdFnc(int argc, const char* argv[]) {
+	printf("Digital Button States (Press any key to exit):\n");
+	printf("Legend:\n");
+	printf("\tLB/RB = Left/Right Bumper\n");
+	printf("\tLT/RT = Left/Right Trigger\n");
+	printf("\tLTP/RTP = Left/Right Trackpad Click\n");
+	printf("\tJoy = Joystick Click\n");
+	printf("\tLG/RG = Left/Right Grip\n");
+	printf("\tLA/RA = Left/Right Arrow\n");
+	printf("\n");
+	printf("Time       LB LT LTP Joy LG LA Steam X Y A B RA RG RTP RT RB\n");
+	printf("------------------------------------------------------------\n");
+
+	while (!usb_tstc()) {
+
+		printf("0x%08x ", getUsTickCnt());
+
+		printf(" %d ", getLeftBumperState());
+		printf(" %d ", getLeftTriggerState());
+		printf("  %d ", getLeftTrackpadClickState());
+		printf("  %d ", getJoyClickState());
+		printf(" %d ", getLeftGripState());
+		printf(" %d ", getFrontLeftButtonState());
+		printf("    %d ", getSteamButtonState());
+		printf("%d ", getXButtonState());
+		printf("%d ", getYButtonState());
+		printf("%d ", getAButtonState());
+		printf("%d ", getBButtonState());
+		printf(" %d ", getFrontRightButtonState());
+		printf(" %d ", getRightGripState());
+		printf("  %d ", getRightTrackpadClickState());
+		printf(" %d ", getRightTriggerState());
+		printf(" %d", getRightBumperState());
+
+		printf("\r");
+		usb_flush();
+
+		usleep(20000);
+	}
+
+	return 0;
 }

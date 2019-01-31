@@ -1,11 +1,11 @@
 /**
- * \file buttons.h
- * \brief Encompasses functions for reading Steam Controller digital button 
- *	states.
+ * \file test.h
+ * \brief Encompasses functions for regression testing different functionality
+ *  (i.e. USB CDC UART).
  *
  * MIT License
  *
- * Copyright (c) 2018 Gregory Gluszek
+ * Copyright (c) 2019 Gregory Gluszek
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,39 +26,11 @@
  * SOFTWARE.
  */
 
-#ifndef _BUTTONS_
-#define _BUTTONS_
+#ifndef _TEST_
+#define _TEST_
 
-#include <stdint.h>
+int testCmdFnc(int argc, const char* argv[]);
+void testCmdUsage(void);
 
-void initButtons(void);
-
-int getSteamButtonState(void);
-int getFrontLeftButtonState(void);
-int getFrontRightButtonState(void);
-
-int getJoyClickState(void);
-
-int getXButtonState(void);
-int getYButtonState(void);
-int getBButtonState(void);
-int getAButtonState(void);
-
-int getRightGripState(void);
-int getLeftGripState(void);
-
-int getRightTrackpadClickState(void);
-int getLeftTrackpadClickState(void);
-
-int getRightTriggerState(void);
-int getLeftTriggerState(void);
-
-int getRightBumperState(void);
-int getLeftBumperState(void);
-
-int buttonsCmdFnc(int argc, const char* argv[]);
-void buttonsCmdUsage(void);
-
-#endif /* _BUTTONS_ */
-
+#endif /* _TEST_ */
 

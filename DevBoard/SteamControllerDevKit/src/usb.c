@@ -366,9 +366,11 @@ static void usbUartTxStart(USB_UART_DATA_T* uartData) {
 	//  Not sure why. Maybe related to built in CDC UART support?
 	__disable_irq();
 	// Send the data to the USB EP (the interrupt handler will adjust rxIdx)
-	uartData->txSent = USBD_API->hw->WriteEP(uartData->usbHandle, 
-		USB_CDC_IN_EP, &uartData->txFifo[uartData->txRdIdx], 
-		bytes_to_send);
+	if (USB_IsConfigured(uartData->usbHandle)) {
+		uartData->txSent = USBD_API->hw->WriteEP(uartData->usbHandle, 
+			USB_CDC_IN_EP, &uartData->txFifo[uartData->txRdIdx], 
+			bytes_to_send);
+	}
 	__enable_irq();
 
 	// Just in case something went wrong

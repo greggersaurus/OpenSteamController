@@ -448,16 +448,5 @@ static void handleSerialChar(char c) {
 void handleConsoleInput(void) {
 	while (usb_tstc()) {
 		handleSerialChar(usb_getc());
-/*
-		//TODO: Testing for overflow in CDC UART. Remove this
-		char c = usb_getc();
-		usb_putc(c);
-		if (c == '\r') {
-			usb_putc('\n');
-		} else { 
-			usb_putc('_');
-		}
-		usb_flush();
-*/
 	}
 }

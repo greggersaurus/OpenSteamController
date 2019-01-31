@@ -39,6 +39,10 @@
 #include "trackpad.h"
 #include "haptic.h"
 #include "jingle_data.h"
+#include "usb.h"
+#include "buttons.h"
+#include "test.h"
+#include "time.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -49,90 +53,99 @@
 typedef struct {
 	const char* cmdName;
 	int (*cmdFnc)(int argc, const char* argv[]);
+	void (*cmdUsg)(void);
 } Cmd;
 
+int helpCmdFnc(int argc, const char* argv[]);
+void helpCmdUsage(void);
+
 /**
- * Prints details to console regarding how to use the test print command line 
- *  function.
+ * Print command usage details to console.
  *
  * \return None.
  */
-void testPrintCmdUsage(void) {
-	//TODO: add details on command how to exit
+void versionCmdUsage(void) {
+	printf(
+		"usage: version \n"
+		"\n"
+		"Print version info.\n"
+	);
 }
 
 /**
- * Command to stress test printing. This makes a very long string and then
- *  continuously prints it, with null term inserted randomly. 
- * Idea is to run this and make sure that 1) The system never locks up and
- *  2) Upon exit printing still works fine.
+ * Print command usage details to console.
  *
- * \param argc Number of arguments (i.e. size of argv)
- * \param argv Command line entry broken into array argument strings.
- *
- * \return 0 on success.
+ * \return None.
  */
-int testPrintCmdFnc(int argc, const char* argv[]) {
-	const uint32_t STR_SZ = 2048;
-	char* tst_str = malloc(STR_SZ);
+int versionCmdFnc(int argc, const char* argv[]) {
+	printf("OpenSteamController Ver %d.%d.\n", 
+		DEV_BOARD_FW_VER_MAJOR, DEV_BOARD_FW_VER_MINOR);
 
-	if (!tst_str) {
-		printf("Could not allocate tst_str\n");
-		return -1;
-	}
-
-//TODO: more options for more tests (maybe allow for selecting max string length and variability or something?
-//	i.e. we want this really aggressive test to see if anything locks up and perminently screws up, but also
-//	 want test to make sure things are printing in a sane manner repeatedly... (i.e. try adcRead and see strings are cut short once in a while... what is this?)
-//	 Is that due to ADC interrupts?? (shouldn't it not affect UART output...?)
-
-	// Initialize string with characters that have printable symbols
-	for (int idx = 0; idx < STR_SZ; idx++) {
-		tst_str[idx] = (idx % 94) + 33;
-	}
-	tst_str[STR_SZ-1] = 0;
-
-	//TODO: add prompt before starting?
-
-	//TODO: switch to using usb_tstc for exiting loop
-	while (1) {
-		int rnd_idx = rand();	
-	
-		rnd_idx %= STR_SZ;	
-	
-		char tmp = tst_str[rnd_idx];
-
-		// Change length of string
-		tst_str[rnd_idx] = 0;
-
-		//TODO: why are we getting bell sound...?
-		printf("%s\n", tst_str);
-
-		// Restore length of string
-		tst_str[rnd_idx] = tmp;
-
-		//TODO: Change to using sleep function (once implemented)
-		for (volatile int cnt = 0; cnt < 0x4000; cnt++) {
-		}
-	}
-
-	free(tst_str);
+	return 0;
 }
 
 static Cmd cmds[] = {
-	{.cmdName = "adcRead", .cmdFnc = adcReadCmdFnc},
-	{.cmdName = "eeprom", .cmdFnc = eepromCmdFnc},
-	{.cmdName = "haptic", .cmdFnc = hapticCmdFnc},
-	{.cmdName = "initStats", .cmdFnc = initStatsCmdFnc},
-	{.cmdName = "jingle", .cmdFnc = jingleCmdFnc},
-	{.cmdName = "led", .cmdFnc = ledCmdFnc},
-	{.cmdName = "mem", .cmdFnc = memCmdFnc},
-	{.cmdName = "monitor", .cmdFnc = monitorCmdFnc},
-	{.cmdName = "trackpad", .cmdFnc = trackpadCmdFnc},
-	{.cmdName = "testPrint", .cmdFnc = testPrintCmdFnc},
-//TODO: add version function (print version of fw, and build date, etc.)
-//TODO: add help fnc (and structure to have usage functions for each command)
+	{.cmdName = "adcRead", .cmdFnc = adcReadCmdFnc, .cmdUsg = adcReadCmdUsage},
+	{.cmdName = "buttons", .cmdFnc = buttonsCmdFnc, .cmdUsg = buttonsCmdUsage},
+	{.cmdName = "eeprom", .cmdFnc = eepromCmdFnc, .cmdUsg = NULL},
+	{.cmdName = "haptic", .cmdFnc = hapticCmdFnc, .cmdUsg = NULL},
+	{.cmdName = "help", .cmdFnc = helpCmdFnc, .cmdUsg = helpCmdUsage},
+	{.cmdName = "initStats", .cmdFnc = initStatsCmdFnc, .cmdUsg = NULL},
+	{.cmdName = "jingle", .cmdFnc = jingleCmdFnc, .cmdUsg = NULL},
+	{.cmdName = "led", .cmdFnc = ledCmdFnc, .cmdUsg = NULL},
+	{.cmdName = "mem", .cmdFnc = memCmdFnc, .cmdUsg = NULL},
+	{.cmdName = "monitor", .cmdFnc = monitorCmdFnc, .cmdUsg = NULL},
+	{.cmdName = "trackpad", .cmdFnc = trackpadCmdFnc, .cmdUsg = NULL},
+	{.cmdName = "test", .cmdFnc = testCmdFnc, .cmdUsg = NULL},
+	{.cmdName = "version", .cmdFnc = versionCmdFnc, .cmdUsg = versionCmdUsage},
 };
+
+/**
+ * Print command usage details to console.
+ *
+ * \return None.
+ */
+void helpCmdUsage(void) {
+	printf(
+		"usage: help cmdName\n"
+		"\n"
+		"Print command usage based on specified cmdName.\n"
+		"Possible values for cmdName are:\n"
+	);
+	for (int idx = 0; idx < ARRAY_SIZE(cmds); idx++) {
+		printf("\t%s\n", cmds[idx].cmdName);
+	}
+}
+
+/**
+ * Print command usage details to console.
+ *
+ * \return None.
+ */
+int helpCmdFnc(int argc, const char* argv[]) {
+	if (argc != 2) {
+		helpCmdUsage();
+		return 0;
+	}
+
+	int idx = 0;
+	for (idx = 0; idx < ARRAY_SIZE(cmds); idx++) {
+		if (!strcmp(argv[1], cmds[idx].cmdName)) {
+			if (!cmds[idx].cmdUsg) {
+				printf("No usage function available.\n");
+			} else {
+				cmds[idx].cmdUsg();
+			}
+			break;
+		}
+	}
+
+	if (idx >= ARRAY_SIZE(cmds)) {
+		printf("Invalid cmdName \'%s\'\n", argv[1]);
+	}
+
+	return 0;
+}
 
 /**
  * Find commands whose name match the given string.
@@ -212,8 +225,14 @@ void executeCmd(const char* entry, uint32_t len) {
 
 	const Cmd** possible_cmds = searchCmds(entry, cmd_len);
 
+	if (!cmd_len) {
+		return;
+	}
+
 	if (!possible_cmds[0] || possible_cmds[1]) {
-		printf("command not found\n");
+		printf("Command \'");
+		usb_putb(entry, cmd_len);
+		printf("\' not found. Try \'help\' command.\n");
 		return;
 	}
 
