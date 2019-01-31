@@ -1,6 +1,6 @@
 *.swp
-DevBoard/SteamControllerDevKit/.settings/
-DevBoard/SteamControllerDevKit/Debug/
-DevBoard/lpc_chip_11uxx_lib/Debug/
-DevBoard/FauxControllers/.settings/
-DevBoard/FauxControllers/Debug/
+Firmware/OpenSteamController/.settings/
+Firmware/OpenSteamController/Debug/
+Firmware/lpc_chip_11uxx_lib/Debug/
+Firmware/FauxControllers/.settings/
+Firmware/FauxControllers/Debug/

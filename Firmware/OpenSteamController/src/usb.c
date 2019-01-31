@@ -263,7 +263,6 @@ ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 	0 /* bLength */
 };
 
-//TODO: better descriptor text? Maybe baud rate here?
 /**
  * USB String Descriptor (optional)
  */
@@ -271,13 +270,31 @@ ALIGNED(4) const uint8_t USB_StringDescriptor[] = {
 	/* Index 0x00: LANGID Codes */
 	0x04, /* bLength */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
-	WBVAL(0x0409),	/* US English */    /* wLANGID */
+	WBVAL(0x0409),	/* US English */ /* wLANGID */
 	/* Index 0x01: Manufacturer */
-	(3 * 2 + 2), /* bLength (13 Char + Type + lenght) */
+	(21 * 2 + 2), /* bLength */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
-	'G', 0,
-	'G', 0,
+	'O', 0,
+	'p', 0,
+	'e', 0,
+	'n', 0,
 	' ', 0,
+	'S', 0,
+	't', 0,
+	'e', 0,
+	'a', 0,
+	'm', 0,
+	' ', 0,
+	'C', 0,
+	'o', 0,
+	'n', 0,
+	't', 0,
+	'r', 0,
+	'o', 0,
+	'l', 0,
+	'l', 0,
+	'e', 0,
+	'r', 0,
 	/* Index 0x02: Product */
 	(9 * 2 + 2), /* bLength */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
@@ -291,16 +308,14 @@ ALIGNED(4) const uint8_t USB_StringDescriptor[] = {
 	'r', 0,
 	't', 0,
 	/* Index 0x03: Serial Number */
-	(6 * 2 + 2), /* bLength (8 Char + Type + lenght) */
+	(4 * 2 + 2), /* bLength (8 Char + Type + length) */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
-	'G', 0,
-	'G', 0,
-	' ', 0,
-	'-', 0,
+	'1', 0,
 	'7', 0,
 	'8', 0,
+	'9', 0,
 	/* Index 0x04: Interface 1, Alternate Setting 0 */
-	( 4 * 2 + 2), /* bLength (4 Char + Type + lenght) */
+	(4 * 2 + 2), /* bLength (4 Char + Type + length) */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
 	'V', 0,
 	'C', 0,
@@ -1028,7 +1043,7 @@ const uint8_t USB_StringDescriptor[] = {
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
 	WBVAL(0x0409), /* wLANGID : US English */
 	/* Index 0x01: Manufacturer */
-	(40 * 2 + 2), /* bLength (40 Char + Type + lenght) */
+	(40 * 2 + 2), /* bLength (40 Char + Type + length) */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
 	'B', 0,
 	'e', 0,
@@ -1071,7 +1086,7 @@ const uint8_t USB_StringDescriptor[] = {
 	'A', 0,
 	')', 0,
 	/* Index 0x02: Product */
-	(28 * 2 + 2), /* bLength (28 Char + Type + lenght) */
+	(28 * 2 + 2), /* bLength (28 Char + Type + length) */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
 	'C', 0,
 	'o', 0,
@@ -1102,7 +1117,7 @@ const uint8_t USB_StringDescriptor[] = {
 	'e', 0,
 	'r', 0,
 	/* Index 0x03: Serial Number */
-	(12 * 2 + 2), /* bLength (12 Char + Type + lenght) */
+	(12 * 2 + 2), /* bLength (12 Char + Type + length) */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */
 	'0', 0,
 	'0', 0,
@@ -1117,7 +1132,7 @@ const uint8_t USB_StringDescriptor[] = {
 	'0', 0,
 	'1', 0,
 	/* Index 0x04: Interface 0, Alternate Setting 0 */
-	(3 * 2 + 2), /* bLength (9 Char + Type + lenght) */
+	(3 * 2 + 2), /* bLength (9 Char + Type + length) */
 	USB_STRING_DESCRIPTOR_TYPE, /* bDescriptorType */ //TODO: this correct?
 	'H', 0,
 	'I', 0,

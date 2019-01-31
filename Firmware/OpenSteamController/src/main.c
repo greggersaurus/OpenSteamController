@@ -1,7 +1,7 @@
 /**
- * \file SteamControllerDevKit.c
- * \brief Main for Steam Controller Development Kit. The idea is to 
- *	take advante of the relatively open nature of the Steam Controller and
+ * \file main.c
+ * \brief Entry point for Open Steam Controller firmware. The idea is to 
+ *	take advantage of the relatively open nature of the Steam Controller and
  *	provide a basis for people to tinker and interface with the variety of
  *	perihperals on the Steam Controller Hardware. 
  *
@@ -72,6 +72,8 @@ int main(void){
 //TODO: return code check and blink LED on error?
 
 #if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
+	usleep(1000000);
+
 	while(!usb_tstc()) {
 		usleep(50000);
 
@@ -79,6 +81,7 @@ int main(void){
 			"0x%08x). Press any key.\r", DEV_BOARD_FW_VER_MAJOR, 
 			DEV_BOARD_FW_VER_MINOR, getUsTickCnt());
 	}
+	printf("\n");
 
 	// Main execution loop
 	while(1) {

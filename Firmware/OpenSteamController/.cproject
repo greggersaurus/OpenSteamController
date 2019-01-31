@@ -19,7 +19,7 @@
 					<folderInfo id="com.crt.advproject.config.exe.debug.1223647947." name="/" resourcePath="">
 						<toolChain id="com.crt.advproject.toolchain.exe.debug.714186048" name="NXP MCU Tools" superClass="com.crt.advproject.toolchain.exe.debug">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.GNU_ELF" id="com.crt.advproject.platform.exe.debug.1626342303" name="ARM-based MCU (Debug)" superClass="com.crt.advproject.platform.exe.debug"/>
-							<builder buildPath="${workspace_loc:/SteamControllerDevKit}/Debug" id="com.crt.advproject.builder.exe.debug.2021809063" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="com.crt.advproject.builder.exe.debug"/>
+							<builder buildPath="${workspace_loc:/OpenSteamController}/Debug" id="com.crt.advproject.builder.exe.debug.2021809063" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="com.crt.advproject.builder.exe.debug"/>
 							<tool id="com.crt.advproject.cpp.exe.debug.1503431883" name="MCU C++ Compiler" superClass="com.crt.advproject.cpp.exe.debug"/>
 							<tool id="com.crt.advproject.gcc.exe.debug.1136757033" name="MCU C Compiler" superClass="com.crt.advproject.gcc.exe.debug">
 								<option id="com.crt.advproject.gcc.arch.686818209" name="Architecture" superClass="com.crt.advproject.gcc.arch" value="com.crt.advproject.gcc.target.cm0" valueType="enumerated"/>
@@ -57,7 +57,7 @@
 								<option id="com.crt.advproject.link.gcc.multicore.master.userobjs.1758133572" name="Slave Objects (not visible)" superClass="com.crt.advproject.link.gcc.multicore.master.userobjs" valueType="userObjs"/>
 								<option id="com.crt.advproject.link.arch.1883296421" name="Architecture" superClass="com.crt.advproject.link.arch" value="com.crt.advproject.link.target.cm0" valueType="enumerated"/>
 								<option id="com.crt.advproject.link.thumb.2073784972" name="Thumb mode" superClass="com.crt.advproject.link.thumb" value="true" valueType="boolean"/>
-								<option id="com.crt.advproject.link.script.1832569684" name="Linker script" superClass="com.crt.advproject.link.script" value="&quot;SteamControllerDevKit_Debug.ld&quot;" valueType="string"/>
+								<option id="com.crt.advproject.link.script.1832569684" name="Linker script" superClass="com.crt.advproject.link.script" value="&quot;OpenSteamController_Debug.ld&quot;" valueType="string"/>
 								<option id="com.crt.advproject.link.manage.144549545" name="Manage linker script" superClass="com.crt.advproject.link.manage" value="true" valueType="boolean"/>
 								<option id="gnu.c.link.option.nostdlibs.1612660261" name="No startup or default libs (-nostdlib)" superClass="gnu.c.link.option.nostdlibs" value="true" valueType="boolean"/>
 								<option id="gnu.c.link.option.other.931334608" name="Other options (-Xlinker [option])" superClass="gnu.c.link.option.other" valueType="stringList">
@@ -106,7 +106,7 @@
 					<folderInfo id="com.crt.advproject.config.exe.release.852006587." name="/" resourcePath="">
 						<toolChain id="com.crt.advproject.toolchain.exe.release.1916383761" name="NXP MCU Tools" superClass="com.crt.advproject.toolchain.exe.release">
 							<targetPlatform binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.GNU_ELF" id="com.crt.advproject.platform.exe.release.851270619" name="ARM-based MCU (Release)" superClass="com.crt.advproject.platform.exe.release"/>
-							<builder buildPath="${workspace_loc:/SteamControllerDevKit}/Release" id="com.crt.advproject.builder.exe.release.323173195" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="com.crt.advproject.builder.exe.release"/>
+							<builder buildPath="${workspace_loc:/OpenSteamController}/Release" id="com.crt.advproject.builder.exe.release.323173195" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="com.crt.advproject.builder.exe.release"/>
 							<tool id="com.crt.advproject.cpp.exe.release.117193276" name="MCU C++ Compiler" superClass="com.crt.advproject.cpp.exe.release"/>
 							<tool id="com.crt.advproject.gcc.exe.release.1465083041" name="MCU C Compiler" superClass="com.crt.advproject.gcc.exe.release">
 								<option id="com.crt.advproject.gcc.arch.216882719" name="Architecture" superClass="com.crt.advproject.gcc.arch" value="com.crt.advproject.gcc.target.cm0" valueType="enumerated"/>
@@ -140,7 +140,7 @@
 								<option id="com.crt.advproject.link.gcc.multicore.master.userobjs.2018320218" name="Slave Objects (not visible)" superClass="com.crt.advproject.link.gcc.multicore.master.userobjs" valueType="userObjs"/>
 								<option id="com.crt.advproject.link.arch.32123053" name="Architecture" superClass="com.crt.advproject.link.arch" value="com.crt.advproject.link.target.cm0" valueType="enumerated"/>
 								<option id="com.crt.advproject.link.thumb.1021582464" name="Thumb mode" superClass="com.crt.advproject.link.thumb" value="true" valueType="boolean"/>
-								<option id="com.crt.advproject.link.script.1025851378" name="Linker script" superClass="com.crt.advproject.link.script" value="&quot;SteamControllerDevKit_Release.ld&quot;" valueType="string"/>
+								<option id="com.crt.advproject.link.script.1025851378" name="Linker script" superClass="com.crt.advproject.link.script" value="&quot;OpenSteamController_Release.ld&quot;" valueType="string"/>
 								<option id="com.crt.advproject.link.manage.879251577" name="Manage linker script" superClass="com.crt.advproject.link.manage" value="true" valueType="boolean"/>
 								<option id="gnu.c.link.option.nostdlibs.1128627732" name="No startup or default libs (-nostdlib)" superClass="gnu.c.link.option.nostdlibs" value="true" valueType="boolean"/>
 								<option id="gnu.c.link.option.other.1939361348" name="Other options (-Xlinker [option])" superClass="gnu.c.link.option.other" valueType="stringList">
@@ -166,7 +166,7 @@
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-		<project id="SteamControllerDevKit.com.crt.advproject.projecttype.exe.871803011" name="Executable" projectType="com.crt.advproject.projecttype.exe"/>
+		<project id="OpenSteamController.com.crt.advproject.projecttype.exe.871803011" name="Executable" projectType="com.crt.advproject.projecttype.exe"/>
 	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
@@ -220,10 +220,10 @@
 	</storageModule>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="/SteamControllerDevKit"/>
+			<resource resourceType="PROJECT" workspacePath="/OpenSteamController"/>
 		</configuration>
 		<configuration configurationName="Release">
-			<resource resourceType="PROJECT" workspacePath="/SteamControllerDevKit"/>
+			<resource resourceType="PROJECT" workspacePath="/OpenSteamController"/>
 		</configuration>
 	</storageModule>
 </cproject>

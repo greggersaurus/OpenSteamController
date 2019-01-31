@@ -74,31 +74,17 @@ This is a running list of items I would like to prioritize and not lose track
             1. Maybe we can hijack IRQ handler??
             1. Or maybe we look into not using ROM code and writing out own (see polling example fix for this issue: http://www.eevblog.com/forum/microcontrollers/usb-cdc-_flow-control_/)
         1. Reproduce issues by pasting entire jingle into console no longer locks it up, but it looks like some command get mangled...
-1. On startup have console periodically print welcome message until key is pressed?
-    1. This way user knows they are connected to a working terminal without needing to hit enter?
-    1. Make single line with \r
-1. Dig into IRQ contention
-    1. Jingle does not work if ADC IRQ is up and running
-        1. Only run when looking to get new data like Valve does...?
 1. Dig into inaccuracy in haptic output
     1. Use violin tuner app and notice how the higher the frequencey the larger the gap in frequency output and what app measures...
-1. Create help command
-    1. Need to provide help functions for all cmds
-    1. Make sure output format for each function is consistent (i.e. surround {} to designate variables)
 1. Dig into infinite pulse on haptic bug
     1. There was a bug where Note was pointing to bogus data that resulted in a interrupt that never seemed to end
         1. Need bounds check on how interrupt variables are setup to stop this from happening???
-1. Create sleep function
-    1. Use CT16B0 like official Valve FW does?
-1. Now that we know PIO1_1 is active low enable of analog triggers (L = AD0 and R = AD2), clean up and organize!
+1. Make all functions have usage 
+1. Change project name to OpenSteamController (or something like that)
 1. Get controller to act as PowerA wired
     1. Clean up naming in changes...
 1. Add details on different firmware build types (i.e. intentions and commands/control layouts)
 1. Add details for each specific firwmare build type to this README
-1. Figure out interrupt related issues as to why Console output gets weird
-    1. Is this related to WFI() in main loop?
-    1. Is this related to ADC IRQ always running?
-    1. Is this related to monitor command lock up?
 1. Check clean build works (i.e. from fresh clone)
 1. Revisit and clean init()
     1. What GPIOs, etc. do we still not understand?
@@ -109,16 +95,6 @@ This is a running list of items I would like to prioritize and not lose track
     1. Use another counter?
 1. Look into having USB UART CDC still be active for controller build... (This might not be possible. Need to learn more about USB in general I think...)
     1. This could be an awesome debug option to be able plug controller into PC to get stats, etc. via UART after usage...
-1. (finish) ADC command
-    1. Make sure interrupts are working as expected
-        1. Always be converting? or no for power reasons?
-    1. Have it use interrupt like Valve's firmware does
-        1. Make sure IRQ is not starving anything running in normal execution context (i.e. not IRQ)
-    1. Add safety checks, timeouts, etc.
-    1. Read other channels (analog triggers? analog joystick?)
-        1. See how sim results configure PIOs
-    1. Polling mode where adc results are refreshed automatically until 'q' is pressed
-    1. Better comments
 1. READMEs for lpcexpresso projects
     1. Details on where lpc project came from
     1. Intention and requirements (i.e. lpc project) for SteamControllerDevKit project
