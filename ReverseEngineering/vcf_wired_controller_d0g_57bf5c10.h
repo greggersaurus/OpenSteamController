@@ -1942,7 +1942,7 @@ void fnc0x0000995c();
 void fnc0x00008de4();
 
 // Function called from main loop if USB_Configure_Event has occurred? (Setup trackpad ASIC, kickoff jingle, setup gyro/accelerometer?, and more...?)
-?? fnc0x0000a8ac( arg0x0000a8ac_0, arg0x0000a8ac_1, arg0x0000a8ac_2, arg0x0000a8ac_3, arg0x0000a8ac_4, arg0x0000a8ac_5, arg0x0000a8ac_6, arg0x0000a8ac_12, )
+?? fnc0x0000a8ac()
 
 /**
  * Power down watchdog.
@@ -1952,14 +1952,14 @@ void fnc0x00008de4();
 void fnc0x0000b9d0();
 
 /**
- * CT32B0/Haptics setup related?
+ * Setup Haptics.
  * 
  * \return None.
  */
 void fnc0x00006f8c();
 
 /**
- * Drive PIO1_7.
+ * Drive Haptics Enable GPIO (i.e. PIO1_7).
  * 
  * \param arg0x00005c40_0 Inverse of value to drive PIO1_7.
  * 
@@ -1974,13 +1974,35 @@ void fnc0x00005c40(arg0x00005c40_0);
  */
 void fnc0x000037c0();
 
-// Read EEPROM at offset 0x400 and fill in some SRAM based on values read?
-?? fnc0x000038dc( arg0x000038dc_0, arg0x000038dc_1, arg0x000038dc_2, arg0x000038dc_3, arg0x000038dc_4, arg0x000038dc_5, arg0x000038dc_6, arg0x000038dc_12, )
+/**
+ * Fill SRAM Jingle Data location with Jingle Data (either from EEPROM or 
+ *  default data read from flash)
+ * 
+ * \return None.
+ */
+void fnc0x000038dc();
 
-?? fnc0x00006604( arg0x00006604_0, arg0x00006604_1, arg0x00006604_2, arg0x00006604_3, arg0x00006604_4, arg0x00006604_5, arg0x00006604_6, arg0x00006604_7, arg0x00006604_8, arg0x00006604_9, arg0x00006604_10, arg0x00006604_11, arg0x00006604_12, )
+/**
+ * Read Jingle Data from EEPROM.
+ * 
+ * \param arg0x00006604_0 Index of Jingle data...? This value is shifted left
+ *	by 11 bits and used as EEPROM address to read from.
+ * \param arg0x00006604_1 Number of bytes to read from EEPROM.
+ * \param arg0x00006604_2 Unused...?
+ * \param arg0x00006604_3 Address to write EEPROM data (i.e. possible Jingle
+ *	Data) to.
+ *
+ * \return None.
+ */
+void fnc0x00006604(arg0x00006604_0, arg0x00006604_1, arg0x00006604_2, arg0x00006604_3);
 
-// Fill SRAM with default jingle data
-?? fnc0x000065c0( arg0x000065c0_0, arg0x000065c0_1, arg0x000065c0_2, arg0x000065c0_3, arg0x000065c0_4, arg0x000065c0_5, arg0x000065c0_6, arg0x000065c0_12, )
+/**
+ * Fill SRAM Jingle Data location with default Jingle Data (i.e. that read and
+ *  unpacked from flash).
+ * 
+ * \return None.
+ */
+void fnc0x000065c0();
 
 // Even high level function for Trackpad ASIC init?
 ?? fnc0x0000a308( arg0x0000a308_0, arg0x0000a308_1, arg0x0000a308_2, arg0x0000a308_3, arg0x0000a308_4, arg0x0000a308_5, arg0x0000a308_6, arg0x0000a308_12, )
@@ -2079,8 +2101,14 @@ uint8_t fnc0x00004c14(arg0x00004c14_0, arg0x00004c14_1, arg0x00004c14_2, arg0x00
 // Called in PINT3. Checks some PINT3 global variables for TODO purpose...
 ?? fnc0x00009798( arg0x00009798_0, arg0x00009798_1, arg0x00009798_2, arg0x00009798_3, arg0x00009798_4, arg0x00009798_5, arg0x00009798_6, arg0x00009798_7, arg0x00009798_12, )
 
-// Related to playing jingle via haptics???
-?? fnc0x00003934( arg0x00003934_0, arg0x00003934_1, arg0x00003934_2, arg0x00003934_3, arg0x00003934_4, arg0x00003934_5, arg0x00003934_6, arg0x00003934_12, )
+/**
+ * Play jingle for a particular event.
+ *
+ * \param arg0x00003934_0 Event index (0 = power-up, 1 = power-down, others = ??)
+ *
+ * \return 1 on success??
+ */
+int fnc0x00003934(arg0x00003934_0);
 
 /**
  * Start next Note (i.e. repeated pulse) in sequence setup for specified haptic.
@@ -2104,7 +2132,7 @@ int fnc0x000079b0(arg0x000079b0_0);
 int fnc0x000037fc(arg0x000037fc_0, arg0x000037fc_1, arg0x000037fc_2, arg0x000037fc_3);
 
 /**
- * Setup variable to play Note via a Haptic.
+ * Setup variables to play Note via a Haptic.
  *
  * \param arg0x0000708c_0 Indicates which haptic (0 = Right, 1 = Left)
  * \param arg0x0000708c_1 Number of microseconds high
@@ -2125,8 +2153,13 @@ void fnc0x0000708c(arg0x0000708c_0, arg0x0000708c_1, arg0x0000708c_2, arg0x00007
  */
 void fnc0x000091e8(arg0x000091e8_0, arg0x000091e8_1);
 
-// Function called on connect (USB or Radio?). Stop LED from blinking and play startup jingle?
-?? fnc0x00007a10( arg0x00007a10_0, arg0x00007a10_1, arg0x00007a10_2, arg0x00007a10_3, arg0x00007a10_4, arg0x00007a10_5, arg0x00007a10_6, arg0x00007a10_12, )
+/**
+ * Function called on connect (i.e. USB connection established or Radio Chip).
+ *  Stop LED from blinking and play startup Jingle.
+ * 
+ * \return None.
+ */
+void fnc0x00007a10();
 
 // CT32B0 Interrupt Handler?
 ?? fnc0x00009d2c( arg0x00009d2c_0, arg0x00009d2c_1, arg0x00009d2c_2, arg0x00009d2c_3, arg0x00009d2c_4, arg0x00009d2c_5, arg0x00009d2c_6, arg0x00009d2c_12, )
