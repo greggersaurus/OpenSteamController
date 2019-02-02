@@ -906,7 +906,7 @@ void fnc0x000048bc(arg0x000048bc_0);
 void fnc0x00008f50();
 
 /**
- * AKA void Chip_SSP_Init(LPC_SSP_T *pSSP)??
+ * AKA void Chip_SSP_Init(LPC_SSP_T *pSSP)
  * Initialize the SSP
  *
  * \param arg0x000043f4_0 pSSP The base of SSP peripheral on the chip
@@ -1977,7 +1977,9 @@ void fnc0x000037c0();
 // Read EEPROM at offset 0x400 and fill in some SRAM based on values read?
 ?? fnc0x000038dc( arg0x000038dc_0, arg0x000038dc_1, arg0x000038dc_2, arg0x000038dc_3, arg0x000038dc_4, arg0x000038dc_5, arg0x000038dc_6, arg0x000038dc_12, )
 
-// Fill in some SRAM (related to EEPROM read of offset 0x400?)
+?? fnc0x00006604( arg0x00006604_0, arg0x00006604_1, arg0x00006604_2, arg0x00006604_3, arg0x00006604_4, arg0x00006604_5, arg0x00006604_6, arg0x00006604_7, arg0x00006604_8, arg0x00006604_9, arg0x00006604_10, arg0x00006604_11, arg0x00006604_12, )
+
+// Fill SRAM with default jingle data
 ?? fnc0x000065c0( arg0x000065c0_0, arg0x000065c0_1, arg0x000065c0_2, arg0x000065c0_3, arg0x000065c0_4, arg0x000065c0_5, arg0x000065c0_6, arg0x000065c0_12, )
 
 // Even high level function for Trackpad ASIC init?
@@ -2004,11 +2006,29 @@ void fnc0x00009604(arg0x00009604_0);
 // Initialize Trackpad ASIC?
 ?? fnc0x000074e8(arg0x000074e8_0)
 
-// Trackpad ASIC Register Read
-?? fnc0x0000491c( arg0x0000491c_0, arg0x0000491c_1, arg0x0000491c_2, arg0x0000491c_3, arg0x0000491c_4, arg0x0000491c_5, arg0x0000491c_6, arg0x0000491c_7, arg0x0000491c_12, )
+/**
+ * Trackpad ASIC Register Read
+ *
+ * \param arg0x0000491c_0 Specifies which Trackpad ASIC to configure 0 = Right,
+ *	1 = Left.
+ * \param arg0x0000491c_1 Register address to read from in Trackpad ASIC.
+ *
+ * \return Content of specified Trackpad ASIC register.
+ */
+uint8_t fnc0x0000491c(arg0x0000491c_0, arg0x0000491c_1);
 
-// Trackpad ASIC Extended Register Access (ERA) Write with Address Increment
-?? fnc0x00004c14( arg0x00004c14_0, arg0x00004c14_1, arg0x00004c14_2, arg0x00004c14_3, arg0x00004c14_4, arg0x00004c14_5, arg0x00004c14_6, arg0x00004c14_7, arg0x00004c14_12, )
+/**
+ * Trackpad ASIC Extended Register Access (ERA) Write with Address Increment
+ *
+ * \param arg0x00004c14_0 Specifies which Trackpad ASIC to configure 0 = Right,
+ *	1 = Left.
+ * \param arg0x00004c14_1 16-bit extended register address.
+ * \param arg0x00004c14_2 Number of bytes to be sequentially written.
+ * \param arg0x00004c14_3 Pointer to data to be written.
+ *
+ * \return 0 on succes??
+ */
+uint8_t fnc0x00004c14(arg0x00004c14_0, arg0x00004c14_1, arg0x00004c14_2, arg0x00004c14_3);
 
 // Clear SW_DR and HW_DR by writing 0x00 to Status1 trackpad ASIC register
 ?? fnc0x00004cb0( arg0x00004cb0_0, arg0x00004cb0_1, arg0x00004cb0_2, arg0x00004cb0_3, arg0x00004cb0_4, arg0x00004cb0_5, arg0x00004cb0_6, arg0x00004cb0_7, arg0x00004cb0_12, )
