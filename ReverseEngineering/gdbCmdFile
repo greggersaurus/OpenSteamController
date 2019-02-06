@@ -55,51 +55,6 @@ target remote localhost:3333
 #------------------------------------------------------------------------------#
 
 
-# 32-bit word read from EEPROM byte offset 0xXXX (see EEPROM.mem for details on
-#  value significance):
-
-set $eeprom_0x000 = 0x0005a55a 
-set $eeprom_0x004 = 0x0000000a 
-set $eeprom_0x008 = 0x00000000 
-set $eeprom_0x00C = 0x34354D50 
-set $eeprom_0x010 = 0x44323037 
-set $eeprom_0x014 = 0x00003241 
-set $eeprom_0x018 = 0x00000000 
-set $eeprom_0x01C = 0x35354346 
-set $eeprom_0x020 = 0x44333231 
-set $eeprom_0x024 = 0x00004431 
-set $eeprom_0x028 = 0x00000000 
-set $eeprom_0x02C = 0x9C5D1040 
-set $eeprom_0x030 = 0x000000C0 
-set $eeprom_0x034 = 0x00000000 
-set $eeprom_0x038 = 0x00000000 
-set $eeprom_0x03C = 0x00000000 
-set $eeprom_0x040 = 0x00000000 
-set $eeprom_0x044 = 0x00000000 
-set $eeprom_0x048 = 0x00000000 
-set $eeprom_0x04C = 0x00000000 
-set $eeprom_0x050 = 0x00000000 
-set $eeprom_0x054 = 0x00000000 
-set $eeprom_0x058 = 0x00000000 
-set $eeprom_0x05C = 0x00000000 
-set $eeprom_0x060 = 0x00000000 
-set $eeprom_0x064 = 0x00000000 
-set $eeprom_0x068 = 0x00000000 
-set $eeprom_0x06C = 0x00000000 
-set $eeprom_0x070 = 0x00000000 
-set $eeprom_0x074 = 0xFFFF0A02 
-set $eeprom_0x078 = 0xFF050903 
-set $eeprom_0x07C = 0xFFFFFFFF 
-set $eeprom_0x080 = 0xFFFFFFFF 
-
-set $eeprom_0x500 = 0x00000000
-
-set $eeprom_0x600 = 0xba
-set $eeprom_0x601 = 0xdc
-
-#------------------------------------------------------------------------------#
-
-
 # Default register settings according to User Manaul UM10462:
 
 # Default register settings for system control block (base address 0x4004 8000)
@@ -386,7 +341,8 @@ restore LPC11U3x16kBbootROM.bin binary 0x1fff0000
 
 # Setup watchpoint for instruction immediately before checking values first
 #  read from EEPROM (i.e. magic number and hw version)
-watch $pc == 0x00000d10
+watch $pc == 0x00000bdc
+watch $pc == 0x000051c4
 
 echo \n
 echo Waiting for first EEPROM read to get HW version to complete \n
@@ -395,12 +351,7 @@ echo \n
 # Execute until watchpoint
 continue
 
-# Fill in memory with what should have been read from EEPROM address offset 0
-set {int}0x10000254 = $eeprom_0x000
-set {int}0x10000258 = $eeprom_0x004
-
-# Remove watchpoint
-delete 
+eeprom_data_rd
 
 # }
 
@@ -415,7 +366,8 @@ delete
 
 # Setup watchpoint for instruction immediately before checking values first
 #  read from EEPROM offset 0x500 (TODO: purpose of this data?)
-watch $pc == 0x000015be
+watch $pc == 0x00000bdc
+watch $pc == 0x000051c4
 
 echo \n
 echo Waiting for second EEPROM read to get data at 0x500 \n
@@ -424,11 +376,7 @@ echo \n
 # Execute until watchpoint
 continue
 
-# Fill in memory with what should have been read from EEPROM address offset 0
-set {int}0x10001c08 = $eeprom_0x500
-
-# Remove watchpoint
-delete 
+eeprom_data_rd
 
 # }
 
@@ -443,7 +391,8 @@ delete
 
 # Setup watchpoint for instruction immediately after reading 0x84 bytes from
 #  offset 0x0 of EEPROM, after basic init and power up
-watch $pc == 0x00005d28
+watch $pc == 0x00000bdc
+watch $pc == 0x000051c4
 
 echo \n
 echo Waiting for EEPROM read of 0x80 bytes of data from offset 0x000 \n
@@ -452,40 +401,7 @@ echo \n
 # Execute until watchpoint
 continue
 
-# Fill in memory with what should have been read from EEPROM address offset 0
-set {int}0x100009b4 = $eeprom_0x000
-set {int}0x100009b8 = $eeprom_0x004
-set {int}0x100009bc = $eeprom_0x008
-set {int}0x100009c0 = $eeprom_0x00C
-set {int}0x100009c4 = $eeprom_0x010
-set {int}0x100009c8 = $eeprom_0x014
-set {int}0x100009cc = $eeprom_0x018
-set {int}0x100009d0 = $eeprom_0x01C
-set {int}0x100009d4 = $eeprom_0x020
-set {int}0x100009d8 = $eeprom_0x024
-set {int}0x100009dc = $eeprom_0x028
-set {int}0x100009e0 = $eeprom_0x02C
-set {int}0x100009e4 = $eeprom_0x030
-set {int}0x100009e8 = $eeprom_0x034
-set {int}0x100009ec = $eeprom_0x038
-set {int}0x100009f0 = $eeprom_0x03C
-set {int}0x100009f4 = $eeprom_0x040
-set {int}0x100009f8 = $eeprom_0x044
-set {int}0x100009fc = $eeprom_0x048
-set {int}0x10000a00 = $eeprom_0x04C
-set {int}0x10000a04 = $eeprom_0x050
-set {int}0x10000a08 = $eeprom_0x054
-set {int}0x10000a0c = $eeprom_0x058
-set {int}0x10000a10 = $eeprom_0x05C
-set {int}0x10000a14 = $eeprom_0x060
-set {int}0x10000a18 = $eeprom_0x064
-set {int}0x10000a1c = $eeprom_0x068
-set {int}0x10000a20 = $eeprom_0x06C
-set {int}0x10000a24 = $eeprom_0x070
-set {int}0x10000a28 = $eeprom_0x074
-set {int}0x10000a2c = $eeprom_0x078
-set {int}0x10000a30 = $eeprom_0x07C
-set {int}0x10000a34 = $eeprom_0x080
+eeprom_data_rd
 
 # Remove watchpoint
 delete 
@@ -850,7 +766,8 @@ else
 	# Handle filling in RAM with 0x400 bytes that would have been read from EEPROM offset 0x800	
 
 	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
-	watch $pc == 0x000038ea
+	watch $pc == 0x00000bdc
+	watch $pc == 0x000051c4
 
 	echo \n
 	echo Waiting for EEPROM read 0x400 bytes that would have been read from EEPROM offset 0x800 \n
@@ -859,11 +776,7 @@ else
 	# Execute until watchpoint
 	continue
 
-# TODO: add read of EEPROM data of 0x400 bytes from offset 0x800 to RAM address 0x10001200-0x100015ff
-#	There is no rush to add this as DevBoard FW shows this as being all 0's
-
-	# Remove watchpoint
-	delete 
+	eeprom_data_rd
 
 	# }
 
@@ -876,7 +789,8 @@ else
 	# Handle filling in RAM with 2 bytes that would have been read from EEPROM offset 0x600	
 
 	# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
-	watch $pc == 0x000047d2
+	watch $pc == 0x00000bdc
+	watch $pc == 0x000051c4
 
 	echo \n
 	echo Waiting for EEPROM read of 2 bytes from offset 0x600 \n
@@ -885,12 +799,7 @@ else
 	# Execute until watchpoint
 	continue
 
-	# Fill in RAM that mimic EEPROM read
-	set {char}0x10001f40 = $eeprom_0x600
-	set {char}0x10001f41 = $eeprom_0x601
-
-	# Remove watchpoint
-	delete 
+	eeprom_data_rd
 
 	# }
 
@@ -917,6 +826,7 @@ else
 		check_trackpad_asic_reg_read
 		check_trackpad_asic_era_write_autoinc
 		check_trackpad_asic_dr_interrupts
+		eeprom_data_rd
 		check_ct32b0_irq_fire
 
 	end
