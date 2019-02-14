@@ -131,6 +131,10 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000003 - Related to CT16B1?
  (uint8_t*) 0x10000004 - Related to CT16B1?
  (uint8_t*) 0x10000005 - Counter variable? Related to CT16B1?
+ (uint8_t*) 0x10000006 - Related to Right Haptic and whether Haptic is setup
+			 as Intellimouse or gives Absolute Data Packets?
+ (uint8_t*) 0x10000007 - Related to Left Haptic and whether Haptic is setup
+			 as Intellimouse or gives Absolute Data Packets?
 
  (uint8_t*) 0x10000008 - GPIO Bank/Group for TODO GPIO (PIO1_28)
  (uint8_t*) 0x10000009 - GPIO Number for TODO GPIO (PIO1_28)     
@@ -315,17 +319,25 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x1000023f - GPIO group/port for Left Trackpad ASIC Data Ready (PIO1_16)?
  (uint8_t*) 0x10000240 - GPIO number/offset for Right Trackpad ASIC Data Ready (PIO0_23).
  (uint8_t*) 0x10000241 - GPIO number/offset for Left Trackpad ASIC Data Ready (PIO1_16)?
- (uint8_t*) 0x10000242 - PINT3 related? Enable for reading ASIC registers 0x11
-			 and 0x12 maybe?
+ (uint8_t*) 0x10000242 - Enable for reading ASIC registers 0x11 and 0x12 in PINT3 ISR.
 
  (uint8_t*) 0x10000246 - PINT3/Right Trackpad ASIC related. Counts how many times
-			 times ASIC registers 0x11 and 0x12 are read. Counts
-			 up to 10.
+			 times ASIC registers 0x11 and 0x12 are read. Used as
+			 index of where to store values read from 0x11 and 0x12.
 
- (uint8_t*) 0x1000024a - Flag related to PINT3 (PIO0_23 - DR for Right Hatpci)?
+ (uint8_t*) 0x10000248 - PINT3/Right Trackpad ASIC Related. Value is inverted
+			 after a certain number of PINT3 IRQs. This is an index
+			 to select which global values are being udpated by
+			 the PINT3 ISR SPI transactions and which are being
+			 read (i.e. you want one stable copy while the other is
+			 updating)
+ (uint8_t*) 0x10000249 - 0x10000248, but for PINT4/Left Trackpad ASIC. 
+ (uint8_t*) 0x1000024a - Flag related to PINT3 (PIO0_23 - DR for Right Haptic).
+			 Once PINT3 has fired the desired number of times 
+			 (and expected data has been gathered) this flag is set. 
 
  (uint8_t*) 0x1000024c - Flag related to PINT3/Right Trackpad ASIC. Set after a 
-			 certain number (10?) of runs of PINT3.
+			 10 of runs of PINT3 ISR.
 
  (uint8_t*) 0x1000024e - PINT3/Right Trackpad ASIC related?
 
@@ -533,9 +545,9 @@ USB_HID2 HID Report Descriptor (len 0x21):
 (uint32_t*) 0x10000860 - Callback[3] related to ??
 (uint32_t*) 0x10000868 - Callback[4] related to Left Analog Trigger (AD0)
 (uint32_t*) 0x1000086c - Callback[5] related to Right Analog Trigger (AD2)
-(uint32_t*) 0x10000870 - Callback[6] related to ??
-(uint32_t*) 0x10000874 - Callback[7] related to ??
-(uint32_t*) 0x10000878 - Callback[8] related to ??
+(uint32_t*) 0x10000870 - Callback[6] related to Trackpad ASIC??
+(uint32_t*) 0x10000874 - Callback[7] related to Trackpad ASIC??
+(uint32_t*) 0x10000878 - Callback[8] related to Trackpad ASIC??
 (uint32_t*) 0x1000087c - Callback[9] related to ??
 (uint32_t*) 0x10000880 - Callback[10] related to ??
 (uint32_t*) 0x10000884 - Callback[11] related to ??
@@ -852,9 +864,47 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000a36 - EEPROM Read Data 0x082 - Uknown purpose
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
  (uint8_t*) 0x10000a38 - Value of Right Trackpad ASIC Register 0x12, filled
-			 by calls in PINT3
+			 by 1st call to PINT3
  (uint8_t*) 0x10000a39 - Value of Right Trackpad ASIC Register 0x11, filled
-			 by calls in PINT3
+			 by 1st call to PINT3
+
+(uint16_t*) 0x10000a84 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a86 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a88 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a8a - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a8c - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a8e - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a90 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a92 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a94 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a96 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a98 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a9a - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a9c - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000a9e - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000aa0 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000aa2 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000aa4 - Related to PINT3 ISR and Right Haptic?
+(uint16_t*) 0x10000aa6 - Related to PINT3 ISR and Right Haptic?
+
+(uint16_t*) 0x10000b70 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a84??)
+(uint16_t*) 0x10000b72 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a86??)
+(uint16_t*) 0x10000b74 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a88??)
+(uint16_t*) 0x10000b76 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a8a??)
+(uint16_t*) 0x10000b78 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a8c??)
+(uint16_t*) 0x10000b7a - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a8e??)
+(uint16_t*) 0x10000b7c - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a90??)
+(uint16_t*) 0x10000b7e - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a92??)
+(uint16_t*) 0x10000b80 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a94??)
+(uint16_t*) 0x10000b82 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a96??)
+(uint16_t*) 0x10000b84 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a98??)
+(uint16_t*) 0x10000b86 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a9a??)
+(uint16_t*) 0x10000b88 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a9c??)
+(uint16_t*) 0x10000b8a - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a9e??)
+(uint16_t*) 0x10000b8c - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000aa0??)
+(uint16_t*) 0x10000b8e - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000aa2??)
+(uint16_t*) 0x10000b90 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000aa4??)
+(uint16_t*) 0x10000b92 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000aa6??)
 
  (uint8_t*) 0x10000d80 - I2C_XFER_T.slaveAddr; 7-bit I2C Slave address 
 
@@ -1084,6 +1134,7 @@ struct AnalogReadingRelated {
 			 for USB_VBUS = 1 case...). Maybe just used to wakeup
 			 processor in main loop from wfi?
 (uint32_t*) 0x100010c0 - Callback function. Related to PINT3 (PIO0_23 change).
+(uint32_t*) 0x100010c4 - Callback function. Related to PINT4 (PIO1_16 change).
                      
 
 (uint32_t*) 0x100010d4 - Read in USB_Configure_Event()

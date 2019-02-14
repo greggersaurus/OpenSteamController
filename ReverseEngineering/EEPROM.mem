@@ -34,4 +34,6 @@
 
 (uint32_t*) 0x500 - Think this might affect use of watchdog somehow, but not 100% sure
 
-(uint32_t*) 0x800 - Start of Jingle Data (0x200 bytes)? (TODO add more details and verify (i.e. write our own custom Jingles here)
+(uint32_t*) 0x600 - Related to Trackpad ASICS?
+
+(uint32_t*) 0x800 - Start of 0x400 bytes of Jingle Data. See [Jingle](../Jingle/README.md) for additional details.

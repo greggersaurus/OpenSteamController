@@ -49,6 +49,15 @@
 #	continues until a watchpoint occurs.
 define reset_top_level_watchpoints
 
+	# Variable to control simulation of IRQs
+	#  Note each of these simulations are destructive and if true (1) they 
+	#   will simulate ISR and then simulation will either stop or report
+	#   repeated Hard Faults.
+	#  This is intended to figure out what ISRs are doing
+	set $irq_sim_pint3 = 1
+	set $irq_sim_ct32b0 = 0 
+
+
 	echo Entry point of CT16B0 Sleep Function fnc0x00005174() \n
 	watch $pc == 0x00005174
 
@@ -68,8 +77,18 @@ define reset_top_level_watchpoints
 	watch $pc == 0x00000bdc
 	watch $pc == 0x000051c4
 
-##	echo Return from fnc0x00007a10(): CT32B0 Interrupt Simulation (destructive) \n
-##	watch $pc == 0x00007a38
+	echo Entry point of fnc0x0000573c(): Read SPI ASIC Reg 0x11 and 0x12
+	watch $pc == 0x0000573c
+
+	if $irq_sim_pint3
+		echo Entry point fnc0x000055e8(): Setup PINT3 (destructive) \n
+		watch $pc == 0x000055e8
+	end
+
+	if $irq_sim_ct32b0
+		echo Return from fnc0x00007a10(): CT32B0 Interrupt Simulation (destructive) \n
+		watch $pc == 0x00007a38
+	end
 
 	continue
 end
@@ -891,9 +910,17 @@ define check_trackpad_asic_dr_interrupts
 		set $trackpad_num = $r0
 
 		if $trackpad_num == 0
+			# Index to indicate which group of global data is stable
+			#  to be read
+			set {char}0x10000248 = 1 - *(char*)0x10000248
+			# Flag to indicate ISR has fired desired number of times	
 			set {char}0x1000024a = 1
 		end
 		if $trackpad_num == 1
+			# Index to indicate which group of global data is stable
+			#  to be read
+			set {char}0x10000249 = 1 - *(char*)0x10000249
+			# Flag to indicate ISR has fired desired number of times	
 			set {char}0x1000024b = 1
 		end
 
@@ -1465,9 +1492,69 @@ end
 
 
 ##
+# This command handles simulating the PINT3 IRQ firing. 
+#  PINT3 is triggerd on rising edge of PIO0_23, which is DR on the Right
+#  Haptic.
+define check_pint3_isr_sim
+	if $pc == 0x000055e8
+
+		# Remove all watchpoints
+		delete
+
+		# Check if PIO0_23 was setup
+		if $r0 == 0 && $r1 == 23 
+
+			echo \n
+			echo DETECTED Entry point fnc0x000055e8(): Setup PINT3 (destructive) \n
+			echo \n
+
+			# Wait until exit of function
+			watch $pc == 0x00005630
+
+			# Execute until watchpoint
+			continue
+
+			# Remove all watchpoints
+			delete
+
+			echo \n
+			echo Jumping to PINT3 Interrupt Handler \n
+			echo \n
+
+			# Jump to CT32B0 Interrupt Handler
+			set $lr = $pc
+			set $pc = 0x00000138
+
+			# This is enable for handling ISR data if set to 0 ISR just returns
+			## set {char}0x10000242 = 0x0
+
+			# Counter that is incremented each time ISR fires (if 0x10000242 == 1)
+			# If count is 0xa on ISR entry then 0x1000024c is set to 1
+			set {char}0x10000246 = 0xa
+
+			# Flag that is set after 0x10000246 counter reaches 0xb (i.e. ISR has
+			#  fired 10 times.
+			set {char}0x1000024c = 0x1
+
+			# If 0x1000024c flag is set, then ISR checks if 0x10000246 has counted
+			#  up to 0x13
+			set {char}0x10000246 = 0x12
+
+			# TODO: Other variable settings to consider (i.e. 
+
+			echo \n
+			echo HANDLED Entry point fnc0x000055e8(): Setup PINT3 (destructive) \n
+			echo \n
+
+		end
+	end
+end
+
+
+##
 # This command handles simulating the CT32B0 IRQ firing. 
 #  	TODO: more details (i.e. related to haptics and jingle)
-define check_ct32b0_irq_fire
+define check_ct32b0_isr_sim
 	# Check if everything related to CT32B0 firing has been setup
 	if $pc == 0x00007a38
 
@@ -1492,7 +1579,7 @@ define check_ct32b0_irq_fire
 		# MR2 = left haptic
 		##set {int}0x40014000 = 0x4
 
-##TODO: add special cases for handling clearing of interrupts?? 
+##TODO: add special cases for handling clearing of interrupts?? (i.e. so ISR exits??)
 
 		echo \n
 		echo HANDLED Return from fnc0x00007a10(): CT32B0 Interrupt Simulation (destructive) \n
@@ -1502,5 +1589,180 @@ end
 
 
 ## 
-#TODO: fnc0x0000573c()
-# define check_trackpad_asic_reg_read_autoinc
+# This command handles function fnc0x0000573c(), which is optimized call for
+#   reading values of Trackpad ASIC registers and clearing Trackpad ASIC Flags
+define check_spi_asic_rd_reg_0x11_0x12
+	if $pc == 0x0000573c
+
+		echo \n
+		echo DETECTED Entry point of fnc0x0000573c(): Read SPI ASIC Reg 0x11 and 0x12 \n
+		echo \n
+
+		# Remove all watchpoints
+		delete
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 1 of Read SPI ASIC Reg 0x11 and 0x12 command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 1 (or could technically be response to previous command)
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 2 of Read SPI ASIC Reg 0x11 and 0x12 command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 2 
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 3 of Read SPI ASIC Reg 0x11 and 0x12 command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler byte 3 
+		set {int}0x40040008 = 0x000000FB
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 4 of Read SPI ASIC Reg 0x11 and 0x12 command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Value of Trackpad ASIC Register 0x11
+		set {int}0x40040008 = 0x00000000
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 5 of Read SPI ASIC Reg 0x11 and 0x12 command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Value of Trackpad ASIC Register 0x12
+		set {int}0x40040008 = 0x00000000
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 6 of Read SPI ASIC Reg 0x11 and 0x12 command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler Byte 1 for Trackpad ASIC Flag Clear
+		set {int}0x40040008 = 0x00000000
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to set SPI MISO response for Byte 7 of Read SPI ASIC Reg 0x11 and 0x12 command \n
+		
+		# Execute until watchpoint
+		continue
+
+		# Write SPI response data and mark FIFO as not empty
+		set {int}0x4004000C = 0x00000007
+		#  Filler Byte 2 for Trackpad ASIC Flag Clear
+		set {int}0x40040008 = 0x00000000
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		# SPI transaction complete
+		# Setup watchpoint for instruction setting mask to check SSP/SPI Status Register Receive FIFO Not Empty bit
+		watch $pc == 0x00008f34
+
+		echo Waiting to change SPI MISO FIFO status after 7 response bytes for Reg Read command \n
+	
+		# Execute until watchpoint
+		continue
+
+		# Write SPI mark FIFO as empty so code stops reading it (and does not overflow...)
+		set {int}0x4004000C = 0x00000003
+
+		# Make sure we move past this instruction before next watch
+		stepi
+
+		# Remove all watchpoints
+		delete 
+
+
+		echo \n
+		echo HANDLED Entry point of fnc0x0000573c(): Read SPI ASIC Reg 0x11 and 0x12 \n
+		echo \n
+	end
+end

@@ -24,6 +24,42 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Need to better understand intentions of Trackpad ASIC init
+    1. Looks like maybe they are initially putting controllers into state to generate packets no matter what, so they can adjust EMI settings?
+    1. Go back and fill details on all memory areas related to Trackpads (i.e. follow the way indices are increased for each PINT3 ISR call as well as which buffer is being filled)
+    1. Start testing some of this with custom FW? (i.e. does 0x18 to SysConfig1 output data constantly? What does this data (reg 0x11 and 0x12) look like?)
+    1. Consider settings for variables not used or change so far...0x1000024e?
+    1. Consider how and when controller gets to state where trackpad is enabled (i.e. not writing 0x18 to SysConfig1)
+
+1. Need to resim with returning 0x600 EEPROM data at proper point...
+    1. Seems this data is just used to fill in RAM (if it has not already been filled in... But we don't know where those RAM addresses are filled in... You would think the ISR...)
+1. Also resim and take note of what happens if PINT3 IRQ does not fire when expected
+    1. It seems to not read EEPROM data at 0x600 and just move on to initializing other haptic... Where to note this?
+
+1. Understand Trackpad ASIC
+    1. For fnc0x00002be0() and fnc0x00002d9c() can we make sense of why registers are grouped these ways?
+1. Work through (simulate) options for inserting custom Jingle Data
+    1. Modify default Jingle Data read from firmware
+        1. Not Great: data is packed into firmware (i.e. all 0 bytes/words are not actually in firmware, but handled upon read in) and this is another level to understand (and which may not be consistent with never versions)
+    1. Modify firmware to read default Jingle Data from different location
+        1. Create Jingle Data blob (unpacked)
+        1. Write into unused section of firmware
+            1. Assumes we can detect unused section
+            1. Assumes contiguous 0x400 byte of unused space
+        1. Modify copy to 0x10001200 to read from flash instead of RAM
+            1. Will this actually work?
+    1. EEPROM non-default (assuming that is what is stored at 0x800 in EEPROM)
+        1. USB command (if it exists)
+            1. Need to simulate and see if this even possibly exists
+        1. DevBoard/CustomFW
+            1. Clunky having to use cli to input new data
+1. Work through options for creating custom Jingle Data
+    1. Extension for something like MusScore?
+        1. Need to find right software to extend to be helpful to maximum number of users
+    1. Custom SW
+        1. A lot of work and will probably still be hard to use
+    1. Better console commands
+        1. A lot of work and will probably still be hard to use
 1. TODO: clean this all up now that we have a complete (enough) understanding of the Haptic and Jingles
 1. Need more details on jingle and interrupt
     1. How is offset to Jingle[n] deteremined?

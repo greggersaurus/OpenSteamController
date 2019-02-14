@@ -2007,14 +2007,31 @@ void fnc0x000065c0();
 // Even high level function for Trackpad ASIC init?
 ?? fnc0x0000a308( arg0x0000a308_0, arg0x0000a308_1, arg0x0000a308_2, arg0x0000a308_3, arg0x0000a308_4, arg0x0000a308_5, arg0x0000a308_6, arg0x0000a308_12, )
 
-// Initialize some SRAM1 variables
-?? fnc0x00005f90( arg0x00005f90_0, arg0x00005f90_1, arg0x00005f90_2, arg0x00005f90_3, arg0x00005f90_4, arg0x00005f90_5, arg0x00005f90_6, arg0x00005f90_7, arg0x00005f90_12, )
+/**
+ * Initialize (i.e. clear) some SRAM1 variables (related to Trackpad ASIC?)
+ * 
+ * \param arg0x00005f90_0 Defines which set of SRAM1 variable to clear, maybe
+ *	related to Right Trackpad and Left Trackpad?
+ *
+ * \return None.
+ */
+void fnc0x00005f90(arg0x00005f90_0);
 
-// Initialize some SRAM1 variables
-?? fnc0x00005eb8( arg0x00005eb8_0, arg0x00005eb8_1, arg0x00005eb8_2, arg0x00005eb8_3, arg0x00005eb8_4, arg0x00005eb8_5, arg0x00005eb8_6, arg0x00005eb8_7, arg0x00005eb8_12, )
+/**
+ * Initialize (write non-zero values) SRAM1 variables (related to Trackpad ASIC?)
+ * 
+ * \return None.
+ */
+void fnc0x00005eb8();
 
-// Initialize both Trackpad ASICs?
-?? fnc0x000047a4( arg0x000047a4_0, arg0x000047a4_1, arg0x000047a4_2, arg0x000047a4_3, arg0x000047a4_4, arg0x000047a4_5, arg0x000047a4_6, arg0x000047a4_7, arg0x000047a4_12, )
+/**
+ * Initialize Trackpad ASICs
+ *
+ * \param arg0x000047a4_0 The number of Trackpad ASICs to init?
+ * 
+ * \return None.
+ */
+void fnc0x000047a4(arg0x000047a4_0);
 
 /**
  * CT16B0 sleep related (usleep or msleep type function maybe?).
@@ -2025,8 +2042,15 @@ void fnc0x000065c0();
  */
 void fnc0x00009604(arg0x00009604_0);
 
-// Initialize Trackpad ASIC?
-?? fnc0x000074e8(arg0x000074e8_0)
+/**
+ * Initialize Trackpad ASIC.
+ *
+ * \param arg0x000074e8_0 Defines which Trackpad to initialize. 0 = Right,
+ *	1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x000074e8(arg0x000074e8_0);
 
 /**
  * Trackpad ASIC Register Read
@@ -2042,8 +2066,8 @@ uint8_t fnc0x0000491c(arg0x0000491c_0, arg0x0000491c_1);
 /**
  * Trackpad ASIC Extended Register Access (ERA) Write with Address Increment
  *
- * \param arg0x00004c14_0 Specifies which Trackpad ASIC to configure 0 = Right,
- *	1 = Left.
+ * \param arg0x00004c14_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
  * \param arg0x00004c14_1 16-bit extended register address.
  * \param arg0x00004c14_2 Number of bytes to be sequentially written.
  * \param arg0x00004c14_3 Pointer to data to be written.
@@ -2052,34 +2076,118 @@ uint8_t fnc0x0000491c(arg0x0000491c_0, arg0x0000491c_1);
  */
 uint8_t fnc0x00004c14(arg0x00004c14_0, arg0x00004c14_1, arg0x00004c14_2, arg0x00004c14_3);
 
-// Clear SW_DR and HW_DR by writing 0x00 to Status1 trackpad ASIC register
-?? fnc0x00004cb0( arg0x00004cb0_0, arg0x00004cb0_1, arg0x00004cb0_2, arg0x00004cb0_3, arg0x00004cb0_4, arg0x00004cb0_5, arg0x00004cb0_6, arg0x00004cb0_7, arg0x00004cb0_12, )
+/**
+ * Clear SW_DR and HW_DR by writing 0x00 to Status1 trackpad ASIC register
+ *
+ * \param arg0x00004cb0_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * 
+ * \return None.
+ */
+void fnc0x00004cb0(arg0x00004cb0_0)
 
-// Initialize registers for Trackpad (i.e. write ERAs, etc.)
-?? fnc0x0000777c( arg0x0000777c_0, arg0x0000777c_1, arg0x0000777c_2, arg0x0000777c_3, arg0x0000777c_4, arg0x0000777c_5, arg0x0000777c_6, arg0x0000777c_7, arg0x0000777c_12, )
+/**
+ * Initialize registers (and shadow copies) for Trackpad ASIC (i.e. write ERAs,
+ *	 etc.)
+ * 
+ * \param arg0x0000777c_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x0000777c(arg0x0000777c_0);
 
-// Update a number of ASIC Trackpad registers (0x05, 0x06, 0x07, 0x08, 0x09)
-?? fnc0x00002be0( arg0x00002be0_0, arg0x00002be0_1, arg0x00002be0_2, arg0x00002be0_3, arg0x00002be0_4, arg0x00002be0_5, arg0x00002be0_6, arg0x00002be0_7, arg0x00002be0_12, )
+/**
+ * Update a number of ASIC Trackpad registers (0x05, 0x06, 0x07, 0x08, 0x09).
+ *
+ * TODO: params might make more sense if we understand why registers are grouped this way...
+ * 
+ * \param arg0x00002be0_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * \param arg0x00002be0_1 Part of value used for updating register 0x05 (some 
+ *	sort of compiler optimization?)
+ * \param arg0x00002be0_2 Part of value used for updating register 0x05 (some 
+ *	sort of compiler optimization?)
+ * \param bunch of stuff on stack used to update other registers...
+ * 
+ * \return None.
+ */
+void fnc0x00002be0(arg0x00002be0_0, arg0x00002be0_1, arg0x00002be0_2);
 
-// Update ASIC Trackpad register (check if value differs from shadow copy and send update via SPI if necessary)
-?? fnc0x0000c094( arg0x0000c094_0, arg0x0000c094_1, arg0x0000c094_2, arg0x0000c094_3, arg0x0000c094_4, arg0x0000c094_5, arg0x0000c094_6, arg0x0000c094_7, arg0x0000c094_12, )
+/**
+ * Update ASIC Trackpad register (check if value differs from shadow copy and 
+ *	send update via SPI if necessary)
+ * 
+ * \param arg0x0000c094_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * \param arg0x0000c094_1 Local special to Valve FW index of register (i.e.
+ *	index relates to regiters that they care about modifying). See 
+ *	details on 0x100000c4 - 0x100000d3 for indices map to Trackpad ASIC
+ *	register addresses.
+ * \param arg0x0000c094_2 Trackpad ASIC Register Address.
+ * \param arg0x0000c094_3 Value that register should be.
+ *
+ * \return None.
+ */
+void fnc0x0000c094(arg0x0000c094_0, arg0x0000c094_1, arg0x0000c094_2, arg0x0000c094_3);
 
-// Update a number of ASIC Trackpad registers (0x13, 0x014, 0x015, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x0a, 0x0b, 0x0e)
-//  AND then read 0x10 and 0x11 and concatenate into a single word and return result
-?? fnc0x00002d9c( arg0x00002d9c_0, arg0x00002d9c_1, arg0x00002d9c_2, arg0x00002d9c_3, arg0x00002d9c_4, arg0x00002d9c_5, arg0x00002d9c_6, arg0x00002d9c_7, arg0x00002d9c_12, )
+/**
+ * Update a number of ASIC Trackpad registers (0x13, 0x014, 0x015, 0x16, 0x17, 
+ *	0x18, 0x19, 0x1a, 0x0a, 0x0b, 0x0e) AND then read 0x10 and 0x11 and 
+ *	concatenate into a single word and return result, though it never 
+ *	seems to be used... Maybe registers are read to clear some state?
+ * TODO: params might make more sense if we understand why registers are grouped this way...
+ * 
+ * \param arg0x00002d9c_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * \param arg0x00002d9c_1 Related to values written to registers. 
+ * \param arg0x00002d9c_2 Related to values written to registers. 
+ * \param arg0x00002d9c_3 Right shift adjustment to be applied to return value.
+ * 
+ * \return Values of Trackpad ASIC registers 0x10 and 0x11 concatenated. 
+ */
+int32_t fnc0x00002d9c(arg0x00002d9c_0, arg0x00002d9c_1, arg0x00002d9c_2, arg0x00002d9c_3);
 
-// Related to PINT3/4 (i.e. new results from Right/Left Trackpad)?
-?? fnc0x0000975c( arg0x0000975c_0, arg0x0000975c_1, arg0x0000975c_2, arg0x0000975c_3, arg0x0000975c_4, arg0x0000975c_5, arg0x0000975c_6, arg0x0000975c_7, arg0x0000975c_12, )
+/**
+ * Initialze (clear) some variable and update Intellimouse v.s. Absolute Data 
+ *	Packet settings for Trackpad ASIC
+ * 
+ * \param arg0x0000975c_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * 
+ * \return None.
+ */
+void fnc0x0000975c(arg0x0000975c_0);
 
-?? fnc0x00002c4c( arg0x00002c4c_0, arg0x00002c4c_1, arg0x00002c4c_2, arg0x00002c4c_3, arg0x00002c4c_4, arg0x00002c4c_5, arg0x00002c4c_6, arg0x00002c4c_7, arg0x00002c4c_12, )
+/**
+ * Update Trackpad ASIC registers 0x05, 0x0a, 0x0b, 0x0e. Sequence related to 
+ *	changing Intellimouse v.s. Absolute Data Packets?
+ * 
+ * \param arg0x00002c4c_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * 
+ * \return None.
+ */
+void fnc0x00002c4c(arg0x00002c4c_0);
 
-?? fnc0x00003f3c( arg0x00003f3c_0, arg0x00003f3c_1, arg0x00003f3c_2, arg0x00003f3c_3, arg0x00003f3c_4, arg0x00003f3c_5, arg0x00003f3c_6, arg0x00003f3c_7, arg0x00003f3c_12, )
+/**
+ * Update Trackpad ASIC settings for Intellimouse Packets v.s. Absolute Data Packets
+ *
+ * \param arg0x00003f3c_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x00003f3c(arg0x00003f3c_0);
 
 ?? fnc0x00007d6c( arg0x00007d6c_0, arg0x00007d6c_1, arg0x00007d6c_2, arg0x00007d6c_3, arg0x00007d6c_4, arg0x00007d6c_5, arg0x00007d6c_6, arg0x00007d6c_7, arg0x00007d6c_12, )
 
 ?? fnc0x00006cb8( arg0x00006cb8_0, arg0x00006cb8_1, arg0x00006cb8_2, arg0x00006cb8_3, arg0x00006cb8_4, arg0x00006cb8_5, arg0x00006cb8_6, arg0x00006cb8_7, arg0x00006cb8_12, )
 
-// Wait for PINT3/4 to fire??
+/**
+// Wait for PINT3/4 to fire enough times....
+ * \param arg0x0000b97c_1 Number of times to wait Interrupt to fire before giving up???
+ */
 ?? fnc0x0000b97c( arg0x0000b97c_0, arg0x0000b97c_1, arg0x0000b97c_2, arg0x0000b97c_3, arg0x0000b97c_4, arg0x0000b97c_5, arg0x0000b97c_6, arg0x0000b97c_7, arg0x0000b97c_12, )
 
 // EEPROM read related
@@ -2089,17 +2197,45 @@ uint8_t fnc0x00004c14(arg0x00004c14_0, arg0x00004c14_1, arg0x00004c14_2, arg0x00
 
 ?? fnc0x00002d14( arg0x00002d14_0, arg0x00002d14_1, arg0x00002d14_2, arg0x00002d14_3, arg0x00002d14_4, arg0x00002d14_5, arg0x00002d14_6, arg0x00002d14_7, arg0x00002d14_12, )
 
-// PINT3 IRQ 
-?? fnc0x00005402( arg0x00005402_0, arg0x00005402_1, arg0x00005402_2, arg0x00005402_3, arg0x00005402_4, arg0x00005402_5, arg0x00005402_6, arg0x00005402_7, arg0x00005402_12, )
+/**
+ * PINT3 (i.e. DR for Right Trackpad ASIC) ISR.
+ * 
+ * \return None.
+ */
+void fnc0x00005402();
 
-// PINT3 related?
-?? fnc0x0000763c( arg0x0000763c_0, arg0x0000763c_1, arg0x0000763c_2, arg0x0000763c_3, arg0x0000763c_4, arg0x0000763c_5, arg0x0000763c_6, arg0x0000763c_7, arg0x0000763c_12, )
+/**
+ * PINT3 related callback.
+ * 
+ * \return None.
+ */
+void fnc0x0000763c();
 
-// SPI Auto-Increment READ for Sequential Addresses?
-?? fnc0x0000573c( arg0x0000573c_0, arg0x0000573c_1, arg0x0000573c_2, arg0x0000573c_3, arg0x0000573c_4, arg0x0000573c_5, arg0x0000573c_6, arg0x0000573c_7, arg0x0000573c_12, )
+/**
+ * Read Trackpad ASIC registers 0x11 and 0x12, save results (to globals), and 
+ *	clear Trackpad ASIC flags 
+ *
+ * \param arg0x0000573c_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * 
+ * \return None.
+ */
+void fnc0x0000573c(arg0x0000573c_0);
 
 // Called in PINT3. Checks some PINT3 global variables for TODO purpose...
 ?? fnc0x00009798( arg0x00009798_0, arg0x00009798_1, arg0x00009798_2, arg0x00009798_3, arg0x00009798_4, arg0x00009798_5, arg0x00009798_6, arg0x00009798_7, arg0x00009798_12, )
+
+/**
+ * Update some Trackpad ASIC registers and adjust EMI settings?
+ * Similar to fnc0x00002c4c
+ * Called by PINT3 if ISR has fired 10 times
+ *
+ * \param arg0x00002c82_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x00002c82(arg0x00002c82_0);
 
 /**
  * Play jingle for a particular event.
