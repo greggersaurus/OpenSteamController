@@ -24,17 +24,21 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Rerun sim and pay attention to logic after fnc0x0000863c (as we are simulating accurate 0x600 and 0x626 EEPROM read data now)
+    1. Make sure to update vcf_wired_controller_d0g_57bf5c10.c with this path...
+1. Next move onto ISR and 0x1000024e (=2?)
+    1. Does ISR change state of Trackpad ASIC (i.e. Track disable=0? AnyMeasenable=0?)
+1. Is ISR just always firing in this (possible) calibration mode?
+    1. Is there any path in ISR where ISR might not be firing (i.e. not clearing Trackpad ASIC registers or some global flag set to just exit ISR?)
+1. Consider how this all relates to 0x600 and 0x626 EEPROM data
+    1. If we code up Valve's routine what do we get from Trackpad ASIC v.s. what is in EEPROM?
+
 1. Need to better understand intentions of Trackpad ASIC init
     1. Looks like maybe they are initially putting controllers into state to generate packets no matter what, so they can adjust EMI settings?
     1. Go back and fill details on all memory areas related to Trackpads (i.e. follow the way indices are increased for each PINT3 ISR call as well as which buffer is being filled)
     1. Start testing some of this with custom FW? (i.e. does 0x18 to SysConfig1 output data constantly? What does this data (reg 0x11 and 0x12) look like?)
     1. Consider settings for variables not used or change so far...0x1000024e?
     1. Consider how and when controller gets to state where trackpad is enabled (i.e. not writing 0x18 to SysConfig1)
-
-1. Need to resim with returning 0x600 EEPROM data at proper point...
-    1. Seems this data is just used to fill in RAM (if it has not already been filled in... But we don't know where those RAM addresses are filled in... You would think the ISR...)
-1. Also resim and take note of what happens if PINT3 IRQ does not fire when expected
-    1. It seems to not read EEPROM data at 0x600 and just move on to initializing other haptic... Where to note this?
 
 1. Understand Trackpad ASIC
     1. For fnc0x00002be0() and fnc0x00002d9c() can we make sense of why registers are grouped these ways?

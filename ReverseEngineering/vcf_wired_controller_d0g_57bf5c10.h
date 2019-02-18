@@ -2180,18 +2180,59 @@ void fnc0x00002c4c(arg0x00002c4c_0);
  */
 void fnc0x00003f3c(arg0x00003f3c_0);
 
+// Trackpad ASIC calibration routine??
 ?? fnc0x00007d6c( arg0x00007d6c_0, arg0x00007d6c_1, arg0x00007d6c_2, arg0x00007d6c_3, arg0x00007d6c_4, arg0x00007d6c_5, arg0x00007d6c_6, arg0x00007d6c_7, arg0x00007d6c_12, )
 
-?? fnc0x00006cb8( arg0x00006cb8_0, arg0x00006cb8_1, arg0x00006cb8_2, arg0x00006cb8_3, arg0x00006cb8_4, arg0x00006cb8_5, arg0x00006cb8_6, arg0x00006cb8_7, arg0x00006cb8_12, )
+/**
+ * Related to reading values from Trackpad ASIR registers via ISR and 
+ *  accumulated/averaging results. Some sort of calibration routine maybe?
+ *
+ * \param arg0x00006cb8_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * 
+ * \return 1 on succes. 0 on failure (i.e. could not get desired data via ISR)
+ */
+int fnc0x00006cb8(arg0x00006cb8_0);
 
 /**
-// Wait for PINT3/4 to fire enough times....
- * \param arg0x0000b97c_1 Number of times to wait Interrupt to fire before giving up???
+ * Wait for PINT3/4 (i.e. Right/Left Trackpad DR ISR) to fire enough times (i.e.
+ *  for reading Trackpad ASIC register 0x11 and 0x12 and each time storing the
+ *  read values to the next spot in an array). 
+ * TODO: can ISR be setup to read other registers?
+ * TODO: What are registers 0x11 and 0x12?
+ *
+ * \param arg0x00002c4c_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * \param arg0x0000b97c_1 Related to Number of times to wait Interrupt to fire 
+ *	before declaring failure (but don't quite understand the math...).
+ *
+ * \return 1 on success. 0 on failure (i.e. ISR did not fire after 
+ *	arg0x0000b97c_1 sleeps).
  */
-?? fnc0x0000b97c( arg0x0000b97c_0, arg0x0000b97c_1, arg0x0000b97c_2, arg0x0000b97c_3, arg0x0000b97c_4, arg0x0000b97c_5, arg0x0000b97c_6, arg0x0000b97c_7, arg0x0000b97c_12, )
+int fnc0x0000b97c(arg0x0000b97c_0, arg0x0000b97c_1);
 
-// EEPROM read related
-?? fnc0x0000863c( arg0x0000863c_0, arg0x0000863c_1, arg0x0000863c_2, arg0x0000863c_3, arg0x0000863c_4, arg0x0000863c_5, arg0x0000863c_6, arg0x0000863c_7, arg0x0000863c_12, )
+/**
+ * Get value related to PINT3/4 ISR reads/accumulations/averages of Trackpad 
+ *  ASIC registers 0x11 and 0x12. Seems to be value at 0x10000aa8 for Right 
+ *  Trackpad and value at 0x10000ace for Left Trackpad. 
+ *  and 
+ * 
+ * \return See description above. 
+ */
+int32_t fnc0x00005a24(arg0x00005a24_0);
+
+/**
+ * Read from EEPROM, related to Trackpad ASIC calibration/setup?
+ *
+ * \param arg0x0000863c_0 Offset from base address where to read EEPROM 0x00 
+ *	for Right Trackpad. 0x26 for Left Trackpad.
+ * \param arg0x0000863c_1 Memory where read EEPROM data is to be saved.
+ * \param arg0x0000863c_2 EEPROM base address where Trackpad ASIC (calibration?)
+ *	data has been stored.
+ *
+ * \return None.
+ */
+void fnc0x0000863c(arg0x0000863c_0, arg0x0000863c_1, arg0x0000863c_2);
 
 ?? fnc0x0000977c( arg0x0000977c_0, arg0x0000977c_1, arg0x0000977c_2, arg0x0000977c_3, arg0x0000977c_4, arg0x0000977c_5, arg0x0000977c_6, arg0x0000977c_7, arg0x0000977c_12, )
 

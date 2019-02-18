@@ -54,7 +54,7 @@ define reset_top_level_watchpoints
 	#   will simulate ISR and then simulation will either stop or report
 	#   repeated Hard Faults.
 	#  This is intended to figure out what ISRs are doing
-	set $irq_sim_pint3 = 1
+	set $irq_sim_pint3 = 0
 	set $irq_sim_ct32b0 = 0 
 
 
@@ -1540,7 +1540,7 @@ define check_pint3_isr_sim
 			#  up to 0x13
 			set {char}0x10000246 = 0x12
 
-			# TODO: Other variable settings to consider (i.e. 
+			# TODO: Other variable settings to consider (i.e. 0x1000024e??)
 
 			echo \n
 			echo HANDLED Entry point fnc0x000055e8(): Setup PINT3 (destructive) \n

@@ -34,6 +34,7 @@
 
 (uint32_t*) 0x500 - Think this might affect use of watchdog somehow, but not 100% sure
 
-(uint32_t*) 0x600 - Related to Trackpad ASICS?
+(uint??_t*) 0x600 - Start of 0x26 bytes of Right Trackpad ASIC related (calibration?) data
+(uint??_t*) 0x626 - Start of 0x26 bytes of Left Trackpad ASIC related (calibration?) data
 
 (uint32_t*) 0x800 - Start of 0x400 bytes of Jingle Data. See [Jingle](../Jingle/README.md) for additional details.

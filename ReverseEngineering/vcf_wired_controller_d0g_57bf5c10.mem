@@ -320,11 +320,12 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000240 - GPIO number/offset for Right Trackpad ASIC Data Ready (PIO0_23).
  (uint8_t*) 0x10000241 - GPIO number/offset for Left Trackpad ASIC Data Ready (PIO1_16)?
  (uint8_t*) 0x10000242 - Enable for reading ASIC registers 0x11 and 0x12 in PINT3 ISR.
+ (uint8_t*) 0x10000243 - 0x10000242, but for PINT3/Left Trackpad?
 
  (uint8_t*) 0x10000246 - PINT3/Right Trackpad ASIC related. Counts how many times
 			 times ASIC registers 0x11 and 0x12 are read. Used as
 			 index of where to store values read from 0x11 and 0x12.
-
+ (uint8_t*) 0x10000247 - 0x10000246, but for PINT4/Left Trackpad ASIC.
  (uint8_t*) 0x10000248 - PINT3/Right Trackpad ASIC Related. Value is inverted
 			 after a certain number of PINT3 IRQs. This is an index
 			 to select which global values are being udpated by
@@ -335,12 +336,12 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x1000024a - Flag related to PINT3 (PIO0_23 - DR for Right Haptic).
 			 Once PINT3 has fired the desired number of times 
 			 (and expected data has been gathered) this flag is set. 
-
+ (uint8_t*) 0x1000024b - 0x1000024a, but for PINT4/Left Trackpad ASIC.
  (uint8_t*) 0x1000024c - Flag related to PINT3/Right Trackpad ASIC. Set after a 
 			 10 of runs of PINT3 ISR.
-
+ (uint8_t*) 0x1000024d - 0x1000024c, but for PINT4/Left Trackpad ASIC.
  (uint8_t*) 0x1000024e - PINT3/Right Trackpad ASIC related?
-
+ (uint8_t*) 0x1000024f - 0x1000024e, but for PINT4/Left Trackpad ASIC.
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
 			 Decremented (and checked to be 0) before interrupt 
@@ -349,7 +350,11 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 EEPROM has valid data (early init only)
 			 2. SSP0 control register base address
 (uint16_t*) 0x10000256 - EEPROM Read Data 0x002 - Continuation of Magic Number?
-(uint32_t*) 0x10000258 - EEPROM Read Data 0x004 - Board/HW Revision Number
+(uint32_t*) 0x10000258 - 1. EEPROM Read Data 0x004 - Board/HW Revision Number
+(uint16_t*) 0x10000258 - 2. Related to Right Trackpad ASIC register values read
+			 via PINT3 ISR (i.e. Registers 0x12 and 0x11)
+(uint16_t*) 0x1000025a - 2. Related to Left Trackpad ASIC register values read
+			 via PINT4 ISR (i.e. Registers 0x12 and 0x11)
 
 (uint32_t*) 0x10000260 - System Clock Frequency in Hz
 
@@ -864,47 +869,328 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000a36 - EEPROM Read Data 0x082 - Uknown purpose
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
  (uint8_t*) 0x10000a38 - Value of Right Trackpad ASIC Register 0x12, filled
-			 by 1st call to PINT3
+			 by call 0 to PINT3. Shadow copy[0].
  (uint8_t*) 0x10000a39 - Value of Right Trackpad ASIC Register 0x11, filled
-			 by 1st call to PINT3
+			 by call 0 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a3a - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 1 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a3b - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 1 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a3c - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 2 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a3d - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 2 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a3e - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 3 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a3f - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 3 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a40 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 4 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a41 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 4 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a42 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 5 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a43 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 5 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a44 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 6 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a45 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 6 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a46 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 7 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a47 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 7 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a48 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 8 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a49 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 8 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a4a - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 9 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a4b - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 9 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a4c - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 10 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a4d - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 10 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a4e - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 11 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a4f - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 11 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a50 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 12 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a51 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 12 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a52 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 13 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a53 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 13 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a54 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 14 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a55 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 14 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a56 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 15 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a57 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 15 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a58 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 16 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a59 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 16 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a5a - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 17 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a5b - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 17 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a5c - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 18 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a5d - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 18 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a5e - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 0 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a5f - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 0 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a60 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 1 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a61 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 1 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a62 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 2 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a63 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 2 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a64 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 3 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a65 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 3 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a66 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 4 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a67 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 4 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a68 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 5 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a69 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 5 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a6a - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 6 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a6b - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 6 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a6c - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 7 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a6d - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 7 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a6e - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 8 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a6f - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 8 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a70 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 9 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a71 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 9 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a72 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 10 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a73 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 10 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a74 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 11 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a75 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 11 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a76 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 12 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a77 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 12 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a78 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 13 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a79 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 13 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a7a - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 14 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a7b - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 14 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a7c - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 15 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a7d - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 15 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a7e - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 16 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a7f - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 16 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a80 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 17 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a81 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 17 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a82 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 18 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a83 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 18 to PINT3. Shadow copy[0].
+ (uint8_t*) 0x10000a84 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 0 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a85 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 0 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a86 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 1 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a87 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 1 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a88 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 2 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a89 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 2 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a8a - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 3 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a8b - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 3 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a8c - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 4 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a8d - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 4 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a8e - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 5 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a8f - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 5 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a90 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 6 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a91 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 6 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a92 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 7 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a93 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 7 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a94 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 8 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a95 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 8 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a96 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 9 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a97 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 9 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a98 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 10 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a99 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 10 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a9a - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 11 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a9b - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 11 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a9c - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 12 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a9d - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 12 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a9e - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 13 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000a9f - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 13 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa0 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 14 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa1 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 14 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa2 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 15 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa3 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 15 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa4 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 16 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa5 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 16 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa6 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 17 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa7 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 17 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa8 - Value of Right Trackpad ASIC Register 0x12, filled
+			 by call 18 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aa9 - Value of Right Trackpad ASIC Register 0x11, filled
+			 by call 18 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aaa - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 0 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aab - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 0 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aac - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 1 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aad - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 1 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aae - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 2 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aaf - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 2 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab0 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 3 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab1 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 3 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab2 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 4 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab3 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 4 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab4 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 5 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab5 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 5 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab6 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 6 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab7 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 6 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab8 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 7 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ab9 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 7 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aba - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 8 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000abb - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 8 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000abc - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 9 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000abd - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 9 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000abe - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 10 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000abf - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 10 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac0 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 11 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac1 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 11 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac2 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 12 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac3 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 12 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac4 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 13 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac5 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 13 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac6 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 14 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac7 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 14 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac8 - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 15 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ac9 - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 15 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000aca - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 16 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000acb - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 16 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000acc - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 17 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000acd - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 17 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000ace - Value of Left Trackpad ASIC Register 0x12, filled
+			 by call 18 to PINT3. Shadow copy[1].
+ (uint8_t*) 0x10000acf - Value of Left Trackpad ASIC Register 0x11, filled
+			 by call 18 to PINT3. Shadow copy[1].
 
-(uint16_t*) 0x10000a84 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a86 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a88 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a8a - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a8c - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a8e - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a90 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a92 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a94 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a96 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a98 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a9a - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a9c - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000a9e - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000aa0 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000aa2 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000aa4 - Related to PINT3 ISR and Right Haptic?
-(uint16_t*) 0x10000aa6 - Related to PINT3 ISR and Right Haptic?
-
-(uint16_t*) 0x10000b70 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a84??)
-(uint16_t*) 0x10000b72 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a86??)
-(uint16_t*) 0x10000b74 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a88??)
-(uint16_t*) 0x10000b76 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a8a??)
-(uint16_t*) 0x10000b78 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a8c??)
-(uint16_t*) 0x10000b7a - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a8e??)
-(uint16_t*) 0x10000b7c - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a90??)
-(uint16_t*) 0x10000b7e - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a92??)
-(uint16_t*) 0x10000b80 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a94??)
-(uint16_t*) 0x10000b82 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a96??)
-(uint16_t*) 0x10000b84 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a98??)
-(uint16_t*) 0x10000b86 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a9a??)
-(uint16_t*) 0x10000b88 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a9c??)
-(uint16_t*) 0x10000b8a - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000a9e??)
-(uint16_t*) 0x10000b8c - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000aa0??)
-(uint16_t*) 0x10000b8e - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000aa2??)
-(uint16_t*) 0x10000b90 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000aa4??)
-(uint16_t*) 0x10000b92 - Related Right Haptic and PINT3 ISR (accumulated value of 0x10000aa6??)
+(uint16_t*) 0x10000b70 - Related Right Trackpad and PINT3 ISR (average value of TODO 0x10000a84??)
+(uint16_t*) 0x10000b72 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a86??)
+(uint16_t*) 0x10000b74 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a88??)
+(uint16_t*) 0x10000b76 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a8a??)
+(uint16_t*) 0x10000b78 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a8c??)
+(uint16_t*) 0x10000b7a - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a8e??)
+(uint16_t*) 0x10000b7c - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a90??)
+(uint16_t*) 0x10000b7e - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a92??)
+(uint16_t*) 0x10000b80 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a94??)
+(uint16_t*) 0x10000b82 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a96??)
+(uint16_t*) 0x10000b84 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a98??)
+(uint16_t*) 0x10000b86 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a9a??)
+(uint16_t*) 0x10000b88 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a9c??)
+(uint16_t*) 0x10000b8a - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000a9e??)
+(uint16_t*) 0x10000b8c - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000aa0??)
+(uint16_t*) 0x10000b8e - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000aa2??)
+(uint16_t*) 0x10000b90 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000aa4??)
+(uint16_t*) 0x10000b92 - Related Right Trackpad and PINT3 ISR (accumulated value of 0x10000aa6??)
 
  (uint8_t*) 0x10000d80 - I2C_XFER_T.slaveAddr; 7-bit I2C Slave address 
 
