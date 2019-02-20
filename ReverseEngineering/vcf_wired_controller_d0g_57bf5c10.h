@@ -1231,7 +1231,8 @@ float fnc0x00002662(arg0x00002662_0, arg0x00002662_1);
 void fnc0x00006504(arg0x00006504_0);
 
 /**
- * Set some variables (callback?) related to Joystick X/Y measurements?
+ * Set some variables (callback?) related to Joystick X/Y measurements? 
+ *	And on next call relates to Trackpads?
  *
  * \return None.
  */
@@ -2180,8 +2181,17 @@ void fnc0x00002c4c(arg0x00002c4c_0);
  */
 void fnc0x00003f3c(arg0x00003f3c_0);
 
-// Trackpad ASIC calibration routine??
-?? fnc0x00007d6c( arg0x00007d6c_0, arg0x00007d6c_1, arg0x00007d6c_2, arg0x00007d6c_3, arg0x00007d6c_4, arg0x00007d6c_5, arg0x00007d6c_6, arg0x00007d6c_7, arg0x00007d6c_12, )
+/**
+ * Trackpad ASIC calibration routine?? Setup Trackpad ASIC in a particular
+ *  way then monitor results captured via ISR. Results may be replaced by
+ *  values from 0x600 or 0x626 in EEPROM.
+ *
+ * \parma arg0x00007d6c_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x00007d6c(arg0x00007d6c_0)
 
 /**
  * Related to reading values from Trackpad ASIR registers via ISR and 
@@ -2234,9 +2244,25 @@ int32_t fnc0x00005a24(arg0x00005a24_0);
  */
 void fnc0x0000863c(arg0x0000863c_0, arg0x0000863c_1, arg0x0000863c_2);
 
-?? fnc0x0000977c( arg0x0000977c_0, arg0x0000977c_1, arg0x0000977c_2, arg0x0000977c_3, arg0x0000977c_4, arg0x0000977c_5, arg0x0000977c_6, arg0x0000977c_7, arg0x0000977c_12, )
+/**
+ * Set 0x1000024e=2 and update some Trackpad ASIC registers.
+ *
+ * \param arg0x0000977c_0 Offset from base address where to read EEPROM 0x00 
+ *	for Right Trackpad. 0x26 for Left Trackpad.
+ *
+ * \return None.
+ */
+void fnc0x0000977c(arg0x0000977c_0);
 
-?? fnc0x00002d14( arg0x00002d14_0, arg0x00002d14_1, arg0x00002d14_2, arg0x00002d14_3, arg0x00002d14_4, arg0x00002d14_5, arg0x00002d14_6, arg0x00002d14_7, arg0x00002d14_12, )
+/**
+ * Update some Trackpad ASIC registers after changing 0x1000024e=2.
+ *
+ * \param arg0x00002d14_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x00002d14(arg0x00002d14_0);
 
 /**
  * PINT3 (i.e. DR for Right Trackpad ASIC) ISR.
@@ -2263,8 +2289,16 @@ void fnc0x0000763c();
  */
 void fnc0x0000573c(arg0x0000573c_0);
 
-// Called in PINT3. Checks some PINT3 global variables for TODO purpose...
-?? fnc0x00009798( arg0x00009798_0, arg0x00009798_1, arg0x00009798_2, arg0x00009798_3, arg0x00009798_4, arg0x00009798_5, arg0x00009798_6, arg0x00009798_7, arg0x00009798_12, )
+/**
+ * Called in PINT3. Exit related code and setting of variables based on
+ *  conditions (i.e. ISR has run enough times that global data is valid).
+ *
+ * \param arg0x00009798_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ * 
+ * \return None.
+ */
+void fnc0x00009798(arg0x00009798_0);
 
 /**
  * Update some Trackpad ASIC registers and adjust EMI settings?

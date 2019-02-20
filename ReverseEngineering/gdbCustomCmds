@@ -1521,26 +1521,32 @@ define check_pint3_isr_sim
 			echo Jumping to PINT3 Interrupt Handler \n
 			echo \n
 
-			# Jump to CT32B0 Interrupt Handler
+			# Jump to PINT3 Interrupt Handler
 			set $lr = $pc
 			set $pc = 0x00000138
 
 			# This is enable for handling ISR data if set to 0 ISR just returns
-			## set {char}0x10000242 = 0x0
+			##set {char}0x10000242 = 0x0
 
 			# Counter that is incremented each time ISR fires (if 0x10000242 == 1)
 			# If count is 0xa on ISR entry then 0x1000024c is set to 1
-			set {char}0x10000246 = 0xa
+			##set {char}0x10000246 = 0xa
 
 			# Flag that is set after 0x10000246 counter reaches 0xb (i.e. ISR has
 			#  fired 10 times.
-			set {char}0x1000024c = 0x1
+			##set {char}0x1000024c = 0x1
 
 			# If 0x1000024c flag is set, then ISR checks if 0x10000246 has counted
 			#  up to 0x13
-			set {char}0x10000246 = 0x12
+			##set {char}0x10000246 = 0x12
 
 			# TODO: Other variable settings to consider (i.e. 0x1000024e??)
+
+			# Set after Trackpad calibration routine
+			set {char}0x1000024e = 0x2
+
+			# Checked in PINT3 if 0x1000024e = 0x2
+			#set {short}0x10000b70 = 0xfdc7
 
 			echo \n
 			echo HANDLED Entry point fnc0x000055e8(): Setup PINT3 (destructive) \n
