@@ -36,27 +36,18 @@
 static LPC_SSP_T* spiRegs = LPC_SSP0;
 
 typedef enum Trackpad_t {
-	R_TRACKPAD,
-	L_TRACKPAD
+	R_TRACKPAD = 0,
+	L_TRACKPAD = 1
 } Trackpad;
+
+#define GPIO_SSP0_SCK0 1, 29
+#define GPIO_SSP0_MISO0 0, 8
+#define GPIO_SSP0_MOSI0 0, 9
 
 #define GPIO_R_TRACKPAD_CS 1, 15 
 #define GPIO_R_TRACKPAD_DR 0, 23 
 #define GPIO_L_TRACKPAD_CS 1, 6
 #define GPIO_L_TRACKPAD_DR 1, 16
-
-/**
- * Print command usage details to console.
- *
- * \return None.
- */
-static void printUsage(void) {
-	printf(
-		"usage: trackpad\n"
-		"\n"
-//TODO
-	);
-}
 
 /**
  * Write to a register on the Pinnacle ASIC (i.e. the Trackpad controller).
@@ -78,9 +69,12 @@ static void writePinnacleReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, false);
 	}
 
+	// Number of words to transfer
 	xf_setup.length = 2;
+	// Used to count how many words have been transmitted
 	xf_setup.tx_cnt = 0;
 	xf_setup.tx_data = tx_data;
+	// Used to count how many words have been received
 	xf_setup.rx_cnt = 0;
 	xf_setup.rx_data = rx_data;
 
@@ -88,6 +82,7 @@ static void writePinnacleReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 	tx_data[0] = 0x80 | (0x1F & addr);
 	tx_data[1] = val;
 
+	// TODO: should this be done by hand? Maybe this is why we are getting poor results from the Trackpad ASIC?
 	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
 
 	if (R_TRACKPAD == trackpad) {
@@ -99,8 +94,6 @@ static void writePinnacleReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 
 /**
  * Read a register on the Pinnacle ASIC (i.e. the Trackpad controller).
- *  TODO: What about multiple back to back reads?
- *  TODO: What about waiting for DR to be high?
  *
  * \param trackpad Specifies which trackpad to communicate with. 
  * \param addr Register address to read.
@@ -118,9 +111,12 @@ static uint8_t readPinnacleReg(Trackpad trackpad, uint8_t addr) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, false);
 	}
 
+	// Number of words to transfer
 	xf_setup.length = 4;
+	// Used to count how many words have been transmitted
 	xf_setup.tx_cnt = 0;
 	xf_setup.tx_data = tx_data;
+	// Used to count how many words have been received
 	xf_setup.rx_cnt = 0;
 	xf_setup.rx_data = rx_data;
 
@@ -130,8 +126,6 @@ static uint8_t readPinnacleReg(Trackpad trackpad, uint8_t addr) {
 	tx_data[1] = 0xFB;
 	tx_data[2] = 0xFB;
 	tx_data[3] = 0xFB;
-
-	rx_data[3] = 0xF1;
 
 	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
 
@@ -145,53 +139,114 @@ static uint8_t readPinnacleReg(Trackpad trackpad, uint8_t addr) {
 }
 
 /**
+ * Trackpad ASIC Extended Register Access (ERA) Write with Address Increment
+ *
+ * \param trackpad Specifies which trackpad to communicate with. 
+ * \param addr 16-bit extended register address.
+ * \param len Number of bytes to be sequentially written.
+ * \param[in] data Pointer to data to be written.
+ *
+ * \return None.
+ */
+static void writePinnacleExtRegs(Trackpad trackpad, uint16_t addr, uint8_t len, 
+	const uint8_t* data) {
+
+	// Write Address high byte
+	writePinnacleReg(trackpad, 0x1C, 0xFF & (addr >> 8));
+	// Write Address low byte
+	writePinnacleReg(trackpad, 0x1D, 0xFF & addr);
+
+	for (int idx = 0; idx < len; idx++) {
+		// Write value
+		writePinnacleReg(trackpad, 0x1B, data[idx]);
+
+		// Write ERA auto-increment write to ERA Control
+		writePinnacleReg(trackpad, 0x1E, 0x0A);
+
+		// Read ERA Control until it contains 0x00
+		while (readPinnacleReg(trackpad, 0x1E)){
+		}
+	}
+}
+
+//TODO: rename. This is recreation of fnc0x0000573c(). Read 0x12 and 0x11 and clear flags, all in one SPI transaction
+static uint16_t rapidReadAndClear(Trackpad trackpad) {
+	Chip_SSP_DATA_SETUP_T xf_setup;
+	uint8_t tx_data[7];
+	uint8_t rx_data[7];
+
+	if (R_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, false);
+	} else if (L_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, false);
+	}
+
+	// Number of words to transfer
+	xf_setup.length = 7;
+	// Used to count how many words have been transmitted
+	xf_setup.tx_cnt = 0;
+	xf_setup.tx_data = tx_data;
+	// Used to count how many words have been received
+	xf_setup.rx_cnt = 0;
+	xf_setup.rx_data = rx_data;
+
+	// Auto-incremented read starting at register 0x11
+	tx_data[0] = 0xA0 | 0x11;
+	tx_data[1] = 0xFC;
+	tx_data[2] = 0xFC;
+	tx_data[3] = 0xFC;
+	tx_data[4] = 0xFB;
+	// Clear flags
+	tx_data[5] = 0x80 | 0x02;
+	tx_data[6] = 0x00;
+
+	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
+
+	if (R_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, true);
+	} else if (L_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, true);
+	}
+
+	// Concatenate 0x12 and 0x11 into a single 16-bit word
+	return (rx_data[4] << 8) | rx_data[3];
+}
+
+/**
  * Setup all clocks, peripherals, etc. so the ADC chnanels can be read.
  *
  * \return 0 on success.
  */
 void initTrackpad(void) {
-	NVIC_SetPriority(SSP0_IRQn, 0);
+	// Set Interrupt Priority for SSP0 to one below highest (even though
+	//  we don't use SSP0 interrupts...)
+	NVIC_SetPriority(SSP0_IRQn, 1);
 
-	// Set PIO1_29 to function as Serial clock for SSP0
-	Chip_IOCON_PinMuxSet(LPC_IOCON, 1, 29, IOCON_FUNC1);
+	// Setup SSP0 pins
+	Chip_IOCON_PinMuxSet(LPC_IOCON, GPIO_SSP0_SCK0, IOCON_FUNC1);
+	Chip_IOCON_PinMuxSet(LPC_IOCON, GPIO_SSP0_MISO0, IOCON_FUNC1);
+	Chip_IOCON_PinMuxSet(LPC_IOCON, GPIO_SSP0_MOSI0, IOCON_FUNC1);
 
-	// Set PIO0_8 to function as Master In Slave Out for SSP0
-	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 8, IOCON_FUNC1);
-
-	// Set PIO0_9 to function as Master Out Slave In for SSP0
-	Chip_IOCON_PinMuxSet(LPC_IOCON, 0, 9, IOCON_FUNC1);
-
+	// Configure SPI
 	Chip_SSP_Init(spiRegs);
-
-	Chip_SSP_SetFormat(spiRegs, SSP_BITS_8, SSP_FRAMEFORMAT_SPI, SSP_CLOCK_CPHA1_CPOL0);
-
+	Chip_SSP_SetFormat(spiRegs, SSP_BITS_8, SSP_FRAMEFORMAT_SPI, 
+		SSP_CLOCK_CPHA1_CPOL0);
 	Chip_SSP_Set_Mode(spiRegs, SSP_MODE_MASTER);
-
 	Chip_SSP_SetBitRate(spiRegs, 6000000);
-
 	Chip_SSP_Enable(spiRegs);
 
-
-	// Chip select is active low
+	// Right Trackpad comms setup
 	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, true);
-
 	Chip_GPIO_SetPinDIROutput(LPC_GPIO, GPIO_R_TRACKPAD_CS);
-
 	Chip_IOCON_PinMux(LPC_IOCON, GPIO_R_TRACKPAD_CS, IOCON_DIGMODE_EN |
 		IOCON_MODE_INACT, IOCON_FUNC0);
-
 	Chip_IOCON_PinMux(LPC_IOCON, GPIO_R_TRACKPAD_DR, IOCON_DIGMODE_EN | 
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Right Trackpad in shutdown mode
-// TODO: This is what the Steam Controller does with the trackpad on startup,
-//	however, the datahsheet states: "Request additional instructions from 
-//	Cirque for exiting Sleep and Shutdown modes if your application requires 
-//	SPI at 1 MHZ or greater." Figure this out later via further rev eng?
 	writePinnacleReg(R_TRACKPAD, 0x03, 0x02);
 
-
-	// Chip select is active low
+	// Left Trackpad comms setup
 	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, true);
 
 	Chip_GPIO_SetPinDIROutput(LPC_GPIO, GPIO_L_TRACKPAD_CS);
@@ -230,11 +285,32 @@ void SSP1_IRQHandler (void) {
 	//TODO: Setup to react to SPI transaction complete?
 }
 
-// 0 - GPIO pin interrupt 0
-void FLEX_INT0_IRQHandler(void) {
+// 3 - GPIO pin interrupt 3
+// Right Haptic DR
+void FLEX_INT3_IRQHandler(void) {
 	//TODO: Setup to react to data ready pin rising edge?
 }
 
+// 4 - GPIO pin interrupt 4
+// Left Haptic DR
+void FLEX_INT4_IRQHandler(void) {
+	//TODO: Setup to react to data ready pin rising edge?
+}
+
+/**
+ * Print command usage details to console.
+ *
+ * \return None.
+ */
+void trackpadCmdUsage(void) {
+	printf(
+		"usage: trackpad monitor\n"
+		"       trackpad read regAddr\n"
+		"       trackpad write regAddr val\n"
+		"\n"
+//TODO
+	);
+}
 /**
  * Handle trackpad query/control command line function.
  *
@@ -339,7 +415,7 @@ while(1) {
 
 	// Wait for trackpad to say it has new data
 	while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {
-		//printf("DR Low for Right Trackpad\n");
+		printf("DR Low for Right Trackpad\n");
 	}
 
 	data[0] = readPinnacleReg(R_TRACKPAD, 0x12);

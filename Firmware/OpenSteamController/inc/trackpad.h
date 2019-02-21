@@ -30,9 +30,10 @@
 
 #include <stdint.h>
 
-int trackpadCmdFnc(int argc, const char* argv[]);
-
 void initTrackpad(void);
+
+void trackpadCmdUsage(void);
+int trackpadCmdFnc(int argc, const char* argv[]);
 
 #endif /* _TRACKPAD_ */
 
