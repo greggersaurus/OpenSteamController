@@ -30,6 +30,7 @@
 #include "lpc_types.h"
 #include "chip.h"
 #include "ssp_11xx.h"
+#include "time.h"
 
 #include <stdio.h>
 
@@ -44,10 +45,37 @@ typedef enum Trackpad_t {
 #define GPIO_SSP0_MISO0 0, 8
 #define GPIO_SSP0_MOSI0 0, 9
 
-#define GPIO_R_TRACKPAD_CS 1, 15 
+#define GPIO_R_TRACKPAD_CS_N 1, 15 
 #define GPIO_R_TRACKPAD_DR 0, 23 
-#define GPIO_L_TRACKPAD_CS 1, 6
+#define GPIO_L_TRACKPAD_CS_N 1, 6
 #define GPIO_L_TRACKPAD_DR 1, 16
+
+#define TPAD_REG_FW_ID 0x00
+#define TPAD_REG_FW_VER 0x01
+#define TPAD_REG_STATUS_1 0x02
+#define TPAD_REG_SYS_CFG_1 0x03
+#define TPAD_REG_FEED_CFG_1 0x04
+#define TPAD_REG_FEED_CFG_2 0x05
+#define TPAD_REG_FEED_CFG_3 0x06
+#define TPAD_REG_CAL_CFG_1 0x07
+#define TPAD_REG_PS2_AUX_CTRL 0x08
+#define TPAD_REG_SAMPLE_RATE 0x09
+#define TPAD_REG_Z_IDLE 0x0A
+#define TPAD_REG_Z_SCALAR 0x0B
+#define TPAD_REG_SLEEP_INTV 0x0C
+#define TPAD_REG_SLEEP_TIMER 0x0D
+#define TPAD_REG_DYN_EMI 0x0E
+
+#define TPAD_REG_GPIO_A_CTRL 0x18
+#define TPAD_REG_GPIO_A_DATA 0x19
+#define TPAD_REG_GPIO_B 0x1A
+
+#define TPAD_REG_ERA_VAL 0x1B
+#define TPAD_REG_ERA_H_ADDR 0x1C
+#define TPAD_REG_ERA_L_ADDR 0x1D
+#define TPAD_REG_ERA_CTRL 0x1E
+
+#define TPAD_REG_PROD_ID 0x1F
 
 /**
  * Write to a register on the Pinnacle ASIC (i.e. the Trackpad controller).
@@ -64,9 +92,9 @@ static void writePinnacleReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 	uint8_t rx_data[2];
 
 	if (R_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, false);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, false);
 	} else if (L_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, false);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, false);
 	}
 
 	// Number of words to transfer
@@ -86,9 +114,9 @@ static void writePinnacleReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
 
 	if (R_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, true);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, true);
 	} else if (L_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, true);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 	}
 }
 
@@ -106,9 +134,9 @@ static uint8_t readPinnacleReg(Trackpad trackpad, uint8_t addr) {
 	uint8_t rx_data[4];
 
 	if (R_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, false);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, false);
 	} else if (L_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, false);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, false);
 	}
 
 	// Number of words to transfer
@@ -130,9 +158,9 @@ static uint8_t readPinnacleReg(Trackpad trackpad, uint8_t addr) {
 	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
 
 	if (R_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, true);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, true);
 	} else if (L_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, true);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 	}
 
 	return rx_data[3];
@@ -151,20 +179,19 @@ static uint8_t readPinnacleReg(Trackpad trackpad, uint8_t addr) {
 static void writePinnacleExtRegs(Trackpad trackpad, uint16_t addr, uint8_t len, 
 	const uint8_t* data) {
 
-	// Write Address high byte
-	writePinnacleReg(trackpad, 0x1C, 0xFF & (addr >> 8));
-	// Write Address low byte
-	writePinnacleReg(trackpad, 0x1D, 0xFF & addr);
+	// Write address 
+	writePinnacleReg(trackpad, TPAD_REG_ERA_H_ADDR, 0xFF & (addr >> 8));
+	writePinnacleReg(trackpad, TPAD_REG_ERA_L_ADDR, 0xFF & addr);
 
 	for (int idx = 0; idx < len; idx++) {
 		// Write value
-		writePinnacleReg(trackpad, 0x1B, data[idx]);
+		writePinnacleReg(trackpad, TPAD_REG_ERA_VAL, data[idx]);
 
 		// Write ERA auto-increment write to ERA Control
-		writePinnacleReg(trackpad, 0x1E, 0x0A);
+		writePinnacleReg(trackpad, TPAD_REG_ERA_CTRL, 0x0A);
 
 		// Read ERA Control until it contains 0x00
-		while (readPinnacleReg(trackpad, 0x1E)){
+		while (readPinnacleReg(trackpad, TPAD_REG_ERA_CTRL)){
 		}
 	}
 }
@@ -176,9 +203,9 @@ static uint16_t rapidReadAndClear(Trackpad trackpad) {
 	uint8_t rx_data[7];
 
 	if (R_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, false);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, false);
 	} else if (L_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, false);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, false);
 	}
 
 	// Number of words to transfer
@@ -203,9 +230,9 @@ static uint16_t rapidReadAndClear(Trackpad trackpad) {
 	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
 
 	if (R_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, true);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, true);
 	} else if (L_TRACKPAD == trackpad) {
-		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, true);
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 	}
 
 	// Concatenate 0x12 and 0x11 into a single 16-bit word
@@ -236,49 +263,276 @@ void initTrackpad(void) {
 	Chip_SSP_Enable(spiRegs);
 
 	// Right Trackpad comms setup
-	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS, true);
-	Chip_GPIO_SetPinDIROutput(LPC_GPIO, GPIO_R_TRACKPAD_CS);
-	Chip_IOCON_PinMux(LPC_IOCON, GPIO_R_TRACKPAD_CS, IOCON_DIGMODE_EN |
+	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, true);
+	Chip_GPIO_SetPinDIROutput(LPC_GPIO, GPIO_R_TRACKPAD_CS_N);
+	Chip_IOCON_PinMux(LPC_IOCON, GPIO_R_TRACKPAD_CS_N, IOCON_DIGMODE_EN |
 		IOCON_MODE_INACT, IOCON_FUNC0);
 	Chip_IOCON_PinMux(LPC_IOCON, GPIO_R_TRACKPAD_DR, IOCON_DIGMODE_EN | 
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Right Trackpad in shutdown mode
-	writePinnacleReg(R_TRACKPAD, 0x03, 0x02);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SYS_CFG_1, 0x02);
 
 	// Left Trackpad comms setup
-	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS, true);
+	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 
-	Chip_GPIO_SetPinDIROutput(LPC_GPIO, GPIO_L_TRACKPAD_CS);
+	Chip_GPIO_SetPinDIROutput(LPC_GPIO, GPIO_L_TRACKPAD_CS_N);
 
-	Chip_IOCON_PinMux(LPC_IOCON, GPIO_L_TRACKPAD_CS, IOCON_DIGMODE_EN |
+	Chip_IOCON_PinMux(LPC_IOCON, GPIO_L_TRACKPAD_CS_N, IOCON_DIGMODE_EN |
 		IOCON_MODE_INACT, IOCON_FUNC0);
 
 	Chip_IOCON_PinMux(LPC_IOCON, GPIO_L_TRACKPAD_DR, IOCON_DIGMODE_EN | 
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Left Trackpad in shutdown mode
-//TODO: See note above 
-	writePinnacleReg(L_TRACKPAD, 0x03, 0x02);
+	writePinnacleReg(L_TRACKPAD, TPAD_REG_SYS_CFG_1, 0x02);
 
 
-	// Test to setup Right trackpad to get data...
+	// Place the Trackpad in reset
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SYS_CFG_1, 0x01);
 
-/*
-	// Clear Flags 
-	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
-	// Configures SysConfig1(normal mode, active)
-	writePinnacleReg(R_TRACKPAD, 0x03, 0x00);
-	// Configures FeedConfig2(disable relative mode features)
-	writePinnacleReg(R_TRACKPAD, 0x05, 0x1F);
-	// Configures FeedConfig1(absolute mode, enable feed)
-	writePinnacleReg(R_TRACKPAD, 0x04, 0x03);
-	// Configures Z-idle
-	writePinnacleReg(R_TRACKPAD, 0x0A, 0x05);
-*/
+	usleep(50 * 1000);
 
-//TODO
-//	NVIC_EnableIRQ(SSP0_IRQn);
+	// Wait for Software Command Complete SW_CC
+	while (!(0x08 & readPinnacleReg(R_TRACKPAD, 0x02))) {
+	}
+
+	// Clear flags
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_STATUS_1, 0x00);
+
+	usleep(10 * 1000);
+
+	// Read firmware ASIC ID (should be 0x07)
+// TODO: what if it's not?!
+	readPinnacleReg(R_TRACKPAD, TPAD_REG_FW_ID);
+
+	// Read Firmware Revision Number (should be 0x3A)
+// TODO: what if it's not?!
+	readPinnacleReg(R_TRACKPAD, TPAD_REG_FW_VER);
+	
+	// Track disable
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SYS_CFG_1, 0x08);
+
+	usleep(10 * 1000);
+	
+	// Clear flags
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_STATUS_1, 0x00);
+	
+	// Default settings:
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_FEED_CFG_2, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_FEED_CFG_3, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_CAL_CFG_1, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_PS2_AUX_CTRL, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SAMPLE_RATE, 0x00);
+	// TODO: can get more data on these registers??
+	writePinnacleReg(R_TRACKPAD, 0x13, 0x00);
+	writePinnacleReg(R_TRACKPAD, 0x14, 0x00);
+	writePinnacleReg(R_TRACKPAD, 0x15, 0x00);
+	writePinnacleReg(R_TRACKPAD, 0x16, 0x00);
+	writePinnacleReg(R_TRACKPAD, 0x17, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_GPIO_A_CTRL, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_GPIO_A_DATA, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_GPIO_B, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_Z_IDLE, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_Z_SCALAR, 0x13);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_DYN_EMI, 0x41);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SLEEP_INTV, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SLEEP_TIMER, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_PS2_AUX_CTRL, 0x00);
+
+	uint8_t data[8];
+
+	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x07;
+	data[3] = 0xf8;
+	data[4] = 0x00;
+	data[5] = 0x00;
+	data[6] = 0x05;
+	data[7] = 0x50;
+	writePinnacleExtRegs(R_TRACKPAD, 0x015B, 8, data);
+
+	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x07;
+	data[3] = 0xf8;
+	data[4] = 0x00;
+	data[5] = 0x00;
+	data[6] = 0x06;
+	data[7] = 0x60;
+	writePinnacleExtRegs(R_TRACKPAD, 0x0163, 8, data);
+
+	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x07;
+	data[3] = 0xf8;
+	data[4] = 0x00;
+	data[5] = 0x00;
+	data[6] = 0x04;
+	data[7] = 0xc8;
+	writePinnacleExtRegs(R_TRACKPAD, 0x016B, 8, data);
+
+	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x07;
+	data[3] = 0xf8;
+	data[4] = 0x00;
+	data[5] = 0x00;
+	data[6] = 0x07;
+	data[7] = 0x80;
+	writePinnacleExtRegs(R_TRACKPAD, 0x0173, 8, data);
+
+	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x07;
+	data[3] = 0xf8;
+	data[4] = 0x00;
+	data[5] = 0x00;
+	data[6] = 0x05;
+	data[7] = 0x28;
+	writePinnacleExtRegs(R_TRACKPAD, 0x017B, 8, data);
+
+	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x07;
+	data[3] = 0xf8;
+	data[4] = 0x00;
+	data[5] = 0x00;
+	data[6] = 0x06;
+	data[7] = 0x18;
+	writePinnacleExtRegs(R_TRACKPAD, 0x0183, 8, data);
+
+	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x07;
+	data[3] = 0xf8;
+	data[4] = 0x00;
+	data[5] = 0x00;
+	data[6] = 0x04;
+	data[7] = 0xB0;
+	writePinnacleExtRegs(R_TRACKPAD, 0x018B, 8, data);
+
+	data[0] = 0x00;
+	data[1] = 0x00;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x00;
+	data[5] = 0x00;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x0193, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x02;
+	data[5] = 0x3B;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x01DF, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x04;
+	data[5] = 0x76;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x01E7, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x00;
+	data[5] = 0xED;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x01EF, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x01;
+	data[5] = 0xDA;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x01F7, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x03;
+	data[5] = 0xB4;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x01FF, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x07;
+	data[5] = 0x68;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x0207, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x06;
+	data[5] = 0xD1;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x020F, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x05;
+	data[5] = 0xA3;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x0217, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x03;
+	data[5] = 0x47;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x021F, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x06;
+	data[5] = 0x8E;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x0227, 8, data);
+
+	data[0] = 0x0F;
+	data[1] = 0xFF;
+	data[2] = 0x00;
+	data[3] = 0x00;
+	data[4] = 0x05;
+	data[5] = 0x1D;
+	data[6] = 0x00;
+	data[7] = 0x00;
+	writePinnacleExtRegs(R_TRACKPAD, 0x022F, 8, data);
+
+// TODO: resume at Line 117770 in vcf_wired_controller_d0g_57bf5c10.c
 }
 
 void SSP1_IRQHandler (void) {
