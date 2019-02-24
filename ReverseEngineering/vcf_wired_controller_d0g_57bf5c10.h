@@ -2005,8 +2005,12 @@ void fnc0x00006604(arg0x00006604_0, arg0x00006604_1, arg0x00006604_2, arg0x00006
  */
 void fnc0x000065c0();
 
-// Even high level function for Trackpad ASIC init?
-?? fnc0x0000a308( arg0x0000a308_0, arg0x0000a308_1, arg0x0000a308_2, arg0x0000a308_3, arg0x0000a308_4, arg0x0000a308_5, arg0x0000a308_6, arg0x0000a308_12, )
+/**
+ * Initialize both trackpads (i.e. calibration?)
+ *
+ * \return None.
+ */
+void fnc0x0000a308();
 
 /**
  * Initialize (i.e. clear) some SRAM1 variables (related to Trackpad ASIC?)

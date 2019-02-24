@@ -50,6 +50,7 @@ typedef enum Trackpad_t {
 #define GPIO_L_TRACKPAD_CS_N 1, 6
 #define GPIO_L_TRACKPAD_DR 1, 16
 
+//TODO: revisit these reg definitions are it looks like Trackpad is being configured in AnyMeas mode
 #define TPAD_REG_FW_ID 0x00
 #define TPAD_REG_FW_VER 0x01
 #define TPAD_REG_STATUS_1 0x02
@@ -197,6 +198,8 @@ static void writePinnacleExtRegs(Trackpad trackpad, uint16_t addr, uint8_t len,
 }
 
 //TODO: rename. This is recreation of fnc0x0000573c(). Read 0x12 and 0x11 and clear flags, all in one SPI transaction
+// I think this is getting the raw ADC value (given the Trackpad was setup in AnyMeas mode)
+//  Question is understanding how to switch which ADC is being sampled...
 static uint16_t rapidReadAndClear(Trackpad trackpad) {
 	Chip_SSP_DATA_SETUP_T xf_setup;
 	uint8_t tx_data[7];
@@ -339,6 +342,8 @@ void initTrackpad(void) {
 	writePinnacleReg(R_TRACKPAD, TPAD_REG_SLEEP_INTV, 0x00);
 	writePinnacleReg(R_TRACKPAD, TPAD_REG_SLEEP_TIMER, 0x00);
 	writePinnacleReg(R_TRACKPAD, TPAD_REG_PS2_AUX_CTRL, 0x00);
+
+	// Load up Compensation Matrix data??
 
 	uint8_t data[8];
 
@@ -532,7 +537,61 @@ void initTrackpad(void) {
 	data[7] = 0x00;
 	writePinnacleExtRegs(R_TRACKPAD, 0x022F, 8, data);
 
-// TODO: resume at Line 117770 in vcf_wired_controller_d0g_57bf5c10.c
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_FEED_CFG_2, 0xc2);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_FEED_CFG_3, 0x02);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_CAL_CFG_1, 0x01);
+	// 40 Sample/Second
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SAMPLE_RATE, 0x28);
+
+	data[0] = 0x64;
+	data[1] = 0x03;
+	writePinnacleExtRegs(R_TRACKPAD, 0x00D8, 2, data);
+
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_STATUS_1, 0x00);
+
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SYS_CFG_1, 0x18);
+	
+	usleep(2 * 1000);
+
+	readPinnacleReg(R_TRACKPAD, 0x11);
+	readPinnacleReg(R_TRACKPAD, 0x12);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_STATUS_1, 0x00);
+
+	writePinnacleReg(R_TRACKPAD, 0x15, 0x07);
+	writePinnacleReg(R_TRACKPAD, 0x16, 0xf8);
+
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_GPIO_A_DATA, 0x05);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_GPIO_B, 0x50);
+
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SYS_CFG_1, 0x18);
+
+	usleep(2 * 1000);
+
+	readPinnacleReg(R_TRACKPAD, 0x11);
+	readPinnacleReg(R_TRACKPAD, 0x12);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_STATUS_1, 0x00);
+
+	writePinnacleReg(R_TRACKPAD, 0x13, 0x0F);
+	writePinnacleReg(R_TRACKPAD, 0x14, 0xFF);
+	writePinnacleReg(R_TRACKPAD, 0x15, 0x00);
+	writePinnacleReg(R_TRACKPAD, 0x16, 0x00);
+	writePinnacleReg(R_TRACKPAD, 0x17, 0x02);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_GPIO_A_CTRL, 0x3B);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_GPIO_A_DATA, 0x00);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_GPIO_B, 0x00);
+	
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_SYS_CFG_1, 0x18);
+
+	usleep(2 * 1000);
+
+	readPinnacleReg(R_TRACKPAD, 0x11);
+	readPinnacleReg(R_TRACKPAD, 0x12);
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_STATUS_1, 0x00);
+
+	writePinnacleReg(R_TRACKPAD, TPAD_REG_STATUS_1, 0x00);
+
+// TODO: resume at line 121865
+	// This is where we start setting up PINT3/4
 }
 
 void SSP1_IRQHandler (void) {

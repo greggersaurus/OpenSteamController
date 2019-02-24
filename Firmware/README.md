@@ -71,6 +71,14 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
+1. Get trackpad functionality working
+    1. Valve's firmware seems to be using the Trackpads in AnyMeas mode
+        1. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for additional details
+    1. In this way the controller gets the raw ADC data and can do what it wants with it
+    1. What do we want to do...?
+        1. Let's see what AnyMeas data looks like and if we can understand it
+        1. Maybe this is necessary, given how poorly the default performance seemed to work... (or maybe there was something else going on related to bad performance in default mode?)
+        1. Easiest approach may be to replicate what Valve does as accurately as possible (now that we understand AnyMeas mode a little more) and (try to) understand and use that data
 1. Revisist console/CDC uart
     1. Make regression tests (i.e. testPrint)
         1. Buffer overflow related

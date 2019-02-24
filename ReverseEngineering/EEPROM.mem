@@ -35,42 +35,42 @@
 (uint32_t*) 0x500 - Think this might affect use of watchdog somehow, but not 100% sure
 
 (uint16_t*) 0x600 - Magic Word 0xbadc Related to following 0x24 values being valid.
-(uint16_t*) 0x602 - Right Trackpad Calibration value? Replaces 0x10000b70 if data is used.
-(uint16_t*) 0x604 - Right Trackpad Calibration value? Replaces 0x10000b72 if data is used.
-(uint16_t*) 0x606 - Right Trackpad Calibration value? Replaces 0x10000b74 if data is used.
-(uint16_t*) 0x608 - Right Trackpad Calibration value? Replaces 0x10000b76 if data is used.
-(uint16_t*) 0x60a - Right Trackpad Calibration value? Replaces 0x10000b78 if data is used.
-(uint16_t*) 0x60c - Right Trackpad Calibration value? Replaces 0x10000b7a if data is used.
-(uint16_t*) 0x60e - Right Trackpad Calibration value? Replaces 0x10000b7c if data is used.
-(uint16_t*) 0x610 - Right Trackpad Calibration value? Replaces 0x10000b7e if data is used.
-(uint16_t*) 0x612 - Right Trackpad Calibration value? Replaces 0x10000b80 if data is used.
-(uint16_t*) 0x614 - Right Trackpad Calibration value? Replaces 0x10000b82 if data is used.
-(uint16_t*) 0x616 - Right Trackpad Calibration value? Replaces 0x10000b84 if data is used.
-(uint16_t*) 0x618 - Right Trackpad Calibration value? Replaces 0x10000b86 if data is used.
-(uint16_t*) 0x61a - Right Trackpad Calibration value? Replaces 0x10000b88 if data is used.
-(uint16_t*) 0x61c - Right Trackpad Calibration value? Replaces 0x10000b8a if data is used.
-(uint16_t*) 0x61e - Right Trackpad Calibration value? Replaces 0x10000b8c if data is used.
-(uint16_t*) 0x620 - Right Trackpad Calibration value? Replaces 0x10000b8e if data is used.
-(uint16_t*) 0x622 - Right Trackpad Calibration value? Replaces 0x10000b90 if data is used.
-(uint16_t*) 0x624 - Right Trackpad Calibration value? Replaces 0x10000b92 if data is used.
+(uint16_t*) 0x602 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b70 if data is used.
+(uint16_t*) 0x604 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b72 if data is used.
+(uint16_t*) 0x606 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b74 if data is used.
+(uint16_t*) 0x608 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b76 if data is used.
+(uint16_t*) 0x60a - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b78 if data is used.
+(uint16_t*) 0x60c - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b7a if data is used.
+(uint16_t*) 0x60e - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b7c if data is used.
+(uint16_t*) 0x610 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b7e if data is used.
+(uint16_t*) 0x612 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b80 if data is used.
+(uint16_t*) 0x614 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b82 if data is used.
+(uint16_t*) 0x616 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b84 if data is used.
+(uint16_t*) 0x618 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b86 if data is used.
+(uint16_t*) 0x61a - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b88 if data is used.
+(uint16_t*) 0x61c - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b8a if data is used.
+(uint16_t*) 0x61e - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b8c if data is used.
+(uint16_t*) 0x620 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b8e if data is used.
+(uint16_t*) 0x622 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b90 if data is used.
+(uint16_t*) 0x624 - Right Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b92 if data is used.
 (uint16_t*) 0x626 - Magic Word 0xbadc Related to following 0x24 values being valid.
-(uint16_t*) 0x628 - Left Trackpad Calibration value? Replaces 0x10000b94 if data is used.
-(uint16_t*) 0x62a - Left Trackpad Calibration value? Replaces 0x10000b96 if data is used.
-(uint16_t*) 0x62c - Left Trackpad Calibration value? Replaces 0x10000b98 if data is used.
-(uint16_t*) 0x62e - Left Trackpad Calibration value? Replaces 0x10000b9a if data is used.
-(uint16_t*) 0x630 - Left Trackpad Calibration value? Replaces 0x10000b9c if data is used.
-(uint16_t*) 0x632 - Left Trackpad Calibration value? Replaces 0x10000b9e if data is used.
-(uint16_t*) 0x634 - Left Trackpad Calibration value? Replaces 0x10000ba0 if data is used.
-(uint16_t*) 0x636 - Left Trackpad Calibration value? Replaces 0x10000ba2 if data is used.
-(uint16_t*) 0x638 - Left Trackpad Calibration value? Replaces 0x10000ba4 if data is used.
-(uint16_t*) 0x63a - Left Trackpad Calibration value? Replaces 0x10000ba6 if data is used.
-(uint16_t*) 0x63c - Left Trackpad Calibration value? Replaces 0x10000ba8 if data is used.
-(uint16_t*) 0x63e - Left Trackpad Calibration value? Replaces 0x10000baa if data is used.
-(uint16_t*) 0x640 - Left Trackpad Calibration value? Replaces 0x10000bac if data is used.
-(uint16_t*) 0x642 - Left Trackpad Calibration value? Replaces 0x10000bae if data is used.
-(uint16_t*) 0x644 - Left Trackpad Calibration value? Replaces 0x10000bb0 if data is used.
-(uint16_t*) 0x646 - Left Trackpad Calibration value? Replaces 0x10000bb2 if data is used.
-(uint16_t*) 0x648 - Left Trackpad Calibration value? Replaces 0x10000bb4 if data is used.
-(uint16_t*) 0x64a - Left Trackpad Calibration value? Replaces 0x10000bb6 if data is used.
+(uint16_t*) 0x628 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b94 if data is used.
+(uint16_t*) 0x62a - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b96 if data is used.
+(uint16_t*) 0x62c - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b98 if data is used.
+(uint16_t*) 0x62e - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b9a if data is used.
+(uint16_t*) 0x630 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b9c if data is used.
+(uint16_t*) 0x632 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000b9e if data is used.
+(uint16_t*) 0x634 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000ba0 if data is used.
+(uint16_t*) 0x636 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000ba2 if data is used.
+(uint16_t*) 0x638 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000ba4 if data is used.
+(uint16_t*) 0x63a - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000ba6 if data is used.
+(uint16_t*) 0x63c - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000ba8 if data is used.
+(uint16_t*) 0x63e - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000baa if data is used.
+(uint16_t*) 0x640 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000bac if data is used.
+(uint16_t*) 0x642 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000bae if data is used.
+(uint16_t*) 0x644 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000bb0 if data is used.
+(uint16_t*) 0x646 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000bb2 if data is used.
+(uint16_t*) 0x648 - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000bb4 if data is used.
+(uint16_t*) 0x64a - Left Trackpad AnyMeas Compensation Default Value? Replaces 0x10000bb6 if data is used.
 
 (uint32_t*) 0x800 - Start of 0x400 bytes of Jingle Data. See [Jingle](../Jingle/README.md) for additional details.

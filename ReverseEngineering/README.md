@@ -24,6 +24,12 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Review all Trackpad related sim data now that I think we are looking at an AnyMeas configuration and usage
+    1. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for reference
+    1. Call out what looks like compensation data (and defaults that exist in EEPROM)
+    1. Revisit interrupt and understand how ADC channels are switched for each interrupt call
+    1. Revisit functions as registers are not necessarilly acting as defined by datasheet
+
 1. Code up equivalent of Valve's routine and see how trackpad reacts
     1. Use this data to further understand what Valve is doing
         1. Maybe it's Calibration or EMI related (i.e. adjusting when sensitivity of Trackpad DR)?
