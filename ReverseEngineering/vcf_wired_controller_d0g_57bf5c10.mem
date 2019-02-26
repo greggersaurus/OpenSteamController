@@ -131,10 +131,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000003 - Related to CT16B1?
  (uint8_t*) 0x10000004 - Related to CT16B1?
  (uint8_t*) 0x10000005 - Counter variable? Related to CT16B1?
- (uint8_t*) 0x10000006 - Related to Right Haptic and whether Haptic is setup
-			 as Intellimouse or gives Absolute Data Packets?
- (uint8_t*) 0x10000007 - Related to Left Haptic and whether Haptic is setup
-			 as Intellimouse or gives Absolute Data Packets?
+ (uint8_t*) 0x10000006 - Right Haptic Toggle Frequency (ElecFreq)
+ (uint8_t*) 0x10000007 - Left Haptic Toggle Frequency (ElecFreq)
 
  (uint8_t*) 0x10000008 - GPIO Bank/Group for TODO GPIO (PIO1_28)
  (uint8_t*) 0x10000009 - GPIO Number for TODO GPIO (PIO1_28)     
@@ -258,22 +256,38 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 Pointer to store xfer when bus is busy
 (uint32_t*) 0x100000c0 - static struct i2c_interface i2c[0].flags
 			 Flags used by I2C master and slave
- (uint8_t*) 0x100000c4 - Value written to register 0x05 of Right Trackpad ASIC
- (uint8_t*) 0x100000c5 - Value written to register 0x06 of Right Trackpad ASIC
- (uint8_t*) 0x100000c6 - Value written to register 0x07 of Right Trackpad ASIC
- (uint8_t*) 0x100000c7 - Value written to register 0x08 of Right Trackpad ASIC
- (uint8_t*) 0x100000c8 - Value written to register 0x09 of Right Trackpad ASIC
- (uint8_t*) 0x100000c9 - Value written to register 0x13 of Right Trackpad ASIC
- (uint8_t*) 0x100000ca - Value written to register 0x14 of Right Trackpad ASIC
- (uint8_t*) 0x100000cb - Value written to register 0x15 of Right Trackpad ASIC
- (uint8_t*) 0x100000cc - Value written to register 0x16 of Right Trackpad ASIC
- (uint8_t*) 0x100000cd - Value written to register 0x17 of Right Trackpad ASIC
- (uint8_t*) 0x100000ce - Value written to register 0x18 of Right Trackpad ASIC
- (uint8_t*) 0x100000cf - Value written to register 0x19 of Right Trackpad ASIC
- (uint8_t*) 0x100000d0 - Value written to register 0x1a of Right Trackpad ASIC
- (uint8_t*) 0x100000d1 - Value written to register 0x0a of Right Trackpad ASIC
- (uint8_t*) 0x100000d2 - Value written to register 0x0b of Right Trackpad ASIC
- (uint8_t*) 0x100000d3 - Value written to register 0x0e of Right Trackpad ASIC?
+ (uint8_t*) 0x100000c4 - Value written to register 0x05 (AnyMeas_AccumBits_ElecFreq) of Right Trackpad ASIC
+ (uint8_t*) 0x100000c5 - Value written to register 0x06 (AnyMeas_BitLength) of Right Trackpad ASIC
+ (uint8_t*) 0x100000c6 - Value written to register 0x07 (AnyMeas_ADC_MuxControl) of Right Trackpad ASIC
+ (uint8_t*) 0x100000c7 - Value written to register 0x08 (AnyMeas_ADC_Config2) of Right Trackpad ASIC
+ (uint8_t*) 0x100000c8 - Value written to register 0x09 (AnyMeas_ADC_AWidth) of Right Trackpad ASIC
+ (uint8_t*) 0x100000c9 - Value written to register 0x13 (AnyMeas_Toggle_31_24) of Right Trackpad ASIC
+ (uint8_t*) 0x100000ca - Value written to register 0x14 (AnyMeas_Toggle_23_16) of Right Trackpad ASIC
+ (uint8_t*) 0x100000cb - Value written to register 0x15 (AnyMeas_Toggle_15_8) of Right Trackpad ASIC
+ (uint8_t*) 0x100000cc - Value written to register 0x16 (AnyMeas_Toggle_7_0) of Right Trackpad ASIC
+ (uint8_t*) 0x100000cd - Value written to register 0x17 (AnyMeas_Polarity_31_24) of Right Trackpad ASIC
+ (uint8_t*) 0x100000ce - Value written to register 0x18 (AnyMeas_Polarity_23_16) of Right Trackpad ASIC
+ (uint8_t*) 0x100000cf - Value written to register 0x19 (AnyMeas_Polarity_15_8) of Right Trackpad ASIC
+ (uint8_t*) 0x100000d0 - Value written to register 0x1a (AnyMeas_Polarity_7_0) of Right Trackpad ASIC
+ (uint8_t*) 0x100000d1 - Value written to register 0x0a (AnyMeas_pADCMeasInfoStart_High_Byte) of Right Trackpad ASIC
+ (uint8_t*) 0x100000d2 - Value written to register 0x0b (AnyMeas_pADCMeasInfoStart_Low_Byte) of Right Trackpad ASIC
+ (uint8_t*) 0x100000d3 - Value written to register 0x0e (AnyMeas_Control_NumMeas) of Left Trackpad ASIC
+ (uint8_t*) 0x100000d4 - Value written to register 0x05 (AnyMeas_AccumBits_ElecFreq) of Left Trackpad ASIC
+ (uint8_t*) 0x100000d5 - Value written to register 0x06 (AnyMeas_BitLength) of Left Trackpad ASIC
+ (uint8_t*) 0x100000d6 - Value written to register 0x07 (AnyMeas_ADC_MuxControl) of Left Trackpad ASIC
+ (uint8_t*) 0x100000d7 - Value written to register 0x08 (AnyMeas_ADC_Config2) of Left Trackpad ASIC
+ (uint8_t*) 0x100000d8 - Value written to register 0x09 (AnyMeas_ADC_AWidth) of Left Trackpad ASIC
+ (uint8_t*) 0x100000d9 - Value written to register 0x13 (AnyMeas_Toggle_31_24) of Left Trackpad ASIC
+ (uint8_t*) 0x100000da - Value written to register 0x14 (AnyMeas_Toggle_23_16) of Left Trackpad ASIC
+ (uint8_t*) 0x100000db - Value written to register 0x15 (AnyMeas_Toggle_15_8) of Left Trackpad ASIC
+ (uint8_t*) 0x100000dc - Value written to register 0x16 (AnyMeas_Toggle_7_0) of Left Trackpad ASIC
+ (uint8_t*) 0x100000dd - Value written to register 0x17 (AnyMeas_Polarity_31_24) of Left Trackpad ASIC
+ (uint8_t*) 0x100000de - Value written to register 0x18 (AnyMeas_Polarity_23_16) of Left Trackpad ASIC
+ (uint8_t*) 0x100000df - Value written to register 0x19 (AnyMeas_Polarity_15_8) of Left Trackpad ASIC
+ (uint8_t*) 0x100000e0 - Value written to register 0x1a (AnyMeas_Polarity_7_0) of Left Trackpad ASIC
+ (uint8_t*) 0x100000e1 - Value written to register 0x0a (AnyMeas_pADCMeasInfoStart_High_Byte) of Left Trackpad ASIC
+ (uint8_t*) 0x100000e2 - Value written to register 0x0b (AnyMeas_pADCMeasInfoStart_Low_Byte) of Left Trackpad ASIC
+ (uint8_t*) 0x100000e3 - Value written to register 0x0e (AnyMeas_Control_NumMeas) of Left Trackpad ASIC
 
  (uint8_t*) 0x10000200 - GPIO Bank/Group for Haptic Enable GPIO (PIO1_7)
  (uint8_t*) 0x10000201 - GPIO Number for Haptic Enable GPIO (PIO1_7)
@@ -321,11 +335,11 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x1000023f - GPIO group/port for Left Trackpad ASIC Data Ready (PIO1_16)?
  (uint8_t*) 0x10000240 - GPIO number/offset for Right Trackpad ASIC Data Ready (PIO0_23).
  (uint8_t*) 0x10000241 - GPIO number/offset for Left Trackpad ASIC Data Ready (PIO1_16)?
- (uint8_t*) 0x10000242 - Enable for reading ASIC registers 0x11 and 0x12 in PINT3 ISR.
+ (uint8_t*) 0x10000242 - Enable for reading ASIC AnyMeas ADC values (registers 0x11 and 0x12) in PINT3 ISR.
  (uint8_t*) 0x10000243 - 0x10000242, but for PINT3/Left Trackpad?
 
  (uint8_t*) 0x10000246 - PINT3/Right Trackpad ASIC related. Counts how many times
-			 times ASIC registers 0x11 and 0x12 are read. Used as
+			 times AnyMeas ADC values  are read. Used as
 			 index of where to store values read from 0x11 and 0x12.
  (uint8_t*) 0x10000247 - 0x10000246, but for PINT4/Left Trackpad ASIC.
  (uint8_t*) 0x10000248 - PINT3/Right Trackpad ASIC Related. Value is inverted
@@ -344,6 +358,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x1000024d - 0x1000024c, but for PINT4/Left Trackpad ASIC.
  (uint8_t*) 0x1000024e - PINT3/Right Trackpad ASIC mode? Value relates to how 
 			 ISR reacts (i.e. when 0x1000024a is set).
+			 0 = compensation calculation?
+			 2 = normal operation?
  (uint8_t*) 0x1000024f - 0x1000024e, but for PINT4/Left Trackpad ASIC.
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
@@ -873,8 +889,10 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
  (uint8_t*) 0x10000a38 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 0 to PINT3. Shadow copy[0].
+			 AnyMeas ADC low byte read of ADC Address 0x1DF?
  (uint8_t*) 0x10000a39 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 0 to PINT3. Shadow copy[0].
+			 AnyMeas ADC high byte read of ADC Address 0x1DF?
  (uint8_t*) 0x10000a3a - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 1 to PINT3. Shadow copy[0].
  (uint8_t*) 0x10000a3b - Value of Right Trackpad ASIC Register 0x11, filled

@@ -26,160 +26,50 @@ This section is a running list of priorities to focus on in hopes of reaching
 
 1. Review all Trackpad related sim data now that I think we are looking at an AnyMeas configuration and usage
     1. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for reference
+        1. Add this to references in README?
+        1. Make README related to understanding Trackpad?
     1. Call out what looks like compensation data (and defaults that exist in EEPROM)
+        1. Could add more relating to correlation of memory and ADC address
     1. Revisit interrupt and understand how ADC channels are switched for each interrupt call
-    1. Revisit functions as registers are not necessarilly acting as defined by datasheet
+        1. Re-run for when 0x1000024e = 3
+    1. Use now better annotated sim data to better construct trackpad.c
+        1. Think through functions like updating toggle registers and how only writing to SPI should occur if reg value differes from local static
+    1. Compare sim results from trackpad.c output results and see if we need to resim anything
 
-1. Code up equivalent of Valve's routine and see how trackpad reacts
-    1. Use this data to further understand what Valve is doing
-        1. Maybe it's Calibration or EMI related (i.e. adjusting when sensitivity of Trackpad DR)?
-        1. Maybe it's just related to converting trackpad results to a different form (think back to complicated math for Joystick X/Y position)
+1. What about simulating with 0x20000008 flag set (i.e. after trackpad initialized)?
 
-1. Is ISR just always firing in this (possible) calibration mode?
-    1. Is there any path in ISR where ISR might not be firing (i.e. not clearing Trackpad ASIC registers or some global flag set to just exit ISR?)
-1. Consider how this all relates to 0x600 and 0x626 EEPROM data
-    1. If we code up Valve's routine what do we get from Trackpad ASIC v.s. what is in EEPROM?
-
-1. Need to better understand intentions of Trackpad ASIC init
-    1. Looks like maybe they are initially putting controllers into state to generate packets no matter what, so they can adjust EMI settings?
-    1. Go back and fill details on all memory areas related to Trackpads (i.e. follow the way indices are increased for each PINT3 ISR call as well as which buffer is being filled)
-    1. Start testing some of this with custom FW? (i.e. does 0x18 to SysConfig1 output data constantly? What does this data (reg 0x11 and 0x12) look like?)
-    1. Consider settings for variables not used or change so far...0x1000024e?
-    1. Consider how and when controller gets to state where trackpad is enabled (i.e. not writing 0x18 to SysConfig1)
-
-1. What about simulating with 0x20000008 flag set (i.e. after trackpad initialized?
-
-1. Understand Trackpad ASIC
-    1. For fnc0x00002be0() and fnc0x00002d9c() can we make sense of why registers are grouped these ways?
-1. Work through (simulate) options for inserting custom Jingle Data
-    1. Modify default Jingle Data read from firmware
-        1. Not Great: data is packed into firmware (i.e. all 0 bytes/words are not actually in firmware, but handled upon read in) and this is another level to understand (and which may not be consistent with never versions)
-    1. Modify firmware to read default Jingle Data from different location
-        1. Create Jingle Data blob (unpacked)
-        1. Write into unused section of firmware
-            1. Assumes we can detect unused section
-            1. Assumes contiguous 0x400 byte of unused space
-        1. Modify copy to 0x10001200 to read from flash instead of RAM
-            1. Will this actually work?
-    1. EEPROM non-default (assuming that is what is stored at 0x800 in EEPROM)
-        1. USB command (if it exists)
-            1. Need to simulate and see if this even possibly exists
-        1. DevBoard/CustomFW
-            1. Clunky having to use cli to input new data
-1. Work through options for creating custom Jingle Data
-    1. Extension for something like MusScore?
-        1. Need to find right software to extend to be helpful to maximum number of users
-    1. Custom SW
-        1. A lot of work and will probably still be hard to use
-    1. Better console commands
-        1. A lot of work and will probably still be hard to use
-1. TODO: clean this all up now that we have a complete (enough) understanding of the Haptic and Jingles
-1. Need more details on jingle and interrupt
-    1. How is offset to Jingle[n] deteremined?
-        1. Each jingle has maximum number of notes for right and left combined?
-    1. See if pilatomic singer can provide details on Note structure
-        1. Maybe it was the same for what is sent via USB?
-    1. Start filling out paths on CT32B0 interrupt code
-    1. Track down how interrupt handler transitions from one pulse to next
-        1. How does it know where to get pulse info from next?
-        1. How does it know when to stop?
-        1. What about this business of checking if the other haptic is active? (what if it isn't?!)
-1. Find where default jingle data is read from flash and written into RAM
-    1. void fnc0x00002a2a(arg0x00002a2a_0, arg0x00002a2a_1, arg0x00002a2a_2);
-    1. Also track down implication that non-default jingle could exist in EEPROM
-1. Dig through function that seems to be related to jingle (fnc0x00003934, fnc0x000079b0)
-    1. GPIO0_18 is activate for left haptic
-        1. Understand how PIO1_7 and PIO1_12 are enables (or not)
-        1. What about right haptic?
-    1. Need to simulate CT32B0 IRQ to figure out what actually makes haptic vibrate?
-        1. Make sure this gets captured appropriately in vcf_wired_controller_d0g_57bf5c10.c
-        1. Look back through PIO0_18 being set as input and being read...
-            1. Looks like this may be how haptics are activated?
-    1. Work back and see where values are being pulled from on-chip flash and try modifying?
-    1. Looks like there is also path where jingles can come from EEPROM... (i.e. looking for magic work 0xbead from 0x800 in EEPROM)????
-        1. Did Valve implement a USB function to write to EEPROM generically (or specifically for this purpose)?
+1. Jingle Sim related
+    1. Details on CT32B0 ISR based on simulation results?
+    1. Details on each function call
 1. Add I2C related handling function to gdbCmdFile and gdbCustomCmds
     1. Common sub-function in fnc0x00005fbc()?
-1. Dig into results of SPI intialization simulation data
-    1. May need to run more sim to try other paths (there may be some sort of EMI related calibration adjustment routine (which may explain results I was getting...))
-        1. What if PINT3/4 times out (i.e. fnc0x0000b97c())
-1. Handle all of the new simulation data in detail
-    1. Make sure it all ends up (cleanly) in vcf_wired_controller_d0g_57bf5c10.c file and each function has a description.
 1. Clean, clean, clean
     1. gdbCmdFile, gdbCustomCmds, gdbOldRef
     1. PINT3 dump
     1. Cleaning other ISRs and looping paths so that they make when I come back after I have forgotten everything.
-1. Clean, organize and (re-)assess items below:
+    1. Make sure all known functions have details in .h file
 
-1. Push through Right haptic init via gdbCmdFile, then fix pinkysim simplified logging?
-    1. Slowely convert to gdbCmdFile being single loop calling gdbCustomCmds to handle things dynamically
-        1. Add watchpoints for functions that are simply landmarks regarding how far we have made it??
-    1. Get all details togther on paths for PINT3 into vcf_wired_controller_d0g_57bf5c10.c
-    1. Go back and add landmarks for functions being called, etc. so we can find our way back through later (i.e. if we need to try a different path)
-        1. Add echos and fnc0x...() names and '{''}' to show how we simulate through certain function calls
-        1. Echo after each watch point?? (sometimes screen is just filled with watchpoints and we don't know where we are in execution...)
-    1. Consider writes to ASIC Reg 0x0E (dynamic EMI adjustments).
-        1. Is this why I was getting intermittment DR in my DevBoard tests??
-    1. Pay attention to ASIC Reg 0x0B (Z Scaler)
-        1. Is this why I was getting intermittment DR in my DevBoard tests??
-1. Update pinkySim simplified C output to handle pop's where registers are not restored (pop should still occur for value, but it will be lost, right?)
-    1. Seems that we need to handle special case of writing SP (reg13) and how that might wipe out values pushed onto it...
-    1. Perhaps solution is to remove each regs entry being an array and instead make a stack array that handles holding data dynamically
-        1. i.e. on push store value/string and const specifier to stack, on pop write those to register, on SP adjust... Do anything? (i.e. use SP value as way of calculating index into SP array?)
-        1. Make sure to have side-by-side test to see how simplified.c test output changes... (i.e. did we miss anything before or screw up anything with this *fix*)
-    1. Also think about special cases of setting LR and PC and other special registers and how we want to handle that??
-1. Check EEPROM read values at 0x800 and 0x600 on both controllers...
-    1. Update gdbCmdFile with values (see TODOs)
-1. Things to try immediately (see farther below for more details)
-    1. What if 0x100010d8 is >= 5?
-        1. Check main loop
-            1. This is leading us down a new path. Keep digging!
-        1. Check USB_Configure_Event and USB_Resume_Event
-    1. Revisit gdbCmdFile watchpoints
-        1. Rather than settings and removing watchpoints one by one, can we watch multiple and react differently based on pc?
-            1. This will make repeated steps that need intervention (i.e. skipping WriteEP or making it through SPI transactions) cleaner (less code duplication)
-        1. Can gdb command files have functions and loops?
-            1. Make functions to visit different IRQs and callbacks (so we are not constantly removing or changing code...)
-    1. Consider: How do we get to path where startup tune is sent to haptics?
-        1. Connecting to Linux causes jingle (just power over USB does not)
-            1. USB HID related exchange causes this to happen?
-        1. Compare usbmon connection capture to other HID devices?
-            1. Any special instruction that could point to jingle playing?
-        1. Note that trackpad being powered and Right being in mouse mode with haptic feedback occurs...
-            1. What is holding this up from happening if we seem to be in main loop and may even try to WriteEP for EP3...?
-    1. Look into getting details on fields in 0x10001100 struct EP3UpdateMsg
-        1, Look into what this contains when controller is connected with Valve FW (and no driver/Steam in new ubuntu vm)
-            1. Holes where trackpad data exist or accelerometer??
-    1. What about functions checking periph related to EP1 and EP2?
-        1. Are these not generating messages because nothing was perceived to change? Or is it just a different USB HID interface (i.e. not interrupt)?
-        1. Try re-running simulation with different inputs (i.e. related buttons pressed...)
-    1. Send 64 bytes message defined in https://gitlab.com/Pilatomic/SteamControllerSinger/blob/master/main.cpp to EP3_HID_GetReport (or is it SetReport??) Or is it EP1 or EP2?
-        1. We know from SteamControllerSinger that this causes haptics to vibrate
-            1. Info on how to communicate with haptics
-            1. Info on memory and setup related to haptics/SPI?
-    1. Is AD6 battery gauge/power?
-        1. Try putting dead (or nearly dead) battery in and checking
-            1. But maybe GPIOs, etc. need to be set differently?
+1. Send 64 bytes message defined in https://gitlab.com/Pilatomic/SteamControllerSinger/blob/master/main.cpp to EP3_HID_GetReport (or is it SetReport??) Or is it EP1 or EP2?
+    1. We know from SteamControllerSinger that this causes haptics to vibrate
+        1. Info on how to communicate with haptics
+        1. Info on memory and setup related to haptics/SPI?
+1. Is AD6 battery gauge/power?
+    1. Try putting dead (or nearly dead) battery in and checking
+        1. But maybe GPIOs, etc. need to be set differently?
 
-    1. (Fresh look) Make sure all valid paths in all enabled IRQs are covered
-        1. PINT3!!
-            1. Sets 0x1000024a to non-zero when complete?
-        1. PINT0
-        1. PINT1
-        1. PINT2
-        1. ADC
-        1. I2C0
-        1. CT16B0
-        1. USART0 
-        1. CT32B0
-    1. Decode functions from new sim data now that variable changed by SysTick handler moves us forward
-        1. Don't lose track of other variables checked in previous wfi path. They might still matter...
-    1. Dev Board comms with Radio Chip via UART
-        1. Monitor PIO1_5 and (anything else we can watch?) to check for change after sending same mesages?
-    1. Monitor GPIO1_5 when RF dongle is plugged in or not
-        1. Scope with official FW?
-    1. USB related callbacks (at leats resume one...)
-        1. Seems some variable related to wfi loop in main path may be related to USB (and maybe changed in callback functions?)
+1. Make TODOs for maybe in the future getting more details on following IRQs
+    1. PINT0
+    1. PINT1
+    1. I2C0
+    1. USART0 
+1. Decode functions from new sim data now that variable changed by SysTick handler moves us forward
+    1. Don't lose track of other variables checked in previous wfi path. They might still matter...
+1. Dev Board comms with Radio Chip via UART
+    1. Monitor PIO1_5 and (anything else we can watch?) to check for change after sending same mesages?
+1. Monitor GPIO1_5 when RF dongle is plugged in or not
+    1. Scope with official FW?
+1. USB related callbacks (at leats resume one...)
+    1. Seems some variable related to wfi loop in main path may be related to USB (and maybe changed in callback functions?)
 
 1. Consider converting project(s) to CPP
     1. What version does compiler support?
@@ -201,10 +91,6 @@ This section is a running list of priorities to focus on in hopes of reaching
         1. Where is firmware for Radio chip?
             1. How is this updated by Valve?
                 1. Check latest vcf as we know there was an update with latest firmware...?
-        1. Should focus be Focus on USB_VBUS = 0 instead of USB_VBUS = 1?
-            1. For USB_VBUS = 1 case jingle seems to be triggered by USB activity (i.e. driver probing/enumerating)
-            1. For USB_VBUS = 0 case jingle seems to be triggered by communicating with RF chip
-                1. Note that once controller has synced with RF dongle, plugging in USB does not change USB_VBUS...
     1. Low priority sections that we could have better understanding of
         1. ADC Math
             1. Simulate with AD0/2 and AD1/3 have realistic accumulation results?

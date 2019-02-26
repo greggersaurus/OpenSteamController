@@ -2048,7 +2048,7 @@ void fnc0x000047a4(arg0x000047a4_0);
 void fnc0x00009604(arg0x00009604_0);
 
 /**
- * Initialize Trackpad ASIC.
+ * Initialize a Trackpad ASIC.
  *
  * \param arg0x000074e8_0 Defines which Trackpad to initialize. 0 = Right,
  *	1 = Left.
@@ -2103,21 +2103,31 @@ void fnc0x00004cb0(arg0x00004cb0_0)
 void fnc0x0000777c(arg0x0000777c_0);
 
 /**
- * Update a number of ASIC Trackpad registers (0x05, 0x06, 0x07, 0x08, 0x09).
- *
- * TODO: params might make more sense if we understand why registers are grouped this way...
+ * Update Trackpad ASIC AnyMeas Registers Related to ADC configuration:
+ *	0x05 = AnyMeas_AccumBits_ElecFreq, 
+ *	0x06 = AnyMeas_BitLength
+ *	0x07 = AnyMeas_ADC_MuxControl
+ *	0x08 = AnyMeas_ADC_Config2
+ *	0x09 = AnyMeas_ADC_AWidth
  * 
  * \param arg0x00002be0_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
- * \param arg0x00002be0_1 Part of value used for updating register 0x05 (some 
- *	sort of compiler optimization?)
- * \param arg0x00002be0_2 Part of value used for updating register 0x05 (some 
- *	sort of compiler optimization?)
+ * \param arg0x00002be0_1 AnyMeas Accumulation Bits (i.e. Gain). 
+ *	0xC0 = lowest, 0x80 = 1.3x, 0x40 = 1.6x, 0x00 = 2x
+ * \param arg0x00002be0_2 AnyMeas Toggle Frequence (ElecFreq). 
+ *	0x02 = 500,000 Hz, 0x03 = 444,444 Hz, 0x04 = 400,000 Hz,
+ *	0x05 = 363,636 Hz, 0x06 = 333,333 Hz, 0x07 = 307,692 Hz,
+ *	0x09 = 267,000 Hz, 0x0B = 235,000 Hz
+ * \param arg0x00002be0_3 AnyMeas BitLength
+ * \param Stack[0] AnyMeas ADC MuxControl
+ * \param Stack[1] AnyMeas ADC Config2
+ * \param Stack[2] AnyMeas ADC AWidth
+ *	
  * \param bunch of stuff on stack used to update other registers...
  * 
  * \return None.
  */
-void fnc0x00002be0(arg0x00002be0_0, arg0x00002be0_1, arg0x00002be0_2);
+void fnc0x00002be0(arg0x00002be0_0, arg0x00002be0_1, arg0x00002be0_2, arg0x00002be0_3);
 
 /**
  * Update ASIC Trackpad register (check if value differs from shadow copy and 
@@ -2137,25 +2147,20 @@ void fnc0x00002be0(arg0x00002be0_0, arg0x00002be0_1, arg0x00002be0_2);
 void fnc0x0000c094(arg0x0000c094_0, arg0x0000c094_1, arg0x0000c094_2, arg0x0000c094_3);
 
 /**
- * Update a number of ASIC Trackpad registers (0x13, 0x014, 0x015, 0x16, 0x17, 
- *	0x18, 0x19, 0x1a, 0x0a, 0x0b, 0x0e) AND then read 0x10 and 0x11 and 
- *	concatenate into a single word and return result, though it never 
- *	seems to be used... Maybe registers are read to clear some state?
- * TODO: params might make more sense if we understand why registers are grouped this way...
+ * Similar to ADC_TakeMeasurement (https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino)
  * 
  * \param arg0x00002d9c_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
- * \param arg0x00002d9c_1 Related to values written to registers. 
- * \param arg0x00002d9c_2 Related to values written to registers. 
- * \param arg0x00002d9c_3 Right shift adjustment to be applied to return value.
+ * \param arg0x00002d9c_1 Toggle
+ * \param arg0x00002d9c_2 Polarity
+ * \param arg0x00002d9c_3 Right shift adjustment to be applied to 16-bit ADC value.
  * 
  * \return Values of Trackpad ASIC registers 0x10 and 0x11 concatenated. 
  */
 int32_t fnc0x00002d9c(arg0x00002d9c_0, arg0x00002d9c_1, arg0x00002d9c_2, arg0x00002d9c_3);
 
 /**
- * Initialze (clear) some variable and update Intellimouse v.s. Absolute Data 
- *	Packet settings for Trackpad ASIC
+ * Setup PINT3/4 to gather compensation data via AnyMeas ADC reads.
  * 
  * \param arg0x0000975c_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
@@ -2165,8 +2170,8 @@ int32_t fnc0x00002d9c(arg0x00002d9c_0, arg0x00002d9c_1, arg0x00002d9c_2, arg0x00
 void fnc0x0000975c(arg0x0000975c_0);
 
 /**
- * Update Trackpad ASIC registers 0x05, 0x0a, 0x0b, 0x0e. Sequence related to 
- *	changing Intellimouse v.s. Absolute Data Packets?
+ * Setup ADC reads for compensation calculations(?) (11 reads starting at ADC 
+ *	Address 0x01df).
  * 
  * \param arg0x00002c4c_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
@@ -2176,7 +2181,8 @@ void fnc0x0000975c(arg0x0000975c_0);
 void fnc0x00002c4c(arg0x00002c4c_0);
 
 /**
- * Update Trackpad ASIC settings for Intellimouse Packets v.s. Absolute Data Packets
+ * Update Trackpad Toggle Frequency (ElecFreq) based on global variable 
+ *	(i.e. 0x10000006/0x10000007).
  *
  * \param arg0x00003f3c_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
@@ -2186,9 +2192,9 @@ void fnc0x00002c4c(arg0x00002c4c_0);
 void fnc0x00003f3c(arg0x00003f3c_0);
 
 /**
- * Trackpad ASIC calibration routine?? Setup Trackpad ASIC in a particular
- *  way then monitor results captured via ISR. Results may be replaced by
- *  values from 0x600 or 0x626 in EEPROM.
+ * Trackpad ASIC compensation calculation routine. Setup Trackpad ASIC in a 
+ *  particular way then monitor results captured via ISR. Results may be 
+ *  replaced by values from 0x600 or 0x626 in EEPROM.
  *
  * \parma arg0x00007d6c_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
@@ -2198,8 +2204,7 @@ void fnc0x00003f3c(arg0x00003f3c_0);
 void fnc0x00007d6c(arg0x00007d6c_0)
 
 /**
- * Related to reading values from Trackpad ASIR registers via ISR and 
- *  accumulated/averaging results. Some sort of calibration routine maybe?
+ * Attempt to accumulate compensation data via AnyMeas ADC reads.
  *
  * \param arg0x00006cb8_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
@@ -2209,11 +2214,7 @@ void fnc0x00007d6c(arg0x00007d6c_0)
 int fnc0x00006cb8(arg0x00006cb8_0);
 
 /**
- * Wait for PINT3/4 (i.e. Right/Left Trackpad DR ISR) to fire enough times (i.e.
- *  for reading Trackpad ASIC register 0x11 and 0x12 and each time storing the
- *  read values to the next spot in an array). 
- * TODO: can ISR be setup to read other registers?
- * TODO: What are registers 0x11 and 0x12?
+ * Wait for a sequence of AnyMeas ADC reads to take place via PINT3/4.
  *
  * \param arg0x00002c4c_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
@@ -2236,7 +2237,7 @@ int fnc0x0000b97c(arg0x0000b97c_0, arg0x0000b97c_1);
 int32_t fnc0x00005a24(arg0x00005a24_0);
 
 /**
- * Read from EEPROM, related to Trackpad ASIC calibration/setup?
+ * Read from EEPROM, related to Trackpad ASIC compensation.
  *
  * \param arg0x0000863c_0 Offset from base address where to read EEPROM 0x00 
  *	for Right Trackpad. 0x26 for Left Trackpad.
@@ -2249,17 +2250,17 @@ int32_t fnc0x00005a24(arg0x00005a24_0);
 void fnc0x0000863c(arg0x0000863c_0, arg0x0000863c_1, arg0x0000863c_2);
 
 /**
- * Set 0x1000024e=2 and update some Trackpad ASIC registers.
+ * Setup Trackpad ASIC to capture AnyMeas ADC results for normal operation?
  *
- * \param arg0x0000977c_0 Offset from base address where to read EEPROM 0x00 
- *	for Right Trackpad. 0x26 for Left Trackpad.
+ * \param arg0x0000977c_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
  *
  * \return None.
  */
 void fnc0x0000977c(arg0x0000977c_0);
 
 /**
- * Update some Trackpad ASIC registers after changing 0x1000024e=2.
+ * Update some Trackpad ASIC registers related to normal AnyMeas operations?
  *
  * \param arg0x00002d14_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
@@ -2283,8 +2284,8 @@ void fnc0x00005402();
 void fnc0x0000763c();
 
 /**
- * Read Trackpad ASIC registers 0x11 and 0x12, save results (to globals), and 
- *	clear Trackpad ASIC flags 
+ * Read Trackpad ASIC AnyMeas ADC value (registers 0x11 and 0x12), save results 
+ *	(to proper index in global array), and clear Trackpad ASIC flags 
  *
  * \param arg0x0000573c_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
@@ -2296,6 +2297,7 @@ void fnc0x0000573c(arg0x0000573c_0);
 /**
  * Called in PINT3. Exit related code and setting of variables based on
  *  conditions (i.e. ISR has run enough times that global data is valid).
+ * Changes 
  *
  * \param arg0x00009798_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
@@ -2305,9 +2307,9 @@ void fnc0x0000573c(arg0x0000573c_0);
 void fnc0x00009798(arg0x00009798_0);
 
 /**
- * Update some Trackpad ASIC registers and adjust EMI settings?
- * Similar to fnc0x00002c4c
- * Called by PINT3 if ISR has fired 10 times
+ * Part 2 of ADC reads for compensation calculations(?) (8 reads starting at ADC 
+ *	Address 0x015b). Called in PINT3/4 after ADC reads setup by 
+ *	fnc0x00002c4c() have completed.
  *
  * \param arg0x00002c82_0 Specifies which Trackpad ASIC to communicate with.
  *	0 = Right, 1 = Left.
