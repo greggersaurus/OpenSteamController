@@ -10,6 +10,8 @@ All the information in this document was deciphered via reverse engingineering
  Valve's official firmware. Refer to the 
  [Reverse Engineering](../ReverseEngineering/) subproject for details.
 
+TODO: mention jingle_data.c and how that is an implementation of the data captured here (also mention haptic.c as it details how haptics are controlled to produce Jingle)
+
 
 # Jingle Data Format
 
@@ -92,7 +94,21 @@ This section details different approaches for allowing a user to customize
 
 TODO: mention changing packed data in firmware, or changing assembly to read blob from previously empty section of firmware that we fill in with custom data
 
+For Firmware vcf_wired_controller_d0g_57bf5c10.bin:
+	(uint32_t*)0x000065d0 Stores how many bytes are in default Jingle Data (i.e. 0x3fa or 0x400)
+	(uint32_t*)0x000065d4 Stores location of where Jingle Data resides (i.e. 0x100003b8, which could be changed to address in flash that we fill with custom data...?)
+
 ### Approach
+
+1. Modify default Jingle Data read from firmware
+    1. Not Great: data is packed into firmware (i.e. all 0 bytes/words are not actually in firmware, but handled upon read in) and this is another level to understand (and which may not be consistent with never versions)
+1. Modify firmware to read default Jingle Data from different location
+    1. Create Jingle Data blob (unpacked)
+    1. Write into unused section of firmware
+        1. Assumes we can detect unused section
+        1. Assumes contiguous 0x400 byte of unused space
+    1. Modify copy to 0x10001200 to read from flash instead of RAM
+        1. Will this actually work?
 
 ### Risks
 
@@ -104,6 +120,11 @@ This approach leverages the fact that the official firmware checks EEPROM to
  have custom Jingles without needing to modifying the official firmware. 
 
 ### Approach
+
+1. USB command (if it exists)
+    1. Need to simulate and see if this even possibly exists
+1. DevBoard/CustomFW
+    1. Clunky having to use cli to input new data
 
 ### Risks
 
