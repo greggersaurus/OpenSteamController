@@ -79,6 +79,8 @@ This is a running list of items I would like to prioritize and not lose track
         1. Let's see what AnyMeas data looks like and if we can understand it
         1. Maybe this is necessary, given how poorly the default performance seemed to work... (or maybe there was something else going on related to bad performance in default mode?)
         1. Easiest approach may be to replicate what Valve does as accurately as possible (now that we understand AnyMeas mode a little more) and (try to) understand and use that data
+        1. Biggest risk/disconnect, is not understanding what each "ADC" relates to and how to use those values...
+            1. Hopefully DEV_KIT build will help with understanding this...
 1. Revisist console/CDC uart
     1. Make regression tests (i.e. testPrint)
         1. Buffer overflow related
@@ -95,9 +97,9 @@ This is a running list of items I would like to prioritize and not lose track
 1. Dig into infinite pulse on haptic bug
     1. There was a bug where Note was pointing to bogus data that resulted in a interrupt that never seemed to end
         1. Need bounds check on how interrupt variables are setup to stop this from happening???
-1. Make all functions have usage 
+1. Make sure all functions have usage 
 1. Get controller to act as PowerA wired
-    1. Clean up naming in changes...
+    1. Clean up (i.e. naming changes...)
 1. Add details on different firmware build types (i.e. intentions and commands/control layouts)
 1. Add details for each specific firwmare build type to this README
 1. Check clean build works (i.e. from fresh clone)
