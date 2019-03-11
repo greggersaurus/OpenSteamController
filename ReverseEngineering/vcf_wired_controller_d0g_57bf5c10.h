@@ -2048,7 +2048,7 @@ void fnc0x000047a4(arg0x000047a4_0);
 void fnc0x00009604(arg0x00009604_0);
 
 /**
- * Initialize a Trackpad ASIC.
+ * Setup Trackpad ASIC (i.e. Configure registers, calibration, setup ISR).
  *
  * \param arg0x000074e8_0 Defines which Trackpad to initialize. 0 = Right,
  *	1 = Left.

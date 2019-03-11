@@ -25,16 +25,22 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Review all Trackpad related sim data now that I think we are looking at an AnyMeas configuration and usage
-    1. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for reference
-        1. Add this to references in README?
-        1. Make README related to understanding Trackpad?
-    1. Call out what looks like compensation data (and defaults that exist in EEPROM)
-        1. Could add more relating to correlation of memory and ADC address
     1. Revisit interrupt and understand how ADC channels are switched for each interrupt call
+        1. Revisit and pay attention to how ADC channel (and number of ADC channels sampled) is changed before changing value of 0x1000024e
+           1. Maybe, 0 = calibration, 2 = ?? measurement mode, 3 = ?? measurement mode?
         1. Re-run for when 0x1000024e = 3
+            1. Summarize thoughts on this and for other values
+                1. When =2 or =3 seems to only be paying attention to one "ADC" why?
     1. Use now better annotated sim data to better construct trackpad.c
         1. Think through functions like updating toggle registers and how only writing to SPI should occur if reg value differes from local static
+            1. Group functions for updating similar registers...
     1. Compare sim results from trackpad.c output results and see if we need to resim anything
+
+    1. Call out what looks like compensation data (and defaults that exist in EEPROM)
+        1. Could add more relating to correlation of memory and ADC address (and compensation matrices?)
+    1. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for reference
+        1. Add this to references in README?
+        1. Make README related to understanding Trackpad? (or trackpad.c is enough?)
 
 1. What about simulating with 0x20000008 flag set (i.e. after trackpad initialized)?
 

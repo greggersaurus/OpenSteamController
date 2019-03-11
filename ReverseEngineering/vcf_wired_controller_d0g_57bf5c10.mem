@@ -271,7 +271,7 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x100000d0 - Value written to register 0x1a (AnyMeas_Polarity_7_0) of Right Trackpad ASIC
  (uint8_t*) 0x100000d1 - Value written to register 0x0a (AnyMeas_pADCMeasInfoStart_High_Byte) of Right Trackpad ASIC
  (uint8_t*) 0x100000d2 - Value written to register 0x0b (AnyMeas_pADCMeasInfoStart_Low_Byte) of Right Trackpad ASIC
- (uint8_t*) 0x100000d3 - Value written to register 0x0e (AnyMeas_Control_NumMeas) of Left Trackpad ASIC
+ (uint8_t*) 0x100000d3 - Value written to register 0x0e (AnyMeas_Control_NumMeas) of Right Trackpad ASIC
  (uint8_t*) 0x100000d4 - Value written to register 0x05 (AnyMeas_AccumBits_ElecFreq) of Left Trackpad ASIC
  (uint8_t*) 0x100000d5 - Value written to register 0x06 (AnyMeas_BitLength) of Left Trackpad ASIC
  (uint8_t*) 0x100000d6 - Value written to register 0x07 (AnyMeas_ADC_MuxControl) of Left Trackpad ASIC
