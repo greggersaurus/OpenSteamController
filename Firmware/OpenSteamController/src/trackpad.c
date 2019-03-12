@@ -31,6 +31,7 @@
 #include "chip.h"
 #include "ssp_11xx.h"
 #include "time.h"
+#include "usb.h"
 
 #include <stdio.h>
 
@@ -532,7 +533,7 @@ static int32_t takeAdcMeasPinnacle(Trackpad trackpad, uint32_t toggle,
 	setNumMeasPinnacle(trackpad, 1);
 
 	// Start the measurement
-	writePinnacleReg(R_TRACKPAD, TPAD_SYSCFG1_ADDR, 
+	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
 
 	usleep(2 * 1000);
@@ -576,6 +577,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_TRACKDIS_BIT);
 	
+	// Delay after track disable to allow for tracking operations to finish 
 	usleep(10 * 1000);
 
 	clearFlagsPinnacle(trackpad);
@@ -909,122 +911,149 @@ void trackpadCmdUsage(void) {
  * \return 0 on success.
  */
 int trackpadCmdFnc(int argc, const char* argv[]) {
-	int retval = 0;
 
-	// Reset right trackpad ASIC
-	writePinnacleReg(R_TRACKPAD, 0x03, 0x01);
+	Trackpad trackpad = R_TRACKPAD;
 
-	printf("Reset ASIC\n");
-
-	// Sleep
-	for (volatile int cnt = 0; cnt < 0x20000; cnt++) {
-	}
-
-	uint8_t status1 = 0;
-
-	while (status1 != 0x08) {
-		status1 = readPinnacleReg(R_TRACKPAD, 0x02);
-
-		printf("status1 = 0x%02x\n", status1);
-	}
-
-	// Clear HW_DR
-	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
-
-
-	//TODO: sleep
-
-
-	uint8_t fw_asic_id = readPinnacleReg(R_TRACKPAD, 0x00);
-
-	printf("fw_asic_id = 0x%02x\n", fw_asic_id);
-
-	uint8_t fw_ver = readPinnacleReg(R_TRACKPAD, 0x01);
-
-	printf("fw_ver = 0x%02x\n", fw_ver);
-
-	// Set undocument bit, normal mode, active, no reset
-	writePinnacleReg(R_TRACKPAD, 0x03, 0x08);
-
-
-	//TODO: sleep
-
-
-	// Clear HW_DR
-	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
-
-	// Enable Intellimouse, etc.
-	writePinnacleReg(R_TRACKPAD, 0x05, 0x00);
-
-	// FeedConfig3
-	writePinnacleReg(R_TRACKPAD, 0x06, 0x00);
-
-	// CalConfig1
-	writePinnacleReg(R_TRACKPAD, 0x07, 0x00);
-
-	// PS/2 Aux Control
-	writePinnacleReg(R_TRACKPAD, 0x08, 0x00);
-
-	return 0;
-
-//TODO
-	uint8_t data[5];
-
-	data[0] = readPinnacleReg(R_TRACKPAD, 0x00);
-	data[1] = readPinnacleReg(R_TRACKPAD, 0x01);
-
-	printf("Firmware ID = 0x%02x\n", data[0]);
-	printf("Firmware Version = 0x%02x\n\n", data[1]);
-
-	// Wait for trackpad to say it has new data
-	while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {
-		//printf("DR Low for Right Trackpad\n");
-	}
-
-	// Clear Flags 
-	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
-	// Configures SysConfig1(normal mode, active)
-	writePinnacleReg(R_TRACKPAD, 0x03, 0x00);
-	// Configures FeedConfig2(disable relative mode features)
-	writePinnacleReg(R_TRACKPAD, 0x05, 0x1F);
-	// Configures FeedConfig1(absolute mode, enable feed)
-	writePinnacleReg(R_TRACKPAD, 0x04, 0x03);
-	// Configures Z-idle
-	writePinnacleReg(R_TRACKPAD, 0x0A, 0x05);
-
-// TODO: This shouldn't just lockup and loop like this... Provide exit capability (maybe even clearing/backspacing on screen to stop infinite scroll?)
-// 	This does seem to give sane data, but it is kind of sporadic (i.e. you might get no samples, even if finger is down).
-//	When samples are coming in data seems to track finger location properly. Probably more settings needed here for this to work better??
-//	(i.e. sensitivity or sample timing? Look into what might be going on here? Or maybe this has to do with pull-down on GPIO being too strong?)
-//
-// 	Ideas of where the problem lies:
-//		1. Bad Setup - Reverse engineering Valve's setup procedure for different modes (i.e. intellimouse)
-//		2. Printing is leading to too long a delay in handling new data which messes things up...
-while(1) {
-
-	// Wait for trackpad to say it has new data
-	while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {
-		printf("DR Low for Right Trackpad\n");
-	}
-
-	data[0] = readPinnacleReg(R_TRACKPAD, 0x12);
-	data[1] = readPinnacleReg(R_TRACKPAD, 0x14);
-	data[2] = readPinnacleReg(R_TRACKPAD, 0x15);
-	data[3] = readPinnacleReg(R_TRACKPAD, 0x16);
-	data[4] = readPinnacleReg(R_TRACKPAD, 0x17);
+	printf("Firmware ID = 0x%02x\n", readPinnacleReg(trackpad, TPAD_FW_ID_ADDR));
+	printf("Firmware Version = 0x%02x\n", readPinnacleReg(trackpad, TPAD_FW_VER_ADDR));
 
 /*
-	printf("ABS Data Packets = 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n\n",
-		data[0], data[1], data[2], data[3], data[4]);
+	while (!usb_tstc()) {
+		// Get first 11 measurements...
+		setAdcStartAddrPinnacle(trackpad, 0x01df);
+		setNumMeasPinnacle(trackpad, 11);
+
+		// Start the measurement
+		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
+
+		for (int cnt = 0; cnt < 11; cnt++) {
+			// Wait for trackpad to say it has new data                             
+			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
+				//printf("DR Low for Right Trackpad\n");                        
+			}
+
+			printf("% 5d ", (int16_t)getPinnacleAdcAndClr(trackpad));
+		}
+
+		// Get next 8 measurements...
+		setAdcStartAddrPinnacle(trackpad, 0x015b);
+		setNumMeasPinnacle(trackpad, 8);
+
+		// Start the measurement
+		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
+
+		for (int cnt = 0; cnt < 8; cnt++) {
+			// Wait for trackpad to say it has new data                             
+			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
+				//printf("DR Low for Right Trackpad\n");                        
+			}
+
+			printf("% 5d ", (int16_t)getPinnacleAdcAndClr(trackpad));
+		}
+		printf("\r");
+
+		usleep(50 * 1000);
+	}
 */
 
-	uint16_t x = (0xF&data[3]) << 8 | data[1];
-	uint16_t y = (0xF0&data[3]) << 4 | data[2];
-	printf("x = %d, y = %d, z = %d\n", x, y, data[4]);
+	
+	int comps[19];
+	int comp_idx = 0;
+	memset(comps, 0, 19*sizeof(int));
 
-	// Clear Flags 
-	writePinnacleReg(R_TRACKPAD, 0x02, 0x00);
-}
+	for (int avg_cnt = 0; avg_cnt < 16; avg_cnt++) {
+		comp_idx = 0;
+
+		// Get first 11 measurements...
+		setAdcStartAddrPinnacle(trackpad, 0x01df);
+		setNumMeasPinnacle(trackpad, 11);
+
+		// Start the measurement
+		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
+
+		for (int cnt = 0; cnt < 11; cnt++) {
+			// Wait for trackpad to say it has new data                             
+			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
+				//printf("DR Low for Right Trackpad\n");                        
+			}
+
+			comps[comp_idx] += (int16_t)getPinnacleAdcAndClr(trackpad);
+			comp_idx++;
+		}
+
+		// Get next 8 measurements...
+		setAdcStartAddrPinnacle(trackpad, 0x015b);
+		setNumMeasPinnacle(trackpad, 8);
+
+		// Start the measurement
+		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
+
+		for (int cnt = 0; cnt < 8; cnt++) {
+			// Wait for trackpad to say it has new data                             
+			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
+				//printf("DR Low for Right Trackpad\n");                        
+			}
+
+			comps[comp_idx] += (int16_t)getPinnacleAdcAndClr(trackpad);
+			comp_idx++;
+		}
+	}
+
+	for (int idx = 0; idx < 19; idx++) {
+		comps[idx] /= 16;
+		printf("0x%04x ", comps[idx]);
+	}
+	printf("\n");
+
+	int vals_idx = 0;
+	while (!usb_tstc()) {
+		vals_idx = 0;
+
+		// Get first 11 measurements...
+		setAdcStartAddrPinnacle(trackpad, 0x01df);
+		setNumMeasPinnacle(trackpad, 11);
+
+		// Start the measurement
+		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
+
+		for (int cnt = 0; cnt < 11; cnt++) {
+			// Wait for trackpad to say it has new data                             
+			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
+				//printf("DR Low for Right Trackpad\n");                        
+			}
+
+			int val = (int16_t)getPinnacleAdcAndClr(trackpad);
+			printf("% 5d ", val - comps[vals_idx]);
+			vals_idx++;
+		}
+
+		// Get next 8 measurements...
+		setAdcStartAddrPinnacle(trackpad, 0x015b);
+		setNumMeasPinnacle(trackpad, 8);
+
+		// Start the measurement
+		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
+
+		for (int cnt = 0; cnt < 8; cnt++) {
+			// Wait for trackpad to say it has new data                             
+			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
+				//printf("DR Low for Right Trackpad\n");                        
+			}
+
+			int val = (int16_t)getPinnacleAdcAndClr(trackpad);
+			printf("% 5d ", val - comps[vals_idx]);
+			vals_idx++;
+		}
+		printf("\r");
+
+		usleep(50 * 1000);
+	}
 
 	return 0;
 }
