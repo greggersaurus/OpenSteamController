@@ -137,6 +137,8 @@ void stage2Init(uint32_t hwVersion){
 
 	// Enables clock for GPIO port registers via system clock control register
 	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_GPIO);
+	// Enable clock for PINT[0] to PINT[7]
+	Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_PINT);
 
 	// Check state of PIO0_3 (USB voltage detected) 
 	uint8_t usb_volt_detect = Chip_GPIO_ReadPortBit(LPC_GPIO, 0 , 3);

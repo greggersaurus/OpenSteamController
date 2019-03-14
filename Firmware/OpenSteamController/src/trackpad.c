@@ -32,8 +32,10 @@
 #include "ssp_11xx.h"
 #include "time.h"
 #include "usb.h"
+#include "eeprom_access.h"
 
 #include <stdio.h>
+#include <string.h>
 
 static LPC_SSP_T* spiRegs = LPC_SSP0;
 
@@ -51,6 +53,22 @@ typedef enum Trackpad_t {
 #define GPIO_L_TRACKPAD_CS_N 1, 6
 #define GPIO_L_TRACKPAD_DR 1, 16
 
+#define PINT_R_TRACKPAD 3
+#define PINT_L_TRACKPAD 4
+
+#define NUM_ANYMEAS_ADCS (19) //!< Number of ADC channels read in AnyMeas
+	//!< mode
+
+static int16_t tpadAdcComps[2][NUM_ANYMEAS_ADCS]; //!< Compensation values 
+	//!< for ADC channels read from trackpad in AnyMeas mode. There are 19
+	//!< channels read for each of the two trackpads.
+static volatile int16_t tpadAdcDatas[2][NUM_ANYMEAS_ADCS]; //!< The ADC 
+	//!< values most recently read via ISR.
+static volatile int tpadAdcIdxs[2]; //!< Used to track where next ADC value
+	//!< read from ISR should be written in tpad_adc_datas.
+
+// Trackpad ASIC Registers:
+//TODO: Specify AnyMeas v.s. Normal?
 #define TPAD_FW_ID_ADDR (0x00)
 #define TPAD_FW_VER_ADDR (0x01)
 #define TPAD_STATUS1_ADDR (0x02)
@@ -278,7 +296,7 @@ static void writePinnacleExtRegs(Trackpad trackpad, uint16_t addr, uint8_t len,
  *
  * \return The ADC value.
  */
-static uint16_t getPinnacleAdcAndClr(Trackpad trackpad) {
+static int16_t getPinnacleAdcAndClr(Trackpad trackpad) {
 	Chip_SSP_DATA_SETUP_T xf_setup;
 	uint8_t tx_data[7];
 	uint8_t rx_data[7];
@@ -541,6 +559,32 @@ static int32_t takeAdcMeasPinnacle(Trackpad trackpad, uint32_t toggle,
 	int16_t retval = getPinnacleAdcAndClr(trackpad);
 
 	return (int32_t)(retval >> adjust);
+}
+
+//TODO: rename function? too similar to register access one?
+/**
+ * Request all NUM_ANYMEAS_ADCS ADC values be read. Return once tpadAdcDatas
+ *  has the latest data.
+ * 
+ * \param trackpad Specifies which trackpad to communicate with. 
+ *
+ * \return None.
+ */
+void getPinnacleAdcVals(Trackpad trackpad) {
+	tpadAdcIdxs[trackpad] = 0;
+
+	// Request first 11 measurements.
+	setAdcStartAddrPinnacle(trackpad, 0x01df);
+	setNumMeasPinnacle(trackpad, 11);
+
+	// Start the measurement
+	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+		TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
+
+	// Wait for ADC reads to complete
+	while (tpadAdcIdxs[trackpad] < NUM_ANYMEAS_ADCS) {
+		__WFI();
+	}
 }
 
 /**
@@ -814,8 +858,39 @@ static void setupTrackpad(Trackpad trackpad) {
 	
 	clearFlagsPinnacle(trackpad);
 
-// TODO: resume at line 121865
-	// This is where we start setting up PINT3/4
+	// Setting PINT so we can react to PINT rising edge
+	if (trackpad == R_TRACKPAD) {
+		Chip_SYSCTL_SetPinInterrupt(PINT_R_TRACKPAD, GPIO_R_TRACKPAD_DR);
+		Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_R_TRACKPAD));
+		Chip_PININT_EnableIntHigh(LPC_PININT, PININTCH(PINT_R_TRACKPAD));
+		NVIC_ClearPendingIRQ(PIN_INT3_IRQn);
+		NVIC_EnableIRQ(PIN_INT3_IRQn);
+		NVIC_SetPriority(PIN_INT3_IRQn, 3);
+	} else if (trackpad == L_TRACKPAD) {
+		Chip_SYSCTL_SetPinInterrupt(PINT_L_TRACKPAD, GPIO_L_TRACKPAD_DR);
+		Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_L_TRACKPAD));
+		Chip_PININT_EnableIntHigh(LPC_PININT, PININTCH(PINT_L_TRACKPAD));
+		NVIC_ClearPendingIRQ(PIN_INT4_IRQn);
+		NVIC_EnableIRQ(PIN_INT4_IRQn);
+		NVIC_SetPriority(PIN_INT4_IRQn, 3);
+	}
+
+	// Compute compensation values (i.e. average value of ADCs, assuming
+	//  no input during initialization).
+	int comp_accums[NUM_ANYMEAS_ADCS];
+	memset(comp_accums, 0, sizeof(int) * NUM_ANYMEAS_ADCS);
+
+	for (int comp_cnt = 0; comp_cnt < 16; comp_cnt++) {
+		getPinnacleAdcVals(trackpad);
+
+		for (int comp_idx = 0; comp_idx < NUM_ANYMEAS_ADCS; comp_idx++) {
+			comp_accums[comp_idx] += tpadAdcDatas[trackpad][comp_idx];
+		}
+	}
+
+	for (int comp_idx = 0; comp_idx < NUM_ANYMEAS_ADCS; comp_idx++) {
+		tpadAdcComps[trackpad][comp_idx] = comp_accums[comp_idx] / 16;
+	}
 }
 
 /**
@@ -872,20 +947,55 @@ void initTrackpad(void) {
 	setupTrackpad(L_TRACKPAD);
 }
 
-void SSP1_IRQHandler (void) {
-	//TODO: Setup to react to SPI transaction complete?
+/**
+ * Function to be called by ISR to handle next ADC value.
+ * 
+ * \param trackpad Specifies which trackpad to communicate with. 
+ * 
+ * \return None.
+ */
+void getNextPinnacleAdcValIsr(Trackpad trackpad) {
+	volatile int16_t* tpad_adc_datas = tpadAdcDatas[trackpad];
+	int tpad_adc_idx = tpadAdcIdxs[trackpad];
+
+	tpad_adc_datas[tpad_adc_idx] = getPinnacleAdcAndClr(trackpad);
+	tpad_adc_idx++;
+
+	if (tpad_adc_idx == 11) {
+		// Request next 8 measurements...
+		setAdcStartAddrPinnacle(trackpad, 0x015b);
+		setNumMeasPinnacle(trackpad, 8);
+
+		// Start the measurement
+		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
+	}
+
+	tpadAdcIdxs[trackpad] = tpad_adc_idx;
 }
 
-// 3 - GPIO pin interrupt 3
-// Right Haptic DR
+/**
+ * ISR for 3 - GPIO pin interrupt 3, which occurs on rising edge of Right 
+ *  Haptic DR.
+ * 
+ * \return None.
+ */
 void FLEX_INT3_IRQHandler(void) {
-	//TODO: Setup to react to data ready pin rising edge?
+	Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_R_TRACKPAD));
+
+	getNextPinnacleAdcValIsr(R_TRACKPAD);
 }
 
-// 4 - GPIO pin interrupt 4
-// Left Haptic DR
+/**
+ * ISR for 4 - GPIO pin interrupt 4, which occurs on rising edge of Left 
+ *  Haptic DR.
+ * 
+ * \return None.
+ */
 void FLEX_INT4_IRQHandler(void) {
-	//TODO: Setup to react to data ready pin rising edge?
+	Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_L_TRACKPAD));
+
+	getNextPinnacleAdcValIsr(L_TRACKPAD);
 }
 
 /**
@@ -912,10 +1022,31 @@ void trackpadCmdUsage(void) {
  */
 int trackpadCmdFnc(int argc, const char* argv[]) {
 
-	Trackpad trackpad = R_TRACKPAD;
+	Trackpad trackpad = L_TRACKPAD;
 
 	printf("Firmware ID = 0x%02x\n", readPinnacleReg(trackpad, TPAD_FW_ID_ADDR));
 	printf("Firmware Version = 0x%02x\n", readPinnacleReg(trackpad, TPAD_FW_VER_ADDR));
+
+	int16_t eeprom_comps[NUM_ANYMEAS_ADCS];
+	if (trackpad == R_TRACKPAD) {
+		eepromRead(0x602, eeprom_comps, sizeof(eeprom_comps));
+	} else {
+		eepromRead(0x628, eeprom_comps, sizeof(eeprom_comps));
+	}
+
+	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+		printf("comps[%d] = %d %d\n", idx, tpadAdcComps[trackpad][idx], eeprom_comps[idx]);
+	}
+	
+	while (!usb_tstc()) {
+		getPinnacleAdcVals(trackpad);
+		for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+			printf("% 5d ", tpadAdcDatas[trackpad][idx] - tpadAdcComps[trackpad][idx]);
+		}
+		printf("\r");
+
+		usleep(50 * 1000);
+	}
 
 /*
 	while (!usb_tstc()) {
@@ -959,6 +1090,7 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 */
 
 	
+/*
 	int comps[19];
 	int comp_idx = 0;
 	memset(comps, 0, 19*sizeof(int));
@@ -1054,6 +1186,7 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 
 		usleep(50 * 1000);
 	}
+*/
 
 	return 0;
 }

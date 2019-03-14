@@ -72,6 +72,16 @@ This is a running list of items I would like to prioritize and not lose track
  of.
 
 1. Get trackpad functionality working
+    1. Think through why Valve is using AnyMeas mode
+        1. Power savings? More granular control?
+        1. Maybe "normal" mode works fine, it's just the way I was monitoring DR (or DR only gets pulled high for a little while??)
+            1. Get PINT3 working in both AnyMeas and "normal" mode and see if we can't just use "normal" mode to press on (for now)
+                1. Save understanding and using AnyMeas mode for future work
+    1. Understand AnyMeas data
+        1. Verify this is the correct data by comparing ALL EEPROM compensation defaults
+        1. Methodically check behavior of each ADC result at different touch points on trackpad
+        1. Do this all via PINT3/4
+
     1. Valve's firmware seems to be using the Trackpads in AnyMeas mode
         1. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for additional details
     1. In this way the controller gets the raw ADC data and can do what it wants with it
