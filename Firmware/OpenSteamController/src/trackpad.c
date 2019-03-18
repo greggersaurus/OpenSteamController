@@ -37,6 +37,17 @@
 #include <stdio.h>
 #include <string.h>
 
+#define ANYMEAS_EN (1) //!< This flag controls whether the trackpad ASICs are
+	//!< configured to perform movement tracking calcualtions or whether
+	//!< all access to Trackpad ASICs is in AnyMeas mode (i.e. a raw
+	//!< data access mode). 
+	//!< TODO: AnyMeas Mode is the way the official firmware uses the 
+	//!<  and either Normal Mode does not work well or I am missing some
+	//!<  setup or configuration steps... Going to focus on AnyMeas Mode
+	//!<  since we at least have official FW as reference. Leaving
+	//!<  Normal Mode option in here just in case anyone wants to try
+	//!<  and work with it in the future.
+
 static LPC_SSP_T* spiRegs = LPC_SSP0;
 
 typedef enum Trackpad_t {
@@ -56,6 +67,24 @@ typedef enum Trackpad_t {
 #define PINT_R_TRACKPAD 3
 #define PINT_L_TRACKPAD 4
 
+#if (!ANYMEAS_EN)
+
+typedef struct TrackpadAbsData {
+	uint16_t xPos;
+	uint16_t yPos;
+	uint16_t zPos;
+} TrackpadAbsData;
+
+volatile TrackpadAbsData tpadAbsDatas[2][2]; //!< Two copies of absolute data
+	//!< for each trackpad. This is filled in by ISR and can be read by
+	//!< function(s) requesting most up to date X/Y position.
+volatile int tpadAbsDataIdxs[2]; //!< Defines which copy in tpadAbsData will be 
+	//!< written to on next ISR, and thus defins which copy is most recent.
+volatile bool tpadIsrBusys[2]; //!< Defines if the interrupt is currently being 
+	//!< being handled.
+
+#else  // if (ANYMEAS_EN)
+
 #define NUM_ANYMEAS_ADCS (19) //!< Number of ADC channels read in AnyMeas
 	//!< mode
 
@@ -67,8 +96,9 @@ static volatile int16_t tpadAdcDatas[2][NUM_ANYMEAS_ADCS]; //!< The ADC
 static volatile int tpadAdcIdxs[2]; //!< Used to track where next ADC value
 	//!< read from ISR should be written in tpad_adc_datas.
 
+#endif // ANYMEAS_EN
+
 // Trackpad ASIC Registers:
-//TODO: Specify AnyMeas v.s. Normal?
 #define TPAD_FW_ID_ADDR (0x00)
 #define TPAD_FW_VER_ADDR (0x01)
 #define TPAD_STATUS1_ADDR (0x02)
@@ -84,8 +114,41 @@ static volatile int tpadAdcIdxs[2]; //!< Used to track where next ADC value
 		// Measure mode (i.e. raw mode). Changes registers 0x05 and on.
 	#define TPAD_SYSCFG1_GPIOCTRLEN_BIT (0x20)
 
-// Note: The following register descriptions only apply to AnyMeas mode. If
-//	 the AnyMeas bit is not set, these registers have different purposes.
+#if (!ANYMEAS_EN)
+
+#define TPAD_FEEDCFG1_ADDR (0x04)
+	#define TPAD_FEEDCFG1_FEEDEN_BIT (0x01) // Enable data flow
+	#define TPAD_FEEDCFG1_ABSEN_BIT (0x02) // Absolute mode enable (relative
+		// mode disable)
+	#define TPAD_FEEDCFG1_FILTDIS_BIT (0x04) // Filter disable
+	#define TPAD_FEEDCFG1_XDIS_BIT (0x08) // X disable
+	#define TPAD_FEEDCFG1_YDIS_BIT (0x10) // Y disable
+	#define TPAD_FEEDCFG1_XINVERT_BIT (0x40) // X data invert
+	#define TPAD_FEEDCFG1_YINVERT_BIT (0x80) // Y data disable
+#define TPAD_FEEDCFG2_ADDR (0x05)
+	#define TPAD_FEEDCFG2_INTMOUSE_BIT (0x01) // Intellimouse Enable
+	#define TPAD_FEEDCFG2_SWAPXY_BIT (0x80) // Swap X & Y (i.e. 90 degree
+		// rotation)
+#define TPAD_FEEDCFG3_ADDR (0x06)
+#define TPAD_CALCFG_ADDR (0x07)
+	#define TPAD_CALCFG_CALIBRATE (0x01) //
+#define TPAD_PS2AUXCTRL_ADDR (0x08)
+#define TPAD_SAMPLERATE_ADDR (0x09)
+	#define TPAD_SAMPLERATE_100 (0x64) // 100 Samples/Second
+#define TPAD_ZIDLE_ADDR (0x0A)
+#define TPAD_ZSCALER_ADDR (0x0B)
+#define TPAD_SLEEPINTERVAL_ADDR (0x0C)
+#define TPAD_SLEEPTIMER_ADDR (0x0D)
+#define TPAD_DYNEMI_ADDR (0x0E)
+#define TPAD_PACKETBTE0_ADDR (0x12)
+#define TPAD_PACKETBTE1_ADDR (0x13)
+#define TPAD_PACKETBTE2_ADDR (0x14)
+#define TPAD_PACKETBTE3_ADDR (0x15)
+#define TPAD_PACKETBTE4_ADDR (0x16)
+#define TPAD_PACKETBTE5_ADDR (0x17)
+
+#else  // if (ANYMEAS_EN)
+
 #define TPAD_ADCCFG1_ADDR (0x05) 
 	typedef enum TpadAdcGain_t {
 		TPAD_ADC_GAIN0 = 0xC0, // Lowest gain
@@ -160,6 +223,8 @@ static volatile int tpadAdcIdxs[2]; //!< Used to track where next ADC value
 #define TPAD_POLARITY_HILO_ADDR (0x18) //!< Polarity(23:16)
 #define TPAD_POLARITY_LOHI_ADDR (0x19) //!< Polarity(15:8)
 #define TPAD_POLARITY_LOLO_ADDR (0x1A) //!< Polarity(7:0)
+
+#endif // ANYMEAS_EN
 
 // These registers do not change based on AnyMeas settings:
 #define TPAD_ERA_VAL_ADDR 0x1B
@@ -289,6 +354,167 @@ static void writePinnacleExtRegs(Trackpad trackpad, uint16_t addr, uint8_t len,
 }
 
 /**
+ * Clear Software Command Complete and Software Data Ready flags for the
+ *  specifica trackpad.
+ * 
+ * \param trackpad Specifies which trackpad to communicate with. 
+ * 
+ * \return None.
+ */
+static inline void clearFlagsPinnacle(Trackpad trackpad) {
+	writePinnacleReg(trackpad, TPAD_STATUS1_ADDR, 0x00);
+}
+
+/**
+ * Setup interrupt handling for rising edge of DR event from specified trackpad.
+ * 
+ * \param trackpad Specifies which trackpad to communicate with. 
+ * 
+ * \return None.
+ */
+static void setupTrackpadISR(Trackpad trackpad) {
+	// Setting PINT so we can react to PINT rising edge
+	if (trackpad == R_TRACKPAD) {
+		Chip_SYSCTL_SetPinInterrupt(PINT_R_TRACKPAD, GPIO_R_TRACKPAD_DR);
+		Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_R_TRACKPAD));
+		Chip_PININT_EnableIntHigh(LPC_PININT, PININTCH(PINT_R_TRACKPAD));
+		NVIC_ClearPendingIRQ(PIN_INT3_IRQn);
+		NVIC_EnableIRQ(PIN_INT3_IRQn);
+		NVIC_SetPriority(PIN_INT3_IRQn, 3);
+	} else if (trackpad == L_TRACKPAD) {
+		Chip_SYSCTL_SetPinInterrupt(PINT_L_TRACKPAD, GPIO_L_TRACKPAD_DR);
+		Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_L_TRACKPAD));
+		Chip_PININT_EnableIntHigh(LPC_PININT, PININTCH(PINT_L_TRACKPAD));
+		NVIC_ClearPendingIRQ(PIN_INT4_IRQn);
+		NVIC_EnableIRQ(PIN_INT4_IRQn);
+		NVIC_SetPriority(PIN_INT4_IRQn, 3);
+	}
+}
+
+#if (!ANYMEAS_EN)
+
+/**
+ * Setup Trackpad ASIC (i.e. configure registers, calibration, setup ISR).
+ * 
+ * \param trackpad Specifies which trackpad to communicate with. 
+ * 
+ * \return None.
+ */
+static void setupTrackpad(Trackpad trackpad) {
+	// Reset the TrackpadASIC:
+	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, TPAD_SYSCFG1_RESET_BIT);
+
+	usleep(50 * 1000);
+
+	while (!(TPAD_STATUS1_CC_BIT & readPinnacleReg(trackpad, 
+		TPAD_STATUS1_ADDR))) {
+	}
+
+	clearFlagsPinnacle(trackpad);
+
+	usleep(10 * 1000);
+
+	// Check Firmware ID
+	uint8_t fw_id = readPinnacleReg(trackpad, TPAD_FW_ID_ADDR);
+	if (fw_id != 0x07)
+		return;
+
+	// Check Firmware Version
+	uint8_t fw_ver = readPinnacleReg(trackpad, TPAD_FW_VER_ADDR);
+	if (fw_ver != 0x3a) 
+		return;
+
+	// Set ASIC to normal mode and active
+	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 0);
+	
+	// Allow time for changes to take place
+	usleep(10 * 1000);
+
+	clearFlagsPinnacle(trackpad);
+
+	writePinnacleReg(trackpad, TPAD_FEEDCFG2_ADDR, 0x1F);
+	writePinnacleReg(trackpad, TPAD_FEEDCFG1_ADDR, TPAD_FEEDCFG1_FEEDEN_BIT
+		| TPAD_FEEDCFG1_ABSEN_BIT);
+	writePinnacleReg(trackpad, TPAD_ZIDLE_ADDR, 0x5);
+
+	setupTrackpadISR(trackpad);
+}
+
+/**
+ * Get the latest Absolute Packet DAta and Clear Flags, all in a single burst
+ *  of SPI data.
+ *
+ * \param trackpad Specifies which trackpad to communicate with. 
+ * \param[out] absData Location of where to store absolute packet data.
+ * 
+ * \return None.
+ */
+void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
+	Chip_SSP_DATA_SETUP_T xf_setup;
+	uint8_t tx_data[9];
+	uint8_t rx_data[9];
+
+	if (R_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, false);
+	} else if (L_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, false);
+	}
+
+	// Number of words to transfer
+	xf_setup.length = 9;
+	// Used to count how many words have been transmitted
+	xf_setup.tx_cnt = 0;
+	xf_setup.tx_data = tx_data;
+	// Used to count how many words have been received
+	xf_setup.rx_cnt = 0;
+	xf_setup.rx_data = rx_data;
+
+	// Auto-incremented read starting at register TPAD_MEASRESULT_HI_ADDR
+	tx_data[0] = 0xA0 | TPAD_PACKETBTE2_ADDR;
+	tx_data[1] = 0xFC;
+	tx_data[2] = 0xFC;
+	tx_data[3] = 0xFC;
+	tx_data[4] = 0xFC;
+	tx_data[5] = 0xFC;
+	tx_data[6] = 0xFB;
+	// Clear flags
+	tx_data[7] = 0x80 | TPAD_STATUS1_ADDR;
+	tx_data[8] = 0x00;
+
+	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
+
+	if (R_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, true);
+	} else if (L_TRACKPAD == trackpad) {
+		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
+	}
+
+	absData->xPos = (0x0F & (rx_data[5] << 8)) | rx_data[3];
+	absData->yPos = (0x0F & (rx_data[5] << 4)) | rx_data[4];
+	absData->zPos = 0x3F & rx_data[6];
+}
+
+/**
+ * Get the latest data from the Pinnacle ASIC and update global variables, etc.
+ *
+ * \param trackpad Specifies which trackpad to communicate with. 
+ *
+ * \return The ADC value.
+ */
+static void getLatestPinnacleData(Trackpad trackpad) {
+	tpadIsrBusys[trackpad] = true;
+
+	getAbsDataAndClr(trackpad, &tpadAbsDatas[trackpad][tpadAbsDataIdxs[trackpad]]);
+
+	tpadAbsDataIdxs[trackpad]++;
+	tpadAbsDataIdxs[trackpad] %= 2;
+
+	tpadIsrBusys[trackpad] = false;
+}
+
+#else  // if (ANYMEAS_EN)
+
+/**
  * Get the latest AnyMeas ADC reading and Clear Flags, all in a single burst
  *  of SPI data.
  *
@@ -337,18 +563,6 @@ static int16_t getPinnacleAdcAndClr(Trackpad trackpad) {
 	// Concatenate TPAD_MEASRESULT_HI_ADDR and TPAD_MEASRESULT_HI_ADDR into 
 	//  a single 16-bit word
 	return (rx_data[3] << 8) | rx_data[4];
-}
-
-/**
- * Clear Software Command Complete and Software Data Ready flags for the
- *  specifica trackpad.
- * 
- * \param trackpad Specifies which trackpad to communicate with. 
- * 
- * \return None.
- */
-static inline void clearFlagsPinnacle(Trackpad trackpad) {
-	writePinnacleReg(trackpad, TPAD_STATUS1_ADDR, 0x00);
 }
 
 /**
@@ -859,21 +1073,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	clearFlagsPinnacle(trackpad);
 
 	// Setting PINT so we can react to PINT rising edge
-	if (trackpad == R_TRACKPAD) {
-		Chip_SYSCTL_SetPinInterrupt(PINT_R_TRACKPAD, GPIO_R_TRACKPAD_DR);
-		Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_R_TRACKPAD));
-		Chip_PININT_EnableIntHigh(LPC_PININT, PININTCH(PINT_R_TRACKPAD));
-		NVIC_ClearPendingIRQ(PIN_INT3_IRQn);
-		NVIC_EnableIRQ(PIN_INT3_IRQn);
-		NVIC_SetPriority(PIN_INT3_IRQn, 3);
-	} else if (trackpad == L_TRACKPAD) {
-		Chip_SYSCTL_SetPinInterrupt(PINT_L_TRACKPAD, GPIO_L_TRACKPAD_DR);
-		Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_L_TRACKPAD));
-		Chip_PININT_EnableIntHigh(LPC_PININT, PININTCH(PINT_L_TRACKPAD));
-		NVIC_ClearPendingIRQ(PIN_INT4_IRQn);
-		NVIC_EnableIRQ(PIN_INT4_IRQn);
-		NVIC_SetPriority(PIN_INT4_IRQn, 3);
-	}
+	setupTrackpadISR(trackpad);
 
 	// Compute compensation values (i.e. average value of ADCs, assuming
 	//  no input during initialization).
@@ -892,6 +1092,7 @@ static void setupTrackpad(Trackpad trackpad) {
 		tpadAdcComps[trackpad][comp_idx] = comp_accums[comp_idx] / 16;
 	}
 }
+#endif // ANYMEAS_EN
 
 /**
  * Setup all clocks, peripherals, etc. so the ADC chnanels can be read.
@@ -947,6 +1148,7 @@ void initTrackpad(void) {
 	setupTrackpad(L_TRACKPAD);
 }
 
+#if (ANYMEAS_EN)
 /**
  * Function to be called by ISR to handle next ADC value.
  * 
@@ -973,6 +1175,7 @@ void getNextPinnacleAdcValIsr(Trackpad trackpad) {
 
 	tpadAdcIdxs[trackpad] = tpad_adc_idx;
 }
+#endif // ANYMEAS_EN
 
 /**
  * ISR for 3 - GPIO pin interrupt 3, which occurs on rising edge of Right 
@@ -983,7 +1186,11 @@ void getNextPinnacleAdcValIsr(Trackpad trackpad) {
 void FLEX_INT3_IRQHandler(void) {
 	Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_R_TRACKPAD));
 
+#if (!ANYMEAS_EN)
+	getLatestPinnacleData(R_TRACKPAD);
+#else  // if (ANYMEAS_EN)
 	getNextPinnacleAdcValIsr(R_TRACKPAD);
+#endif // ANYMEAS_EN
 }
 
 /**
@@ -995,7 +1202,11 @@ void FLEX_INT3_IRQHandler(void) {
 void FLEX_INT4_IRQHandler(void) {
 	Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_L_TRACKPAD));
 
+#if (!ANYMEAS_EN)
+	getLatestPinnacleData(L_TRACKPAD);
+#else  // if (ANYMEAS_EN)
 	getNextPinnacleAdcValIsr(L_TRACKPAD);
+#endif // ANYMEAS_EN
 }
 
 /**
@@ -1022,10 +1233,26 @@ void trackpadCmdUsage(void) {
  */
 int trackpadCmdFnc(int argc, const char* argv[]) {
 
-	Trackpad trackpad = L_TRACKPAD;
+	Trackpad trackpad = R_TRACKPAD;
 
 	printf("Firmware ID = 0x%02x\n", readPinnacleReg(trackpad, TPAD_FW_ID_ADDR));
 	printf("Firmware Version = 0x%02x\n", readPinnacleReg(trackpad, TPAD_FW_VER_ADDR));
+
+#if (!ANYMEAS_EN)
+
+	while (!usb_tstc()) {
+		int idx = tpadAbsDataIdxs[trackpad];
+		idx++;
+		idx %= 2;
+		printf("[%d]: X = %4d, Y = %4d, Z = %4d\r", idx, 
+			tpadAbsDatas[trackpad][idx].xPos, 
+			tpadAbsDatas[trackpad][idx].yPos, 
+			tpadAbsDatas[trackpad][idx].zPos);
+
+		usleep(10 * 1000);
+	}
+
+#else // if (ANYMEAS_EN)
 
 	int16_t eeprom_comps[NUM_ANYMEAS_ADCS];
 	if (trackpad == R_TRACKPAD) {
@@ -1041,9 +1268,9 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 	while (!usb_tstc()) {
 		getPinnacleAdcVals(trackpad);
 		for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
-			printf("% 5d ", tpadAdcDatas[trackpad][idx] - tpadAdcComps[trackpad][idx]);
+			printf("% 5d, ", tpadAdcDatas[trackpad][idx] - tpadAdcComps[trackpad][idx]);
 		}
-		printf("\r");
+		printf("\n");
 
 		usleep(50 * 1000);
 	}
@@ -1187,6 +1414,8 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 		usleep(50 * 1000);
 	}
 */
+
+#endif // ANYMEAS_EN
 
 	return 0;
 }
