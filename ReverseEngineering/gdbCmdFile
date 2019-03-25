@@ -578,22 +578,11 @@ else
 	
 	# Handle command to put MPU-6500 into sleep mode (called by fnc0x00005fbc()):
 
-
-	# Setup watchpoint for busy wait on checking value of I2C_XFER_T.status (0x10000d94)
-	watch $pc == 0x0000425c
-
-	echo \n
 	echo Waiting for I2C command for sleep to MPU-6500 \n
 	echo \n
-
-	# Execute until watchpoint
-	continue
-
-	# Set I2C_XFER_T.status to I2C_STATUS_DONE (to indicate successful transfer)
-	set {int}0x10000d94 = 0
-
-	# Remove watchpoint
-	delete 
+	
+	reset_top_level_watchpoints
+	check_i2c_xfer
 
 	# }
 
@@ -603,34 +592,12 @@ else
 
 	# {
 
-	# Get ADC readings (battery level?) fnc0x00002cf0()? (called after fnc0x000098f0()):
-
-	# Setup watchpoint before code waits for ADC interrupt to have run its
-	#  initial course for AD6
-	watch $pc == 0x00002d00
-
 	echo \n
 	echo Waiting for initial ADC read for AD6 only \n
 	echo \n
 
-	# Execute until watchpoint
-	continue
-
-	# Counter for how many times interrupt fires initially before AD values
-	#  start being accumulated
-	set {int}0x10000014 = 0x0000012d
-	# Counter for how many times interrupt fires for accumulating AD6 values
-	set {int}0x10000018 = 0x00000007
-
-	# Set flag to indicate ADC ISR has served its purpose and ADC is shutdown
-	set {char}0x10000010 = 1
-
-	# Set value of 8 accumulated channel 6 ADC values
-	#  ADC Chanel 6 reads ~0x03ac when polled via adcRead command in custom firmware.
-	set {short}0x10000f8c = 0x1d60
-
-	# Remove watchpoint
-	delete 
+	reset_top_level_watchpoints
+	check_get_adc_vals
 
 	# }
 
@@ -681,36 +648,12 @@ else
 
 	# {
 
-	# Read ADCs now that AD0-3 are enabled (called by fnc0x00006e14()):
-
-	# Setup watchpoint before code waits for ADC interrupt to have run its
-	#  initial course for AD6
-	watch $pc == 0x00002d00
-
 	echo \n
 	echo Waiting for ADC read of AD0-4 & 6 \n
 	echo \n
 
-	# Execute until watchpoint
-	continue
-
-	##set $pc = 0x00000204
-	# Counter for how many times interrupt fires initially before AD values
-	#  start being accumulated
-	set {int}0x10000014 = 0x0000012d
-	# Counter for how many times interrupt fires for accumulating AD6 values
-	set {int}0x10000018 = 0x00000007
-	# Set flag to indicate ADC ISR has served its purpose and ADC is shutdown
-	set {char}0x10000010 = 1
-
-	# TODO: Add setting values accumulated for other enabled channels (AD0-AD3?)
-
-	# Set value of 8 accumulated AD6 values
-	#  ADC Chanel 6 reads ~0x03ac when polled via adcRead command in custom firmware.
-	set {short}0x10000f8c = 0x1d60
-
-	# Remove watchpoint
-	delete 
+	reset_top_level_watchpoints
+	check_get_adc_vals
 
 	# }
 
@@ -817,6 +760,9 @@ else
 	#  and call them as part of this loop.
 	while (1)
 
+		# TODO: temporary solution to get multiple iterations of filling out USB structures after Trackpad ASIC setup
+		set {char}0x10000074 = 1
+
 		# Set watchpoints that relate to functions that need special simulation steps
 		reset_top_level_watchpoints
 
@@ -830,7 +776,9 @@ else
 		check_spi_asic_rd_reg_0x11_0x12
 		check_pint3_isr_sim
 		check_ct32b0_isr_sim
-
+		check_i2c_xfer
+		check_get_adc_vals
+		check_trackpad_isr_main_loop
 	end
 
 

@@ -80,6 +80,19 @@ define reset_top_level_watchpoints
 	echo Entry point of fnc0x0000573c(): Read SPI ASIC Reg 0x11 and 0x12
 	watch $pc == 0x0000573c
 
+	echo Entry point of fnc0x000042f0(): AKA int Chip_I2C_MasterTransfer
+	watch $pc == 0x000042f0
+
+	echo Entry point of fnc0x00002d4c(): Start ADC accumulation and wait for results
+	watch $pc == 0x00002d4c
+
+	echo Entry point of fnc0x00004964(): Related to Trackpad ADC Reads and ISR in Main Loop
+	watch $pc == 0x00004964
+
+	## TODO: commented out as we can push through wfi instruction and just get a warning printed...
+	##echo Instruction of Main Loop wfi to be skipped over
+	##watch $pc == 0x000043d0
+
 	if $irq_sim_pint3
 		echo Entry point fnc0x000055e8(): Setup PINT3 (destructive) \n
 		watch $pc == 0x000055e8
@@ -89,6 +102,7 @@ define reset_top_level_watchpoints
 		echo Return from fnc0x00007a10(): CT32B0 Interrupt Simulation (destructive) \n
 		watch $pc == 0x00007a38
 	end
+
 
 	continue
 end
@@ -1542,8 +1556,13 @@ define check_pint3_isr_sim
 
 			# TODO: Other variable settings to consider (i.e. 0x1000024e??)
 
+			set {char}0x10000246 = 0x1
+
 			# Set after Trackpad calibration routine
 			set {char}0x1000024e = 0x2
+
+#TODO: What about this case?
+			set {char}0x1000024e = 0x1
 
 			# Checked in PINT3 if 0x1000024e = 0x2
 			#set {short}0x10000b70 = 0xfdc7
@@ -1594,6 +1613,7 @@ define check_ct32b0_isr_sim
 end
 
 
+#TODO: name this better now that we know 0x11 and 0x12 are 16-bit AnyMeas ADC read
 ## 
 # This command handles function fnc0x0000573c(), which is optimized call for
 #   reading values of Trackpad ASIC registers and clearing Trackpad ASIC Flags
@@ -1772,3 +1792,137 @@ define check_spi_asic_rd_reg_0x11_0x12
 		echo \n
 	end
 end
+
+##
+# This command handles when an I2C transfer has been requested
+define check_i2c_xfer
+	# Check if we are at entry point of a function which handles EEPROM read
+	if $pc == 0x000042f0 
+		echo \n
+		echo DETECTED fnc0x000042f0(): AKA int Chip_I2C_MasterTransfer \n
+		echo \n
+
+		# Remove all watchpoints
+		delete
+		
+		# Record input parameters
+		set $xfer_struct = $r1
+
+		# Continue until busy wait on checking value of I2C_XFER_T.status (0x10000d94)
+		watch $pc == 0x0000425c
+
+		# Execute until watchpoint
+		continue
+
+		# Set I2C_XFER_T.status to I2C_STATUS_DONE (to indicate successful transfer)
+		set $status_addr = $xfer_struct + 0x14
+		set {int}$status_addr = 0
+
+		# Remove all watchpoints
+		delete 
+
+		# Fill in rx buffer based on contents of tx buffer (i.e. simulation MPU 6500 Gyro/Accelerometer)
+		#TODO:
+
+		echo \n
+		echo HANDLED fnc0x000042f0(): AKA int Chip_I2C_MasterTransfer \n
+		echo \n
+	end
+end
+
+##
+# This command handles when fnc0x00002d4c() has been called to accumulate ADC
+#  values via ISR
+define check_get_adc_vals
+	# Check if we are at entry point of a function which handles EEPROM read
+	if $pc == 0x00002d4c 
+		echo \n
+		echo DETECTED fnc0x00002d4c(): Start ADC accumulation and wait for results \n
+		echo \n
+
+		# Remove all watchpoints
+		delete
+
+		# Continue until ADC request has been enabled and code is waiting on global flag to indicate accumulations are complete
+		watch $pc == 0x00002d8e
+
+		# Execute until watchpoint
+		continue
+
+		#TODO: move some of this to function to simulate ADC IRQ...
+		##set $pc = 0x00000204
+		# Counter for how many times interrupt fires initially before AD values
+		#  start being accumulated
+		set {int}0x10000014 = 0x0000012d
+		# Counter for how many times interrupt fires for accumulating AD6 values
+		set {int}0x10000018 = 0x00000007
+		# Set flag to indicate ADC ISR has served its purpose and ADC is shutdown
+		set {char}0x10000010 = 1
+
+		# TODO: Add setting values accumulated for other enabled channels (AD0-AD3?)
+
+		# Set value of 8 accumulated AD6 values
+		#  ADC Chanel 6 reads ~0x03ac when polled via adcRead command in custom firmware.
+		set {short}0x10000f8c = 0x1d60
+
+		# Remove all watchpoints
+		delete 
+
+		echo \n
+		echo HANDLED fnc0x00002d4c(): Start ADC accumulation and wait for results \n
+		echo \n
+	end
+end
+
+##
+# This command handles setting the flag to indicate that Trackpad ISR has fired
+#  properly. This is in hopes of figuring out how Main Loop uses Trackpad ISR
+#  data...
+define check_trackpad_isr_main_loop
+	# Check if we are at entry point of a function which handles EEPROM read
+	if $pc == 0x00004964 
+		echo \n
+		echo DETECTED fnc0x00004964(): Related to Trackpad ADC Reads and ISR in Main Loop \n
+		echo \n
+
+		set $trackpad_num = $r0
+
+		if $trackpad_num == 0
+			# Flag to indicate ISR has fired desired number of times	
+			set {char}0x1000024a = 1
+		end 
+		if $trackpad_num == 1
+			# Flag to indicate ISR has fired desired number of times	
+			set {char}0x1000024b = 1
+		end 
+
+		# Remove all watchpoints
+		delete 
+
+		echo \n
+		echo HANDLED fnc0x00004964(): Related to Trackpad ADC Reads and ISR in Main Loop \n
+		echo \n
+	end
+end
+
+##
+# This command handles skipping wfi in main loop 
+define check_wfi_main_skip
+	# Check if we are at entry point of a function which handles EEPROM read
+	if $pc == 0x000043d0 
+		echo \n
+		echo DETECTED Instruction of Main Loop wfi to be skipped over \n
+		echo \n
+
+		# Change PC to skip over WFI
+		set $pc = 0x000043d2
+
+		# Remove all watchpoints
+		delete 
+
+		echo \n
+		echo HANDLED Instruction of Main Loop wfi to be skipped over \n
+		echo \n
+	end
+end
+

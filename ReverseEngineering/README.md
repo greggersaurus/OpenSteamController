@@ -24,6 +24,16 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
+1. Sim PINT3 ISR with mode = 1 (0x1000024e = 1)
+    1. Is this similar to gathering results for compensation mode or is there a difference in there that might trip me up?
+1. Understand function that utilizes ADC results. fnc0x00007ff8
+    1. Will this help explain how to use ADC results?
+1. Is 0x10000258 packet for mouse movement?
+1. Clean up below
+    1. Shoudl be able to remove some of this...
+1. Consider effort in capturing paths I am using to understand how ADC results are being used
+
+
 1. Review all Trackpad related sim data now that I think we are looking at an AnyMeas configuration and usage
     1. Revisit interrupt and understand how ADC channels are switched for each interrupt call
         1. Revisit and pay attention to how ADC channel (and number of ADC channels sampled) is changed before changing value of 0x1000024e
@@ -41,8 +51,6 @@ This section is a running list of priorities to focus on in hopes of reaching
     1. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for reference
         1. Add this to references in README?
         1. Make README related to understanding Trackpad? (or trackpad.c is enough?)
-
-1. What about simulating with 0x20000008 flag set (i.e. after trackpad initialized)?
 
 1. Jingle Sim related
     1. Details on CT32B0 ISR based on simulation results?

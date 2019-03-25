@@ -335,12 +335,13 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x1000023f - GPIO group/port for Left Trackpad ASIC Data Ready (PIO1_16)?
  (uint8_t*) 0x10000240 - GPIO number/offset for Right Trackpad ASIC Data Ready (PIO0_23).
  (uint8_t*) 0x10000241 - GPIO number/offset for Left Trackpad ASIC Data Ready (PIO1_16)?
- (uint8_t*) 0x10000242 - Enable for reading ASIC AnyMeas ADC values (registers 0x11 and 0x12) in PINT3 ISR.
+ (uint8_t*) 0x10000242 - Enable for reading ASIC AnyMeas ADC Values (registers 0x11 and 0x12) in PINT3 ISR.
  (uint8_t*) 0x10000243 - 0x10000242, but for PINT3/Left Trackpad?
 
  (uint8_t*) 0x10000246 - PINT3/Right Trackpad ASIC related. Counts how many times
 			 times AnyMeas ADC values  are read. Used as
-			 index of where to store values read from 0x11 and 0x12.
+			 index of where to store AnyMeas ADC Values 
+			 (read from registers 0x11 and 0x12).
  (uint8_t*) 0x10000247 - 0x10000246, but for PINT4/Left Trackpad ASIC.
  (uint8_t*) 0x10000248 - PINT3/Right Trackpad ASIC Related. Value is inverted
 			 after a certain number of PINT3 IRQs. This is an index
@@ -358,8 +359,9 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x1000024d - 0x1000024c, but for PINT4/Left Trackpad ASIC.
  (uint8_t*) 0x1000024e - PINT3/Right Trackpad ASIC mode? Value relates to how 
 			 ISR reacts (i.e. when 0x1000024a is set).
-			 0 = compensation calculation?
-			 2 = normal operation?
+			 0 = compensation calculation.
+			 1 = mouse mode operation (maybe)?
+			 2 = ?? operation?
  (uint8_t*) 0x1000024f - 0x1000024e, but for PINT4/Left Trackpad ASIC.
 (uint32_t*) 0x10000250 - Related to interrupts being enabled/disabled. 
 			 Incremented after after interrupt disable (via cps). 
@@ -371,11 +373,25 @@ USB_HID2 HID Report Descriptor (len 0x21):
 (uint16_t*) 0x10000256 - EEPROM Read Data 0x002 - Continuation of Magic Number?
 (uint32_t*) 0x10000258 - 1. EEPROM Read Data 0x004 - Board/HW Revision Number
 (uint16_t*) 0x10000258 - 2. Related to Right Trackpad ASIC register values read
-			 via PINT3 ISR (i.e. Registers 0x12 and 0x11)
+			 via PINT3 ISR, AnyMeas ADC Vals (i.e. Registers 0x12 and 0x11)
+			 Related to simulated mouse maybe?
 (uint16_t*) 0x1000025a - 2. Related to Left Trackpad ASIC register values read
-			 via PINT4 ISR (i.e. Registers 0x12 and 0x11)
+			 via PINT4 ISR, AnyMeas ADC Vals (i.e. Registers 0x12 and 0x11)
+			 Related to simulated mouse maybe?
 
 (uint32_t*) 0x10000260 - System Clock Frequency in Hz
+(uint32_t*) 0x10000264 - Counter for the number of times in the main loop in
+			 which the Right Trackpad ISR did not produce results.
+			 If this reaches 5 an attempt is made to reinit the
+			 the Trackpad ASIC via SPI commands.
+(uint32_t*) 0x10000268 - 0x10000264 but for Left Trackpad.
+
+(uint32_t*) 0x1000026c - Related to Right Trackpad and Compenstated ADC Values 
+			 (i.e. Array starting at 0x10000c00). Counter?
+(uint32_t*) 0x10000270 - 0x1000026c, but for Left Trackpad.
+
+ (uint8_t*) 0x1000027e - Related to (Right?) EP2/Trackpad (in mouse mode?)
+ (uint8_t*) 0x1000027f - Related to (Left?) EP2/Trackpad (in mouse mode?)
 
  (uint8_t*) 0x10000281 - Flag related to ??
 
@@ -889,347 +905,608 @@ USB_HID2 HID Report Descriptor (len 0x21):
  (uint8_t*) 0x10000a37 - EEPROM Read Data 0x083 - Uknown purpose
  (uint8_t*) 0x10000a38 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 0 to PINT3. Shadow copy[0].
-			 AnyMeas ADC low byte read of ADC Address 0x1DF?
+			 AnyMeasAdcVal[0] low byte (read of ADC Address 0x1DF?)
  (uint8_t*) 0x10000a39 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 0 to PINT3. Shadow copy[0].
-			 AnyMeas ADC high byte read of ADC Address 0x1DF?
+			 AnyMeasAdcVal[0] high byte (read of ADC Address 0x1DF?)
  (uint8_t*) 0x10000a3a - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 1 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[1] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a3b - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 1 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[1] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a3c - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 2 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[2] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a3d - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 2 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[2] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a3e - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 3 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[3] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a3f - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 3 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[3] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a40 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 4 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[4] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a41 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 4 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[4] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a42 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 5 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[5] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a43 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 5 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[5] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a44 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 6 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[6] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a45 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 6 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[6] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a46 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 7 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[7] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a47 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 7 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[7] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a48 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 8 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[8] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a49 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 8 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[8] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a4a - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 9 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[9] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a4b - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 9 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[9] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a4c - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 10 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[10] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a4d - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 10 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[10] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a4e - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 11 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[11] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a4f - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 11 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[11] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a50 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 12 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[12] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a51 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 12 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[12] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a52 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 13 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[13] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a53 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 13 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[13] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a54 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 14 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[14] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a55 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 14 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[14] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a56 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 15 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[15] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a57 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 15 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[15] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a58 - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 16 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[16] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a59 - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 16 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[16] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a5a - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 17 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[17] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a5b - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 17 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[17] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a5c - Value of Right Trackpad ASIC Register 0x12, filled
 			 by call 18 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[18] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a5d - Value of Right Trackpad ASIC Register 0x11, filled
 			 by call 18 to PINT3. Shadow copy[0].
+			 AnyMeasAdcVal[18] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a5e - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 0 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[0] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a5f - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 0 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[0] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a60 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 1 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[1] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a61 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 1 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[1] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a62 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 2 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[2] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a63 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 2 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[2] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a64 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 3 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[3] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a65 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 3 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[3] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a66 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 4 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[4] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a67 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 4 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[4] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a68 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 5 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[5] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a69 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 5 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[5] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a6a - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 6 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[6] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a6b - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 6 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[6] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a6c - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 7 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[7] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a6d - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 7 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[7] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a6e - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 8 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[8] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a6f - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 8 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[8] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a70 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 9 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[9] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a71 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 9 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[9] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a72 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 10 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[10] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a73 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 10 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[10] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a74 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 11 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[11] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a75 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 11 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[11] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a76 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 12 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[12] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a77 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 12 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[12] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a78 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 13 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[13] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a79 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 13 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[13] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a7a - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 14 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[14] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a7b - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 14 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[14] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a7c - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 15 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[15] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a7d - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 15 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[15] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a7e - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 16 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[16] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a7f - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 16 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[16] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a80 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 17 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[17] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a81 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 17 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[17] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a82 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 18 to PINT4. Shadow copy[0].
+			 AnyMeasAdcVal[18] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000a83 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 18 to PINT4. Shadow copy[0].
- (uint8_t*) 0x10000a84 - Value of Right Trackpad ASIC Register 0x12, filled
+			 AnyMeasAdcVal[18] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a84 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 0 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a85 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[0] low byte (read of ADC Address 0x1DF?)
+ (uint8_t*) 0x10000a85 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 0 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a86 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[0] high byte (read of ADC Address 0x1DF?)
+ (uint8_t*) 0x10000a86 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 1 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a87 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[1] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a87 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 1 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a88 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[1] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a88 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 2 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a89 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[2] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a89 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 2 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a8a - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[2] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a8a - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 3 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a8b - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[3] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a8b - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 3 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a8c - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[3] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a8c - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 4 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a8d - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[4] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a8d - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 4 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a8e - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[4] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a8e - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 5 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a8f - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[5] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a8f - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 5 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a90 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[5] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a90 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 6 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a91 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[6] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a91 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 6 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a92 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[6] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a92 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 7 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a93 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[7] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a93 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 7 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a94 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[7] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a94 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 8 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a95 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[8] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a95 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 8 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a96 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[8] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a96 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 9 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a97 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[9] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a97 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 9 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a98 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[9] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a98 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 10 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a99 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[10] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a99 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 10 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a9a - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[10] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a9a - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 11 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a9b - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[11] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a9b - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 11 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a9c - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[11] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a9c - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 12 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a9d - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[12] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a9d - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 12 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a9e - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[12] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a9e - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 13 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000a9f - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[13] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000a9f - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 13 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa0 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[13] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa0 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 14 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa1 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[14] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa1 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 14 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa2 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[14] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa2 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 15 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa3 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[15] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa3 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 15 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa4 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[15] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa4 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 16 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa5 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[16] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa5 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 16 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa6 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[16] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa6 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 17 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa7 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[17] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa7 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 17 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa8 - Value of Right Trackpad ASIC Register 0x12, filled
+                         AnyMeasAdcVal[17] high byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa8 - Value of Right Trackpad ASIC Register 0x12, filled     d
 			 by call 18 to PINT3. Shadow copy[1].
- (uint8_t*) 0x10000aa9 - Value of Right Trackpad ASIC Register 0x11, filled
+                         AnyMeasAdcVal[18] low byte (read of ADC Address 0x???)
+ (uint8_t*) 0x10000aa9 - Value of Right Trackpad ASIC Register 0x11, filled     d
 			 by call 18 to PINT3. Shadow copy[1].
+                         AnyMeasAdcVal[18] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000aaa - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 0 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[0] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000aab - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 0 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[0] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000aac - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 1 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[1] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000aad - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 1 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[1] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000aae - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 2 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[2] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000aaf - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 2 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[2] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab0 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 3 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[3] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab1 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 3 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[3] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab2 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 4 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[4] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab3 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 4 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[4] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab4 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 5 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[5] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab5 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 5 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[5] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab6 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 6 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[6] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab7 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 6 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[6] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab8 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 7 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[7] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ab9 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 7 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[7] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000aba - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 8 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[8] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000abb - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 8 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[8] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000abc - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 9 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[9] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000abd - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 9 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[9] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000abe - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 10 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[10] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000abf - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 10 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[10] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac0 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 11 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[11] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac1 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 11 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[11] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac2 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 12 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[12] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac3 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 12 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[12] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac4 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 13 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[13] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac5 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 13 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[13] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac6 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 14 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[14] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac7 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 14 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[14] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac8 - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 15 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[15] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ac9 - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 15 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[15] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000aca - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 16 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[16] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000acb - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 16 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[16] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000acc - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 17 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[17] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000acd - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 17 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[17] high byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000ace - Value of Left Trackpad ASIC Register 0x12, filled
 			 by call 18 to PINT4. Shadow copy[1].
+                         AnyMeasAdcVal[18] low byte (read of ADC Address 0x???)
  (uint8_t*) 0x10000acf - Value of Left Trackpad ASIC Register 0x11, filled
 			 by call 18 to PINT4. Shadow copy[1].
 
-(uint16_t*) 0x10000b70 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a38/0x10000a84??)
-(uint16_t*) 0x10000b72 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a86/0x10000a86??)
-(uint16_t*) 0x10000b74 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a88/0x10000a88??)
-(uint16_t*) 0x10000b76 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a8a/0x10000a8a??)
-(uint16_t*) 0x10000b78 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a8c/0x10000a8c??)
-(uint16_t*) 0x10000b7a - Related Right Trackpad and PINT3 ISR (average value of 0x10000a8e/0x10000a8e??)
-(uint16_t*) 0x10000b7c - Related Right Trackpad and PINT3 ISR (average value of 0x10000a90/0x10000a90??)
-(uint16_t*) 0x10000b7e - Related Right Trackpad and PINT3 ISR (average value of 0x10000a92/0x10000a92??)
-(uint16_t*) 0x10000b80 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a94/0x10000a94??)
-(uint16_t*) 0x10000b82 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a96/0x10000a96??)
-(uint16_t*) 0x10000b84 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a98/0x10000a98??)
-(uint16_t*) 0x10000b86 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a9a/0x10000a9a??)
-(uint16_t*) 0x10000b88 - Related Right Trackpad and PINT3 ISR (average value of 0x10000a9c/0x10000a9c??)
-(uint16_t*) 0x10000b8a - Related Right Trackpad and PINT3 ISR (average value of 0x10000a9e/0x10000a9e??)
-(uint16_t*) 0x10000b8c - Related Right Trackpad and PINT3 ISR (average value of 0x10000aa0/0x10000aa0??)
-(uint16_t*) 0x10000b8e - Related Right Trackpad and PINT3 ISR (average value of 0x10000aa2/0x10000aa2??)
-(uint16_t*) 0x10000b90 - Related Right Trackpad and PINT3 ISR (average value of 0x10000aa4/0x10000aa4??)
-(uint16_t*) 0x10000b92 - Related Right Trackpad and PINT3 ISR (average value of 0x10000aa6/0x10000aa6??)
-(uint16_t*) 0x10000b94 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a5e/0x10000aaa??)
-(uint16_t*) 0x10000b96 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a60/0x10000aac??)
-(uint16_t*) 0x10000b98 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a62/0x10000aae??)
-(uint16_t*) 0x10000b9a - Related Left Trackpad and PINT4 ISR (average value of 0x10000a64/0x10000ab0??)
-(uint16_t*) 0x10000b9c - Related Left Trackpad and PINT4 ISR (average value of 0x10000a66/0x10000ab2??)
-(uint16_t*) 0x10000b9e - Related Left Trackpad and PINT4 ISR (average value of 0x10000a68/0x10000ab4??)
-(uint16_t*) 0x10000ba0 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a6a/0x10000ab6??)
-(uint16_t*) 0x10000ba2 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a6c/0x10000ab8??)
-(uint16_t*) 0x10000ba4 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a6e/0x10000aba??)
-(uint16_t*) 0x10000ba6 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a70/0x10000abc??)
-(uint16_t*) 0x10000ba8 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a72/0x10000abe??)
-(uint16_t*) 0x10000baa - Related Left Trackpad and PINT4 ISR (average value of 0x10000a74/0x10000ac0??)
-(uint16_t*) 0x10000bac - Related Left Trackpad and PINT4 ISR (average value of 0x10000a76/0x10000ac2??)
-(uint16_t*) 0x10000bae - Related Left Trackpad and PINT4 ISR (average value of 0x10000a78/0x10000ac4??)
-(uint16_t*) 0x10000bb0 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a7a/0x10000ac6??)
-(uint16_t*) 0x10000bb2 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a7c/0x10000ac8??)
-(uint16_t*) 0x10000bb4 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a7e/0x10000aca??)
-(uint16_t*) 0x10000bb6 - Related Left Trackpad and PINT4 ISR (average value of 0x10000a80/0x10000acc??)
+(uint32_t*) 0x10000ad0 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000ad4 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000ad8 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000adc - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000ae0 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000ae4 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000ae8 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000aec - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000af0 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000af4 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000af8 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000afc - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b00 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b04 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b08 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b0c - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b10 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b14 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b18 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b1c - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b20 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b24 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b28 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b2c - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? First 11??)
+(uint32_t*) 0x10000b30 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b34 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b38 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b3c - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b40 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b44 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b48 - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b4c - Right Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b50 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b54 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b58 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b5c - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b60 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b64 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b68 - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint32_t*) 0x10000b6c - Left Trackpad value related to converting AnyMeasAdcVals[]. TODO: more details on this conversion... (what ADCs are included??? Next 8??)
+(uint16_t*) 0x10000b70 - Compensation value for Right Trackpad AnyMeasAdcVal[0]
+(uint16_t*) 0x10000b72 - Compensation value for Right Trackpad AnyMeasAdcVal[1]
+(uint16_t*) 0x10000b74 - Compensation value for Right Trackpad AnyMeasAdcVal[2]
+(uint16_t*) 0x10000b76 - Compensation value for Right Trackpad AnyMeasAdcVal[3]
+(uint16_t*) 0x10000b78 - Compensation value for Right Trackpad AnyMeasAdcVal[4]
+(uint16_t*) 0x10000b7a - Compensation value for Right Trackpad AnyMeasAdcVal[5]
+(uint16_t*) 0x10000b7c - Compensation value for Right Trackpad AnyMeasAdcVal[6]
+(uint16_t*) 0x10000b7e - Compensation value for Right Trackpad AnyMeasAdcVal[7]
+(uint16_t*) 0x10000b80 - Compensation value for Right Trackpad AnyMeasAdcVal[8]
+(uint16_t*) 0x10000b82 - Compensation value for Right Trackpad AnyMeasAdcVal[9]
+(uint16_t*) 0x10000b84 - Compensation value for Right Trackpad AnyMeasAdcVal[10]
+(uint16_t*) 0x10000b86 - Compensation value for Right Trackpad AnyMeasAdcVal[11]
+(uint16_t*) 0x10000b88 - Compensation value for Right Trackpad AnyMeasAdcVal[12]
+(uint16_t*) 0x10000b8a - Compensation value for Right Trackpad AnyMeasAdcVal[13]
+(uint16_t*) 0x10000b8c - Compensation value for Right Trackpad AnyMeasAdcVal[14]
+(uint16_t*) 0x10000b8e - Compensation value for Right Trackpad AnyMeasAdcVal[15]
+(uint16_t*) 0x10000b90 - Compensation value for Right Trackpad AnyMeasAdcVal[16]
+(uint16_t*) 0x10000b92 - Compensation value for Right Trackpad AnyMeasAdcVal[17]
+(uint16_t*) 0x10000b94 - Compensation value for Left Trackpad AnyMeasAdcVal[0]
+(uint16_t*) 0x10000b96 - Compensation value for Left Trackpad AnyMeasAdcVal[1]
+(uint16_t*) 0x10000b98 - Compensation value for Left Trackpad AnyMeasAdcVal[2]
+(uint16_t*) 0x10000b9a - Compensation value for Left Trackpad AnyMeasAdcVal[3]
+(uint16_t*) 0x10000b9c - Compensation value for Left Trackpad AnyMeasAdcVal[4]
+(uint16_t*) 0x10000b9e - Compensation value for Left Trackpad AnyMeasAdcVal[5]
+(uint16_t*) 0x10000ba0 - Compensation value for Left Trackpad AnyMeasAdcVal[6]
+(uint16_t*) 0x10000ba2 - Compensation value for Left Trackpad AnyMeasAdcVal[7]
+(uint16_t*) 0x10000ba4 - Compensation value for Left Trackpad AnyMeasAdcVal[8]
+(uint16_t*) 0x10000ba6 - Compensation value for Left Trackpad AnyMeasAdcVal[9]
+(uint16_t*) 0x10000ba8 - Compensation value for Left Trackpad AnyMeasAdcVal[10]
+(uint16_t*) 0x10000baa - Compensation value for Left Trackpad AnyMeasAdcVal[11]
+(uint16_t*) 0x10000bac - Compensation value for Left Trackpad AnyMeasAdcVal[12]
+(uint16_t*) 0x10000bae - Compensation value for Left Trackpad AnyMeasAdcVal[13]
+(uint16_t*) 0x10000bb0 - Compensation value for Left Trackpad AnyMeasAdcVal[14]
+(uint16_t*) 0x10000bb2 - Compensation value for Left Trackpad AnyMeasAdcVal[15]
+(uint16_t*) 0x10000bb4 - Compensation value for Left Trackpad AnyMeasAdcVal[16]
+(uint16_t*) 0x10000bb6 - Compensation value for Left Trackpad AnyMeasAdcVal[17]
+(uint16_t*) 0x10000bb8 - Average compensated value for Right Trackpad AnyMeasAdcVal[0], calculated in Main Loop
+(uint16_t*) 0x10000bba - Average compensated value for Right Trackpad AnyMeasAdcVal[1], calculated in Main Loop
+(uint16_t*) 0x10000bbc - Average compensated value for Right Trackpad AnyMeasAdcVal[2], calculated in Main Loop
+(uint16_t*) 0x10000bbe - Average compensated value for Right Trackpad AnyMeasAdcVal[3], calculated in Main Loop
+(uint16_t*) 0x10000bc0 - Average compensated value for Right Trackpad AnyMeasAdcVal[4], calculated in Main Loop
+(uint16_t*) 0x10000bc2 - Average compensated value for Right Trackpad AnyMeasAdcVal[5], calculated in Main Loop
+(uint16_t*) 0x10000bc4 - Average compensated value for Right Trackpad AnyMeasAdcVal[6], calculated in Main Loop
+(uint16_t*) 0x10000bc6 - Average compensated value for Right Trackpad AnyMeasAdcVal[7], calculated in Main Loop
+(uint16_t*) 0x10000bc8 - Average compensated value for Right Trackpad AnyMeasAdcVal[8], calculated in Main Loop
+(uint16_t*) 0x10000bca - Average compensated value for Right Trackpad AnyMeasAdcVal[9], calculated in Main Loop
+(uint16_t*) 0x10000bcc - Average compensated value for Right Trackpad AnyMeasAdcVal[10], calculated in Main Loop
+(uint16_t*) 0x10000bce - Average compensated value for Right Trackpad AnyMeasAdcVal[11], calculated in Main Loop
+(uint16_t*) 0x10000bd0 - Average compensated value for Right Trackpad AnyMeasAdcVal[12], calculated in Main Loop
+(uint16_t*) 0x10000bd2 - Average compensated value for Right Trackpad AnyMeasAdcVal[13], calculated in Main Loop
+(uint16_t*) 0x10000bd4 - Average compensated value for Right Trackpad AnyMeasAdcVal[14], calculated in Main Loop
+(uint16_t*) 0x10000bd6 - Average compensated value for Right Trackpad AnyMeasAdcVal[15], calculated in Main Loop
+(uint16_t*) 0x10000bd8 - Average compensated value for Right Trackpad AnyMeasAdcVal[16], calculated in Main Loop
+(uint16_t*) 0x10000bda - Average compensated value for Right Trackpad AnyMeasAdcVal[17], calculated in Main Loop
+(uint16_t*) 0x10000bdc - Average compensated value for Left Trackpad AnyMeasAdcVal[0], calculated in Main Loop
+(uint16_t*) 0x10000bde - Average compensated value for Left Trackpad AnyMeasAdcVal[1], calculated in Main Loop
+(uint16_t*) 0x10000be0 - Average compensated value for Left Trackpad AnyMeasAdcVal[2], calculated in Main Loop
+(uint16_t*) 0x10000be2 - Average compensated value for Left Trackpad AnyMeasAdcVal[3], calculated in Main Loop
+(uint16_t*) 0x10000be4 - Average compensated value for Left Trackpad AnyMeasAdcVal[4], calculated in Main Loop
+(uint16_t*) 0x10000be6 - Average compensated value for Left Trackpad AnyMeasAdcVal[5], calculated in Main Loop
+(uint16_t*) 0x10000be8 - Average compensated value for Left Trackpad AnyMeasAdcVal[6], calculated in Main Loop
+(uint16_t*) 0x10000bea - Average compensated value for Left Trackpad AnyMeasAdcVal[7], calculated in Main Loop
+(uint16_t*) 0x10000bec - Average compensated value for Left Trackpad AnyMeasAdcVal[8], calculated in Main Loop
+(uint16_t*) 0x10000bee - Average compensated value for Left Trackpad AnyMeasAdcVal[9], calculated in Main Loop
+(uint16_t*) 0x10000bf0 - Average compensated value for Left Trackpad AnyMeasAdcVal[10], calculated in Main Loop
+(uint16_t*) 0x10000bf2 - Average compensated value for Left Trackpad AnyMeasAdcVal[11], calculated in Main Loop
+(uint16_t*) 0x10000bf4 - Average compensated value for Left Trackpad AnyMeasAdcVal[12], calculated in Main Loop
+(uint16_t*) 0x10000bf6 - Average compensated value for Left Trackpad AnyMeasAdcVal[13], calculated in Main Loop
+(uint16_t*) 0x10000bf8 - Average compensated value for Left Trackpad AnyMeasAdcVal[14], calculated in Main Loop
+(uint16_t*) 0x10000bfa - Average compensated value for Left Trackpad AnyMeasAdcVal[15], calculated in Main Loop
+(uint16_t*) 0x10000bfc - Average compensated value for Left Trackpad AnyMeasAdcVal[16], calculated in Main Loop
+(uint16_t*) 0x10000bfe - Average compensated value for Left Trackpad AnyMeasAdcVal[17], calculated in Main Loop
+(uint32_t*) 0x10000c00 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[0], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c04 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[1], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c08 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[2], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c0c - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[3], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c10 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[4], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c14 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[5], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c18 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[6], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c1c - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[7], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c20 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[8], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c24 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[9], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c28 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[10], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c2c - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[11], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c30 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[12], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c34 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[13], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c38 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[14], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c3c - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[15], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c40 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[16], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c44 - Accumulated compensated value for Right Trackpad AnyMeasAdcVal[17], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c48 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[0], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c4c - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[1], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c50 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[2], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c54 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[3], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c58 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[4], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c5c - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[5], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c60 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[6], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c64 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[7], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c68 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[8], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c6c - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[9], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c70 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[10], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c74 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[11], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c78 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[12], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c7c - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[13], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c80 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[14], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c84 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[15], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c88 - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[16], used for averge val calculated in Main Loop
+(uint32_t*) 0x10000c8c - Accumulated compensated value for Left Trackpad AnyMeasAdcVal[17], used for averge val calculated in Main Loop
 
  (uint8_t*) 0x10000d80 - I2C_XFER_T.slaveAddr; 7-bit I2C Slave address 
 
@@ -1466,7 +1743,7 @@ struct AnalogReadingRelated {
 (uint32_t*) 0x100010d8 - Interrupt disabled in order to check in main...
 			 Incremented in USB_Configure_Event() if 0x10000348 
 			 callback is not NULL.
-			 Incrmeneted in USB_Resume_Event().
+			 Incremented in USB_Resume_Event().
 			 Related to whether callback 0x100010dc is set?
 (uint32_t*) 0x100010dc - Callback. Set differently depending on USB callback
 			 (i.e. USB_Configure_Event() v.s. USB_Suspend_Event()).
@@ -1688,6 +1965,7 @@ struct JingleData {
 
  (uint8_t*) 0x20000002 - Number of active Trackpad ASICs to configure.
 			 Related to SSP0
+ (uint8_t*) 0x20000003 - Related to Trackpads?
 
  (uint8_t*) 0x20000005 - EP2 related?
 
@@ -1704,6 +1982,9 @@ struct JingleData {
 
  (uint8_t*) 0x20000075 - Counter?? Related to Joystick X/Y (AD1/AD3)? 
 			 And Trackpad ASICS?
+
+(uint32_t*) 0x2000008c - Related to Trackpad/EP2?
+(uint32_t*) 0x20000090 - Related to Trackpad/EP2?
 
 (uint16_t*) 0x20000254 - Related to EP3?
 (uint16_t*) 0x2000025a - Related to EP2?

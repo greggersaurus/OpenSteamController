@@ -1544,6 +1544,7 @@ void fnc0x0000627c(arg0x0000627c_0, arg0x0000627c_1);
 
 /**
  * Check flag 0x20000008. If non-zero then...?
+ * TODO: this is where Trackpad calculations and magic happens?
  *
  * \return None.
  */
@@ -2399,3 +2400,8 @@ void fnc0x00007a10();
 // Related to Haptics/CT32B0 Interrupt handler and switching/ending of pulse being sent to haptic via GPIO
 // Called when Note is done being played. Calls functions to setup next Note in Jingle sequence to play.
 ?? fnc0x00003894( arg0x00003894_0, arg0x00003894_1, arg0x00003894_2, arg0x00003894_3, arg0x00003894_4, arg0x00003894_5, arg0x00003894_6, arg0x00003894_7, arg0x00003894_12, )
+
+?? fnc0x0000ba30( arg0x0000ba30_0, arg0x0000ba30_1, arg0x0000ba30_2, arg0x0000ba30_3, arg0x0000ba30_4, arg0x0000ba30_5, arg0x0000ba30_6, arg0x0000ba30_7, arg0x0000ba30_8, arg0x0000ba30_9, arg0x0000ba30_10, arg0x0000ba30_11, arg0x0000ba30_12, )
+
+// Function for utilizing AnyMeas ADC values???
+?? fnc0x00007ff8( arg0x00007ff8_0, arg0x00007ff8_1, arg0x00007ff8_2, arg0x00007ff8_3, arg0x00007ff8_4, arg0x00007ff8_5, arg0x00007ff8_6, arg0x00007ff8_7, arg0x00007ff8_8, arg0x00007ff8_9, arg0x00007ff8_10, arg0x00007ff8_11, arg0x00007ff8_12, )
