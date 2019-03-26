@@ -24,12 +24,11 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
-1. Need to simulate with real AnyMeasAdcVals?
-    1. Capture with DevKit FW and see how this changes behavior?
-1. Understand function that utilizes ADC results. fnc0x00007ff8
-    1. Will this help explain how to use ADC results?
-    1. Is this only for first 11 AnyMeasAdcVals?
-        1. Maybe relates to X position calculation and next 7/8 are for Y position?
+1. Understand how AnyMeas ADC Values are converted to X/Y position
+    1. Start at fnc0x00004964() as that is where ADC values are captured AND TAKE TIME TO BE ORGANIZED
+        1. First 11 values related to X position and next 8 values relate to Y?
+        1. Note functions where different steps occurr (i.e. where are "final" floating point results fnc0x00008ca8()?? (so we can jump there in the future?))
+            1. Simulate more examples to be sure everything correlates before translating conversion functions?
 1. Is 0x10000258 packet for mouse movement?
 1. Clean up below
     1. Shoudl be able to remove some of this...

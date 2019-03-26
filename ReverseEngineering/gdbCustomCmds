@@ -1892,6 +1892,145 @@ define check_trackpad_isr_main_loop
 			set {char}0x1000024b = 1
 		end 
 
+		# Set variables with ADC values. These were gathered using the OpenSteamController Firmware DevKit Build
+	
+		# Right Trackpad had thumb on X axis to right of Y axis
+		# Left Trackpad had thumb in upper left quadrant
+
+		# AnyMeasAdcVal[0]
+		#	Right	
+		set {short}0x10000a38 = 469
+		set {short}0x10000a84 = 469
+		#	Left
+		set {short}0x10000a5e = -1586
+		set {short}0x10000aaa = -1586
+		# AnyMeasAdcVal[1]
+		#	Right	
+		set {short}0x10000a3a = -12875
+		set {short}0x10000a86 = -12875
+		#	Left
+		set {short}0x10000a60 = -16481
+		set {short}0x10000aac = -16481
+		# AnyMeasAdcVal[2]
+		#	Right
+		set {short}0x10000a3c = 2022
+		set {short}0x10000a88 = 2022
+		#	Left
+		set {short}0x10000a62 = 235
+		set {short}0x10000aae = 235
+		# AnyMeasAdcVal[3]
+		#	Right
+		set {short}0x10000a3e = -6205
+		set {short}0x10000a8a = -6205
+		#	Left
+		set {short}0x10000a64 = -7138
+		set {short}0x10000ab0 = -7138
+		# AnyMeasAdcVal[4]
+		#	Right
+		set {short}0x10000a40 = -3258
+		set {short}0x10000a8c = -3258
+		#	Left
+		set {short}0x10000a66 = -1881
+		set {short}0x10000ab2 = -1881
+		# AnyMeasAdcVal[5]
+		#	Right
+		set {short}0x10000a42 = -7129
+		set {short}0x10000a8e = -7129
+		#	Left
+		set {short}0x10000a68 = -6063
+		set {short}0x10000ab4 = -6063
+		# AnyMeasAdcVal[6]
+		#	Right
+		set {short}0x10000a44 = -3450
+		set {short}0x10000a90 = -3450
+		#	Left
+		set {short}0x10000a6a = -1899
+		set {short}0x10000ab6 = -1899
+		# AnyMeasAdcVal[7]
+		#	Right
+		set {short}0x10000a46 = -5199
+		set {short}0x10000a92 = -5199
+		#	Left
+		set {short}0x10000a6c = -4121
+		set {short}0x10000ab8 = -4121
+		# AnyMeasAdcVal[8]
+		#	Right
+		set {short}0x10000a48 = 1819
+		set {short}0x10000a94 = 1819
+		#	Left
+		set {short}0x10000a6e = 2715
+		set {short}0x10000aba = 2715
+		# AnyMeasAdcVal[9]
+		#	Right
+		set {short}0x10000a4a = -6687
+		set {short}0x10000a96 = -6687
+		#	Left
+		set {short}0x10000a70 = -7150
+		set {short}0x10000abc = -7150
+		# AnyMeasAdcVal[10]
+		#	Right
+		set {short}0x10000a4c = 5447
+		set {short}0x10000a98 = 5447
+		#	Left
+		set {short}0x10000a72 = 4880
+		set {short}0x10000abe = 4880
+		# AnyMeasAdcVal[11]
+		#	Right
+		set {short}0x10000a4e = 112
+		set {short}0x10000a9a = 112
+		#	Left
+		set {short}0x10000a74 = 72
+		set {short}0x10000ac0 = 72
+		# AnyMeasAdcVal[12]
+		#	Right
+		set {short}0x10000a50 = 760
+		set {short}0x10000a9c = 760
+		#	Left
+		set {short}0x10000a76 = 696
+		set {short}0x10000ac2 = 696
+		# AnyMeasAdcVal[13]
+		#	Right
+		set {short}0x10000a52 = 1309
+		set {short}0x10000a9e = 1309
+		#	Left
+		set {short}0x10000a78 = 1679
+		set {short}0x10000ac4 = 1679
+		# AnyMeasAdcVal[14]
+		#	Right
+		set {short}0x10000a54 = 484
+		set {short}0x10000aa0 = 484
+		#	Left
+		set {short}0x10000a7a = 2259
+		set {short}0x10000ac6 = 2259
+		# AnyMeasAdcVal[15]
+		#	Right
+		set {short}0x10000a56 = 428
+		set {short}0x10000aa2 = 428
+		#	Left
+		set {short}0x10000a7c = 306
+		set {short}0x10000ac8 = 306
+		# AnyMeasAdcVal[16]
+		#	Right
+		set {short}0x10000a58 = 1248
+		set {short}0x10000aa4 = 1248
+		#	Left
+		set {short}0x10000a7e = 890
+		set {short}0x10000aca = 890
+		# AnyMeasAdcVal[17]
+		#	Right
+		set {short}0x10000a5a = 309
+		set {short}0x10000aa6 = 309
+		#	Left
+		set {short}0x10000a80 = -524
+		set {short}0x10000acc = -524
+		# AnyMeasAdcVal[18]
+		#	Right
+		set {short}0x10000a5c = -31
+		set {short}0x10000aa8 = -31
+		#	Left
+		set {short}0x10000a82 = -11
+		set {short}0x10000ace = -11
+
 		# Remove all watchpoints
 		delete 
 
