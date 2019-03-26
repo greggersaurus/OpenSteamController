@@ -2308,7 +2308,7 @@ void fnc0x0000573c(arg0x0000573c_0);
 void fnc0x00009798(arg0x00009798_0);
 
 /**
- * Part 2 of ADC reads for compensation calculations(?) (8 reads starting at ADC 
+ * Part 2 of ADC reads for compensation calculations (8 reads starting at ADC 
  *	Address 0x015b). Called in PINT3/4 after ADC reads setup by 
  *	fnc0x00002c4c() have completed.
  *
@@ -2318,6 +2318,18 @@ void fnc0x00009798(arg0x00009798_0);
  * \return None.
  */
 void fnc0x00002c82(arg0x00002c82_0);
+
+/**
+ * Similar to void fnc0x00002c82(arg0x00002c82_0), except for Main Loop reads.
+ *  Only difference seems to be that Trackpad ASIC does not go to sleep betwee
+ *  reads.
+ *
+ * \param arg0x00002cb8_0 Specifies which Trackpad ASIC to communicate with.
+ *	0 = Right, 1 = Left.
+ *
+ * \return None.
+ */
+void fnc0x00002cb8(arg0x00002cb8_0);
 
 /**
  * Play jingle for a particular event.

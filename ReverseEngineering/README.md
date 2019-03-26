@@ -24,10 +24,12 @@ This section is a running list of priorities to focus on in hopes of reaching
  goal of modifying haptics jingle. This will be updated as tasks are completed
  and more knowledge is gained about the Steam Controller.
 
-1. Sim PINT3 ISR with mode = 1 (0x1000024e = 1)
-    1. Is this similar to gathering results for compensation mode or is there a difference in there that might trip me up?
+1. Need to simulate with real AnyMeasAdcVals?
+    1. Capture with DevKit FW and see how this changes behavior?
 1. Understand function that utilizes ADC results. fnc0x00007ff8
     1. Will this help explain how to use ADC results?
+    1. Is this only for first 11 AnyMeasAdcVals?
+        1. Maybe relates to X position calculation and next 7/8 are for Y position?
 1. Is 0x10000258 packet for mouse movement?
 1. Clean up below
     1. Shoudl be able to remove some of this...
