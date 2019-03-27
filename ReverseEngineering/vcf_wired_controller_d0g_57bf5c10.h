@@ -2417,3 +2417,9 @@ void fnc0x00007a10();
 
 // Function for utilizing AnyMeas ADC values???
 ?? fnc0x00007ff8( arg0x00007ff8_0, arg0x00007ff8_1, arg0x00007ff8_2, arg0x00007ff8_3, arg0x00007ff8_4, arg0x00007ff8_5, arg0x00007ff8_6, arg0x00007ff8_7, arg0x00007ff8_8, arg0x00007ff8_9, arg0x00007ff8_10, arg0x00007ff8_11, arg0x00007ff8_12, )
+
+// Function related to requesting new AnyMeas ADC Values and starting conversion to X/Y position
+?? fnc0x00004964( arg0x00004964_0, arg0x00004964_1, arg0x00004964_2, arg0x00004964_3, arg0x00004964_4, arg0x00004964_5, arg0x00004964_6, arg0x00004964_7, arg0x00004964_8, arg0x00004964_9, arg0x00004964_10, arg0x00004964_11, arg0x00004964_12, )
+
+// Function related to converting AnyMeas ADC Values to X/Y positions
+?? fnc0x00008ca8( arg0x00008ca8_0, arg0x00008ca8_1, arg0x00008ca8_2, arg0x00008ca8_3, arg0x00008ca8_4, arg0x00008ca8_5, arg0x00008ca8_6, arg0x00008ca8_7, arg0x00008ca8_8, arg0x00008ca8_9, arg0x00008ca8_10, arg0x00008ca8_11, arg0x00008ca8_12, )

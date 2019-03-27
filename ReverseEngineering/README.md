@@ -25,39 +25,24 @@ This section is a running list of priorities to focus on in hopes of reaching
  and more knowledge is gained about the Steam Controller.
 
 1. Understand how AnyMeas ADC Values are converted to X/Y position
-    1. Start at fnc0x00004964() as that is where ADC values are captured AND TAKE TIME TO BE ORGANIZED
+    1. Go through functions fnc0x00007ff8(), fnc0x00004964(), fnc0x00008ca8() and understand and recreate in trackpad.c
+        1. These seem to convert AnyMeas ADC values to X/Y position
+            1. Keep in mind labeled data gathered for thumb being in different positions on Trackpad and how that affects product X and Y values
         1. First 11 values related to X position and next 8 values relate to Y?
-        1. Note functions where different steps occurr (i.e. where are "final" floating point results fnc0x00008ca8()?? (so we can jump there in the future?))
-            1. Simulate more examples to be sure everything correlates before translating conversion functions?
+        1. Make sure these functions are understood and examples make it into vcf_wired_controller_d0g_57bf5c10.c
 1. Is 0x10000258 packet for mouse movement?
+1. Add https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino as a concrete reference in various locations?
+    1. In vcf_wired_controller_d0g_57bf5c10.h?
+    1. In trackpad.c?
 1. Clean up below
-    1. Shoudl be able to remove some of this...
-1. Consider effort in capturing paths I am using to understand how ADC results are being used
+    1. Should be able to remove some of this and consolidate the rest
+        1. Think through what next major RevEng focuses might be and what we know already
+        1. Section for questions that don't fit any particular goal? (for the completionist in me...)
 
-
-1. Review all Trackpad related sim data now that I think we are looking at an AnyMeas configuration and usage
-    1. Revisit interrupt and understand how ADC channels are switched for each interrupt call
-        1. Revisit and pay attention to how ADC channel (and number of ADC channels sampled) is changed before changing value of 0x1000024e
-           1. Maybe, 0 = calibration, 2 = ?? measurement mode, 3 = ?? measurement mode?
-        1. Re-run for when 0x1000024e = 3
-            1. Summarize thoughts on this and for other values
-                1. When =2 or =3 seems to only be paying attention to one "ADC" why?
-    1. Use now better annotated sim data to better construct trackpad.c
-        1. Think through functions like updating toggle registers and how only writing to SPI should occur if reg value differes from local static
-            1. Group functions for updating similar registers...
-    1. Compare sim results from trackpad.c output results and see if we need to resim anything
-
-    1. Call out what looks like compensation data (and defaults that exist in EEPROM)
-        1. Could add more relating to correlation of memory and ADC address (and compensation matrices?)
-    1. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for reference
-        1. Add this to references in README?
-        1. Make README related to understanding Trackpad? (or trackpad.c is enough?)
 
 1. Jingle Sim related
     1. Details on CT32B0 ISR based on simulation results?
     1. Details on each function call
-1. Add I2C related handling function to gdbCmdFile and gdbCustomCmds
-    1. Common sub-function in fnc0x00005fbc()?
 1. Clean, clean, clean
     1. gdbCmdFile, gdbCustomCmds, gdbOldRef
     1. PINT3 dump
