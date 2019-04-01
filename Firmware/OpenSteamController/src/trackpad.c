@@ -85,6 +85,7 @@ volatile bool tpadIsrBusys[2]; //!< Defines if the interrupt is currently being
 
 #else  // if (ANYMEAS_EN)
 
+// TODO: split these 19 values up into X and Y related ADC vals...
 #define NUM_ANYMEAS_ADCS (19) //!< Number of ADC channels read in AnyMeas
 	//!< mode
 
@@ -401,6 +402,7 @@ static void setupTrackpadISR(Trackpad trackpad) {
  * \return None.
  */
 static void setupTrackpad(Trackpad trackpad) {
+/*
 	// Reset the TrackpadASIC:
 	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, TPAD_SYSCFG1_RESET_BIT);
 
@@ -424,6 +426,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	if (fw_ver != 0x3a) 
 		return;
 
+*/
 	// Set ASIC to normal mode and active
 	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 0);
 	
@@ -436,6 +439,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	writePinnacleReg(trackpad, TPAD_FEEDCFG1_ADDR, TPAD_FEEDCFG1_FEEDEN_BIT
 		| TPAD_FEEDCFG1_ABSEN_BIT);
 	writePinnacleReg(trackpad, TPAD_ZIDLE_ADDR, 0x5);
+	writePinnacleReg(trackpad, TPAD_ZSCALER_ADDR, 16);
 
 	setupTrackpadISR(trackpad);
 }
@@ -451,8 +455,8 @@ static void setupTrackpad(Trackpad trackpad) {
  */
 void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
 	Chip_SSP_DATA_SETUP_T xf_setup;
-	uint8_t tx_data[9];
-	uint8_t rx_data[9];
+	uint8_t tx_data[11];
+	uint8_t rx_data[11];
 
 	if (R_TRACKPAD == trackpad) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, false);
@@ -461,7 +465,7 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
 	}
 
 	// Number of words to transfer
-	xf_setup.length = 9;
+	xf_setup.length = 11;
 	// Used to count how many words have been transmitted
 	xf_setup.tx_cnt = 0;
 	xf_setup.tx_data = tx_data;
@@ -470,16 +474,18 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
 	xf_setup.rx_data = rx_data;
 
 	// Auto-incremented read starting at register TPAD_MEASRESULT_HI_ADDR
-	tx_data[0] = 0xA0 | TPAD_PACKETBTE2_ADDR;
-	tx_data[1] = 0xFC;
-	tx_data[2] = 0xFC;
-	tx_data[3] = 0xFC;
-	tx_data[4] = 0xFC;
-	tx_data[5] = 0xFC;
-	tx_data[6] = 0xFB;
+	tx_data[0] = 0xA0 | TPAD_PACKETBTE0_ADDR; // Command Byte
+	tx_data[1] = 0xFC; // Filler Byte
+	tx_data[2] = 0xFC; // Filler Byte
+	tx_data[3] = 0xFC; // PacketByte_0
+	tx_data[4] = 0xFC; // PacketByte_1
+	tx_data[5] = 0xFC; // PacketByte_2
+	tx_data[6] = 0xFC; // PacketByte_3
+	tx_data[7] = 0xFC; // PacketByte_4
+	tx_data[8] = 0xFC; // PacketByte_5
 	// Clear flags
-	tx_data[7] = 0x80 | TPAD_STATUS1_ADDR;
-	tx_data[8] = 0x00;
+	tx_data[9] = 0x80 | TPAD_STATUS1_ADDR;
+	tx_data[10] = 0x00;
 
 	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
 
@@ -489,9 +495,9 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 	}
 
-	absData->xPos = (0x0F & (rx_data[5] << 8)) | rx_data[3];
-	absData->yPos = (0x0F & (rx_data[5] << 4)) | rx_data[4];
-	absData->zPos = 0x3F & rx_data[6];
+	absData->xPos = rx_data[4]; //(0x0F & rx_data[6]);//((0x0F & rx_data[7]) << 8) | rx_data[5];
+	absData->yPos = rx_data[5]; //(0xF0 & rx_data[6]) >> 4;//((0xF0 & rx_data[7]) << 4) | rx_data[6];
+	absData->zPos = rx_data[3]; //0x3F & rx_data[8];
 }
 
 /**
@@ -502,14 +508,15 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
  * \return The ADC value.
  */
 static void getLatestPinnacleData(Trackpad trackpad) {
-	tpadIsrBusys[trackpad] = true;
+	//getAbsDataAndClr(trackpad, &tpadAbsDatas[trackpad][0]);//tpadAbsDataIdxs[trackpad]]);
 
-	getAbsDataAndClr(trackpad, &tpadAbsDatas[trackpad][tpadAbsDataIdxs[trackpad]]);
+	tpadAbsDatas[trackpad][0].xPos = readPinnacleReg(trackpad, 0x13);
+	tpadAbsDatas[trackpad][0].yPos = readPinnacleReg(trackpad, 0x14);
+	tpadAbsDatas[trackpad][0].zPos = readPinnacleReg(trackpad, 0x15);
+	clearFlagsPinnacle(trackpad);
 
-	tpadAbsDataIdxs[trackpad]++;
-	tpadAbsDataIdxs[trackpad] %= 2;
-
-	tpadIsrBusys[trackpad] = false;
+	//tpadAbsDataIdxs[trackpad]++;
+	//tpadAbsDataIdxs[trackpad] %= 2;
 }
 
 #else  // if (ANYMEAS_EN)
@@ -863,7 +870,6 @@ static void setupTrackpad(Trackpad trackpad) {
 	writePinnacleReg(trackpad, TPAD_ANYMEASSTATE_ADDR, 0x00);
 	writePinnacleReg(trackpad, TPAD_ADCCFG2_ADDR, 0x00);
 
-	// Load Compensation Matrix Data (I think...):
 	uint8_t era_data[8];
 
 	era_data[0] = 0x00;
@@ -946,6 +952,8 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[7] = 0x00;
 	writePinnacleExtRegs(trackpad, 0x0193, 8, era_data);
 
+	// Load Compensation Matrix Data (I think...):
+	//  According to datasheet: A compensation matrix of 92 values (each value is 16 bits signed) is stored sequentially in Pinnacle RAM, with the first value being stored at 0x01DF. 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
 	era_data[2] = 0x00;
@@ -1126,8 +1134,10 @@ void initTrackpad(void) {
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Right Trackpad in shutdown mode
+/*
 	writePinnacleReg(R_TRACKPAD, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_SHUTDOWN_BIT);
+*/
 
 	// Left Trackpad comms setup
 	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
@@ -1141,8 +1151,10 @@ void initTrackpad(void) {
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Left Trackpad in shutdown mode
+/*
 	writePinnacleReg(L_TRACKPAD, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_SHUTDOWN_BIT);
+*/
 
 	setupTrackpad(R_TRACKPAD);
 	setupTrackpad(L_TRACKPAD);
@@ -1240,10 +1252,23 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 
 #if (!ANYMEAS_EN)
 
+	printf("Status 1 = 0x%02x\n", readPinnacleReg(trackpad, 0x02));
+	printf("Sys Config 1 = 0x%02x\n", readPinnacleReg(trackpad, 0x03));
+	printf("Feed Config 1 = 0x%02x\n", readPinnacleReg(trackpad, 0x04));
+	printf("Feed Config 2 = 0x%02x\n", readPinnacleReg(trackpad, 0x05));
+	printf("Feed Config 3 = 0x%02x\n", readPinnacleReg(trackpad, 0x06));
+	printf("Cal Config 1 = 0x%02x\n", readPinnacleReg(trackpad, 0x07));
+	printf("PS/2 Aux Control = 0x%02x\n", readPinnacleReg(trackpad, 0x08));
+	printf("Sample Rate = 0x%02x\n", readPinnacleReg(trackpad, 0x09));
+	printf("Z Idle = 0x%02x\n", readPinnacleReg(trackpad, TPAD_ZIDLE_ADDR));
+	printf("Z Scaler = 0x%02x\n", readPinnacleReg(trackpad, TPAD_ZSCALER_ADDR));
+	printf("Sleep Interval = 0x%02x\n", readPinnacleReg(trackpad, TPAD_SLEEPINTERVAL_ADDR));
+	printf("Sleep Timer = 0x%02x\n", readPinnacleReg(trackpad, TPAD_SLEEPTIMER_ADDR));
+	printf("Dynamic EMI Adjust = 0x%02x\n", readPinnacleReg(trackpad, 0x0E));
+
 	while (!usb_tstc()) {
-		int idx = tpadAbsDataIdxs[trackpad];
-		idx++;
-		idx %= 2;
+
+		int idx = 0;//tpadAbsDataIdxs[trackpad];
 		printf("[%d]: X = %4d, Y = %4d, Z = %4d\r", idx, 
 			tpadAbsDatas[trackpad][idx].xPos, 
 			tpadAbsDatas[trackpad][idx].yPos, 
@@ -1263,17 +1288,397 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 
 	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
 		printf("comps[%d] = %d %d\n", idx, tpadAdcComps[trackpad][idx], eeprom_comps[idx]);
+		//tpadAdcComps[trackpad][idx] = eeprom_comps[idx];
 	}
+
+	while (!usb_tstc()) {
+		getPinnacleAdcVals(trackpad);
+
+		// Debug
+/*
+		tpadAdcDatas[trackpad][0] = 0x0004;
+		tpadAdcDatas[trackpad][1] = 0xcda5;
+		tpadAdcDatas[trackpad][2] = 0x07e4;
+		tpadAdcDatas[trackpad][3] = 0xe735;
+		tpadAdcDatas[trackpad][4] = 0xf4d0;
+		tpadAdcDatas[trackpad][5] = 0xe770;
+		tpadAdcDatas[trackpad][6] = 0xf55a;
+		tpadAdcDatas[trackpad][7] = 0xed27;
+		tpadAdcDatas[trackpad][8] = 0x056b;
+		tpadAdcDatas[trackpad][9] = 0xe219;
+		tpadAdcDatas[trackpad][10] = 0x11cd;
+*/
+
+		int32_t adc_vals_x[12];
+
+		int32_t compensated_val = tpadAdcDatas[trackpad][0] - tpadAdcComps[trackpad][0];
+		adc_vals_x[0] = compensated_val;
+		adc_vals_x[1] = compensated_val;
+		adc_vals_x[2] = -compensated_val;
+		adc_vals_x[3] = compensated_val;
+		adc_vals_x[4] = compensated_val;
+		adc_vals_x[5] = compensated_val;
+		adc_vals_x[6] = -compensated_val;
+		adc_vals_x[7] = -compensated_val;
+		adc_vals_x[8] = -compensated_val;
+		adc_vals_x[9] = compensated_val;
+		adc_vals_x[10] = -compensated_val;
+		adc_vals_x[11] = -compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][1] - tpadAdcComps[trackpad][1];
+		adc_vals_x[0] -= compensated_val;
+		adc_vals_x[1] += compensated_val;
+		adc_vals_x[2] += compensated_val;
+		adc_vals_x[3] -= compensated_val;
+		adc_vals_x[4] += compensated_val;
+		adc_vals_x[5] += compensated_val;
+		adc_vals_x[6] += compensated_val;
+		adc_vals_x[7] -= compensated_val;
+		adc_vals_x[8] -= compensated_val;
+		adc_vals_x[9] -= compensated_val;
+		adc_vals_x[10] += compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][2] - tpadAdcComps[trackpad][2];
+		adc_vals_x[0] += compensated_val;
+		adc_vals_x[1] -= compensated_val;
+		adc_vals_x[2] += compensated_val;
+		adc_vals_x[3] += compensated_val;
+		adc_vals_x[4] -= compensated_val;
+		adc_vals_x[5] += compensated_val;
+		adc_vals_x[6] += compensated_val;
+		adc_vals_x[7] += compensated_val;
+		adc_vals_x[8] -= compensated_val;
+		adc_vals_x[9] -= compensated_val;
+		adc_vals_x[10] -= compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][3] - tpadAdcComps[trackpad][3];
+		adc_vals_x[0] -= compensated_val;
+		adc_vals_x[1] += compensated_val;
+		adc_vals_x[2] -= compensated_val;
+		adc_vals_x[3] += compensated_val;
+		adc_vals_x[4] += compensated_val;
+		adc_vals_x[5] -= compensated_val;
+		adc_vals_x[6] += compensated_val;
+		adc_vals_x[7] += compensated_val;
+		adc_vals_x[8] += compensated_val;
+		adc_vals_x[9] -= compensated_val;
+		adc_vals_x[10] -= compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][4] - tpadAdcComps[trackpad][4];
+		adc_vals_x[0] -= compensated_val;
+		adc_vals_x[1] -= compensated_val;
+		adc_vals_x[2] += compensated_val;
+		adc_vals_x[3] -= compensated_val;
+		adc_vals_x[4] += compensated_val;
+		adc_vals_x[5] += compensated_val;
+		adc_vals_x[6] -= compensated_val;
+		adc_vals_x[7] += compensated_val;
+		adc_vals_x[8] += compensated_val;
+		adc_vals_x[9] += compensated_val;
+		adc_vals_x[10] -= compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][5] - tpadAdcComps[trackpad][5];
+		adc_vals_x[0] -= compensated_val;
+		adc_vals_x[1] -= compensated_val;
+		adc_vals_x[2] -= compensated_val;
+		adc_vals_x[3] += compensated_val;
+		adc_vals_x[4] -= compensated_val;
+		adc_vals_x[5] += compensated_val;
+		adc_vals_x[6] += compensated_val;
+		adc_vals_x[7] -= compensated_val;
+		adc_vals_x[8] += compensated_val;
+		adc_vals_x[9] += compensated_val;
+		adc_vals_x[10] += compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][6] - tpadAdcComps[trackpad][6];
+		adc_vals_x[0] += compensated_val;
+		adc_vals_x[1] -= compensated_val;
+		adc_vals_x[2] -= compensated_val;
+		adc_vals_x[3] -= compensated_val;
+		adc_vals_x[4] += compensated_val;
+		adc_vals_x[5] -= compensated_val;
+		adc_vals_x[6] += compensated_val;
+		adc_vals_x[7] += compensated_val;
+		adc_vals_x[8] -= compensated_val;
+		adc_vals_x[9] += compensated_val;
+		adc_vals_x[10] += compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][7] - tpadAdcComps[trackpad][7];
+		adc_vals_x[0] += compensated_val;
+		adc_vals_x[1] += compensated_val;
+		adc_vals_x[2] -= compensated_val;
+		adc_vals_x[3] -= compensated_val;
+		adc_vals_x[4] -= compensated_val;
+		adc_vals_x[5] += compensated_val;
+		adc_vals_x[6] -= compensated_val;
+		adc_vals_x[7] += compensated_val;
+		adc_vals_x[8] += compensated_val;
+		adc_vals_x[9] -= compensated_val;
+		adc_vals_x[10] += compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][8] - tpadAdcComps[trackpad][8];
+		adc_vals_x[0] += compensated_val;
+		adc_vals_x[1] += compensated_val;
+		adc_vals_x[2] += compensated_val;
+		adc_vals_x[3] -= compensated_val;
+		adc_vals_x[4] -= compensated_val;
+		adc_vals_x[5] -= compensated_val;
+		adc_vals_x[6] += compensated_val;
+		adc_vals_x[7] -= compensated_val;
+		adc_vals_x[8] += compensated_val;
+		adc_vals_x[9] += compensated_val;
+		adc_vals_x[10] -= compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][9] - tpadAdcComps[trackpad][9];
+		adc_vals_x[0] -= compensated_val;
+		adc_vals_x[1] += compensated_val;
+		adc_vals_x[2] += compensated_val;
+		adc_vals_x[3] += compensated_val;
+		adc_vals_x[4] -= compensated_val;
+		adc_vals_x[5] -= compensated_val;
+		adc_vals_x[6] -= compensated_val;
+		adc_vals_x[7] += compensated_val;
+		adc_vals_x[8] -= compensated_val;
+		adc_vals_x[9] += compensated_val;
+		adc_vals_x[10] += compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][10] - tpadAdcComps[trackpad][10];
+		adc_vals_x[0] += compensated_val;
+		adc_vals_x[1] -= compensated_val;
+		adc_vals_x[2] += compensated_val;
+		adc_vals_x[3] += compensated_val;
+		adc_vals_x[4] += compensated_val;
+		adc_vals_x[5] -= compensated_val;
+		adc_vals_x[6] -= compensated_val;
+		adc_vals_x[7] -= compensated_val;
+		adc_vals_x[8] += compensated_val;
+		adc_vals_x[9] -= compensated_val;
+		adc_vals_x[10] += compensated_val;
+		adc_vals_x[11] -= compensated_val;
+
+		for (int idx = 0; idx < 12; idx++) {
+			if (adc_vals_x[idx] < 0)
+				adc_vals_x[idx] = 0;
+		}
+
+		int32_t dividend = 0;
+		int32_t divisor = 0;
+		int32_t factor = 0;
+		for (int idx = 0; idx < 12; idx++) {
+			dividend += factor * adc_vals_x[idx];
+			divisor += adc_vals_x[idx];
+			factor += 100;
+		}
+
+		uint32_t x_pos = -1;
+		if (divisor) {
+			x_pos = dividend / divisor;	
+			x_pos = 1200 - x_pos;
+		}
+
+		int32_t adc_vals_y[8];
+
+		compensated_val = tpadAdcDatas[trackpad][11] - tpadAdcComps[trackpad][11];
+		adc_vals_y[0] = -compensated_val;
+		adc_vals_y[1] = compensated_val;
+		adc_vals_y[2] = -compensated_val;
+		adc_vals_y[3] = compensated_val;
+		adc_vals_y[4] = -compensated_val;
+		adc_vals_y[5] = compensated_val;
+		adc_vals_y[6] = -compensated_val;
+		adc_vals_y[7] = compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][12] - tpadAdcComps[trackpad][12];
+		adc_vals_y[0] -= compensated_val;
+		adc_vals_y[1] -= compensated_val;
+		adc_vals_y[2] += compensated_val;
+		adc_vals_y[3] += compensated_val;
+		adc_vals_y[4] -= compensated_val;
+		adc_vals_y[5] -= compensated_val;
+		adc_vals_y[6] += compensated_val;
+		adc_vals_y[7] += compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][13] - tpadAdcComps[trackpad][13];
+		adc_vals_y[0] += compensated_val;
+		adc_vals_y[1] -= compensated_val;
+		adc_vals_y[2] -= compensated_val;
+		adc_vals_y[3] += compensated_val;
+		adc_vals_y[4] += compensated_val;
+		adc_vals_y[5] -= compensated_val;
+		adc_vals_y[6] -= compensated_val;
+		adc_vals_y[7] += compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][14] - tpadAdcComps[trackpad][14];
+		adc_vals_y[0] -= compensated_val;
+		adc_vals_y[1] -= compensated_val;
+		adc_vals_y[2] -= compensated_val;
+		adc_vals_y[3] -= compensated_val;
+		adc_vals_y[4] += compensated_val;
+		adc_vals_y[5] += compensated_val;
+		adc_vals_y[6] += compensated_val;
+		adc_vals_y[7] += compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][15] - tpadAdcComps[trackpad][15];
+		adc_vals_y[0] += compensated_val;
+		adc_vals_y[1] -= compensated_val;
+		adc_vals_y[2] += compensated_val;
+		adc_vals_y[3] -= compensated_val;
+		adc_vals_y[4] -= compensated_val;
+		adc_vals_y[5] += compensated_val;
+		adc_vals_y[6] -= compensated_val;
+		adc_vals_y[7] += compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][16] - tpadAdcComps[trackpad][16];
+		adc_vals_y[0] += compensated_val;
+		adc_vals_y[1] += compensated_val;
+		adc_vals_y[2] -= compensated_val;
+		adc_vals_y[3] -= compensated_val;
+		adc_vals_y[4] -= compensated_val;
+		adc_vals_y[5] -= compensated_val;
+		adc_vals_y[6] += compensated_val;
+		adc_vals_y[7] += compensated_val;
+
+		compensated_val = tpadAdcDatas[trackpad][17] - tpadAdcComps[trackpad][17];
+		adc_vals_y[0] -= compensated_val;
+		adc_vals_y[1] += compensated_val;
+		adc_vals_y[2] += compensated_val;
+		adc_vals_y[3] -= compensated_val;
+		adc_vals_y[4] += compensated_val;
+		adc_vals_y[5] -= compensated_val;
+		adc_vals_y[6] -= compensated_val;
+		adc_vals_y[7] += compensated_val;
+
+		for (int idx = 0; idx < 8; idx++) {
+			if (adc_vals_y[idx] < 0)
+				adc_vals_y[idx] = 0;
+			adc_vals_y[idx] /= 1000;
+		}
+
+		dividend = 0;
+		divisor = 0;
+		factor = 0;
+		for (int idx = 0; idx < 8; idx++) {
+			dividend += factor * adc_vals_y[idx];
+			divisor += adc_vals_y[idx];
+			factor += 100;
+		}
+
+		uint32_t y_pos = -1;
+		if (divisor) {
+			y_pos = dividend / divisor;	
+		}
+
+		printf("X = %4d, Y = %4d\r", x_pos, y_pos);
+		usleep(10 * 1000);
+	}
+
+	
+
+/*
+	int16_t eeprom_comps[NUM_ANYMEAS_ADCS];
+	if (trackpad == R_TRACKPAD) {
+		eepromRead(0x602, eeprom_comps, sizeof(eeprom_comps));
+	} else {
+		eepromRead(0x628, eeprom_comps, sizeof(eeprom_comps));
+	}
+
+	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+		printf("comps[%d] = %d %d\n", idx, tpadAdcComps[trackpad][idx], eeprom_comps[idx]);
+	}
+
+	getPinnacleAdcVals(trackpad);
+
+	if (trackpad == R_TRACKPAD)
+		printf("# Right Trackpad AnyMeas ADC Vals:\n");
+	else 
+		printf("# Left Trackpad AnyMeas ADC Vals:\n");
+
+	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+		uint32_t base_addr = 0x10000a38; 
+		if (trackpad == L_TRACKPAD) {
+			base_addr = 0x10000a5e;
+		}
+		printf("set {short}0x%08x = %d\n", base_addr + 2 * idx, tpadAdcDatas[trackpad][idx]);
+		printf("set {short}0x%08x = %d\n", 0x4c + base_addr + 2 * idx, tpadAdcDatas[trackpad][idx]);
+	}
+
+	return 0;
+
+
+	int adc_idx = 0;
+	if (argc >= 2) {
+		adc_idx = atoi(argv[1]);
+	}
+	if (adc_idx < 0 || adc_idx >= NUM_ANYMEAS_ADCS) {
+		adc_idx = 0;
+	}
+	printf("ADC Index = %d\n", adc_idx);	
+	int min_val = 128000;
+	int max_val = -128000;
 	
 	while (!usb_tstc()) {
 		getPinnacleAdcVals(trackpad);
-		for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
-			printf("% 5d, ", tpadAdcDatas[trackpad][idx] - tpadAdcComps[trackpad][idx]);
-		}
-		printf("\n");
+		int val = (int16_t)((uint16_t)tpadAdcDatas[trackpad][adc_idx] - (uint16_t)tpadAdcComps[trackpad][adc_idx]);
 
+		if (val < min_val)
+			min_val = val;
+		if (val > max_val)
+			max_val = val;
+
+		char loc_str[103];
+		memset(loc_str, '-', sizeof(loc_str));
+		loc_str[sizeof(loc_str)-1] = 0;
+		loc_str[sizeof(loc_str)-2] = ']';
+		loc_str[0] = '[';
+
+		if (-val < 0) {
+			loc_str[1] = '*';
+		} else if (-val / 10 + 1 > 100) {
+			loc_str[100] = '*';
+		} else {
+			loc_str[-val / 10 + 1] = '*';
+		}
+
+		if (-min_val < 0) {
+			loc_str[1] = '!';
+		} else if (-min_val / 10 + 1 > 100) {
+			loc_str[100] = '!';
+		} else {
+			loc_str[-min_val / 10 + 1] = '!';
+		}
+
+		for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+			printf("% 5d %s % 5d % 5d\r", min_val, loc_str, max_val, val);
+		}
+
+*/
+/*
+		for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+			int max_idx = -1;
+			int max_val = -128000000;
+			for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+				if (vals[idx] > max_val) {
+					max_val = vals[idx];
+					max_idx = idx;
+				}
+			}
+			printf("% 2d % 4d, ", max_idx, max_val);
+			vals[max_idx] = -128000000;
+		}
+*/
+/*
 		usleep(50 * 1000);
 	}
+*/
 
 /*
 	while (!usb_tstc()) {
