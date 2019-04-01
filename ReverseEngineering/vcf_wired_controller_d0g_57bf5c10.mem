@@ -327,6 +327,8 @@ USB_HID2 HID Report Descriptor (len 0x21):
 			 Bit 4 relates to Left Haptic/PINT4?
  (uint8_t*) 0x10000236 - Bit number for SSP0 SYSAHBCLKCTRL clock enable/disable.
 
+ (uint8_t*) 0x10000238 - Flag to related to Trackpad. Which AnyMeas Shadown Registers were just read (or are being read?)?
+
  (uint8_t*) 0x1000023a - GPIO group/port for Right Trackpad ASIC Chip Select (PIO1_15).
  (uint8_t*) 0x1000023b - GPIO group/port for Left Trackpad ASIC Chip Select (PIO1_6).
  (uint8_t*) 0x1000023c - GPIO number/offset for Right Trackpad ASIC Chip Selet (PIO1_15).
@@ -375,9 +377,11 @@ USB_HID2 HID Report Descriptor (len 0x21):
 (uint16_t*) 0x10000258 - 2. Related to Right Trackpad ASIC register values read
 			 via PINT3 ISR, AnyMeas ADC Vals (i.e. Registers 0x12 and 0x11)
 			 Related to simulated mouse maybe?
+			 Or maybe Finger Down?
 (uint16_t*) 0x1000025a - 2. Related to Left Trackpad ASIC register values read
 			 via PINT4 ISR, AnyMeas ADC Vals (i.e. Registers 0x12 and 0x11)
 			 Related to simulated mouse maybe?
+			 Or maybe Finger Down?
 
 (uint32_t*) 0x10000260 - System Clock Frequency in Hz
 (uint32_t*) 0x10000264 - Counter for the number of times in the main loop in
@@ -1963,13 +1967,14 @@ struct JingleData {
 
   (int8_t*) 0x20000000 - Related to Trackpad ASIC/SSP0?
 
- (uint8_t*) 0x20000002 - Number of active Trackpad ASICs to configure.
-			 Related to SSP0
- (uint8_t*) 0x20000003 - Related to Trackpads?
+ (uint8_t*) 0x20000002 - Number of active Trackpads.
+ (uint8_t*) 0x20000003 - Related to Trackpads (and converting AnyMeas ADC results to X/Y position?)
 
  (uint8_t*) 0x20000005 - EP2 related?
 
- (uint8_t*) 0x20000008 - Flag related to Trackpads being enabled??
+ (uint8_t*) 0x20000007 - Related to Trackpads?
+ (uint8_t*) 0x20000008 - Flag related to Trackpads being configured?
+ (uint8_t*) 0x20000009 - Trackpad related. Related to 0x20000278?
 
  (uint8_t*) 0x2000000c - Related to EP3 and/or Joystick X/Y (AD1/AD3)?
 
@@ -1986,8 +1991,10 @@ struct JingleData {
 (uint32_t*) 0x2000008c - Related to Trackpad/EP2?
 (uint32_t*) 0x20000090 - Related to Trackpad/EP2?
 
-(uint16_t*) 0x20000254 - Related to EP3?
+(uint16_t*) 0x20000254 - Related to EP3? Related to Trackpad...
 (uint16_t*) 0x2000025a - Related to EP2?
+
+(uint16_t*) 0x20000278 - Related to Trackpads?
 
 (uint16_t*) 0x200002a0 - Related to CT16B1 MR0 calculation?
 (uint16_t*) 0x200002a2 - Related to CT16B1 MR0 calculation?
@@ -1995,7 +2002,7 @@ struct JingleData {
 (uint16_t*) 0x200002a8 - Related to EP3?
 (uint16_t*) 0x200002aa - Related to EP3?
 
-(uint16_t*) 0x200002ae - Related to USB Configuration.
+(uint16_t*) 0x200002ae - Related to USB Configuration. Related to Trackpad?
 
 (uint32_t*) 0x200002c0 - Related to Joystick X/Y position? Callback?
 (uint32_t*) 0x200002c4 - Related to Trackpad position? Callback?

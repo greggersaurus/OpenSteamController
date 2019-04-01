@@ -2415,11 +2415,76 @@ void fnc0x00007a10();
 
 ?? fnc0x0000ba30( arg0x0000ba30_0, arg0x0000ba30_1, arg0x0000ba30_2, arg0x0000ba30_3, arg0x0000ba30_4, arg0x0000ba30_5, arg0x0000ba30_6, arg0x0000ba30_7, arg0x0000ba30_8, arg0x0000ba30_9, arg0x0000ba30_10, arg0x0000ba30_11, arg0x0000ba30_12, )
 
-// Function for utilizing AnyMeas ADC values???
-?? fnc0x00007ff8( arg0x00007ff8_0, arg0x00007ff8_1, arg0x00007ff8_2, arg0x00007ff8_3, arg0x00007ff8_4, arg0x00007ff8_5, arg0x00007ff8_6, arg0x00007ff8_7, arg0x00007ff8_8, arg0x00007ff8_9, arg0x00007ff8_10, arg0x00007ff8_11, arg0x00007ff8_12, )
+
+
+
+// Retrieves  0x10000258 or 0x1000025a
+uint8_t fnc0x00005a44(arg0x00005a44_0);
+
+?? fnc0x00008648( arg0x00008648_0, arg0x00008648_1, arg0x00008648_2, arg0x00008648_3, arg0x00008648_4, arg0x00008648_5, arg0x00008648_6, arg0x00008648_7, arg0x00008648_8, arg0x00008648_9, arg0x00008648_10, arg0x00008648_11, arg0x00008648_12, )
 
 // Function related to requesting new AnyMeas ADC Values and starting conversion to X/Y position
 ?? fnc0x00004964( arg0x00004964_0, arg0x00004964_1, arg0x00004964_2, arg0x00004964_3, arg0x00004964_4, arg0x00004964_5, arg0x00004964_6, arg0x00004964_7, arg0x00004964_8, arg0x00004964_9, arg0x00004964_10, arg0x00004964_11, arg0x00004964_12, )
 
-// Function related to converting AnyMeas ADC Values to X/Y positions
+/**
+ * Request start of capture of another 19 AnyMeas ADC Values
+ * 
+ * \param arg0x00009884_0 Indicates which haptic (0 = Right, 1 = Left)
+ *
+ * \return None.
+ */
+void fnc0x00009884(arg0x00009884_0);
+
+/**
+ * Start conversion of AnyMeas ADC values to X/Y position and grab some other 
+ *  variable filled by ISR (Finger Down or "Mouse" Movement?).
+ *  Priming some values and starting some calculations to finish up later?
+ * 
+ * \param arg0x00007ff8_0 Indicates which haptic (0 = Right, 1 = Left)
+ *
+ * \return none.
+ */
+void fnc0x00007ff8(arg0x00007ff8_0);
+
+/*
+ * Start process of converting latest AnyMeas ADC readings to X/Y position. 
+ *  Specifically this function takes latest AnyMeas ADC readings from global
+ *  shadow copy variables and balances them all relative to other readings on
+ *  their axis. 
+ *
+ * \param arg0x00005028_0 Indicates which haptic (0 = Right, 1 = Left)
+ * 
+ * \return None.
+ */
+void fnc0x00005028(arg0x00005028_0);
+
+/**
+ * Compute arg0x00002118_0/arg0x00002118_1, if both arguments are positive. 
+ *  If they are not both positive... TODO
+ *  This uses fnc0x000020ec() to divide the two input aguments.
+ * 
+ * \param arg0x00002118_0 (uint32_t) Dividend
+ * \param arg0x00002118_1 (uint32_t) Divisor
+ *
+ * \return (uint32_t)arg0x000020ec_0 / (uint32_t)arg0x000020ec_1.
+ */
+int fnc0x00002118(arg0x00002118_0, arg0x00002118_1);
+
+/**
+ * Next step in converting AnyMeas ADC values to X/Y position. In many ways 
+ *  this function is a follow up to fnc0x00005028(). This will produce a 
+ *  an integer X or Y position depending on buffer given to function.
+ * 
+ * \param arg0x00003dea_0 Pointer to AnyMeas ADC values pre-processed by
+ *  	fnc0x00005028(). 
+ * \param arg0x00003dea_1 Number of samples in array pointed to by 
+ *	arg0x00003dea_0.
+ * \param arg0x00003dea_2 Pointer of where to store calculated X/Y position.
+ *
+ * \return Partial result from calculation. Is checked and data used... but
+ *	I don't understand how or why...
+ */
+uint32_t fnc0x00003dea(arg0x00003dea_0, arg0x00003dea_1, arg0x00003dea_2);
+
+// Next step in processing AnyMeas ADC Results and creating X/Y position. This converts integer X and Y positions to float and then...
 ?? fnc0x00008ca8( arg0x00008ca8_0, arg0x00008ca8_1, arg0x00008ca8_2, arg0x00008ca8_3, arg0x00008ca8_4, arg0x00008ca8_5, arg0x00008ca8_6, arg0x00008ca8_7, arg0x00008ca8_8, arg0x00008ca8_9, arg0x00008ca8_10, arg0x00008ca8_11, arg0x00008ca8_12, )
