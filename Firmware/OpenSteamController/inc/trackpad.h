@@ -1,6 +1,7 @@
 /**
  * \file trackpad.h
- * \brief Encompasses functions communicating with trackpad via SPI.
+ * \brief Encompasses functions communicating with Trackpads to get X/Y 
+ *	locations.
  *
  * MIT License
  *
@@ -30,7 +31,18 @@
 
 #include <stdint.h>
 
+/**
+ * Defines which Trackpad is being communicated with.
+ */
+typedef enum Trackpad_t {
+	R_TRACKPAD = 0,
+	L_TRACKPAD = 1
+} Trackpad;
+
 void initTrackpad(void);
+
+void trackpadLocUpdate(Trackpad trackpad);
+void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc);
 
 void trackpadCmdUsage(void);
 int trackpadCmdFnc(int argc, const char* argv[]);

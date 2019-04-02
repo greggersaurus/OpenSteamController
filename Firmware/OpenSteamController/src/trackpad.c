@@ -41,7 +41,7 @@
 	//!< configured to perform movement tracking calcualtions or whether
 	//!< all access to Trackpad ASICs is in AnyMeas mode (i.e. a raw
 	//!< data access mode). 
-	//!< TODO: AnyMeas Mode is the way the official firmware uses the 
+	//!< Note: AnyMeas Mode is the way the official firmware uses the 
 	//!<  and either Normal Mode does not work well or I am missing some
 	//!<  setup or configuration steps... Going to focus on AnyMeas Mode
 	//!<  since we at least have official FW as reference. Leaving
@@ -49,11 +49,6 @@
 	//!<  and work with it in the future.
 
 static LPC_SSP_T* spiRegs = LPC_SSP0;
-
-typedef enum Trackpad_t {
-	R_TRACKPAD = 0,
-	L_TRACKPAD = 1
-} Trackpad;
 
 #define GPIO_SSP0_SCK0 1, 29
 #define GPIO_SSP0_MISO0 0, 8
@@ -66,6 +61,7 @@ typedef enum Trackpad_t {
 
 #define PINT_R_TRACKPAD 3
 #define PINT_L_TRACKPAD 4
+
 
 #if (!ANYMEAS_EN)
 
@@ -83,21 +79,35 @@ volatile int tpadAbsDataIdxs[2]; //!< Defines which copy in tpadAbsData will be
 volatile bool tpadIsrBusys[2]; //!< Defines if the interrupt is currently being 
 	//!< being handled.
 
+
 #else  // if (ANYMEAS_EN)
 
-// TODO: split these 19 values up into X and Y related ADC vals...
-#define NUM_ANYMEAS_ADCS (19) //!< Number of ADC channels read in AnyMeas
-	//!< mode
+
+#define NUM_ANYMEAS_X_ADCS (11) //!< The number of ADC reading used for 
+	//!< calculating the X axis position.
+//TODO: can this be 7?
+#define NUM_ANYMEAS_Y_ADCS (8) //!< The number of ADC reading used for 
+	//!< calculating the Y axis position.
+#define NUM_ANYMEAS_ADCS (NUM_ANYMEAS_X_ADCS + NUM_ANYMEAS_Y_ADCS) //!< The
+	//!< total number of AnyMeas ADCs read for computing X/Y position.
+
+#define ANYMEAS_X_ADC_ADDR (0x01df) //!< Start address for AnyMeas ADCs
+	//!< relating to X position
+#define ANYMEAS_Y_ADC_ADDR (0x015b) //!< Start address for AnyMeas ADCs
+	//!< relating to Y position
 
 static int16_t tpadAdcComps[2][NUM_ANYMEAS_ADCS]; //!< Compensation values 
-	//!< for ADC channels read from trackpad in AnyMeas mode. There are 19
-	//!< channels read for each of the two trackpads.
+	//!< for AnyMeas ADC channels used to calculate X/Y position.
 static volatile int16_t tpadAdcDatas[2][NUM_ANYMEAS_ADCS]; //!< The ADC 
-	//!< values most recently read via ISR.
-static volatile int tpadAdcIdxs[2]; //!< Used to track where next ADC value
-	//!< read from ISR should be written in tpad_adc_datas.
+	//!< values relating to X/Y position filled in by ISR. Read tpadAdcIdxs
+	//!< to tell if these are currently being filled updated.
+static volatile int tpadAdcIdxs[2]; //!< Tracks how tpadAdcDatas is being
+	//!< updated. If this is NUM_ANYMEAS_ADCS, it means tpadAdcDatas
+	//!< are all safe to read.
+
 
 #endif // ANYMEAS_EN
+
 
 // Trackpad ASIC Registers:
 #define TPAD_FW_ID_ADDR (0x00)
@@ -268,7 +278,6 @@ static void writePinnacleReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 	tx_data[0] = 0x80 | (0x1F & addr);
 	tx_data[1] = val;
 
-	// TODO: should this be done by hand? Maybe this is why we are getting poor results from the Trackpad ASIC?
 	Chip_SSP_RWFrames_Blocking(spiRegs, &xf_setup);
 
 	if (R_TRACKPAD == trackpad) {
@@ -392,7 +401,9 @@ static void setupTrackpadISR(Trackpad trackpad) {
 	}
 }
 
+
 #if (!ANYMEAS_EN)
+
 
 /**
  * Setup Trackpad ASIC (i.e. configure registers, calibration, setup ISR).
@@ -402,7 +413,6 @@ static void setupTrackpadISR(Trackpad trackpad) {
  * \return None.
  */
 static void setupTrackpad(Trackpad trackpad) {
-/*
 	// Reset the TrackpadASIC:
 	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, TPAD_SYSCFG1_RESET_BIT);
 
@@ -426,7 +436,6 @@ static void setupTrackpad(Trackpad trackpad) {
 	if (fw_ver != 0x3a) 
 		return;
 
-*/
 	// Set ASIC to normal mode and active
 	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 0);
 	
@@ -495,9 +504,9 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 	}
 
-	absData->xPos = rx_data[4]; //(0x0F & rx_data[6]);//((0x0F & rx_data[7]) << 8) | rx_data[5];
-	absData->yPos = rx_data[5]; //(0xF0 & rx_data[6]) >> 4;//((0xF0 & rx_data[7]) << 4) | rx_data[6];
-	absData->zPos = rx_data[3]; //0x3F & rx_data[8];
+	absData->xPos = ((0x0F & rx_data[7]) << 8) | rx_data[5];
+	absData->yPos = ((0xF0 & rx_data[7]) << 4) | rx_data[6];
+	absData->zPos = 0x3F & rx_data[8];
 }
 
 /**
@@ -508,18 +517,15 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
  * \return The ADC value.
  */
 static void getLatestPinnacleData(Trackpad trackpad) {
-	//getAbsDataAndClr(trackpad, &tpadAbsDatas[trackpad][0]);//tpadAbsDataIdxs[trackpad]]);
+	getAbsDataAndClr(trackpad, tpadAbsDataIdxs[trackpad]);
 
-	tpadAbsDatas[trackpad][0].xPos = readPinnacleReg(trackpad, 0x13);
-	tpadAbsDatas[trackpad][0].yPos = readPinnacleReg(trackpad, 0x14);
-	tpadAbsDatas[trackpad][0].zPos = readPinnacleReg(trackpad, 0x15);
-	clearFlagsPinnacle(trackpad);
-
-	//tpadAbsDataIdxs[trackpad]++;
-	//tpadAbsDataIdxs[trackpad] %= 2;
+	tpadAbsDataIdxs[trackpad]++;
+	tpadAbsDataIdxs[trackpad] %= 2;
 }
 
+
 #else  // if (ANYMEAS_EN)
+
 
 /**
  * Get the latest AnyMeas ADC reading and Clear Flags, all in a single burst
@@ -551,10 +557,10 @@ static int16_t getPinnacleAdcAndClr(Trackpad trackpad) {
 
 	// Auto-incremented read starting at register TPAD_MEASRESULT_HI_ADDR
 	tx_data[0] = 0xA0 | TPAD_MEASRESULT_HI_ADDR;
-	tx_data[1] = 0xFC;
-	tx_data[2] = 0xFC;
-	tx_data[3] = 0xFC;
-	tx_data[4] = 0xFB;
+	tx_data[1] = 0xFC; // Filler Byte
+	tx_data[2] = 0xFC; // Filler Byte
+	tx_data[3] = 0xFC; // TPAD_MEASRESULT_HI_ADDR
+	tx_data[4] = 0xFB; // TPAD_MEASRESULT_LO_ADDR
 	// Clear flags
 	tx_data[5] = 0x80 | TPAD_STATUS1_ADDR;
 	tx_data[6] = 0x00;
@@ -741,8 +747,9 @@ static void setAdcStartAddrPinnacle(Trackpad trackpad, uint16_t addr) {
 static void setNumMeasPinnacle(Trackpad trackpad, uint8_t numMeas) {
 	static uint8_t meas_ctrl_shadow[2] = {0, 0};
 
-	uint8_t meas_ctrl = TPAD_MEASCTRL_POSTMEASPWR_BIT | 
-		(TPAD_MEASCTRL_NUMMEAS_MASK & numMeas);
+	// TODO: add flag for enabling low power mode via TPAD_MEASCTRL_POSTMEASPWR_BIT?
+	//  For now always run fast as possible and do not worry about power
+	uint8_t meas_ctrl = (TPAD_MEASCTRL_NUMMEAS_MASK & numMeas);
 
 	if (meas_ctrl_shadow[trackpad] != meas_ctrl) {
 		writePinnacleReg(trackpad, TPAD_MEASCTRL_ADDR, meas_ctrl);
@@ -782,29 +789,332 @@ static int32_t takeAdcMeasPinnacle(Trackpad trackpad, uint32_t toggle,
 	return (int32_t)(retval >> adjust);
 }
 
-//TODO: rename function? too similar to register access one?
 /**
- * Request all NUM_ANYMEAS_ADCS ADC values be read. Return once tpadAdcDatas
- *  has the latest data.
- * 
+ * Request AnyMeas ADC results start being captured so that X/Y locations can
+ *  be calculated. This function starts conversion process (which continues
+ *  via ISR) and then returns. See trackpadGetLastXY() for waitinging for
+ *  ADC results to be gathered and then converted to X/Y position. 
+ *  
  * \param trackpad Specifies which trackpad to communicate with. 
  *
  * \return None.
  */
-void getPinnacleAdcVals(Trackpad trackpad) {
+void trackpadLocUpdate(Trackpad trackpad) {
 	tpadAdcIdxs[trackpad] = 0;
 
-	// Request first 11 measurements.
-	setAdcStartAddrPinnacle(trackpad, 0x01df);
-	setNumMeasPinnacle(trackpad, 11);
+	// Start by requesting measurements for X axis location
+	setAdcStartAddrPinnacle(trackpad, ANYMEAS_X_ADC_ADDR);
+	setNumMeasPinnacle(trackpad, NUM_ANYMEAS_X_ADCS);
 
-	// Start the measurement
+	// Start the measurements
 	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
+}
 
-	// Wait for ADC reads to complete
+/**
+ * Convert the last updated AnyMeas ADC values to X/Y location. If update to
+ *  AnyMeas ADC values has been requested (i.e. via trackpadLocUpdate()), this
+ *  function will wait until data has been updated.
+ * 
+ * \param trackpad Specifies which Trackpad to communicate with. 
+ * \param[out] xLoc X location. 0-1200. 0 is left side of Trackpad. 1200/2 will
+ *	be returned if finger is not down.
+ * \param[out] yLoc y location. 0-700. 0 is bottom side of Trackpad. 700/2 will
+ *	be returned if finger is not down.
+ *
+ * \return None.
+ */
+void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
+
+	// Set defaults in case finger is not down
+	*xLoc = 1200/2;
+	*yLoc = 700/2;
+
+	// Wait for AnyMeas ADCs related to X position to be updated
+	while (tpadAdcIdxs[trackpad] < NUM_ANYMEAS_X_ADCS) {
+		__WFI();
+	}
+
+	// Calculate xLoc
+	int32_t adc_vals_x[12];
+
+//TODO: can we clean this up?
+	int32_t compensated_val = tpadAdcDatas[trackpad][0] - tpadAdcComps[trackpad][0];
+	adc_vals_x[0] = compensated_val;
+	adc_vals_x[1] = compensated_val;
+	adc_vals_x[2] = -compensated_val;
+	adc_vals_x[3] = compensated_val;
+	adc_vals_x[4] = compensated_val;
+	adc_vals_x[5] = compensated_val;
+	adc_vals_x[6] = -compensated_val;
+	adc_vals_x[7] = -compensated_val;
+	adc_vals_x[8] = -compensated_val;
+	adc_vals_x[9] = compensated_val;
+	adc_vals_x[10] = -compensated_val;
+	adc_vals_x[11] = -compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][1] - tpadAdcComps[trackpad][1];
+	adc_vals_x[0] -= compensated_val;
+	adc_vals_x[1] += compensated_val;
+	adc_vals_x[2] += compensated_val;
+	adc_vals_x[3] -= compensated_val;
+	adc_vals_x[4] += compensated_val;
+	adc_vals_x[5] += compensated_val;
+	adc_vals_x[6] += compensated_val;
+	adc_vals_x[7] -= compensated_val;
+	adc_vals_x[8] -= compensated_val;
+	adc_vals_x[9] -= compensated_val;
+	adc_vals_x[10] += compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][2] - tpadAdcComps[trackpad][2];
+	adc_vals_x[0] += compensated_val;
+	adc_vals_x[1] -= compensated_val;
+	adc_vals_x[2] += compensated_val;
+	adc_vals_x[3] += compensated_val;
+	adc_vals_x[4] -= compensated_val;
+	adc_vals_x[5] += compensated_val;
+	adc_vals_x[6] += compensated_val;
+	adc_vals_x[7] += compensated_val;
+	adc_vals_x[8] -= compensated_val;
+	adc_vals_x[9] -= compensated_val;
+	adc_vals_x[10] -= compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][3] - tpadAdcComps[trackpad][3];
+	adc_vals_x[0] -= compensated_val;
+	adc_vals_x[1] += compensated_val;
+	adc_vals_x[2] -= compensated_val;
+	adc_vals_x[3] += compensated_val;
+	adc_vals_x[4] += compensated_val;
+	adc_vals_x[5] -= compensated_val;
+	adc_vals_x[6] += compensated_val;
+	adc_vals_x[7] += compensated_val;
+	adc_vals_x[8] += compensated_val;
+	adc_vals_x[9] -= compensated_val;
+	adc_vals_x[10] -= compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][4] - tpadAdcComps[trackpad][4];
+	adc_vals_x[0] -= compensated_val;
+	adc_vals_x[1] -= compensated_val;
+	adc_vals_x[2] += compensated_val;
+	adc_vals_x[3] -= compensated_val;
+	adc_vals_x[4] += compensated_val;
+	adc_vals_x[5] += compensated_val;
+	adc_vals_x[6] -= compensated_val;
+	adc_vals_x[7] += compensated_val;
+	adc_vals_x[8] += compensated_val;
+	adc_vals_x[9] += compensated_val;
+	adc_vals_x[10] -= compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][5] - tpadAdcComps[trackpad][5];
+	adc_vals_x[0] -= compensated_val;
+	adc_vals_x[1] -= compensated_val;
+	adc_vals_x[2] -= compensated_val;
+	adc_vals_x[3] += compensated_val;
+	adc_vals_x[4] -= compensated_val;
+	adc_vals_x[5] += compensated_val;
+	adc_vals_x[6] += compensated_val;
+	adc_vals_x[7] -= compensated_val;
+	adc_vals_x[8] += compensated_val;
+	adc_vals_x[9] += compensated_val;
+	adc_vals_x[10] += compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][6] - tpadAdcComps[trackpad][6];
+	adc_vals_x[0] += compensated_val;
+	adc_vals_x[1] -= compensated_val;
+	adc_vals_x[2] -= compensated_val;
+	adc_vals_x[3] -= compensated_val;
+	adc_vals_x[4] += compensated_val;
+	adc_vals_x[5] -= compensated_val;
+	adc_vals_x[6] += compensated_val;
+	adc_vals_x[7] += compensated_val;
+	adc_vals_x[8] -= compensated_val;
+	adc_vals_x[9] += compensated_val;
+	adc_vals_x[10] += compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][7] - tpadAdcComps[trackpad][7];
+	adc_vals_x[0] += compensated_val;
+	adc_vals_x[1] += compensated_val;
+	adc_vals_x[2] -= compensated_val;
+	adc_vals_x[3] -= compensated_val;
+	adc_vals_x[4] -= compensated_val;
+	adc_vals_x[5] += compensated_val;
+	adc_vals_x[6] -= compensated_val;
+	adc_vals_x[7] += compensated_val;
+	adc_vals_x[8] += compensated_val;
+	adc_vals_x[9] -= compensated_val;
+	adc_vals_x[10] += compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][8] - tpadAdcComps[trackpad][8];
+	adc_vals_x[0] += compensated_val;
+	adc_vals_x[1] += compensated_val;
+	adc_vals_x[2] += compensated_val;
+	adc_vals_x[3] -= compensated_val;
+	adc_vals_x[4] -= compensated_val;
+	adc_vals_x[5] -= compensated_val;
+	adc_vals_x[6] += compensated_val;
+	adc_vals_x[7] -= compensated_val;
+	adc_vals_x[8] += compensated_val;
+	adc_vals_x[9] += compensated_val;
+	adc_vals_x[10] -= compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][9] - tpadAdcComps[trackpad][9];
+	adc_vals_x[0] -= compensated_val;
+	adc_vals_x[1] += compensated_val;
+	adc_vals_x[2] += compensated_val;
+	adc_vals_x[3] += compensated_val;
+	adc_vals_x[4] -= compensated_val;
+	adc_vals_x[5] -= compensated_val;
+	adc_vals_x[6] -= compensated_val;
+	adc_vals_x[7] += compensated_val;
+	adc_vals_x[8] -= compensated_val;
+	adc_vals_x[9] += compensated_val;
+	adc_vals_x[10] += compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][10] - tpadAdcComps[trackpad][10];
+	adc_vals_x[0] += compensated_val;
+	adc_vals_x[1] -= compensated_val;
+	adc_vals_x[2] += compensated_val;
+	adc_vals_x[3] += compensated_val;
+	adc_vals_x[4] += compensated_val;
+	adc_vals_x[5] -= compensated_val;
+	adc_vals_x[6] -= compensated_val;
+	adc_vals_x[7] -= compensated_val;
+	adc_vals_x[8] += compensated_val;
+	adc_vals_x[9] -= compensated_val;
+	adc_vals_x[10] += compensated_val;
+	adc_vals_x[11] -= compensated_val;
+
+	for (int idx = 0; idx < 12; idx++) {
+		if (adc_vals_x[idx] < 0)
+			adc_vals_x[idx] = 0;
+	}
+
+	int32_t dividend = 0;
+	int32_t divisor = 0;
+	int32_t factor = 0;
+	for (int idx = 0; idx < 12; idx++) {
+		dividend += factor * adc_vals_x[idx];
+		divisor += adc_vals_x[idx];
+		factor += 100;
+	}
+
+	int32_t x_pos = -1;
+	if (divisor) {
+		x_pos = dividend / divisor;	
+		x_pos = 1200 - x_pos;
+	}
+
+	// Wait for AnyMeas ADCs related to Y position to be updated
 	while (tpadAdcIdxs[trackpad] < NUM_ANYMEAS_ADCS) {
 		__WFI();
+	}
+
+	// Calculate yLoc
+	int32_t adc_vals_y[8];
+
+	compensated_val = tpadAdcDatas[trackpad][11] - tpadAdcComps[trackpad][11];
+	adc_vals_y[0] = -compensated_val;
+	adc_vals_y[1] = compensated_val;
+	adc_vals_y[2] = -compensated_val;
+	adc_vals_y[3] = compensated_val;
+	adc_vals_y[4] = -compensated_val;
+	adc_vals_y[5] = compensated_val;
+	adc_vals_y[6] = -compensated_val;
+	adc_vals_y[7] = compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][12] - tpadAdcComps[trackpad][12];
+	adc_vals_y[0] -= compensated_val;
+	adc_vals_y[1] -= compensated_val;
+	adc_vals_y[2] += compensated_val;
+	adc_vals_y[3] += compensated_val;
+	adc_vals_y[4] -= compensated_val;
+	adc_vals_y[5] -= compensated_val;
+	adc_vals_y[6] += compensated_val;
+	adc_vals_y[7] += compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][13] - tpadAdcComps[trackpad][13];
+	adc_vals_y[0] += compensated_val;
+	adc_vals_y[1] -= compensated_val;
+	adc_vals_y[2] -= compensated_val;
+	adc_vals_y[3] += compensated_val;
+	adc_vals_y[4] += compensated_val;
+	adc_vals_y[5] -= compensated_val;
+	adc_vals_y[6] -= compensated_val;
+	adc_vals_y[7] += compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][14] - tpadAdcComps[trackpad][14];
+	adc_vals_y[0] -= compensated_val;
+	adc_vals_y[1] -= compensated_val;
+	adc_vals_y[2] -= compensated_val;
+	adc_vals_y[3] -= compensated_val;
+	adc_vals_y[4] += compensated_val;
+	adc_vals_y[5] += compensated_val;
+	adc_vals_y[6] += compensated_val;
+	adc_vals_y[7] += compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][15] - tpadAdcComps[trackpad][15];
+	adc_vals_y[0] += compensated_val;
+	adc_vals_y[1] -= compensated_val;
+	adc_vals_y[2] += compensated_val;
+	adc_vals_y[3] -= compensated_val;
+	adc_vals_y[4] -= compensated_val;
+	adc_vals_y[5] += compensated_val;
+	adc_vals_y[6] -= compensated_val;
+	adc_vals_y[7] += compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][16] - tpadAdcComps[trackpad][16];
+	adc_vals_y[0] += compensated_val;
+	adc_vals_y[1] += compensated_val;
+	adc_vals_y[2] -= compensated_val;
+	adc_vals_y[3] -= compensated_val;
+	adc_vals_y[4] -= compensated_val;
+	adc_vals_y[5] -= compensated_val;
+	adc_vals_y[6] += compensated_val;
+	adc_vals_y[7] += compensated_val;
+
+	compensated_val = tpadAdcDatas[trackpad][17] - tpadAdcComps[trackpad][17];
+	adc_vals_y[0] -= compensated_val;
+	adc_vals_y[1] += compensated_val;
+	adc_vals_y[2] += compensated_val;
+	adc_vals_y[3] -= compensated_val;
+	adc_vals_y[4] += compensated_val;
+	adc_vals_y[5] -= compensated_val;
+	adc_vals_y[6] -= compensated_val;
+	adc_vals_y[7] += compensated_val;
+
+	for (int idx = 0; idx < 8; idx++) {
+		if (adc_vals_y[idx] < 0)
+			adc_vals_y[idx] = 0;
+		adc_vals_y[idx] /= 1000;
+	}
+
+	dividend = 0;
+	divisor = 0;
+	factor = 0;
+	for (int idx = 0; idx < 8; idx++) {
+		dividend += factor * adc_vals_y[idx];
+		divisor += adc_vals_y[idx];
+		factor += 100;
+	}
+
+	int32_t y_pos = -1;
+	if (divisor) {
+		y_pos = dividend / divisor;	
+	}
+
+	// Update outputs if finger was down (i.e. x_pos and y_pos are both valid)
+	if (x_pos > 0 && y_pos > 0)  {
+		*xLoc = x_pos;
+		*yLoc = y_pos;
 	}
 }
 
@@ -870,8 +1180,13 @@ static void setupTrackpad(Trackpad trackpad) {
 	writePinnacleReg(trackpad, TPAD_ANYMEASSTATE_ADDR, 0x00);
 	writePinnacleReg(trackpad, TPAD_ADCCFG2_ADDR, 0x00);
 
+	// Load Compensation Matrix Data (I think...):
+	//  According to datasheet: A compensation matrix of 92 values (each 
+	//  value is 16 bits signed) is stored sequentially in Pinnacle RAM, 
+	//  with the first value being stored at 0x01DF. 
 	uint8_t era_data[8];
 
+	// Comensation Matrix Data for AnyMeas ADCs for Y axis location?
 	era_data[0] = 0x00;
 	era_data[1] = 0x00;
 	era_data[2] = 0x07;
@@ -952,8 +1267,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[7] = 0x00;
 	writePinnacleExtRegs(trackpad, 0x0193, 8, era_data);
 
-	// Load Compensation Matrix Data (I think...):
-	//  According to datasheet: A compensation matrix of 92 values (each value is 16 bits signed) is stored sequentially in Pinnacle RAM, with the first value being stored at 0x01DF. 
+	// Comensation Matrix Data for AnyMeas ADCs for X axis location?
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
 	era_data[2] = 0x00;
@@ -1088,8 +1402,15 @@ static void setupTrackpad(Trackpad trackpad) {
 	int comp_accums[NUM_ANYMEAS_ADCS];
 	memset(comp_accums, 0, sizeof(int) * NUM_ANYMEAS_ADCS);
 
-	for (int comp_cnt = 0; comp_cnt < 16; comp_cnt++) {
-		getPinnacleAdcVals(trackpad);
+	static int NUM_COMP_AVGS = 16;
+	for (int comp_cnt = 0; comp_cnt < NUM_COMP_AVGS; comp_cnt++) {
+		// Request X and Y AnyMeas ADC measurements
+		trackpadLocUpdate(trackpad);
+
+		// Wait for AnyMeas ADCs related to X position to be updated
+		while (tpadAdcIdxs[trackpad] < NUM_ANYMEAS_ADCS) {
+			__WFI();
+		}
 
 		for (int comp_idx = 0; comp_idx < NUM_ANYMEAS_ADCS; comp_idx++) {
 			comp_accums[comp_idx] += tpadAdcDatas[trackpad][comp_idx];
@@ -1097,10 +1418,14 @@ static void setupTrackpad(Trackpad trackpad) {
 	}
 
 	for (int comp_idx = 0; comp_idx < NUM_ANYMEAS_ADCS; comp_idx++) {
-		tpadAdcComps[trackpad][comp_idx] = comp_accums[comp_idx] / 16;
+		tpadAdcComps[trackpad][comp_idx] = comp_accums[comp_idx] 
+			/ NUM_COMP_AVGS;
 	}
 }
+
+
 #endif // ANYMEAS_EN
+
 
 /**
  * Setup all clocks, peripherals, etc. so the ADC chnanels can be read.
@@ -1134,10 +1459,8 @@ void initTrackpad(void) {
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Right Trackpad in shutdown mode
-/*
 	writePinnacleReg(R_TRACKPAD, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_SHUTDOWN_BIT);
-*/
 
 	// Left Trackpad comms setup
 	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
@@ -1151,16 +1474,17 @@ void initTrackpad(void) {
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Left Trackpad in shutdown mode
-/*
 	writePinnacleReg(L_TRACKPAD, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_SHUTDOWN_BIT);
-*/
 
 	setupTrackpad(R_TRACKPAD);
 	setupTrackpad(L_TRACKPAD);
 }
 
+
 #if (ANYMEAS_EN)
+
+
 /**
  * Function to be called by ISR to handle next ADC value.
  * 
@@ -1175,10 +1499,10 @@ void getNextPinnacleAdcValIsr(Trackpad trackpad) {
 	tpad_adc_datas[tpad_adc_idx] = getPinnacleAdcAndClr(trackpad);
 	tpad_adc_idx++;
 
-	if (tpad_adc_idx == 11) {
-		// Request next 8 measurements...
-		setAdcStartAddrPinnacle(trackpad, 0x015b);
-		setNumMeasPinnacle(trackpad, 8);
+	if (tpad_adc_idx == NUM_ANYMEAS_X_ADCS) {
+		// Request measurements used for position on Y axis
+		setAdcStartAddrPinnacle(trackpad, ANYMEAS_Y_ADC_ADDR);
+		setNumMeasPinnacle(trackpad, NUM_ANYMEAS_Y_ADCS);
 
 		// Start the measurement
 		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
@@ -1187,7 +1511,10 @@ void getNextPinnacleAdcValIsr(Trackpad trackpad) {
 
 	tpadAdcIdxs[trackpad] = tpad_adc_idx;
 }
+
+
 #endif // ANYMEAS_EN
+
 
 /**
  * ISR for 3 - GPIO pin interrupt 3, which occurs on rising edge of Right 
@@ -1292,292 +1619,20 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 	}
 
 	while (!usb_tstc()) {
-		getPinnacleAdcVals(trackpad);
+		uint16_t x_loc_r;
+		uint16_t y_loc_r;
+		uint16_t x_loc_l;
+		uint16_t y_loc_l;
 
-		// Debug
-/*
-		tpadAdcDatas[trackpad][0] = 0x0004;
-		tpadAdcDatas[trackpad][1] = 0xcda5;
-		tpadAdcDatas[trackpad][2] = 0x07e4;
-		tpadAdcDatas[trackpad][3] = 0xe735;
-		tpadAdcDatas[trackpad][4] = 0xf4d0;
-		tpadAdcDatas[trackpad][5] = 0xe770;
-		tpadAdcDatas[trackpad][6] = 0xf55a;
-		tpadAdcDatas[trackpad][7] = 0xed27;
-		tpadAdcDatas[trackpad][8] = 0x056b;
-		tpadAdcDatas[trackpad][9] = 0xe219;
-		tpadAdcDatas[trackpad][10] = 0x11cd;
-*/
+//TODO: debug why we cannot run both together...
+		//trackpadLocUpdate(R_TRACKPAD);
+		trackpadLocUpdate(L_TRACKPAD);
+		//trackpadGetLastXY(R_TRACKPAD, &x_loc_r, &y_loc_r);
+		trackpadGetLastXY(L_TRACKPAD, &x_loc_l, &y_loc_l);
 
-		int32_t adc_vals_x[12];
+		printf("Left: X = %4d, Y = %3d. Right: X = %4d, Y = %3d.\r", 
+			x_loc_l, y_loc_l, x_loc_r, x_loc_r);
 
-		int32_t compensated_val = tpadAdcDatas[trackpad][0] - tpadAdcComps[trackpad][0];
-		adc_vals_x[0] = compensated_val;
-		adc_vals_x[1] = compensated_val;
-		adc_vals_x[2] = -compensated_val;
-		adc_vals_x[3] = compensated_val;
-		adc_vals_x[4] = compensated_val;
-		adc_vals_x[5] = compensated_val;
-		adc_vals_x[6] = -compensated_val;
-		adc_vals_x[7] = -compensated_val;
-		adc_vals_x[8] = -compensated_val;
-		adc_vals_x[9] = compensated_val;
-		adc_vals_x[10] = -compensated_val;
-		adc_vals_x[11] = -compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][1] - tpadAdcComps[trackpad][1];
-		adc_vals_x[0] -= compensated_val;
-		adc_vals_x[1] += compensated_val;
-		adc_vals_x[2] += compensated_val;
-		adc_vals_x[3] -= compensated_val;
-		adc_vals_x[4] += compensated_val;
-		adc_vals_x[5] += compensated_val;
-		adc_vals_x[6] += compensated_val;
-		adc_vals_x[7] -= compensated_val;
-		adc_vals_x[8] -= compensated_val;
-		adc_vals_x[9] -= compensated_val;
-		adc_vals_x[10] += compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][2] - tpadAdcComps[trackpad][2];
-		adc_vals_x[0] += compensated_val;
-		adc_vals_x[1] -= compensated_val;
-		adc_vals_x[2] += compensated_val;
-		adc_vals_x[3] += compensated_val;
-		adc_vals_x[4] -= compensated_val;
-		adc_vals_x[5] += compensated_val;
-		adc_vals_x[6] += compensated_val;
-		adc_vals_x[7] += compensated_val;
-		adc_vals_x[8] -= compensated_val;
-		adc_vals_x[9] -= compensated_val;
-		adc_vals_x[10] -= compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][3] - tpadAdcComps[trackpad][3];
-		adc_vals_x[0] -= compensated_val;
-		adc_vals_x[1] += compensated_val;
-		adc_vals_x[2] -= compensated_val;
-		adc_vals_x[3] += compensated_val;
-		adc_vals_x[4] += compensated_val;
-		adc_vals_x[5] -= compensated_val;
-		adc_vals_x[6] += compensated_val;
-		adc_vals_x[7] += compensated_val;
-		adc_vals_x[8] += compensated_val;
-		adc_vals_x[9] -= compensated_val;
-		adc_vals_x[10] -= compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][4] - tpadAdcComps[trackpad][4];
-		adc_vals_x[0] -= compensated_val;
-		adc_vals_x[1] -= compensated_val;
-		adc_vals_x[2] += compensated_val;
-		adc_vals_x[3] -= compensated_val;
-		adc_vals_x[4] += compensated_val;
-		adc_vals_x[5] += compensated_val;
-		adc_vals_x[6] -= compensated_val;
-		adc_vals_x[7] += compensated_val;
-		adc_vals_x[8] += compensated_val;
-		adc_vals_x[9] += compensated_val;
-		adc_vals_x[10] -= compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][5] - tpadAdcComps[trackpad][5];
-		adc_vals_x[0] -= compensated_val;
-		adc_vals_x[1] -= compensated_val;
-		adc_vals_x[2] -= compensated_val;
-		adc_vals_x[3] += compensated_val;
-		adc_vals_x[4] -= compensated_val;
-		adc_vals_x[5] += compensated_val;
-		adc_vals_x[6] += compensated_val;
-		adc_vals_x[7] -= compensated_val;
-		adc_vals_x[8] += compensated_val;
-		adc_vals_x[9] += compensated_val;
-		adc_vals_x[10] += compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][6] - tpadAdcComps[trackpad][6];
-		adc_vals_x[0] += compensated_val;
-		adc_vals_x[1] -= compensated_val;
-		adc_vals_x[2] -= compensated_val;
-		adc_vals_x[3] -= compensated_val;
-		adc_vals_x[4] += compensated_val;
-		adc_vals_x[5] -= compensated_val;
-		adc_vals_x[6] += compensated_val;
-		adc_vals_x[7] += compensated_val;
-		adc_vals_x[8] -= compensated_val;
-		adc_vals_x[9] += compensated_val;
-		adc_vals_x[10] += compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][7] - tpadAdcComps[trackpad][7];
-		adc_vals_x[0] += compensated_val;
-		adc_vals_x[1] += compensated_val;
-		adc_vals_x[2] -= compensated_val;
-		adc_vals_x[3] -= compensated_val;
-		adc_vals_x[4] -= compensated_val;
-		adc_vals_x[5] += compensated_val;
-		adc_vals_x[6] -= compensated_val;
-		adc_vals_x[7] += compensated_val;
-		adc_vals_x[8] += compensated_val;
-		adc_vals_x[9] -= compensated_val;
-		adc_vals_x[10] += compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][8] - tpadAdcComps[trackpad][8];
-		adc_vals_x[0] += compensated_val;
-		adc_vals_x[1] += compensated_val;
-		adc_vals_x[2] += compensated_val;
-		adc_vals_x[3] -= compensated_val;
-		adc_vals_x[4] -= compensated_val;
-		adc_vals_x[5] -= compensated_val;
-		adc_vals_x[6] += compensated_val;
-		adc_vals_x[7] -= compensated_val;
-		adc_vals_x[8] += compensated_val;
-		adc_vals_x[9] += compensated_val;
-		adc_vals_x[10] -= compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][9] - tpadAdcComps[trackpad][9];
-		adc_vals_x[0] -= compensated_val;
-		adc_vals_x[1] += compensated_val;
-		adc_vals_x[2] += compensated_val;
-		adc_vals_x[3] += compensated_val;
-		adc_vals_x[4] -= compensated_val;
-		adc_vals_x[5] -= compensated_val;
-		adc_vals_x[6] -= compensated_val;
-		adc_vals_x[7] += compensated_val;
-		adc_vals_x[8] -= compensated_val;
-		adc_vals_x[9] += compensated_val;
-		adc_vals_x[10] += compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][10] - tpadAdcComps[trackpad][10];
-		adc_vals_x[0] += compensated_val;
-		adc_vals_x[1] -= compensated_val;
-		adc_vals_x[2] += compensated_val;
-		adc_vals_x[3] += compensated_val;
-		adc_vals_x[4] += compensated_val;
-		adc_vals_x[5] -= compensated_val;
-		adc_vals_x[6] -= compensated_val;
-		adc_vals_x[7] -= compensated_val;
-		adc_vals_x[8] += compensated_val;
-		adc_vals_x[9] -= compensated_val;
-		adc_vals_x[10] += compensated_val;
-		adc_vals_x[11] -= compensated_val;
-
-		for (int idx = 0; idx < 12; idx++) {
-			if (adc_vals_x[idx] < 0)
-				adc_vals_x[idx] = 0;
-		}
-
-		int32_t dividend = 0;
-		int32_t divisor = 0;
-		int32_t factor = 0;
-		for (int idx = 0; idx < 12; idx++) {
-			dividend += factor * adc_vals_x[idx];
-			divisor += adc_vals_x[idx];
-			factor += 100;
-		}
-
-		uint32_t x_pos = -1;
-		if (divisor) {
-			x_pos = dividend / divisor;	
-			x_pos = 1200 - x_pos;
-		}
-
-		int32_t adc_vals_y[8];
-
-		compensated_val = tpadAdcDatas[trackpad][11] - tpadAdcComps[trackpad][11];
-		adc_vals_y[0] = -compensated_val;
-		adc_vals_y[1] = compensated_val;
-		adc_vals_y[2] = -compensated_val;
-		adc_vals_y[3] = compensated_val;
-		adc_vals_y[4] = -compensated_val;
-		adc_vals_y[5] = compensated_val;
-		adc_vals_y[6] = -compensated_val;
-		adc_vals_y[7] = compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][12] - tpadAdcComps[trackpad][12];
-		adc_vals_y[0] -= compensated_val;
-		adc_vals_y[1] -= compensated_val;
-		adc_vals_y[2] += compensated_val;
-		adc_vals_y[3] += compensated_val;
-		adc_vals_y[4] -= compensated_val;
-		adc_vals_y[5] -= compensated_val;
-		adc_vals_y[6] += compensated_val;
-		adc_vals_y[7] += compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][13] - tpadAdcComps[trackpad][13];
-		adc_vals_y[0] += compensated_val;
-		adc_vals_y[1] -= compensated_val;
-		adc_vals_y[2] -= compensated_val;
-		adc_vals_y[3] += compensated_val;
-		adc_vals_y[4] += compensated_val;
-		adc_vals_y[5] -= compensated_val;
-		adc_vals_y[6] -= compensated_val;
-		adc_vals_y[7] += compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][14] - tpadAdcComps[trackpad][14];
-		adc_vals_y[0] -= compensated_val;
-		adc_vals_y[1] -= compensated_val;
-		adc_vals_y[2] -= compensated_val;
-		adc_vals_y[3] -= compensated_val;
-		adc_vals_y[4] += compensated_val;
-		adc_vals_y[5] += compensated_val;
-		adc_vals_y[6] += compensated_val;
-		adc_vals_y[7] += compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][15] - tpadAdcComps[trackpad][15];
-		adc_vals_y[0] += compensated_val;
-		adc_vals_y[1] -= compensated_val;
-		adc_vals_y[2] += compensated_val;
-		adc_vals_y[3] -= compensated_val;
-		adc_vals_y[4] -= compensated_val;
-		adc_vals_y[5] += compensated_val;
-		adc_vals_y[6] -= compensated_val;
-		adc_vals_y[7] += compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][16] - tpadAdcComps[trackpad][16];
-		adc_vals_y[0] += compensated_val;
-		adc_vals_y[1] += compensated_val;
-		adc_vals_y[2] -= compensated_val;
-		adc_vals_y[3] -= compensated_val;
-		adc_vals_y[4] -= compensated_val;
-		adc_vals_y[5] -= compensated_val;
-		adc_vals_y[6] += compensated_val;
-		adc_vals_y[7] += compensated_val;
-
-		compensated_val = tpadAdcDatas[trackpad][17] - tpadAdcComps[trackpad][17];
-		adc_vals_y[0] -= compensated_val;
-		adc_vals_y[1] += compensated_val;
-		adc_vals_y[2] += compensated_val;
-		adc_vals_y[3] -= compensated_val;
-		adc_vals_y[4] += compensated_val;
-		adc_vals_y[5] -= compensated_val;
-		adc_vals_y[6] -= compensated_val;
-		adc_vals_y[7] += compensated_val;
-
-		for (int idx = 0; idx < 8; idx++) {
-			if (adc_vals_y[idx] < 0)
-				adc_vals_y[idx] = 0;
-			adc_vals_y[idx] /= 1000;
-		}
-
-		dividend = 0;
-		divisor = 0;
-		factor = 0;
-		for (int idx = 0; idx < 8; idx++) {
-			dividend += factor * adc_vals_y[idx];
-			divisor += adc_vals_y[idx];
-			factor += 100;
-		}
-
-		uint32_t y_pos = -1;
-		if (divisor) {
-			y_pos = dividend / divisor;	
-		}
-
-		printf("X = %4d, Y = %4d\r", x_pos, y_pos);
 		usleep(10 * 1000);
 	}
 
