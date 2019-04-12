@@ -832,7 +832,6 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 
 	// Wait for AnyMeas ADCs related to X position to be updated
 	while (tpadAdcIdxs[trackpad] < NUM_ANYMEAS_X_ADCS) {
-		__WFI();
 	}
 
 	// Calculate xLoc
@@ -1015,7 +1014,6 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 
 	// Wait for AnyMeas ADCs related to Y position to be updated
 	while (tpadAdcIdxs[trackpad] < NUM_ANYMEAS_ADCS) {
-		__WFI();
 	}
 
 	// Calculate yLoc
@@ -1618,26 +1616,27 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 		//tpadAdcComps[trackpad][idx] = eeprom_comps[idx];
 	}
 
+	int alive_cnt = 0;
 	while (!usb_tstc()) {
 		uint16_t x_loc_r;
 		uint16_t y_loc_r;
 		uint16_t x_loc_l;
 		uint16_t y_loc_l;
 
-//TODO: debug why we cannot run both together...
-		//trackpadLocUpdate(R_TRACKPAD);
+		trackpadLocUpdate(R_TRACKPAD);
 		trackpadLocUpdate(L_TRACKPAD);
-		//trackpadGetLastXY(R_TRACKPAD, &x_loc_r, &y_loc_r);
+		trackpadGetLastXY(R_TRACKPAD, &x_loc_r, &y_loc_r);
 		trackpadGetLastXY(L_TRACKPAD, &x_loc_l, &y_loc_l);
 
-		printf("Left: X = %4d, Y = %3d. Right: X = %4d, Y = %3d.\r", 
-			x_loc_l, y_loc_l, x_loc_r, x_loc_r);
+		printf("Left: X = %4d, Y = %3d. Right: X = %4d, Y = %3d. (alive cnt = %d)\r", 
+			x_loc_l, y_loc_l, x_loc_r, y_loc_r, alive_cnt++);
 
 		usleep(10 * 1000);
 	}
 
 	
 
+//TODO: turn below into options to be called via command line options?
 /*
 	int16_t eeprom_comps[NUM_ANYMEAS_ADCS];
 	if (trackpad == R_TRACKPAD) {

@@ -72,25 +72,11 @@ This is a running list of items I would like to prioritize and not lose track
  of.
 
 1. Get trackpad functionality working
-    1. Think through why Valve is using AnyMeas mode
-        1. Power savings? More granular control?
-        1. Maybe "normal" mode works fine, it's just the way I was monitoring DR (or DR only gets pulled high for a little while??)
-            1. Get PINT3 working in both AnyMeas and "normal" mode and see if we can't just use "normal" mode to press on (for now)
-                1. Save understanding and using AnyMeas mode for future work
-    1. Understand AnyMeas data
-        1. Verify this is the correct data by comparing ALL EEPROM compensation defaults
-        1. Methodically check behavior of each ADC result at different touch points on trackpad
-        1. Do this all via PINT3/4
-
-    1. Valve's firmware seems to be using the Trackpads in AnyMeas mode
-        1. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for additional details
-    1. In this way the controller gets the raw ADC data and can do what it wants with it
-    1. What do we want to do...?
-        1. Let's see what AnyMeas data looks like and if we can understand it
-        1. Maybe this is necessary, given how poorly the default performance seemed to work... (or maybe there was something else going on related to bad performance in default mode?)
-        1. Easiest approach may be to replicate what Valve does as accurately as possible (now that we understand AnyMeas mode a little more) and (try to) understand and use that data
-        1. Biggest risk/disconnect, is not understanding what each "ADC" relates to and how to use those values...
-            1. Hopefully DEV_KIT build will help with understanding this...
+    1. Clean up and documentation should be all we need to close this out
+        1. Make sure we mention: https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for additional details
+1. Better build solution?
+    1. Docker?
+    1. Try with latest tools from NXP?
 1. Revisist console/CDC uart
     1. Make regression tests (i.e. testPrint)
         1. Buffer overflow related
