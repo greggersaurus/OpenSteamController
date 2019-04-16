@@ -1201,6 +1201,75 @@ typedef struct {
 static Mouse_Ctrl_T g_mouse;
 
 /**
+ * Convert ADC reading for X direction of analog stick to bounds expected by
+ *  Wired Controller Plus (by PowerA) for Nintendo Switch.
+ *
+ * Note: Make sure updateAdcVals() has been called recently so that the ADC
+ *  values used are current.
+ *
+ * \return X position of Analog stick where Left=0x00, Neutral=0x80, Right=0xff
+ */
+static uint8_t getleftAnalogXPowerA(void) {
+	// Joystick X direction (left = 0x338, neutral = 0x20a right = 0x0f0)
+	uint16_t adcVal = 0;
+
+	adcVal = getAdcVal(ADC_JOYSTICK_X);
+
+	if (adcVal < 0x100) {
+		adcVal = 0;
+	} else {
+		adcVal -= 0x100;
+	}
+
+	adcVal >>= 1;
+
+	if (adcVal > 0xff) {
+		adcVal = 0xff;
+	} else if (adcVal < 0x90 && adcVal > 0x70) {
+		adcVal = 0x80;
+	} else if (adcVal < 0x08) {
+		adcVal = 0x00;
+	}
+
+	return ~adcVal;
+}
+
+/**
+ * Convert ADC reading for Y direction of analog stick to bounds expected by
+ *  Wired Controller Plus (by PowerA) for Nintendo Switch.
+ *
+ * Note: Make sure updateAdcVals() has been called recently so that the ADC
+ *  values used are current.
+ *
+ * \return X position of Analog stick where Up=0x00, Neutral=0x80, Down=0xff
+ */
+static uint8_t getleftAnalogYPowerA(void) {
+	// Joystick Y direction (up = 0x32a, neutral = 0x207, down = 0xf8)
+	uint16_t adcVal = 0;
+
+	adcVal = getAdcVal(ADC_JOYSTICK_Y);
+
+	if (adcVal < 0x100) {
+		adcVal = 0;
+	} else {
+		adcVal -= 0x100;
+	}
+
+	adcVal >>= 1;
+
+	if (adcVal > 0xff) {
+		adcVal = 0xff;
+	} else if (adcVal < 0x90 && adcVal > 0x70) {
+		adcVal = 0x80;
+	} else if (adcVal < 0x08) {
+		adcVal = 0x00;
+	}
+
+	return ~adcVal;
+}
+
+
+/**
  * Update HID Report(s) for Faux Wired Controller Plus (by PowerA) for Nintendo
  *  Switch. These report(s) give status information on the controller (i.e. 
  *  what buttons are being pressed, what position is the analog stick in).

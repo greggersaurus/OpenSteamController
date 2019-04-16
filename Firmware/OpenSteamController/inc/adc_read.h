@@ -30,6 +30,18 @@
 
 #include <stdint.h>
 #include "lpc_types.h"
+#include "chip.h"
+#include "adc_11xx.h"
+
+/**
+ * Defines which ADC Channels map to which functionality.
+ */
+typedef enum AdcChan_t {
+	ADC_R_TRIG = ADC_CH2,
+	ADC_L_TRIG = ADC_CH0,
+	ADC_JOYSTICK_X = ADC_CH1,
+	ADC_JOYSTICK_Y = ADC_CH3,
+} AdcChan;
 
 void initAdc(void);
 
@@ -37,11 +49,7 @@ void enableTriggers(bool en);
 void enableJoystick(bool en);
 
 void updateAdcVals(void);
-
-int getAdcVal(uint8_t chan, uint16_t* val);
-
-uint8_t getleftAnalogXPowerA(void);
-uint8_t getleftAnalogYPowerA(void);
+uint16_t getAdcVal(AdcChan chan);
 
 int adcReadCmdFnc(int argc, const char* argv[]);
 void adcReadCmdUsage(void);

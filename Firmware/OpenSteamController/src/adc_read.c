@@ -27,9 +27,6 @@
 
 #include "adc_read.h"
 
-#include "lpc_types.h"
-#include "chip.h"
-#include "adc_11xx.h"
 #include "clock_11xx.h"
 #include "usb.h"
 #include "time.h"
@@ -41,11 +38,6 @@
 	//!< circuitry to measure analog trigger positions.
 #define GPIO_JOYSTICK_PWR 0, 19 //!< Active low enable for powering 
 	//!< circuitry to measure analog trigger positions.
-
-#define ADC_R_TRIG ADC_CH2
-#define ADC_L_TRIG ADC_CH0
-#define ADC_JOYSTICK_X ADC_CH1
-#define ADC_JOYSTICK_Y ADC_CH3
 
 static LPC_ADC_T* adcRegs = LPC_ADC;
 static ADC_CLOCK_SETUP_T adcSetup; 
@@ -150,8 +142,12 @@ static const int ADC_UPDATE_CNT_DONE = 8; //!< Defines when ISR has fired enough
 	//!< times and adcData is up to date with latest ADC readings.
 
 /**
- * This will start new conversion of all enabled ADC channels, and not return
- *  until 
+ * This will start new conversion of all enabled ADC channels and return
+ *  immediately. Used getAdcVal() to wait for conversion to complete. These
+ *  functions are split so that conversion can be started and other tasks
+ *  taken care of before resulted are needed.
+ *
+ * \return None.
  */
 void updateAdcVals(void) {
 	// Clear counter used by ISR
@@ -165,11 +161,6 @@ void updateAdcVals(void) {
 
 	// Enable burst mode to start conversions
 	Chip_ADC_SetBurstCmd(adcRegs, ENABLE);
-
-	// Wait for ADC samples to be accumulated and averaged
-	while (adcUpdateCnt < ADC_UPDATE_CNT_DONE) {
-		__WFI();
-	}
 }
 
 /**
@@ -206,91 +197,22 @@ void ADC_IRQHandler(void) {
 }
 
 /**
- * Return the raw ADC value for a particular channel.
+ * Return the raw ADC value for a particular channel. If conversions/averaging
+ *  is ongoing this function will wait until it is complete. 
  *
- * Note: updateAdcVals() dicates when ADCs are sampled. Make sure it has
+ * Note: updateAdcVals() dicates when ADC samples are started. Make sure it has
  *  recently been called or returned value may be stale.
  * 
  * \param chan ADC channel to retrieve data from.
- * \param[out] val The raw ADC value.
  * 
- * \return 0 on success.
+ * \return The raw ADC value.
  */
-int getAdcVal(uint8_t chan, uint16_t* val) {
-	if (chan >= 8)
-		return -1;
-
-	*val = adcData[chan];
-
-	return 0;
-}
-
-/**
- * Convert ADC reading for X direction of analog stick to bounds expected by
- *  Wired Controller Plus (by PowerA) for Nintendo Switch.
- *
- * Note: Make sure updateAdcVals() has been called recently so that the ADC
- *  values used are current.
- *
- * \return X position of Analog stick where Left=0x00, Neutral=0x80, Right=0xff
- */
-uint8_t getleftAnalogXPowerA(void) {
-	// Joystick X direction (left = 0x338, neutral = 0x20a right = 0x0f0)
-	uint16_t adcVal = 0;
-
-	getAdcVal(ADC_JOYSTICK_X, &adcVal);
-
-	if (adcVal < 0x100) {
-		adcVal = 0;
-	} else {
-		adcVal -= 0x100;
+uint16_t getAdcVal(AdcChan chan) {
+	// Wait for ADC samples to be accumulated and averaged
+	while (adcUpdateCnt < ADC_UPDATE_CNT_DONE) {
 	}
 
-	adcVal >>= 1;
-
-	if (adcVal > 0xff) {
-		adcVal = 0xff;
-	} else if (adcVal < 0x90 && adcVal > 0x70) {
-		adcVal = 0x80;
-	} else if (adcVal < 0x08) {
-		adcVal = 0x00;
-	}
-
-	return ~adcVal;
-}
-
-/**
- * Convert ADC reading for Y direction of analog stick to bounds expected by
- *  Wired Controller Plus (by PowerA) for Nintendo Switch.
- *
- * Note: Make sure updateAdcVals() has been called recently so that the ADC
- *  values used are current.
- *
- * \return X position of Analog stick where Up=0x00, Neutral=0x80, Down=0xff
- */
-uint8_t getleftAnalogYPowerA(void) {
-	// Joystick Y direction (up = 0x32a, neutral = 0x207, down = 0xf8)
-	uint16_t adcVal = 0;
-
-	getAdcVal(ADC_JOYSTICK_Y, &adcVal);
-
-	if (adcVal < 0x100) {
-		adcVal = 0;
-	} else {
-		adcVal -= 0x100;
-	}
-
-	adcVal >>= 1;
-
-	if (adcVal > 0xff) {
-		adcVal = 0xff;
-	} else if (adcVal < 0x90 && adcVal > 0x70) {
-		adcVal = 0x80;
-	} else if (adcVal < 0x08) {
-		adcVal = 0x00;
-	}
-
-	return ~adcVal;
+	return adcData[chan];
 }
 
 /**
@@ -328,18 +250,18 @@ int adcReadCmdFnc(int argc, const char* argv[]) {
 
 		printf("0x%08x ", getUsTickCnt());
 
-		getAdcVal(ADC_CH6, &adc_val);
-		printf("0x%03x ", adc_val);
+		adc_val = getAdcVal(ADC_CH6);
+		printf(" %4d ", adc_val);
 
-		getAdcVal(ADC_L_TRIG, &adc_val);
-		printf("0x%03x ", adc_val);
-		getAdcVal(ADC_R_TRIG, &adc_val);
-		printf("0x%03x ", adc_val);
+		adc_val = getAdcVal(ADC_L_TRIG);
+		printf(" %4d ", adc_val);
+		adc_val = getAdcVal(ADC_R_TRIG);
+		printf(" %4d ", adc_val);
 
-		getAdcVal(ADC_JOYSTICK_X, &adc_val);
-		printf("0x%03x ", adc_val);
-		getAdcVal(ADC_JOYSTICK_Y, &adc_val);
-		printf("0x%03x ", adc_val);
+		adc_val = getAdcVal(ADC_JOYSTICK_X);
+		printf(" %4d ", adc_val);
+		adc_val = getAdcVal(ADC_JOYSTICK_Y);
+		printf(" %4d ", adc_val);
 
 		printf("\r");
 		usb_flush();
