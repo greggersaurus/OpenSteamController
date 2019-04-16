@@ -71,9 +71,12 @@ Run Project -> Build All to compile.
 This is a running list of items I would like to prioritize and not lose track
  of.
 
-1. Get trackpad functionality working
-    1. Clean up and documentation should be all we need to close this out
-        1. Make sure we mention: https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/AnyMeas_Example.ino for additional details
+1. Revisit ADC design
+    1. Use two calls like trackpad (one to start conversion and one to wait on results)
+        1. Allows for better pipelining of calculating everything needed from peripherals for each controller update cycle?
+1. monitor.c?
+1. Faux Switch Controller
+
 1. Better build solution?
     1. Docker?
     1. Try with latest tools from NXP?

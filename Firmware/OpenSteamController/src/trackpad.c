@@ -35,6 +35,7 @@
 #include "eeprom_access.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define ANYMEAS_EN (1) //!< This flag controls whether the trackpad ASICs are
@@ -47,20 +48,28 @@
 	//!<  since we at least have official FW as reference. Leaving
 	//!<  Normal Mode option in here just in case anyone wants to try
 	//!<  and work with it in the future.
+	//!< Note: AnyMeas Mode seems to be poorly documented. Code below
+	//!<  was obtained by replicating official firmware behavior and
+	//!<  using https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example/Pinnacle.h
+	//!<  as a reference. 
 
-static LPC_SSP_T* spiRegs = LPC_SSP0;
+static LPC_SSP_T* const spiRegs = LPC_SSP0;
 
-#define GPIO_SSP0_SCK0 1, 29
-#define GPIO_SSP0_MISO0 0, 8
-#define GPIO_SSP0_MOSI0 0, 9
+#define GPIO_SSP0_SCK0 1, 29 //!< SPI Clock Pin
+#define GPIO_SSP0_MISO0 0, 8 //!< SPI Master In Slave Out Pin
+#define GPIO_SSP0_MOSI0 0, 9 //!< SPI Master Out Slave In Pin
 
-#define GPIO_R_TRACKPAD_CS_N 1, 15 
-#define GPIO_R_TRACKPAD_DR 0, 23 
-#define GPIO_L_TRACKPAD_CS_N 1, 6
-#define GPIO_L_TRACKPAD_DR 1, 16
+#define GPIO_R_TRACKPAD_CS_N 1, 15 //!< Chip select pin for communicating with
+		//!< Right Trackpad.
+#define GPIO_R_TRACKPAD_DR 0, 23 //!< Data Ready pin for Right Trackpad.
+		//!< Indicates Trackpad Data Registers have data to be read.
+#define GPIO_L_TRACKPAD_CS_N 1, 6 //!< Chip select pin for communicating with
+		//!< Left Trackpad.
+#define GPIO_L_TRACKPAD_DR 1, 16 //!< Data Ready pin for Right Trackpad.
+		//!< Indicates Trackpad Data Registers have data to be read.
 
-#define PINT_R_TRACKPAD 3
-#define PINT_L_TRACKPAD 4
+#define PINT_R_TRACKPAD 3 //!< GPIO Pin Interrupt configured for Right Trackpad.
+#define PINT_L_TRACKPAD 4 //!< GPIO Pin Interrupt configured for Left Trackpad.
 
 
 #if (!ANYMEAS_EN)
@@ -85,9 +94,8 @@ volatile bool tpadIsrBusys[2]; //!< Defines if the interrupt is currently being
 
 #define NUM_ANYMEAS_X_ADCS (11) //!< The number of ADC reading used for 
 	//!< calculating the X axis position.
-//TODO: can this be 7?
-#define NUM_ANYMEAS_Y_ADCS (8) //!< The number of ADC reading used for 
-	//!< calculating the Y axis position.
+#define NUM_ANYMEAS_Y_ADCS (7) //!< The number of ADC reading used for 
+	//!< calculating the Y axis position. 
 #define NUM_ANYMEAS_ADCS (NUM_ANYMEAS_X_ADCS + NUM_ANYMEAS_Y_ADCS) //!< The
 	//!< total number of AnyMeas ADCs read for computing X/Y position.
 
@@ -100,16 +108,17 @@ static int16_t tpadAdcComps[2][NUM_ANYMEAS_ADCS]; //!< Compensation values
 	//!< for AnyMeas ADC channels used to calculate X/Y position.
 static volatile int16_t tpadAdcDatas[2][NUM_ANYMEAS_ADCS]; //!< The ADC 
 	//!< values relating to X/Y position filled in by ISR. Read tpadAdcIdxs
-	//!< to tell if these are currently being filled updated.
+	//!< to tell if these are currently being updated.
 static volatile int tpadAdcIdxs[2]; //!< Tracks how tpadAdcDatas is being
 	//!< updated. If this is NUM_ANYMEAS_ADCS, it means tpadAdcDatas
-	//!< are all safe to read.
+	//!< are all safe to be read.
 
 
 #endif // ANYMEAS_EN
 
 
-// Trackpad ASIC Registers:
+// Trackpad ASIC Registers. See https://github.com/cirque-corp/Cirque_Pinnacle_1CA027/blob/master/Additional_Examples/AnyMeas_Example
+//  for reference regarding usage (especially AnyMeas specific registers):
 #define TPAD_FW_ID_ADDR (0x00)
 #define TPAD_FW_VER_ADDR (0x01)
 #define TPAD_STATUS1_ADDR (0x02)
@@ -254,7 +263,7 @@ static volatile int tpadAdcIdxs[2]; //!< Tracks how tpadAdcDatas is being
  *
  * \return None.
  */
-static void writePinnacleReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
+static void writeTpadReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 	Chip_SSP_DATA_SETUP_T xf_setup;
 	uint8_t tx_data[2];
 	uint8_t rx_data[2];
@@ -295,7 +304,7 @@ static void writePinnacleReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
  *
  * \return The value read from the register.
  */
-static uint8_t readPinnacleReg(Trackpad trackpad, uint8_t addr) {
+static uint8_t readTpadReg(Trackpad trackpad, uint8_t addr) {
 	Chip_SSP_DATA_SETUP_T xf_setup;
 	uint8_t tx_data[4];
 	uint8_t rx_data[4];
@@ -343,22 +352,22 @@ static uint8_t readPinnacleReg(Trackpad trackpad, uint8_t addr) {
  *
  * \return None.
  */
-static void writePinnacleExtRegs(Trackpad trackpad, uint16_t addr, uint8_t len, 
+static void writeTpadExtRegs(Trackpad trackpad, uint16_t addr, uint8_t len, 
 	const uint8_t* data) {
 
 	// Write address 
-	writePinnacleReg(trackpad, TPAD_ERA_HIADDR_ADDR, 0xFF & (addr >> 8));
-	writePinnacleReg(trackpad, TPAD_ERA_LOADDR_ADDR, 0xFF & addr);
+	writeTpadReg(trackpad, TPAD_ERA_HIADDR_ADDR, 0xFF & (addr >> 8));
+	writeTpadReg(trackpad, TPAD_ERA_LOADDR_ADDR, 0xFF & addr);
 
 	for (int idx = 0; idx < len; idx++) {
 		// Write value
-		writePinnacleReg(trackpad, TPAD_ERA_VAL_ADDR, data[idx]);
+		writeTpadReg(trackpad, TPAD_ERA_VAL_ADDR, data[idx]);
 
 		// Write ERA auto-increment write to ERA Control
-		writePinnacleReg(trackpad, TPAD_ERA_CTRL_ADDR, 0x0A);
+		writeTpadReg(trackpad, TPAD_ERA_CTRL_ADDR, 0x0A);
 
 		// Read ERA Control until it contains 0x00
-		while (readPinnacleReg(trackpad, TPAD_ERA_CTRL_ADDR)){
+		while (readTpadReg(trackpad, TPAD_ERA_CTRL_ADDR)){
 		}
 	}
 }
@@ -371,8 +380,8 @@ static void writePinnacleExtRegs(Trackpad trackpad, uint16_t addr, uint8_t len,
  * 
  * \return None.
  */
-static inline void clearFlagsPinnacle(Trackpad trackpad) {
-	writePinnacleReg(trackpad, TPAD_STATUS1_ADDR, 0x00);
+static inline void clearTpadFlags(Trackpad trackpad) {
+	writeTpadReg(trackpad, TPAD_STATUS1_ADDR, 0x00);
 }
 
 /**
@@ -382,7 +391,7 @@ static inline void clearFlagsPinnacle(Trackpad trackpad) {
  * 
  * \return None.
  */
-static void setupTrackpadISR(Trackpad trackpad) {
+static void setupTpadISR(Trackpad trackpad) {
 	// Setting PINT so we can react to PINT rising edge
 	if (trackpad == R_TRACKPAD) {
 		Chip_SYSCTL_SetPinInterrupt(PINT_R_TRACKPAD, GPIO_R_TRACKPAD_DR);
@@ -412,45 +421,45 @@ static void setupTrackpadISR(Trackpad trackpad) {
  * 
  * \return None.
  */
-static void setupTrackpad(Trackpad trackpad) {
+static void setupTpad(Trackpad trackpad) {
 	// Reset the TrackpadASIC:
-	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, TPAD_SYSCFG1_RESET_BIT);
+	writeTpadReg(trackpad, TPAD_SYSCFG1_ADDR, TPAD_SYSCFG1_RESET_BIT);
 
 	usleep(50 * 1000);
 
-	while (!(TPAD_STATUS1_CC_BIT & readPinnacleReg(trackpad, 
+	while (!(TPAD_STATUS1_CC_BIT & readTpadReg(trackpad, 
 		TPAD_STATUS1_ADDR))) {
 	}
 
-	clearFlagsPinnacle(trackpad);
+	clearTpadFlags(trackpad);
 
 	usleep(10 * 1000);
 
 	// Check Firmware ID
-	uint8_t fw_id = readPinnacleReg(trackpad, TPAD_FW_ID_ADDR);
+	uint8_t fw_id = readTpadReg(trackpad, TPAD_FW_ID_ADDR);
 	if (fw_id != 0x07)
 		return;
 
 	// Check Firmware Version
-	uint8_t fw_ver = readPinnacleReg(trackpad, TPAD_FW_VER_ADDR);
+	uint8_t fw_ver = readTpadReg(trackpad, TPAD_FW_VER_ADDR);
 	if (fw_ver != 0x3a) 
 		return;
 
 	// Set ASIC to normal mode and active
-	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 0);
+	writeTpadReg(trackpad, TPAD_SYSCFG1_ADDR, 0);
 	
 	// Allow time for changes to take place
 	usleep(10 * 1000);
 
-	clearFlagsPinnacle(trackpad);
+	clearTpadFlags(trackpad);
 
-	writePinnacleReg(trackpad, TPAD_FEEDCFG2_ADDR, 0x1F);
-	writePinnacleReg(trackpad, TPAD_FEEDCFG1_ADDR, TPAD_FEEDCFG1_FEEDEN_BIT
+	writeTpadReg(trackpad, TPAD_FEEDCFG2_ADDR, 0x1F);
+	writeTpadReg(trackpad, TPAD_FEEDCFG1_ADDR, TPAD_FEEDCFG1_FEEDEN_BIT
 		| TPAD_FEEDCFG1_ABSEN_BIT);
-	writePinnacleReg(trackpad, TPAD_ZIDLE_ADDR, 0x5);
-	writePinnacleReg(trackpad, TPAD_ZSCALER_ADDR, 16);
+	writeTpadReg(trackpad, TPAD_ZIDLE_ADDR, 0x5);
+	writeTpadReg(trackpad, TPAD_ZSCALER_ADDR, 16);
 
-	setupTrackpadISR(trackpad);
+	setupTpadISR(trackpad);
 }
 
 /**
@@ -516,7 +525,7 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
  *
  * \return The ADC value.
  */
-static void getLatestPinnacleData(Trackpad trackpad) {
+static void getLatestTpadData(Trackpad trackpad) {
 	getAbsDataAndClr(trackpad, tpadAbsDataIdxs[trackpad]);
 
 	tpadAbsDataIdxs[trackpad]++;
@@ -535,7 +544,7 @@ static void getLatestPinnacleData(Trackpad trackpad) {
  *
  * \return The ADC value.
  */
-static int16_t getPinnacleAdcAndClr(Trackpad trackpad) {
+static int16_t getTpadAdcAndClr(Trackpad trackpad) {
 	Chip_SSP_DATA_SETUP_T xf_setup;
 	uint8_t tx_data[7];
 	uint8_t rx_data[7];
@@ -593,7 +602,7 @@ static int16_t getPinnacleAdcAndClr(Trackpad trackpad) {
  * 
  * \return None.
  */
-static void setAdcCfgPinnacle(Trackpad trackpad, TpadAdcGain gain, 
+static void setTpadAdcCfg(Trackpad trackpad, TpadAdcGain gain, 
 	TpadAdcToggleFreq toggleFreq, TpadAdcSampleLen sampleLength, 
 	TpadAdcMuxSel muxSel , uint8_t cfg2, 
 	TpadAdcAperture aperture) {
@@ -611,23 +620,23 @@ static void setAdcCfgPinnacle(Trackpad trackpad, TpadAdcGain gain,
 	uint8_t width_update = aperture;
 	
 	if (cfg1_shadow[trackpad] != cfg1_update) {
-		writePinnacleReg(trackpad, TPAD_ADCCFG1_ADDR, cfg1_update);
+		writeTpadReg(trackpad, TPAD_ADCCFG1_ADDR, cfg1_update);
 		cfg1_shadow[trackpad] = cfg1_update;
 	}
 	if (ctrl_shadow[trackpad] != ctrl_update) {
-		writePinnacleReg(trackpad, TPAD_ADCCTRL_ADDR, ctrl_update);
+		writeTpadReg(trackpad, TPAD_ADCCTRL_ADDR, ctrl_update);
 		ctrl_shadow[trackpad] = ctrl_update;
 	}
 	if (mux_ctrl_shadow[trackpad] != mux_ctrl_update) {
-		writePinnacleReg(trackpad, TPAD_ADCMUXCTRL_ADDR, mux_ctrl_update);
+		writeTpadReg(trackpad, TPAD_ADCMUXCTRL_ADDR, mux_ctrl_update);
 		mux_ctrl_shadow[trackpad] = mux_ctrl_update;
 	}
 	if (cfg2_shadow[trackpad] != cfg2_update) {
-		writePinnacleReg(trackpad, TPAD_ADCCFG2_ADDR, cfg2_update);
+		writeTpadReg(trackpad, TPAD_ADCCFG2_ADDR, cfg2_update);
 		cfg2_shadow[trackpad] = cfg2_update;
 	}
 	if (width_shadow[trackpad] != width_update) {
-		writePinnacleReg(trackpad, TPAD_ADCWIDTH_ADDR, width_update);
+		writeTpadReg(trackpad, TPAD_ADCWIDTH_ADDR, width_update);
 		width_shadow[trackpad] = width_update;
 	}
 }
@@ -641,7 +650,7 @@ static void setAdcCfgPinnacle(Trackpad trackpad, TpadAdcGain gain,
  *
  * \return None.
  */
-static void setTogglePinnacle(Trackpad trackpad, uint32_t toggle) {
+static void setTpadToggle(Trackpad trackpad, uint32_t toggle) {
 	// Shadow copies of Trackpad ASIC registers to minimize SPI transactions
 	static uint8_t toggle_hihi_shadow[2] = {0, 0};
 	static uint8_t toggle_hilo_shadow[2] = {0, 0};
@@ -654,19 +663,19 @@ static void setTogglePinnacle(Trackpad trackpad, uint32_t toggle) {
 	uint8_t toggle_lolo = 0xFF & (toggle >> 0);
 
 	if (toggle_hihi_shadow[trackpad] != toggle_hihi) {
-		writePinnacleReg(trackpad, TPAD_TOGGLE_HIHI_ADDR, toggle_hihi);
+		writeTpadReg(trackpad, TPAD_TOGGLE_HIHI_ADDR, toggle_hihi);
 		toggle_hihi_shadow[trackpad] = toggle_hihi;
 	}	
 	if (toggle_hilo_shadow[trackpad] != toggle_hilo) {
-		writePinnacleReg(trackpad, TPAD_TOGGLE_HILO_ADDR, toggle_hilo);
+		writeTpadReg(trackpad, TPAD_TOGGLE_HILO_ADDR, toggle_hilo);
 		toggle_hilo_shadow[trackpad] = toggle_hilo;
 	}	
 	if (toggle_lohi_shadow[trackpad] != toggle_lohi) {
-		writePinnacleReg(trackpad, TPAD_TOGGLE_LOHI_ADDR, toggle_lohi);
+		writeTpadReg(trackpad, TPAD_TOGGLE_LOHI_ADDR, toggle_lohi);
 		toggle_lohi_shadow[trackpad] = toggle_lohi;
 	}	
 	if (toggle_lolo_shadow[trackpad] != toggle_lolo) {
-		writePinnacleReg(trackpad, TPAD_TOGGLE_LOLO_ADDR, toggle_lolo);
+		writeTpadReg(trackpad, TPAD_TOGGLE_LOLO_ADDR, toggle_lolo);
 		toggle_lolo_shadow[trackpad] = toggle_lolo;
 	}	
 }
@@ -680,7 +689,7 @@ static void setTogglePinnacle(Trackpad trackpad, uint32_t toggle) {
  *
  * \return None.
  */
-static void setPolarityPinnacle(Trackpad trackpad, uint32_t polarity) {
+static void setTpadPolarity(Trackpad trackpad, uint32_t polarity) {
 	// Shadow copies of Trackpad ASIC registers to minimize SPI transactions
 	static uint8_t polarity_hihi_shadow[2] = {0, 0};
 	static uint8_t polarity_hilo_shadow[2] = {0, 0};
@@ -693,19 +702,19 @@ static void setPolarityPinnacle(Trackpad trackpad, uint32_t polarity) {
 	uint8_t polarity_lolo = 0xFF & (polarity >> 0);
 
 	if (polarity_hihi_shadow[trackpad] != polarity_hihi) {
-		writePinnacleReg(trackpad, TPAD_POLARITY_HIHI_ADDR, polarity_hihi);
+		writeTpadReg(trackpad, TPAD_POLARITY_HIHI_ADDR, polarity_hihi);
 		polarity_hihi_shadow[trackpad] = polarity_hihi;
 	}	
 	if (polarity_hilo_shadow[trackpad] != polarity_hilo) {
-		writePinnacleReg(trackpad, TPAD_POLARITY_HILO_ADDR, polarity_hilo);
+		writeTpadReg(trackpad, TPAD_POLARITY_HILO_ADDR, polarity_hilo);
 		polarity_hilo_shadow[trackpad] = polarity_hilo;
 	}	
 	if (polarity_lohi_shadow[trackpad] != polarity_lohi) {
-		writePinnacleReg(trackpad, TPAD_POLARITY_LOHI_ADDR, polarity_lohi);
+		writeTpadReg(trackpad, TPAD_POLARITY_LOHI_ADDR, polarity_lohi);
 		polarity_lohi_shadow[trackpad] = polarity_lohi;
 	}	
 	if (polarity_lolo_shadow[trackpad] != polarity_lolo) {
-		writePinnacleReg(trackpad, TPAD_POLARITY_LOLO_ADDR, polarity_lolo);
+		writeTpadReg(trackpad, TPAD_POLARITY_LOLO_ADDR, polarity_lolo);
 		polarity_lolo_shadow[trackpad] = polarity_lolo;
 	}	
 }
@@ -718,7 +727,7 @@ static void setPolarityPinnacle(Trackpad trackpad, uint32_t polarity) {
  *
  * \return None.
  */
-static void setAdcStartAddrPinnacle(Trackpad trackpad, uint16_t addr) {
+static void setTpadAdcStartAddr(Trackpad trackpad, uint16_t addr) {
 	// Shadow copies to minimize SPI transactions
 	uint8_t addr_hi_shadow[2] = {0, 0};
 	uint8_t addr_lo_shadow[2] = {0, 0};
@@ -727,11 +736,11 @@ static void setAdcStartAddrPinnacle(Trackpad trackpad, uint16_t addr) {
 	uint8_t addr_lo = 0xFF & addr;
 
 	if (addr_hi_shadow[trackpad] != addr_hi) {
-		writePinnacleReg(trackpad, TPAD_ADC_START_ADDR_HI_ADDR, addr_hi);
+		writeTpadReg(trackpad, TPAD_ADC_START_ADDR_HI_ADDR, addr_hi);
 		addr_hi_shadow[trackpad] = addr_hi;
 	}
 	if (addr_lo_shadow[trackpad] != addr_lo) {
-		writePinnacleReg(trackpad, TPAD_ADC_START_ADDR_LO_ADDR, addr_lo);
+		writeTpadReg(trackpad, TPAD_ADC_START_ADDR_LO_ADDR, addr_lo);
 		addr_lo_shadow[trackpad] = addr_lo;
 	}
 }
@@ -744,7 +753,7 @@ static void setAdcStartAddrPinnacle(Trackpad trackpad, uint16_t addr) {
  *
  * \return None.
  */
-static void setNumMeasPinnacle(Trackpad trackpad, uint8_t numMeas) {
+static void setTpadNumMeas(Trackpad trackpad, uint8_t numMeas) {
 	static uint8_t meas_ctrl_shadow[2] = {0, 0};
 
 	// TODO: add flag for enabling low power mode via TPAD_MEASCTRL_POSTMEASPWR_BIT?
@@ -752,7 +761,7 @@ static void setNumMeasPinnacle(Trackpad trackpad, uint8_t numMeas) {
 	uint8_t meas_ctrl = (TPAD_MEASCTRL_NUMMEAS_MASK & numMeas);
 
 	if (meas_ctrl_shadow[trackpad] != meas_ctrl) {
-		writePinnacleReg(trackpad, TPAD_MEASCTRL_ADDR, meas_ctrl);
+		writeTpadReg(trackpad, TPAD_MEASCTRL_ADDR, meas_ctrl);
 		meas_ctrl_shadow[trackpad] = meas_ctrl;
 	}
 }
@@ -769,22 +778,22 @@ static void setNumMeasPinnacle(Trackpad trackpad, uint8_t numMeas) {
  * 
  * \return ADC result (16-bit value cast to 32-bit...?)
  */
-static int32_t takeAdcMeasPinnacle(Trackpad trackpad, uint32_t toggle, 
+static int32_t takeTpadAdcMeas(Trackpad trackpad, uint32_t toggle, 
 	uint32_t polarity, uint8_t adjust) {
 
-	setTogglePinnacle(trackpad, toggle);
-	setPolarityPinnacle(trackpad, polarity);
+	setTpadToggle(trackpad, toggle);
+	setTpadPolarity(trackpad, polarity);
 	// Put measurement data starting at Register 19???
-	setAdcStartAddrPinnacle(trackpad, 0x0013);
-	setNumMeasPinnacle(trackpad, 1);
+	setTpadAdcStartAddr(trackpad, 0x0013);
+	setTpadNumMeas(trackpad, 1);
 
 	// Start the measurement
-	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+	writeTpadReg(trackpad, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
 
 	usleep(2 * 1000);
 
-	int16_t retval = getPinnacleAdcAndClr(trackpad);
+	int16_t retval = getTpadAdcAndClr(trackpad);
 
 	return (int32_t)(retval >> adjust);
 }
@@ -803,11 +812,11 @@ void trackpadLocUpdate(Trackpad trackpad) {
 	tpadAdcIdxs[trackpad] = 0;
 
 	// Start by requesting measurements for X axis location
-	setAdcStartAddrPinnacle(trackpad, ANYMEAS_X_ADC_ADDR);
-	setNumMeasPinnacle(trackpad, NUM_ANYMEAS_X_ADCS);
+	setTpadAdcStartAddr(trackpad, ANYMEAS_X_ADC_ADDR);
+	setTpadNumMeas(trackpad, NUM_ANYMEAS_X_ADCS);
 
 	// Start the measurements
-	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+	writeTpadReg(trackpad, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
 }
 
@@ -837,7 +846,8 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 	// Calculate xLoc
 	int32_t adc_vals_x[12];
 
-//TODO: can we clean this up?
+	// This is based on simulation of official firmware. Cannot say I
+	//  understand it...
 	int32_t compensated_val = tpadAdcDatas[trackpad][0] - tpadAdcComps[trackpad][0];
 	adc_vals_x[0] = compensated_val;
 	adc_vals_x[1] = compensated_val;
@@ -1123,60 +1133,60 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
  * 
  * \return None.
  */
-static void setupTrackpad(Trackpad trackpad) {
+static void setupTpad(Trackpad trackpad) {
 	// Reset the TrackpadASIC:
-	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, TPAD_SYSCFG1_RESET_BIT);
+	writeTpadReg(trackpad, TPAD_SYSCFG1_ADDR, TPAD_SYSCFG1_RESET_BIT);
 
 	usleep(50 * 1000);
 
-	while (!(TPAD_STATUS1_CC_BIT & readPinnacleReg(trackpad, TPAD_STATUS1_ADDR))) {
+	while (!(TPAD_STATUS1_CC_BIT & readTpadReg(trackpad, TPAD_STATUS1_ADDR))) {
 	}
 
-	clearFlagsPinnacle(trackpad);
+	clearTpadFlags(trackpad);
 
 	usleep(10 * 1000);
 
 	// Check Firmware ID
-	uint8_t fw_id = readPinnacleReg(trackpad, TPAD_FW_ID_ADDR);
+	uint8_t fw_id = readTpadReg(trackpad, TPAD_FW_ID_ADDR);
 	if (fw_id != 0x07)
 		return;
 
 	// Check Firmware Version
-	uint8_t fw_ver = readPinnacleReg(trackpad, TPAD_FW_VER_ADDR);
+	uint8_t fw_ver = readTpadReg(trackpad, TPAD_FW_VER_ADDR);
 	if (fw_ver != 0x3a) 
 		return;
 
 	// Stop Trackpad ASIC internal calculations
-	writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+	writeTpadReg(trackpad, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_TRACKDIS_BIT);
 	
 	// Delay after track disable to allow for tracking operations to finish 
 	usleep(10 * 1000);
 
-	clearFlagsPinnacle(trackpad);
+	clearTpadFlags(trackpad);
 
 	// Set default states for all registers:
-	writePinnacleReg(trackpad, TPAD_ADCCFG1_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_ADCCTRL_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_ADCMUXCTRL_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_ADCCFG2_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_ADCWIDTH_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_TOGGLE_HIHI_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_TOGGLE_HILO_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_TOGGLE_LOHI_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_TOGGLE_LOLO_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_POLARITY_HIHI_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_POLARITY_HILO_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_POLARITY_LOHI_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_POLARITY_LOLO_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_ADCCFG1_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_ADCCTRL_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_ADCMUXCTRL_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_ADCCFG2_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_ADCWIDTH_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_TOGGLE_HIHI_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_TOGGLE_HILO_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_TOGGLE_LOHI_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_TOGGLE_LOLO_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_POLARITY_HIHI_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_POLARITY_HILO_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_POLARITY_LOHI_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_POLARITY_LOLO_ADDR, 0x00);
 
-	setAdcStartAddrPinnacle(trackpad, 0x0013);
+	setTpadAdcStartAddr(trackpad, 0x0013);
 
-	setNumMeasPinnacle(trackpad, 1);
-	writePinnacleReg(trackpad, TPAD_MEASCTRL_ADDR, 0x41);
-	writePinnacleReg(trackpad, TPAD_MEASINDEX_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_ANYMEASSTATE_ADDR, 0x00);
-	writePinnacleReg(trackpad, TPAD_ADCCFG2_ADDR, 0x00);
+	setTpadNumMeas(trackpad, 1);
+	writeTpadReg(trackpad, TPAD_MEASCTRL_ADDR, 0x41);
+	writeTpadReg(trackpad, TPAD_MEASINDEX_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_ANYMEASSTATE_ADDR, 0x00);
+	writeTpadReg(trackpad, TPAD_ADCCFG2_ADDR, 0x00);
 
 	// Load Compensation Matrix Data (I think...):
 	//  According to datasheet: A compensation matrix of 92 values (each 
@@ -1193,7 +1203,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x00;
 	era_data[6] = 0x05;
 	era_data[7] = 0x50;
-	writePinnacleExtRegs(trackpad, 0x015b, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x015b, 8, era_data);
 
 	era_data[0] = 0x00;
 	era_data[1] = 0x00;
@@ -1203,7 +1213,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x00;
 	era_data[6] = 0x06;
 	era_data[7] = 0x60;
-	writePinnacleExtRegs(trackpad, 0x0163, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x0163, 8, era_data);
 
 	era_data[0] = 0x00;
 	era_data[1] = 0x00;
@@ -1213,7 +1223,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x00;
 	era_data[6] = 0x04;
 	era_data[7] = 0xc8;
-	writePinnacleExtRegs(trackpad, 0x016b, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x016b, 8, era_data);
 
 	era_data[0] = 0x00;
 	era_data[1] = 0x00;
@@ -1223,7 +1233,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x00;
 	era_data[6] = 0x07;
 	era_data[7] = 0x80;
-	writePinnacleExtRegs(trackpad, 0x0173, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x0173, 8, era_data);
 
 	era_data[0] = 0x00;
 	era_data[1] = 0x00;
@@ -1233,7 +1243,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x00;
 	era_data[6] = 0x05;
 	era_data[7] = 0x28;
-	writePinnacleExtRegs(trackpad, 0x017b, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x017b, 8, era_data);
 
 	era_data[0] = 0x00;
 	era_data[1] = 0x00;
@@ -1243,7 +1253,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x00;
 	era_data[6] = 0x06;
 	era_data[7] = 0x18;
-	writePinnacleExtRegs(trackpad, 0x0183, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x0183, 8, era_data);
 
 	era_data[0] = 0x00;
 	era_data[1] = 0x00;
@@ -1253,7 +1263,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x00;
 	era_data[6] = 0x04;
 	era_data[7] = 0xb0;
-	writePinnacleExtRegs(trackpad, 0x018b, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x018b, 8, era_data);
 
 	era_data[0] = 0x00;
 	era_data[1] = 0x00;
@@ -1263,7 +1273,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x00;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x0193, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x0193, 8, era_data);
 
 	// Comensation Matrix Data for AnyMeas ADCs for X axis location?
 	era_data[0] = 0x0f;
@@ -1274,7 +1284,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x3b;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x01df, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x01df, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1284,7 +1294,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x76;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x01e7, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x01e7, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1294,7 +1304,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0xed;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x01ef, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x01ef, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1304,7 +1314,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0xda;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x01f7, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x01f7, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1314,7 +1324,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0xb4;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x01ff, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x01ff, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1324,7 +1334,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x68;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x0207, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x0207, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1334,7 +1344,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0xd1;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x020f, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x020f, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1344,7 +1354,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0xa3;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x0217, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x0217, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1354,7 +1364,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x47;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x021f, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x021f, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1364,7 +1374,7 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x8e;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x0227, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x0227, 8, era_data);
 
 	era_data[0] = 0x0f;
 	era_data[1] = 0xff;
@@ -1374,26 +1384,26 @@ static void setupTrackpad(Trackpad trackpad) {
 	era_data[5] = 0x1d;
 	era_data[6] = 0x00;
 	era_data[7] = 0x00;
-	writePinnacleExtRegs(trackpad, 0x022f, 8, era_data);
+	writeTpadExtRegs(trackpad, 0x022f, 8, era_data);
 
-	setAdcCfgPinnacle(trackpad, TPAD_ADC_GAIN0, TPAD_ADC_TOGGLE_FREQ_0,
+	setTpadAdcCfg(trackpad, TPAD_ADC_GAIN0, TPAD_ADC_TOGGLE_FREQ_0,
 		TPAD_ADC_SAMPLEN_256, TPAD_ADC_MUXSEL_SENSEP1GATE, 0, 
 		TPAD_ADC_APETURE_500NS);
 
 	era_data[0] = 0x64;
 	era_data[1] = 0x03;
-	writePinnacleExtRegs(trackpad, 0x00d8, 2, era_data);
+	writeTpadExtRegs(trackpad, 0x00d8, 2, era_data);
 
-	clearFlagsPinnacle(trackpad);
+	clearTpadFlags(trackpad);
 
-	takeAdcMeasPinnacle(trackpad, 0x00000000, 0x00000000, 0);
-	takeAdcMeasPinnacle(trackpad, 0x000007f8, 0x00000550, 0);
-	takeAdcMeasPinnacle(trackpad, 0x0fff0000, 0x023b0000, 0);
+	takeTpadAdcMeas(trackpad, 0x00000000, 0x00000000, 0);
+	takeTpadAdcMeas(trackpad, 0x000007f8, 0x00000550, 0);
+	takeTpadAdcMeas(trackpad, 0x0fff0000, 0x023b0000, 0);
 	
-	clearFlagsPinnacle(trackpad);
+	clearTpadFlags(trackpad);
 
 	// Setting PINT so we can react to PINT rising edge
-	setupTrackpadISR(trackpad);
+	setupTpadISR(trackpad);
 
 	// Compute compensation values (i.e. average value of ADCs, assuming
 	//  no input during initialization).
@@ -1457,7 +1467,7 @@ void initTrackpad(void) {
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Right Trackpad in shutdown mode
-	writePinnacleReg(R_TRACKPAD, TPAD_SYSCFG1_ADDR, 
+	writeTpadReg(R_TRACKPAD, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_SHUTDOWN_BIT);
 
 	// Left Trackpad comms setup
@@ -1472,11 +1482,11 @@ void initTrackpad(void) {
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
 	// Place Left Trackpad in shutdown mode
-	writePinnacleReg(L_TRACKPAD, TPAD_SYSCFG1_ADDR, 
+	writeTpadReg(L_TRACKPAD, TPAD_SYSCFG1_ADDR, 
 		TPAD_SYSCFG1_SHUTDOWN_BIT);
 
-	setupTrackpad(R_TRACKPAD);
-	setupTrackpad(L_TRACKPAD);
+	setupTpad(R_TRACKPAD);
+	setupTpad(L_TRACKPAD);
 }
 
 
@@ -1490,20 +1500,20 @@ void initTrackpad(void) {
  * 
  * \return None.
  */
-void getNextPinnacleAdcValIsr(Trackpad trackpad) {
+void getNextTpadAdcValIsr(Trackpad trackpad) {
 	volatile int16_t* tpad_adc_datas = tpadAdcDatas[trackpad];
 	int tpad_adc_idx = tpadAdcIdxs[trackpad];
 
-	tpad_adc_datas[tpad_adc_idx] = getPinnacleAdcAndClr(trackpad);
+	tpad_adc_datas[tpad_adc_idx] = getTpadAdcAndClr(trackpad);
 	tpad_adc_idx++;
 
 	if (tpad_adc_idx == NUM_ANYMEAS_X_ADCS) {
 		// Request measurements used for position on Y axis
-		setAdcStartAddrPinnacle(trackpad, ANYMEAS_Y_ADC_ADDR);
-		setNumMeasPinnacle(trackpad, NUM_ANYMEAS_Y_ADCS);
+		setTpadAdcStartAddr(trackpad, ANYMEAS_Y_ADC_ADDR);
+		setTpadNumMeas(trackpad, NUM_ANYMEAS_Y_ADCS);
 
 		// Start the measurement
-		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
+		writeTpadReg(trackpad, TPAD_SYSCFG1_ADDR, 
 			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
 	}
 
@@ -1524,9 +1534,9 @@ void FLEX_INT3_IRQHandler(void) {
 	Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_R_TRACKPAD));
 
 #if (!ANYMEAS_EN)
-	getLatestPinnacleData(R_TRACKPAD);
+	getLatestTpadData(R_TRACKPAD);
 #else  // if (ANYMEAS_EN)
-	getNextPinnacleAdcValIsr(R_TRACKPAD);
+	getNextTpadAdcValIsr(R_TRACKPAD);
 #endif // ANYMEAS_EN
 }
 
@@ -1540,9 +1550,9 @@ void FLEX_INT4_IRQHandler(void) {
 	Chip_PININT_ClearIntStatus(LPC_PININT, PININTCH(PINT_L_TRACKPAD));
 
 #if (!ANYMEAS_EN)
-	getLatestPinnacleData(L_TRACKPAD);
+	getLatestTpadData(L_TRACKPAD);
 #else  // if (ANYMEAS_EN)
-	getNextPinnacleAdcValIsr(L_TRACKPAD);
+	getNextTpadAdcValIsr(L_TRACKPAD);
 #endif // ANYMEAS_EN
 }
 
@@ -1553,13 +1563,119 @@ void FLEX_INT4_IRQHandler(void) {
  */
 void trackpadCmdUsage(void) {
 	printf(
+
+#if (!ANYMEAS_EN)
+
+		"usage: trackpad ??? (WIP)\n"
+
+#else // if (ANYMEAS_EN)
+
 		"usage: trackpad monitor\n"
-		"       trackpad read regAddr\n"
-		"       trackpad write regAddr val\n"
+		"       trackpad getRaw\n"
+		"       trackpad readReg left/right addr\n"
+		"       trackpad writeReg left/right addr val\n"
 		"\n"
-//TODO
+		"monitor: Monitor X/Y position calculated for each Trackpad\n"
+		"getRaw: print single set of raw ADC readings and compensation\n" 
+		"	data (ideal for inserting into simulations)\n"
+		"readReg/writeReg: Access Trackpad ASIC Regiters\n"
+#endif
 	);
 }
+
+/**
+ * Function that will entire loop which prints out X/Y position for each 
+ *  Trackpad until a key is pressed to exit.
+ *
+ * \return None.
+ */
+void tpadMonitor(void) {
+	printf("Trackpad X/Y Location (Press any key to exit):\n");
+	printf("\n");
+	printf("Time             Left X Left Y Right X Right Y\n");
+	printf("----------------------------------------------\n");
+
+	while (!usb_tstc()) {
+		uint16_t x_loc = 0;
+		uint16_t y_loc = 0;
+
+		trackpadLocUpdate(L_TRACKPAD);
+		trackpadLocUpdate(R_TRACKPAD);
+
+		printf("0x%08x       ", getUsTickCnt());
+
+		trackpadGetLastXY(L_TRACKPAD, &x_loc, &y_loc);
+
+		printf("  %4d ", x_loc);
+		printf("  %4d ", y_loc);
+
+		trackpadGetLastXY(R_TRACKPAD, &x_loc, &y_loc);
+
+		printf("   %4d ", x_loc);
+		printf("   %4d ", y_loc);
+
+		printf("\r");
+		usb_flush();
+
+		usleep(10 * 1000);
+	}
+}
+
+/**
+ * Print single set of raw ADC readings and compensation data (ideal for 
+ *  inserting into simulations)"
+ *
+ * \return None.
+ */
+void tpadGetRaw(void) {
+	int16_t eeprom_comps[NUM_ANYMEAS_ADCS];
+	eepromRead(0x628, eeprom_comps, sizeof(eeprom_comps));
+	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+		printf("Left Compensation Vals[%d] = %d %d\n", idx, 
+			tpadAdcComps[L_TRACKPAD][idx], eeprom_comps[idx]);
+	}
+	printf("\n");
+
+	eepromRead(0x602, eeprom_comps, sizeof(eeprom_comps));
+	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+		printf("Right Compensation Vals[%d] = %d %d\n", idx, 
+			tpadAdcComps[R_TRACKPAD][idx], eeprom_comps[idx]);
+	}
+	printf("\n");
+
+	uint16_t x_loc = 0;
+	uint16_t y_loc = 0;
+
+	trackpadLocUpdate(L_TRACKPAD);
+	trackpadLocUpdate(R_TRACKPAD);
+
+	printf("# Left Trackpad AnyMeas ADC Vals:\n");
+
+	trackpadGetLastXY(L_TRACKPAD, &x_loc, &y_loc);
+
+	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+		uint32_t base_addr = 0x10000a5e;
+		printf("set {short}0x%08x = %d\n", base_addr + 2 * idx, 
+			tpadAdcDatas[L_TRACKPAD][idx]);
+		printf("set {short}0x%08x = %d\n", 0x4c + base_addr + 2 * idx, 
+			tpadAdcDatas[L_TRACKPAD][idx]);
+	}
+	printf("\n");
+
+	printf("# Right Trackpad AnyMeas ADC Vals:\n");
+
+	trackpadGetLastXY(R_TRACKPAD, &x_loc, &y_loc);
+
+	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+		uint32_t base_addr = 0x10000a38;
+		printf("set {short}0x%08x = %d\n", base_addr + 2 * idx, 
+			tpadAdcDatas[R_TRACKPAD][idx]);
+		printf("set {short}0x%08x = %d\n", 0x4c + base_addr + 2 * idx, 
+			tpadAdcDatas[R_TRACKPAD][idx]);
+	}
+	printf("\n");
+}
+
 /**
  * Handle trackpad query/control command line function.
  *
@@ -1570,26 +1686,26 @@ void trackpadCmdUsage(void) {
  */
 int trackpadCmdFnc(int argc, const char* argv[]) {
 
-	Trackpad trackpad = R_TRACKPAD;
-
-	printf("Firmware ID = 0x%02x\n", readPinnacleReg(trackpad, TPAD_FW_ID_ADDR));
-	printf("Firmware Version = 0x%02x\n", readPinnacleReg(trackpad, TPAD_FW_VER_ADDR));
-
 #if (!ANYMEAS_EN)
 
-	printf("Status 1 = 0x%02x\n", readPinnacleReg(trackpad, 0x02));
-	printf("Sys Config 1 = 0x%02x\n", readPinnacleReg(trackpad, 0x03));
-	printf("Feed Config 1 = 0x%02x\n", readPinnacleReg(trackpad, 0x04));
-	printf("Feed Config 2 = 0x%02x\n", readPinnacleReg(trackpad, 0x05));
-	printf("Feed Config 3 = 0x%02x\n", readPinnacleReg(trackpad, 0x06));
-	printf("Cal Config 1 = 0x%02x\n", readPinnacleReg(trackpad, 0x07));
-	printf("PS/2 Aux Control = 0x%02x\n", readPinnacleReg(trackpad, 0x08));
-	printf("Sample Rate = 0x%02x\n", readPinnacleReg(trackpad, 0x09));
-	printf("Z Idle = 0x%02x\n", readPinnacleReg(trackpad, TPAD_ZIDLE_ADDR));
-	printf("Z Scaler = 0x%02x\n", readPinnacleReg(trackpad, TPAD_ZSCALER_ADDR));
-	printf("Sleep Interval = 0x%02x\n", readPinnacleReg(trackpad, TPAD_SLEEPINTERVAL_ADDR));
-	printf("Sleep Timer = 0x%02x\n", readPinnacleReg(trackpad, TPAD_SLEEPTIMER_ADDR));
-	printf("Dynamic EMI Adjust = 0x%02x\n", readPinnacleReg(trackpad, 0x0E));
+	Trackpad trackpad = R_TRACKPAD;
+
+	printf("Firmware ID = 0x%02x\n", readTpadReg(trackpad, TPAD_FW_ID_ADDR));
+	printf("Firmware Version = 0x%02x\n", readTpadReg(trackpad, TPAD_FW_VER_ADDR));
+
+	printf("Status 1 = 0x%02x\n", readTpadReg(trackpad, 0x02));
+	printf("Sys Config 1 = 0x%02x\n", readTpadReg(trackpad, 0x03));
+	printf("Feed Config 1 = 0x%02x\n", readTpadReg(trackpad, 0x04));
+	printf("Feed Config 2 = 0x%02x\n", readTpadReg(trackpad, 0x05));
+	printf("Feed Config 3 = 0x%02x\n", readTpadReg(trackpad, 0x06));
+	printf("Cal Config 1 = 0x%02x\n", readTpadReg(trackpad, 0x07));
+	printf("PS/2 Aux Control = 0x%02x\n", readTpadReg(trackpad, 0x08));
+	printf("Sample Rate = 0x%02x\n", readTpadReg(trackpad, 0x09));
+	printf("Z Idle = 0x%02x\n", readTpadReg(trackpad, TPAD_ZIDLE_ADDR));
+	printf("Z Scaler = 0x%02x\n", readTpadReg(trackpad, TPAD_ZSCALER_ADDR));
+	printf("Sleep Interval = 0x%02x\n", readTpadReg(trackpad, TPAD_SLEEPINTERVAL_ADDR));
+	printf("Sleep Timer = 0x%02x\n", readTpadReg(trackpad, TPAD_SLEEPTIMER_ADDR));
+	printf("Dynamic EMI Adjust = 0x%02x\n", readTpadReg(trackpad, 0x0E));
 
 	while (!usb_tstc()) {
 
@@ -1604,275 +1720,49 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 
 #else // if (ANYMEAS_EN)
 
-	int16_t eeprom_comps[NUM_ANYMEAS_ADCS];
-	if (trackpad == R_TRACKPAD) {
-		eepromRead(0x602, eeprom_comps, sizeof(eeprom_comps));
+	if (argc < 2) {
+		trackpadCmdUsage();
+		return -1;
+	}
+
+	if (!strcmp("monitor", argv[1])) {
+		tpadMonitor();
+	} else if (!strcmp("getRaw", argv[1])) {
+		tpadGetRaw();
+	} else if (!strcmp("readReg", argv[1])) {
+		if (argc != 4) {
+			trackpadCmdUsage();
+			return -1;
+		}
+		Trackpad trackpad = R_TRACKPAD;
+		if (!strcmp("left", argv[2])) {
+			trackpad = L_TRACKPAD;
+		}
+		uint32_t addr = strtol(argv[3], NULL, 0);
+
+		printf("Read 0x%02x from register 0x%02x of %s Trackpad.\n",
+			readTpadReg(trackpad, addr), addr, 
+			trackpad == R_TRACKPAD ? "right":"left");
+	} else if (!strcmp("writeReg", argv[1])) {
+		if (argc != 5) {
+			trackpadCmdUsage();
+			return -1;
+		}
+		Trackpad trackpad = R_TRACKPAD;
+		if (!strcmp("left", argv[2])) {
+			trackpad = L_TRACKPAD;
+		}
+		uint32_t addr = strtol(argv[3], NULL, 0);
+		uint32_t val = strtol(argv[4], NULL, 0);
+
+		printf("Writing 0x%02x to register 0x%02x of %s Trackpad.\n",
+			val, addr, trackpad == R_TRACKPAD ? "right":"left");
+		
+		writeTpadReg(trackpad, addr, val);
 	} else {
-		eepromRead(0x628, eeprom_comps, sizeof(eeprom_comps));
+		trackpadCmdUsage();
+		return -1;
 	}
-
-	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
-		printf("comps[%d] = %d %d\n", idx, tpadAdcComps[trackpad][idx], eeprom_comps[idx]);
-		//tpadAdcComps[trackpad][idx] = eeprom_comps[idx];
-	}
-
-	int alive_cnt = 0;
-	while (!usb_tstc()) {
-		uint16_t x_loc_r;
-		uint16_t y_loc_r;
-		uint16_t x_loc_l;
-		uint16_t y_loc_l;
-
-		trackpadLocUpdate(R_TRACKPAD);
-		trackpadLocUpdate(L_TRACKPAD);
-		trackpadGetLastXY(R_TRACKPAD, &x_loc_r, &y_loc_r);
-		trackpadGetLastXY(L_TRACKPAD, &x_loc_l, &y_loc_l);
-
-		printf("Left: X = %4d, Y = %3d. Right: X = %4d, Y = %3d. (alive cnt = %d)\r", 
-			x_loc_l, y_loc_l, x_loc_r, y_loc_r, alive_cnt++);
-
-		usleep(10 * 1000);
-	}
-
-	
-
-//TODO: turn below into options to be called via command line options?
-/*
-	int16_t eeprom_comps[NUM_ANYMEAS_ADCS];
-	if (trackpad == R_TRACKPAD) {
-		eepromRead(0x602, eeprom_comps, sizeof(eeprom_comps));
-	} else {
-		eepromRead(0x628, eeprom_comps, sizeof(eeprom_comps));
-	}
-
-	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
-		printf("comps[%d] = %d %d\n", idx, tpadAdcComps[trackpad][idx], eeprom_comps[idx]);
-	}
-
-	getPinnacleAdcVals(trackpad);
-
-	if (trackpad == R_TRACKPAD)
-		printf("# Right Trackpad AnyMeas ADC Vals:\n");
-	else 
-		printf("# Left Trackpad AnyMeas ADC Vals:\n");
-
-	for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
-		uint32_t base_addr = 0x10000a38; 
-		if (trackpad == L_TRACKPAD) {
-			base_addr = 0x10000a5e;
-		}
-		printf("set {short}0x%08x = %d\n", base_addr + 2 * idx, tpadAdcDatas[trackpad][idx]);
-		printf("set {short}0x%08x = %d\n", 0x4c + base_addr + 2 * idx, tpadAdcDatas[trackpad][idx]);
-	}
-
-	return 0;
-
-
-	int adc_idx = 0;
-	if (argc >= 2) {
-		adc_idx = atoi(argv[1]);
-	}
-	if (adc_idx < 0 || adc_idx >= NUM_ANYMEAS_ADCS) {
-		adc_idx = 0;
-	}
-	printf("ADC Index = %d\n", adc_idx);	
-	int min_val = 128000;
-	int max_val = -128000;
-	
-	while (!usb_tstc()) {
-		getPinnacleAdcVals(trackpad);
-		int val = (int16_t)((uint16_t)tpadAdcDatas[trackpad][adc_idx] - (uint16_t)tpadAdcComps[trackpad][adc_idx]);
-
-		if (val < min_val)
-			min_val = val;
-		if (val > max_val)
-			max_val = val;
-
-		char loc_str[103];
-		memset(loc_str, '-', sizeof(loc_str));
-		loc_str[sizeof(loc_str)-1] = 0;
-		loc_str[sizeof(loc_str)-2] = ']';
-		loc_str[0] = '[';
-
-		if (-val < 0) {
-			loc_str[1] = '*';
-		} else if (-val / 10 + 1 > 100) {
-			loc_str[100] = '*';
-		} else {
-			loc_str[-val / 10 + 1] = '*';
-		}
-
-		if (-min_val < 0) {
-			loc_str[1] = '!';
-		} else if (-min_val / 10 + 1 > 100) {
-			loc_str[100] = '!';
-		} else {
-			loc_str[-min_val / 10 + 1] = '!';
-		}
-
-		for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
-			printf("% 5d %s % 5d % 5d\r", min_val, loc_str, max_val, val);
-		}
-
-*/
-/*
-		for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
-			int max_idx = -1;
-			int max_val = -128000000;
-			for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
-				if (vals[idx] > max_val) {
-					max_val = vals[idx];
-					max_idx = idx;
-				}
-			}
-			printf("% 2d % 4d, ", max_idx, max_val);
-			vals[max_idx] = -128000000;
-		}
-*/
-/*
-		usleep(50 * 1000);
-	}
-*/
-
-/*
-	while (!usb_tstc()) {
-		// Get first 11 measurements...
-		setAdcStartAddrPinnacle(trackpad, 0x01df);
-		setNumMeasPinnacle(trackpad, 11);
-
-		// Start the measurement
-		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
-			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
-
-		for (int cnt = 0; cnt < 11; cnt++) {
-			// Wait for trackpad to say it has new data                             
-			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
-				//printf("DR Low for Right Trackpad\n");                        
-			}
-
-			printf("% 5d ", (int16_t)getPinnacleAdcAndClr(trackpad));
-		}
-
-		// Get next 8 measurements...
-		setAdcStartAddrPinnacle(trackpad, 0x015b);
-		setNumMeasPinnacle(trackpad, 8);
-
-		// Start the measurement
-		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
-			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
-
-		for (int cnt = 0; cnt < 8; cnt++) {
-			// Wait for trackpad to say it has new data                             
-			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
-				//printf("DR Low for Right Trackpad\n");                        
-			}
-
-			printf("% 5d ", (int16_t)getPinnacleAdcAndClr(trackpad));
-		}
-		printf("\r");
-
-		usleep(50 * 1000);
-	}
-*/
-
-	
-/*
-	int comps[19];
-	int comp_idx = 0;
-	memset(comps, 0, 19*sizeof(int));
-
-	for (int avg_cnt = 0; avg_cnt < 16; avg_cnt++) {
-		comp_idx = 0;
-
-		// Get first 11 measurements...
-		setAdcStartAddrPinnacle(trackpad, 0x01df);
-		setNumMeasPinnacle(trackpad, 11);
-
-		// Start the measurement
-		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
-			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
-
-		for (int cnt = 0; cnt < 11; cnt++) {
-			// Wait for trackpad to say it has new data                             
-			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
-				//printf("DR Low for Right Trackpad\n");                        
-			}
-
-			comps[comp_idx] += (int16_t)getPinnacleAdcAndClr(trackpad);
-			comp_idx++;
-		}
-
-		// Get next 8 measurements...
-		setAdcStartAddrPinnacle(trackpad, 0x015b);
-		setNumMeasPinnacle(trackpad, 8);
-
-		// Start the measurement
-		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
-			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
-
-		for (int cnt = 0; cnt < 8; cnt++) {
-			// Wait for trackpad to say it has new data                             
-			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
-				//printf("DR Low for Right Trackpad\n");                        
-			}
-
-			comps[comp_idx] += (int16_t)getPinnacleAdcAndClr(trackpad);
-			comp_idx++;
-		}
-	}
-
-	for (int idx = 0; idx < 19; idx++) {
-		comps[idx] /= 16;
-		printf("0x%04x ", comps[idx]);
-	}
-	printf("\n");
-
-	int vals_idx = 0;
-	while (!usb_tstc()) {
-		vals_idx = 0;
-
-		// Get first 11 measurements...
-		setAdcStartAddrPinnacle(trackpad, 0x01df);
-		setNumMeasPinnacle(trackpad, 11);
-
-		// Start the measurement
-		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
-			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
-
-		for (int cnt = 0; cnt < 11; cnt++) {
-			// Wait for trackpad to say it has new data                             
-			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
-				//printf("DR Low for Right Trackpad\n");                        
-			}
-
-			int val = (int16_t)getPinnacleAdcAndClr(trackpad);
-			printf("% 5d ", val - comps[vals_idx]);
-			vals_idx++;
-		}
-
-		// Get next 8 measurements...
-		setAdcStartAddrPinnacle(trackpad, 0x015b);
-		setNumMeasPinnacle(trackpad, 8);
-
-		// Start the measurement
-		writePinnacleReg(trackpad, TPAD_SYSCFG1_ADDR, 
-			TPAD_SYSCFG1_ANYMEASEN_BIT | TPAD_SYSCFG1_TRACKDIS_BIT);
-
-		for (int cnt = 0; cnt < 8; cnt++) {
-			// Wait for trackpad to say it has new data                             
-			while (!Chip_GPIO_ReadPortBit(LPC_GPIO, GPIO_R_TRACKPAD_DR)) {          
-				//printf("DR Low for Right Trackpad\n");                        
-			}
-
-			int val = (int16_t)getPinnacleAdcAndClr(trackpad);
-			printf("% 5d ", val - comps[vals_idx]);
-			vals_idx++;
-		}
-		printf("\r");
-
-		usleep(50 * 1000);
-	}
-*/
 
 #endif // ANYMEAS_EN
 
