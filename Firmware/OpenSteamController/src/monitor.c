@@ -31,6 +31,7 @@
 
 #include "adc_read.h"
 #include "buttons.h"
+#include "trackpad.h"
 #include "usb.h"
 #include "time.h"
 
@@ -45,6 +46,8 @@ void monitorCmdUsage(void) {
 	printf(
 		"usage: monitor\n"
 		"\n"
+		"Enter a loop giving updates on all controller inputs.\n"
+		"Press any key to exit loop.\n"
 	);
 }
 
@@ -57,41 +60,127 @@ void monitorCmdUsage(void) {
  * \return 0 on success.
  */
 int monitorCmdFnc(int argc, const char* argv[]) {
-	//TODO: Add ability to clear terminal and loop for predetermined amount of time (or until key press) so changes are easier to see
-	// Use usb_tstc (once it is available)
-	char clr[] = {27, '[', '2', 'J', 0};
+	// Sequence to clear terminal (as we will be updating more than one line...)
+	const char const clr[] = {27, '[', '2', 'J', 0};
 
-while (!usb_tstc()) {
-	printf("%s", clr);
+	const char empty_x_str[10] = "         ";
 
-	usleep(100000);
+	while (!usb_tstc()) {
+		usb_flush();
 
-	printf("Steam Button State: %d\n", getSteamButtonState());
-	printf("Front Left Button State: %d\n", getFrontLeftButtonState());
-	printf("Front Right Button State: %d\n\n", getFrontRightButtonState());
+		usleep(100 * 1000);
 
-	printf("Joystick Click State: %d\n\n", getJoyClickState());
+		printf("%s", clr);
 
-	printf("X Button State: %d\n", getXButtonState());
-	printf("Y Button State: %d\n", getYButtonState());
-	printf("B Button State: %d\n", getBButtonState());
-	printf("A Button State: %d\n\n", getAButtonState());
+		updateAdcVals();
+		trackpadLocUpdate(L_TRACKPAD);
+		trackpadLocUpdate(R_TRACKPAD);
 
-	printf("Right Grip Button State: %d\n", getRightGripState());
-	printf("Left Grip Button State: %d\n\n", getLeftGripState());
+		printf("Monitoring Steam Controller. Time = 0x%08x. (Press any key to exit):\n", 
+			getUsTickCnt());
 
-	printf("Right Trackpad Click State: %d\n", getRightTrackpadClickState());
-	printf("Left Trackpad Click State: %d\n\n", getLeftTrackpadClickState());
+		uint16_t adc_l_trig = getAdcVal(ADC_L_TRIG);
+		uint16_t adc_r_trig = getAdcVal(ADC_R_TRIG);
 
-	printf("Right Digital Trigger State: %d\n", getRightTriggerState());
-	printf("Left Digital Trigger State: %d\n\n", getLeftTriggerState());
+		printf("%s                                                             %s\n", 
+			adc_l_trig > 400 ? " == " : "    ", 
+			adc_r_trig > 400 ? " == " : "    ");
+		printf("%s                                                             %s\n", 
+			adc_l_trig > 300 ? " == " : "    ", 
+			adc_r_trig > 300 ? " == " : "    ");
+		printf("%s                                                             %s\n", 
+			adc_l_trig > 200 ? " == " : "    ", 
+			adc_r_trig > 200 ? " == " : "    ");
+		printf("%s                                                             %s\n", 
+			adc_l_trig > 100 ? " == " : "    ", 
+			adc_r_trig > 100 ? " == " : "    ");
+		printf("%s                                                             %s\n", 
+			getLeftTriggerState() ? "[LT]" : " LT ", 
+			getRightTriggerState() ? "[RT]" : " RT ");
+		printf("%s                                                             %s\n", 
+			getLeftBumperState() ? "[LB]" : " LB ", 
+			getRightBumperState() ? "[RB]" : " RB ");
 
-	printf("Right Bumper State: %d\n", getRightBumperState());
-	printf("Left Bumper State: %d\n\n", getLeftBumperState());
-}
+
+		char tpad_l_x_str[10] = "         ";
+		uint16_t tpad_l_x = 0;
+		uint16_t tpad_l_y = 0;
+		trackpadGetLastXY(L_TRACKPAD, &tpad_l_x, &tpad_l_y);
+		int tpad_l_x_idx = (tpad_l_x / 100) * 9  /12;
+		tpad_l_x_str[tpad_l_x_idx] = '=';
+
+		char tpad_r_x_str[10] = "         ";
+		uint16_t tpad_r_x = 0;
+		uint16_t tpad_r_y = 0;
+		trackpadGetLastXY(R_TRACKPAD, &tpad_r_x, &tpad_r_y);
+		int tpad_r_x_idx = (tpad_r_x / 100) * 9  /12;
+		tpad_r_x_str[tpad_r_x_idx] = '=';
+
+		printf(" %s                                                  %s\n", 
+			tpad_l_y > 600 ? tpad_l_x_str : empty_x_str,
+			tpad_r_y > 600 ? tpad_r_x_str : empty_x_str);
+		printf(" %s                                                  %s\n", 
+			tpad_l_y <= 600 && tpad_l_y > 500? tpad_l_x_str : empty_x_str,
+			tpad_r_y <= 600 && tpad_r_y > 500? tpad_r_x_str : empty_x_str);
+		printf(" %s                                                  %s\n", 
+			tpad_l_y <= 500 && tpad_l_y > 400? tpad_l_x_str : empty_x_str,
+			tpad_r_y <= 500 && tpad_r_y > 400? tpad_r_x_str : empty_x_str);
+
+		printf("%c%s%c                  %s%s%s                        %c%s%c\n", 
+			getLeftTrackpadClickState() ? '[' : ' ',
+			tpad_l_y <= 400 && tpad_l_y > 300? tpad_l_x_str : empty_x_str,
+			getLeftTrackpadClickState() ? ']' : ' ',
+			getFrontLeftButtonState() ? "[<]" : " < ", 
+			getSteamButtonState() ? "[S]" : " S ", 
+			getFrontRightButtonState() ? "[>]" : " > ",
+			getRightTrackpadClickState() ? '[' : ' ',
+			tpad_r_y <= 400 && tpad_r_y > 300? tpad_r_x_str : empty_x_str,
+			getRightTrackpadClickState() ? ']' : ' ');
+
+		printf(" %s                                                  %s\n", 
+			tpad_l_y <= 300 && tpad_l_y > 200? tpad_l_x_str : empty_x_str,
+			tpad_r_y <= 300 && tpad_r_y > 200? tpad_r_x_str : empty_x_str);
+		printf(" %s                                                  %s\n", 
+			tpad_l_y <= 200 && tpad_l_y > 100? tpad_l_x_str : empty_x_str,
+			tpad_r_y <= 200 && tpad_r_y > 100? tpad_r_x_str : empty_x_str);
+		printf(" %s                                                  %s\n", 
+			tpad_l_y <= 100 && tpad_l_y > 0? tpad_l_x_str : empty_x_str,
+			tpad_r_y <= 100 && tpad_r_y > 0? tpad_r_x_str : empty_x_str);
 
 
-//TODO: Add ADC channels, etc.
+		char joy_x_str[10] = "         ";
+		uint16_t adc_joy_x = getAdcVal(ADC_JOYSTICK_X);
+		uint16_t adc_joy_y = getAdcVal(ADC_JOYSTICK_Y);
+		joy_x_str[9 - adc_joy_x/100] = '=';
+
+		printf("         %s\n", 
+			adc_joy_y > 700? joy_x_str : empty_x_str);
+		printf("         %s                          %s\n", 
+			adc_joy_y <= 700 && adc_joy_y > 600? joy_x_str : empty_x_str,
+			getYButtonState() ? "[Y]" : " Y ");
+		printf("        %c%s%c                      %s   %s\n", 
+			getJoyClickState() ? '[' : ' ',
+			adc_joy_y <= 600 && adc_joy_y > 500? joy_x_str : empty_x_str,
+			getJoyClickState() ? ']' : ' ',
+			getXButtonState() ? "[X]" : " X ",
+			getBButtonState() ? "[B]" : " B ");
+		printf("         %s                          %s\n", 
+			adc_joy_y <= 500 && adc_joy_y > 400? joy_x_str : empty_x_str,
+			getAButtonState() ? "[A]" : " A ");
+		printf("         %s\n", 
+			adc_joy_y <= 400 && adc_joy_y > 300? joy_x_str : empty_x_str);
+		printf("         %s\n", 
+			adc_joy_y <= 300 && adc_joy_y > 200? joy_x_str : empty_x_str);
+		printf("         %s\n", 
+			adc_joy_y <= 200 && adc_joy_y > 100? joy_x_str : empty_x_str);
+		printf("         %s\n", 
+			adc_joy_y <= 100 && adc_joy_y > 0? joy_x_str : empty_x_str);
+
+		printf("       %s                                          %s\n", 
+			getLeftGripState() ? "[LG]" : " LG ",
+			getRightGripState() ? "[RG]" : " RG ");
+
+	}
 
 	return 0;
 }

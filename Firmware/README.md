@@ -80,10 +80,6 @@ There are two primary modes this firmware can be compiled with: DEV_BOARD_FW
 This is a running list of items I would like to prioritize and not lose track
  of.
 
-1. Revisit ADC design
-    1. Use two calls like trackpad (one to start conversion and one to wait on results)
-        1. Allows for better pipelining of calculating everything needed from peripherals for each controller update cycle?
-1. monitor.c
 1. Faux Switch Controller
     1. Clean up (i.e. naming changes...)
     1. Add startup jingle...?
