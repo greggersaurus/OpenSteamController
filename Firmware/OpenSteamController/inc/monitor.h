@@ -30,6 +30,7 @@
 #ifndef _MONITOR_ 
 #define _MONITOR_
 
+void monitorCmdUsage(void);
 int monitorCmdFnc(int argc, const char* argv[]);
 
 #endif /* _MONITOR_ */

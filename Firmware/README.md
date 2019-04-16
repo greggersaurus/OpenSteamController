@@ -6,6 +6,7 @@ The work in this directory is geared towards a completely custom firwmare for
  also acts as a jumping off point for using the Steam Controller hardware for
  other purposes (i.e. to act as a wired controller for the Nintendo Switch).
 
+
 # Resources, Utilities and Influences
 
 ## [lpc_chip_11uxx_lib](./lpc_chip_11uxx_lib)
@@ -56,6 +57,7 @@ The custom firmware for the LPC11U37 has been developed in the LPCXpresso IDE
         * "Any standard program or tool can be used to write new firmware to the LPC11U37." 
         * "In a Windows Explorer window, a user can delete firmware.bin and drag over a new file to program the flash."
 
+
 # Building
 
 Open the LPCXpresso IDE and import projects [OpenSteamController](./OpenSteamController) 
@@ -66,6 +68,13 @@ A project can be imported into LPCXpresso by selecting:
 
 Run Project -> Build All to compile.
 
+## Firmware Configuration
+
+There are two primary modes this firmware can be compiled with: DEV_BOARD_FW
+ and SWITCH_WIRED_POWERA_FW. See OpenSteamController/inc/fw_cfg.h for further 
+ details and to configure which behavior the firmware builds with. 
+
+
 # TODO
 
 This is a running list of items I would like to prioritize and not lose track
@@ -74,13 +83,43 @@ This is a running list of items I would like to prioritize and not lose track
 1. Revisit ADC design
     1. Use two calls like trackpad (one to start conversion and one to wait on results)
         1. Allows for better pipelining of calculating everything needed from peripherals for each controller update cycle?
-1. monitor.c?
+1. monitor.c
 1. Faux Switch Controller
+    1. Clean up (i.e. naming changes...)
+    1. Add startup jingle...?
 
-1. Better build solution?
-    1. Docker?
-    1. Try with latest tools from NXP?
-1. Revisist console/CDC uart
+
+
+1. Building
+    1. Test Release build and move away from working with Debug
+        1. Debug isn't buying us anything on this platform anyways, right?
+    1. Better build solution?
+        1. Docker?
+        1. Try with latest tools from NXP?
+1. Documentation
+    1. READMEs for lpcexpresso projects
+        1. Details on where lpc project came from
+        1. Intention and requirements (i.e. lpc project) for OpenSteamController project
+    1. Make sure all functions have usage 
+1. jingle_data.c
+    1. Needs more support functions for adding new Jingles, notes, etc.
+1. haptic.c
+    1. Check range on input arguments
+    1. playHaptic() should copy data?
+    1. Dig into inaccuracy in haptic output
+        1. Use violin tuner app and notice how the higher the frequencey the larger the gap in frequency output and what app measures...
+    1. Dig into infinite pulse on haptic bug
+        1. There was a bug where Note was pointing to bogus data that resulted in a interrupt that never seemed to end
+            1. Need bounds check on how interrupt variables are setup to stop this from happening???
+1. init.c
+    1. Verify values for OscRateIn and ExtRateIn
+    1. Evaluate if busy wait loop in stage1Init can/should be changed
+    1. Use #defines for GPIOs?
+1. led_ctrl.c
+    1. Command to allow LED to blink
+        1. Use another counter to make interrupt driven?
+    1. Revisit error function...
+1. usb.c
     1. Make regression tests (i.e. testPrint)
         1. Buffer overflow related
         1. __disable_irq() related (i.e. ADC IRQs causing double prints or data loss...)
@@ -91,36 +130,18 @@ This is a running list of items I would like to prioritize and not lose track
             1. Maybe we can hijack IRQ handler??
             1. Or maybe we look into not using ROM code and writing out own (see polling example fix for this issue: http://www.eevblog.com/forum/microcontrollers/usb-cdc-_flow-control_/)
         1. Reproduce issues by pasting entire jingle into console no longer locks it up, but it looks like some command get mangled...
-1. Dig into inaccuracy in haptic output
-    1. Use violin tuner app and notice how the higher the frequencey the larger the gap in frequency output and what app measures...
-1. Dig into infinite pulse on haptic bug
-    1. There was a bug where Note was pointing to bogus data that resulted in a interrupt that never seemed to end
-        1. Need bounds check on how interrupt variables are setup to stop this from happening???
-1. Make sure all functions have usage 
-1. Get controller to act as PowerA wired
-    1. Clean up (i.e. naming changes...)
-1. Add details on different firmware build types (i.e. intentions and commands/control layouts)
-1. Add details for each specific firwmare build type to this README
-1. Check clean build works (i.e. from fresh clone)
-1. Revisit and clean init()
-    1. What GPIOs, etc. do we still not understand?
-1. Make template or something for communicating with Radio chip
-    1. via UART?
-    1. Mostly just a reference to RevEng efforts to get more data?
-1. Update led command to allow LED to blink?
-    1. Use another counter?
-1. Look into having USB UART CDC still be active for controller build... (This might not be possible. Need to learn more about USB in general I think...)
-    1. This could be an awesome debug option to be able plug controller into PC to get stats, etc. via UART after usage...
-1. READMEs for lpcexpresso projects
-    1. Details on where lpc project came from
-    1. Intention and requirements (i.e. lpc project) for OpenSteamController project
-1. Command for communication with gyro sensor
-1. Command for monitoring controller state
-    1. Gyro info?
-    1. Haptic sensor info (i.e. x,y touch location)?
-1. Command for communications with radio chip?
-1. Reorganize/rename project (i.e. CustomFirwmare) so #define can be used to build for various needs
-    1. DEV_KIT where USB acts as UART console for controlling peripherals
-    1. NIN_SWITCH where USB acts as Nintendo Switch wired controller
-    1. PS4 where USB acts as Playstation 4 wired controller (if there is such a thing... Might need to be PS3?)
-1. All TODOs in code to have items in this README?
+1. test.c
+    1. Clean up and add more tests
+    1. Create (at least manual) test procedure?
+1. motion.c
+    1. Add support for interfacing with MPU-6500 Six-Axis (Gyro + Accelerometer)
+1. radio.c
+    1. Add support for interfacing with nRF51822 Radio Chip
+1. trackpad.c
+    1. Add ability to sample ADCs in low power mode
+1. eeprom_access.c
+    1. Implement writing function
+1. mem_access.c
+    1. Implement write command
+1. command.c
+    1. Replace linear search with something more efficient?

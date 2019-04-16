@@ -28,6 +28,7 @@
 #ifndef _MEM_ACCESS_
 #define _MEM_ACCESS_
 
+void memCmdUsage(void);
 int memCmdFnc(int argc, const char* argv[]);
 
 #endif /* _MEM_ACCESS_ */

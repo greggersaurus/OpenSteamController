@@ -39,6 +39,7 @@
 #define DST_ADDR_NOT_MAPPED (3) // Destination address is not mapped in the 
 	// memory map. Count value is taken in to consideration where applicable.
 
+void eepromCmdUsage(void);
 int eepromCmdFnc(int argc, const char* argv[]);
 
 int eepromRead(uint32_t offset, void* readData, uint32_t numBytes);

@@ -31,6 +31,7 @@
 
 #include <stdint.h>
 
+void ledCmdUsage(void);
 int ledCmdFnc(int argc, const char* argv[]);
 
 void initLedCtrl();

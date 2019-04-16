@@ -36,16 +36,6 @@
 #include <stdio.h>
 
 /**
- * Prints details to console regarding how to use the test print command line 
- *  function.
- *
- * \return None.
- */
-void testPrintCmdUsage(void) {
-	//TODO: add details on command how to exit
-}
-
-/**
  * Command to stress test printing. This makes a very long string and then
  *  continuously prints it, with null term inserted randomly. 
  * Idea is to run this and make sure that 1) The system never locks up and
@@ -107,7 +97,9 @@ int testPrintCmdFnc(int argc, const char* argv[]) {
 
 //TODO
 void testCmdUsage(void) {
-
+	printf(
+		"usage: test ??? (WIP)\n"
+	);
 }
 //TODO
 int testCmdFnc(int argc, const char* argv[]) { 

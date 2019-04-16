@@ -31,6 +31,8 @@
 
 #include "adc_read.h"
 #include "buttons.h"
+#include "usb.h"
+#include "time.h"
 
 #include <stdio.h>
 
@@ -39,7 +41,7 @@
  *
  * \return None.
  */
-static void printUsage() {
+void monitorCmdUsage(void) {
 	printf(
 		"usage: monitor\n"
 		"\n"
@@ -55,13 +57,14 @@ static void printUsage() {
  * \return 0 on success.
  */
 int monitorCmdFnc(int argc, const char* argv[]) {
-/*
 	//TODO: Add ability to clear terminal and loop for predetermined amount of time (or until key press) so changes are easier to see
 	// Use usb_tstc (once it is available)
 	char clr[] = {27, '[', '2', 'J', 0};
 
+while (!usb_tstc()) {
 	printf("%s", clr);
-*/
+
+	usleep(100000);
 
 	printf("Steam Button State: %d\n", getSteamButtonState());
 	printf("Front Left Button State: %d\n", getFrontLeftButtonState());
@@ -85,14 +88,8 @@ int monitorCmdFnc(int argc, const char* argv[]) {
 
 	printf("Right Bumper State: %d\n", getRightBumperState());
 	printf("Left Bumper State: %d\n\n", getLeftBumperState());
+}
 
-	for (int cnt = 0; cnt < 64; cnt++) {
-		char* ptr_c = (char*)(0x50000000 + cnt);
-		int* ptr_i = (int*)(0x50001000 + cnt*4);
-
-		printf("0x%p: 0x%02x\t", ptr_c, *ptr_c);
-		printf("0x%p: 0x%08x\n", ptr_i, *ptr_i);
-	}
 
 //TODO: Add ADC channels, etc.
 

@@ -42,7 +42,7 @@
  *
  * \return None.
  */
-static void printUsage() {
+void eepromCmdUsage(void) {
 	printf(
 		"usage: eeprom read word_size address num_words\n"
 		"       eeprom write word_size address value\n"
@@ -147,7 +147,7 @@ int eepromCmdFnc(int argc, const char* argv[]) {
 	int retval = 0;
 
 	if (argc != 5) {
-		printUsage();
+		eepromCmdUsage();
 		return -1;
 	}
 

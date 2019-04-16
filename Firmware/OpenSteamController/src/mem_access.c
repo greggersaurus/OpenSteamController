@@ -37,7 +37,7 @@
  *
  * \return None.
  */
-static void printUsage() {
+void memCmdUsage(void) {
 	printf(
 		"usage: mem read word_size address num_words\n"
 		"       mem write word_size address value\n"
@@ -112,7 +112,7 @@ int memCmdFnc(int argc, const char* argv[]) {
 	int retval = 0;
 
 	if (argc != 5) {
-		printUsage();
+		memCmdUsage();
 		return -1;
 	}
 

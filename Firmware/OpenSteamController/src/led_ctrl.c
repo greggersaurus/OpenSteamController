@@ -42,7 +42,7 @@ static LPC_TIMER_T* ledPwmRegs = LPC_TIMER16_1;
  *
  * \return None.
  */
-static void printUsage() {
+void ledCmdUsage(void) {
 	printf(
 		"usage: led intensity\n"
 		"\n"
@@ -60,7 +60,7 @@ static void printUsage() {
  */
 int ledCmdFnc(int argc, const char* argv[]) {
 	if (argc != 2) {
-		printUsage();
+		ledCmdUsage();
 		return -1;
 	}
 
