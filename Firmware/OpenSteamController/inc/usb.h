@@ -33,13 +33,11 @@
 
 int usbConfig(void);
 
-#if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
 int usb_flush(void);
 int usb_putc(int character);
 void usb_putb(const char* buff, uint32_t len);
 int usb_tstc(void);
 int usb_getc(void);
-#endif
 
 #if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
 void updateControllerStatusPacket(void);

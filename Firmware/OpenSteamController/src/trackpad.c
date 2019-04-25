@@ -94,7 +94,7 @@ volatile bool tpadIsrBusys[2]; //!< Defines if the interrupt is currently being
 
 #define NUM_ANYMEAS_X_ADCS (11) //!< The number of ADC reading used for 
 	//!< calculating the X axis position.
-#define NUM_ANYMEAS_Y_ADCS (7) //!< The number of ADC reading used for 
+#define NUM_ANYMEAS_Y_ADCS (8) //!< The number of ADC reading used for 
 	//!< calculating the Y axis position. 
 #define NUM_ANYMEAS_ADCS (NUM_ANYMEAS_X_ADCS + NUM_ANYMEAS_Y_ADCS) //!< The
 	//!< total number of AnyMeas ADCs read for computing X/Y position.
@@ -268,6 +268,8 @@ static void writeTpadReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 	uint8_t tx_data[2];
 	uint8_t rx_data[2];
 
+	__disable_irq();
+
 	if (R_TRACKPAD == trackpad) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, false);
 	} else if (L_TRACKPAD == trackpad) {
@@ -294,6 +296,8 @@ static void writeTpadReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 	} else if (L_TRACKPAD == trackpad) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 	}
+
+	__enable_irq();
 }
 
 /**
@@ -308,6 +312,8 @@ static uint8_t readTpadReg(Trackpad trackpad, uint8_t addr) {
 	Chip_SSP_DATA_SETUP_T xf_setup;
 	uint8_t tx_data[4];
 	uint8_t rx_data[4];
+
+	__disable_irq();
 
 	if (R_TRACKPAD == trackpad) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, false);
@@ -338,6 +344,8 @@ static uint8_t readTpadReg(Trackpad trackpad, uint8_t addr) {
 	} else if (L_TRACKPAD == trackpad) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 	}
+
+	__enable_irq();
 
 	return rx_data[3];
 }
@@ -476,6 +484,8 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
 	uint8_t tx_data[11];
 	uint8_t rx_data[11];
 
+	__disable_irq();
+
 	if (R_TRACKPAD == trackpad) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, false);
 	} else if (L_TRACKPAD == trackpad) {
@@ -513,6 +523,8 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 	}
 
+	__enable_irq();
+
 	absData->xPos = ((0x0F & rx_data[7]) << 8) | rx_data[5];
 	absData->yPos = ((0xF0 & rx_data[7]) << 4) | rx_data[6];
 	absData->zPos = 0x3F & rx_data[8];
@@ -549,6 +561,8 @@ static int16_t getTpadAdcAndClr(Trackpad trackpad) {
 	uint8_t tx_data[7];
 	uint8_t rx_data[7];
 
+	__disable_irq();
+
 	if (R_TRACKPAD == trackpad) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_R_TRACKPAD_CS_N, false);
 	} else if (L_TRACKPAD == trackpad) {
@@ -581,6 +595,8 @@ static int16_t getTpadAdcAndClr(Trackpad trackpad) {
 	} else if (L_TRACKPAD == trackpad) {
 		Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
 	}
+
+	__enable_irq();
 
 	// Concatenate TPAD_MEASRESULT_HI_ADDR and TPAD_MEASRESULT_HI_ADDR into 
 	//  a single 16-bit word
@@ -1007,23 +1023,94 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 			adc_vals_x[idx] = 0;
 	}
 
-	int32_t dividend = 0;
-	int32_t divisor = 0;
-	int32_t factor = 0;
-	for (int idx = 0; idx < 12; idx++) {
-		dividend += factor * adc_vals_x[idx];
-		divisor += adc_vals_x[idx];
-		factor += 100;
+	// At this point the difference in ajacent samples of adc_vals_x 
+	//  shows has one period of a sine wave for each detected finger
+	//  (but maybe can only distinguish between two fingers). All other
+	//  differences are 0. For now if we see anything other than a 
+	//  single finger down, we treat it as though no fingers are down
+	// TODO: revisit this and look into better way of checking for finger
+	//  down and how we could make detect multi-touch??
+
+	/*
+	// Debug print to illustrate how difference in adjacent samples
+	//  can show where finger(s) are on trackpad
+	printf("%4d\n", adc_vals_x[0]);
+	for (int idx = 0; idx < 11; idx++) {
+		printf("%4d\n", adc_vals_x[idx+1] - adc_vals_x[idx]);
+	}
+	printf("\n");
+	*/
+
+	enum TransitionState {
+		WAIT_FOR_0_TO_P, 
+		WAIT_FOR_P_TO_N,
+		WAIT_FOR_N_TO_0,
+		WAIT_FOR_END,
+		POS_INVALID};
+	enum TransitionState transition_state = WAIT_FOR_0_TO_P;
+
+	// Checking for finger down based on logic detailed above
+	if (adc_vals_x[0] > 0) {
+		transition_state = WAIT_FOR_P_TO_N;
+	} else if (adc_vals_x[0] < 0) {
+		transition_state = POS_INVALID;
+	}
+
+	for (int idx = 0; idx < 11; idx++) {
+		int32_t diff = adc_vals_x[idx+1] - adc_vals_x[idx];
+		if (transition_state == WAIT_FOR_0_TO_P) {
+			if (diff > 0) {
+				transition_state = WAIT_FOR_P_TO_N;
+			} else if (diff < 0) {
+				transition_state = POS_INVALID;
+			}
+		} else if (transition_state == WAIT_FOR_P_TO_N) {
+			if (diff < 0) {
+				transition_state = WAIT_FOR_N_TO_0;
+			} else if (diff == 0) {
+				transition_state = POS_INVALID;
+			}
+		} else if (transition_state == WAIT_FOR_N_TO_0) {
+			if (diff == 0) {
+				transition_state = WAIT_FOR_END;
+			} else if (diff > 0) {
+				transition_state = POS_INVALID;
+			}
+		} else if (transition_state == WAIT_FOR_END) {
+			// Should only get 0 differences if waiting for end
+			if (diff != 0) {
+				transition_state = POS_INVALID;
+			}
+		} else {
+			break;
+		}
 	}
 
 	int32_t x_pos = -1;
-	if (divisor) {
-		x_pos = dividend / divisor;	
-		x_pos = 1200 - x_pos;
+
+	if (transition_state == WAIT_FOR_N_TO_0 || transition_state == WAIT_FOR_END) {
+		int32_t dividend = 0;
+		int32_t divisor = 0;
+		int32_t factor = 0;
+		for (int idx = 0; idx < 12; idx++) {
+			dividend += factor * adc_vals_x[idx];
+			divisor += adc_vals_x[idx];
+			factor += 100;
+		}
+
+		if (divisor) {
+			x_pos = dividend / divisor;	
+			x_pos = 1200 - x_pos;
+		}
 	}
 
 	// Wait for AnyMeas ADCs related to Y position to be updated
 	while (tpadAdcIdxs[trackpad] < NUM_ANYMEAS_ADCS) {
+	}
+
+	// Early exit if no finger down detected in X position calculation
+	if (x_pos < 0) {
+		return;
 	}
 
 	// Calculate yLoc
@@ -1102,21 +1189,73 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 	for (int idx = 0; idx < 8; idx++) {
 		if (adc_vals_y[idx] < 0)
 			adc_vals_y[idx] = 0;
-		adc_vals_y[idx] /= 1000;
+		adc_vals_y[idx] = 1250 * adc_vals_y[idx] / 1000;
 	}
 
-	dividend = 0;
-	divisor = 0;
-	factor = 0;
-	for (int idx = 0; idx < 8; idx++) {
-		dividend += factor * adc_vals_y[idx];
-		divisor += adc_vals_y[idx];
-		factor += 100;
+	/*
+	// Debug print to illustrate how difference in adjacent samples
+	//  can show where finger(s) are on trackpad
+	printf("%4d\n", adc_vals_y[0]);
+	for (int idx = 0; idx < 7; idx++) {
+		printf("%4d\n", adc_vals_y[idx+1] - adc_vals_y[idx]);
+	}
+	printf("\n");
+	*/
+
+	transition_state = WAIT_FOR_0_TO_P;
+
+	// Checking for finger down based on logic detailed above
+	if (adc_vals_y[0] > 0) {
+		transition_state = WAIT_FOR_P_TO_N;
+	} else if (adc_vals_y[0] < 0) {
+		transition_state = POS_INVALID;
+	}
+
+	for (int idx = 0; idx < 7; idx++) {
+		int32_t diff = adc_vals_y[idx+1] - adc_vals_y[idx];
+		if (transition_state == WAIT_FOR_0_TO_P) {
+			if (diff > 0) {
+				transition_state = WAIT_FOR_P_TO_N;
+			} else if (diff < 0) {
+				transition_state = POS_INVALID;
+			}
+		} else if (transition_state == WAIT_FOR_P_TO_N) {
+			if (diff < 0) {
+				transition_state = WAIT_FOR_N_TO_0;
+			} else if (diff == 0) {
+				transition_state = POS_INVALID;
+			}
+		} else if (transition_state == WAIT_FOR_N_TO_0) {
+			if (diff == 0) {
+				transition_state = WAIT_FOR_END;
+			} else if (diff > 0) {
+				transition_state = POS_INVALID;
+			}
+		} else if (transition_state == WAIT_FOR_END) {
+			// Should only get 0 differences if waiting for end
+			if (diff != 0) {
+				transition_state = POS_INVALID;
+			}
+		} else {
+			break;
+		}
 	}
 
 	int32_t y_pos = -1;
-	if (divisor) {
-		y_pos = dividend / divisor;	
+
+	if (transition_state == WAIT_FOR_N_TO_0 || transition_state == WAIT_FOR_END) {
+		int32_t dividend = 0;
+		int32_t divisor = 0;
+		int32_t factor = 0;
+		for (int idx = 0; idx < 8; idx++) {
+			dividend += factor * adc_vals_y[idx];
+			divisor += adc_vals_y[idx];
+			factor += 100;
+		}
+
+		if (divisor) {
+			y_pos = dividend / divisor;	
+		}
 	}
 
 	// Update outputs if finger was down (i.e. x_pos and y_pos are both valid)
@@ -1472,12 +1611,9 @@ void initTrackpad(void) {
 
 	// Left Trackpad comms setup
 	Chip_GPIO_WritePortBit(LPC_GPIO, GPIO_L_TRACKPAD_CS_N, true);
-
 	Chip_GPIO_SetPinDIROutput(LPC_GPIO, GPIO_L_TRACKPAD_CS_N);
-
 	Chip_IOCON_PinMux(LPC_IOCON, GPIO_L_TRACKPAD_CS_N, IOCON_DIGMODE_EN |
 		IOCON_MODE_INACT, IOCON_FUNC0);
-
 	Chip_IOCON_PinMux(LPC_IOCON, GPIO_L_TRACKPAD_DR, IOCON_DIGMODE_EN | 
 		IOCON_MODE_PULLDOWN, IOCON_FUNC0);
 
@@ -1613,6 +1749,8 @@ void tpadMonitor(void) {
 
 		printf("   %4d ", x_loc);
 		printf("   %4d ", y_loc);
+
+		printf(" %4d %4d", tpadAdcDatas[R_TRACKPAD][18], tpadAdcDatas[L_TRACKPAD][18]);
 
 		printf("\r");
 		usb_flush();
@@ -1759,6 +1897,45 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 			val, addr, trackpad == R_TRACKPAD ? "right":"left");
 		
 		writeTpadReg(trackpad, addr, val);
+	} else if (!strcmp("test", argv[1])) {
+		uint16_t x_loc = 0;
+		uint16_t y_loc = 0;
+
+		Trackpad trackpad = R_TRACKPAD;
+
+		eepromRead(0x602, tpadAdcComps[trackpad], sizeof(uint16_t) * NUM_ANYMEAS_ADCS);
+
+		for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
+			printf("comp[%d] = 0x%04x\n", idx, tpadAdcComps[trackpad][idx]);
+		}
+
+		// x = 1051
+		tpadAdcDatas[trackpad][0] = 0xff5e;
+		tpadAdcDatas[trackpad][1] = 0xcca1;
+		tpadAdcDatas[trackpad][2] = 0x0701;
+		tpadAdcDatas[trackpad][3] = 0xe583;
+		tpadAdcDatas[trackpad][4] = 0xf27a;
+		tpadAdcDatas[trackpad][5] = 0xe3db;
+		tpadAdcDatas[trackpad][6] = 0xf38d;
+		tpadAdcDatas[trackpad][7] = 0xeea7;
+		tpadAdcDatas[trackpad][8] = 0x09a4;
+		tpadAdcDatas[trackpad][9] = 0xe585;
+		tpadAdcDatas[trackpad][10] = 0x12ed;
+
+		// y = 235
+		tpadAdcDatas[trackpad][11] = 0x00ae;
+		tpadAdcDatas[trackpad][12] = 0x035b;
+		tpadAdcDatas[trackpad][13] = 0x04df;
+		tpadAdcDatas[trackpad][14] = 0x0386;
+		tpadAdcDatas[trackpad][15] = 0x0286;
+		tpadAdcDatas[trackpad][16] = 0x05d0;
+		tpadAdcDatas[trackpad][17] = 0x0062;
+
+		tpadAdcIdxs[trackpad] = NUM_ANYMEAS_ADCS;
+
+		trackpadGetLastXY(trackpad, &x_loc, &y_loc);
+
+		printf("x = %d, y = %d\n", x_loc, y_loc);	
 	} else {
 		trackpadCmdUsage();
 		return -1;

@@ -37,6 +37,7 @@
 
 #include "buttons.h"
 #include "adc_read.h"
+#include "trackpad.h"
 
 //TODO: straighten out weird circular includes? We cannot include usbd/usbd_core.h, even though that's what we want at this point...
 //#include "usbd/usbd_core.h"
@@ -1277,6 +1278,11 @@ static uint8_t getleftAnalogYPowerA(void) {
  * \return None.
  */
 static void updateReports() {
+	updateAdcVals();
+//TODO: why does adding this result in controller lock up???
+	//trackpadLocUpdate(L_TRACKPAD);
+	trackpadLocUpdate(R_TRACKPAD);
+
 	g_mouse.statusReport.rightTrigger = getRightTriggerState();
 	g_mouse.statusReport.leftTrigger = getLeftTriggerState();
 	g_mouse.statusReport.rightBumper = getRightBumperState();
@@ -1300,10 +1306,34 @@ static void updateReports() {
 
 	g_mouse.statusReport.leftAnalogX = getleftAnalogXPowerA();
 	g_mouse.statusReport.leftAnalogY = getleftAnalogYPowerA();
+
+	uint16_t tpad_r_x = 0;
+	uint16_t tpad_r_y = 0;
+	trackpadGetLastXY(R_TRACKPAD, &tpad_r_x, &tpad_r_y);
+
+	uint32_t r_analog_x = (0x120 * tpad_r_x) / TPAD_MAX_X;
+	uint32_t r_analog_y = (0x110 * (TPAD_MAX_Y - tpad_r_y)) / TPAD_MAX_Y;
+
+	if (r_analog_x < 0x10) {
+		r_analog_x = 0;
+	} else if (r_analog_x >= 0x110) {
+		r_analog_x = 0xff;
+	} else {
+		r_analog_x -= 0x11;
+	}
+
+	if (r_analog_y < 0x10) {
+		r_analog_y = 0;
+	} else if (r_analog_y >= 0x110) {
+		r_analog_y = 0xff;
+	} else {
+		r_analog_y -= 0x11;
+	}
+
 	// TODO: Convert right trackpad finger location on X axis
-	g_mouse.statusReport.rightAnalogX = 0x80;
+	g_mouse.statusReport.rightAnalogX = r_analog_x;
 	// TODO: Convert right trackpad finger location on Y axis
-	g_mouse.statusReport.rightAnalogY = 0x80;
+	g_mouse.statusReport.rightAnalogY = r_analog_y;
 }
 
 /* HID Get Report Request Callback. Called automatically on HID Get Report Request */
@@ -1313,7 +1343,7 @@ static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup,
 	switch (pSetup->wValue.WB.H) {
 	case HID_REPORT_INPUT:
 		updateReports();
-		*pBuffer = &g_mouse.statusReport;
+		*pBuffer = (uint8_t*)&g_mouse.statusReport;
 		*plength = sizeof(ControllreStatusReport);
 		break;
 
@@ -1477,11 +1507,26 @@ void updateControllerStatusPacket(void) {
 			/* send report data */
 			g_mouse.tx_busy = 1;
 			USBD_API->hw->WriteEP(g_mouse.hUsb, HID_EP_IN, 
-				&g_mouse.statusReport, sizeof(ControllreStatusReport));
+				(uint8_t*)&g_mouse.statusReport, sizeof(ControllreStatusReport));
 		}
 	} else {
 		/* reset busy flag if we get disconnected. */
 		g_mouse.tx_busy = 0;
 	}
+}
+
+int usb_flush(void) {
+	return 0;
+}
+int usb_putc(int character) {
+	return 0;
+}
+void usb_putb(const char* buff, uint32_t len) {
+}
+int usb_tstc(void) {
+	return 0;
+}
+int usb_getc(void) {
+	return 0;
 }
 #endif

@@ -74,14 +74,23 @@ There are two primary modes this firmware can be compiled with: DEV_BOARD_FW
  and SWITCH_WIRED_POWERA_FW. See OpenSteamController/inc/fw_cfg.h for further 
  details and to configure which behavior the firmware builds with. 
 
+TODO: Add more details on each build type and how to use once it is built
+
 
 # TODO
 
 This is a running list of items I would like to prioritize and not lose track
  of.
 
+1. trackpad.c
+    1. Clean up
+        1. trackpadGetLastXY especially....
+        1. Either remove "test" option or make more usable
+
 1. Faux Switch Controller
     1. Clean up (i.e. naming changes...)
+    1. Better conversion of trackpad X/Y data for right control stick
+    1. Implement Left Trackpad as DPAD
     1. Add startup jingle...?
 
 
@@ -135,6 +144,11 @@ This is a running list of items I would like to prioritize and not lose track
     1. Add support for interfacing with nRF51822 Radio Chip
 1. trackpad.c
     1. Add ability to sample ADCs in low power mode
+    1. Understand sample [18]. How, why and when could this be used.
+        1. Official FW is sampling this, but how is it using it...?
+    1. Dig into oddities in X/Y data (~5 degree clockwise rotation... or maybe skew is better definition...)
+    1. Add support for multi touch (could this be useful or at least "neat")?
+        1. See notes in trackpadGetLastXY() about how trackpad seems to support this
 1. eeprom_access.c
     1. Implement writing function
 1. mem_access.c
