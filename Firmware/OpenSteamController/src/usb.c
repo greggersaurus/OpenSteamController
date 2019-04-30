@@ -89,10 +89,11 @@ void USB_IRQHandler(void)
 	USBD_API->hw->ISR(usbHandle);
 }
 
+
 #if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
 
 // Structure containing Virtual Comm port control data.
-typedef struct USB_UART_DATA {
+typedef struct {
 	USBD_HANDLE_T usbHandle; //!< Handle to USB device stack 
 	USBD_HANDLE_T cdcHandle; //!< Handle to Communications Device Class controller
 
@@ -127,7 +128,7 @@ typedef struct USB_UART_DATA {
 		//!< sample will be put in txFifo
 	uint32_t txSent; //!< Number of bytes WriteEP reports it last 
 		//!< sent.
-} USB_UART_DATA_T;
+} UsbUartData;
 
 static const uint32_t USB_MAX_PACKET_SZ = USB_FS_MAX_BULK_PACKET; //!< Maximum 
 	//!< number of bytes in packet that can be sent or received via USB.
@@ -139,7 +140,7 @@ static const uint32_t USB_UART_TXFIFO_THRESH = 128; //!< Determines when
 
 static const uint32_t USB_UART_RXFIFO_SZ = 256; //!< Number of bytes in rxFifo.
 
-static USB_UART_DATA_T usbUartData; //!< Virtual Comm port control data 
+static UsbUartData usbUartData; //!< Virtual Comm port control data 
 	//!< instance. 
 
 /**
@@ -329,7 +330,7 @@ ALIGNED(4) const uint8_t USB_StringDescriptor[] = {
  *
  * \return The number of bytes in txFifo ready to be sent.
  */
-static uint32_t usbTxFifoNumBytes(const USB_UART_DATA_T* uartData) {
+static uint32_t usbTxFifoNumBytes(const UsbUartData* uartData) {
 	if (uartData->txWrIdx >= uartData->txRdIdx) {
 		return uartData->txWrIdx - uartData->txRdIdx;
 	}
@@ -346,7 +347,7 @@ static uint32_t usbTxFifoNumBytes(const USB_UART_DATA_T* uartData) {
  *
  * \return None.
  */
-static void usbUartTxStart(USB_UART_DATA_T* uartData) {
+static void usbUartTxStart(UsbUartData* uartData) {
 	// Make sure we are not already busy with a transmit
 	if (uartData->txBusy) {
 		return;
@@ -381,12 +382,14 @@ static void usbUartTxStart(USB_UART_DATA_T* uartData) {
 	//  (i.e. ADC interrupts) we can get repeated prints or dropped data... 
 	//  Not sure why. Maybe related to built in CDC UART support?
 	__disable_irq();
+
 	// Send the data to the USB EP (the interrupt handler will adjust rxIdx)
 	if (USB_IsConfigured(uartData->usbHandle)) {
 		uartData->txSent = USBD_API->hw->WriteEP(uartData->usbHandle, 
 			USB_CDC_IN_EP, &uartData->txFifo[uartData->txRdIdx], 
 			bytes_to_send);
 	}
+
 	__enable_irq();
 
 	// Just in case something went wrong
@@ -498,7 +501,7 @@ int WRITEFUNC(int iFileHandle, char *pcBuffer, int iLength) {
  * 
  * \return None.
  */
-static void rcvUartData(USB_UART_DATA_T* uartData) {
+static void rcvUartData(UsbUartData* uartData) {
 	if (uartData->rxRdIdx <= uartData->rxWrIdx) {
 		// Check if there is enough room until end of buffer to 
 		//  contain max number of bytes we could receive
@@ -607,7 +610,7 @@ int READFUNC(void) {
  */
 static ErrorCode_t usbUartBulkHandler(USBD_HANDLE_T usbHandle, void* data, 
 	uint32_t event) {
-	USB_UART_DATA_T* usb_uart_data = (USB_UART_DATA_T *)data;
+	UsbUartData* usb_uart_data = (UsbUartData*)data;
 
 	switch (event) {
 	// A transfer from us to the USB host that we queued has completed
@@ -749,7 +752,7 @@ static ErrorCode_t usbUartSetLineCode(USBD_HANDLE_T hCDC, CDC_LINE_CODING *line_
 		break;
 	}
 
-// TODO: Should this still be here...?
+	// TODO: Should this still be here...?
 	if (line_coding->dwDTERate < 3125000) {
 		Chip_UART_SetBaud(LPC_USART, line_coding->dwDTERate);
 	}
@@ -899,14 +902,15 @@ int usbConfig(void){
 
 	return 0;
 }
+
 #endif
 
 #if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
 
 /**
- * HID Report Descriptor
+ * HID Report Descriptor. Binary copied from Wired Power A Controller.
  */
-const uint8_t ProController_ReportDescriptor[] = {
+const uint8_t PowerAReportDescriptor[] = {
 	//TODO: Translate these all to HID_* macros
 	HID_UsagePage(HID_USAGE_PAGE_GENERIC), // 05 01 
 	0x09, 0x05, // 09 05 
@@ -953,10 +957,11 @@ const uint8_t ProController_ReportDescriptor[] = {
 
 	HID_EndCollection, // c0
 };
-const uint16_t ProController_ReportDescSize = sizeof(ProController_ReportDescriptor);
+
+const uint16_t PowerAReportDescSize = sizeof(PowerAReportDescriptor);
 
 /**
- * USB Standard Device Descriptor
+ * USB Standard Device Descriptor. Set to match Power A Wired Controller.
  */
 ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
 	USB_DEVICE_DESC_SIZE, /* bLength */
@@ -978,6 +983,7 @@ ALIGNED(4) const uint8_t USB_DeviceDescriptor[] = {
 /**
  * USB FSConfiguration Descriptor
  * All Descriptors (Configuration, Interface, Endpoint, Class, Vendor)
+ * Matches Power A Wired Controller.
  */
 ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 	/* Configuration 1 */
@@ -1014,7 +1020,7 @@ ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 	0x00, /* bCountryCode */
 	0x01, /* bNumDescriptors */
 	HID_REPORT_DESCRIPTOR_TYPE, /* bDescriptorType */
-	WBVAL(sizeof(ProController_ReportDescriptor)), /* wDescriptorLength */
+	WBVAL(sizeof(PowerAReportDescriptor)), /* wDescriptorLength */
 
 	/* Endpoint, HID Interrupt In */
 	USB_ENDPOINT_DESC_SIZE, /* bLength */
@@ -1037,6 +1043,7 @@ ALIGNED(4) uint8_t USB_FsConfigDescriptor[] = {
 
 /**
  * USB String Descriptor (optional)
+ * Matches Power A Wired Controller.
  */
 const uint8_t USB_StringDescriptor[] = {
 	/* Index 0x00: LANGID Codes */
@@ -1140,6 +1147,7 @@ const uint8_t USB_StringDescriptor[] = {
 	'D', 0,
 };
 
+// Defines how Direction Pad inputs are encoded in Power A Status Report Packet
 typedef enum {
 	DPAD_UP = 0x0,
 	DPAD_UP_RIGHT = 0x1,
@@ -1152,6 +1160,8 @@ typedef enum {
 	DPAD_NEUTRAL = 0xF,
 } DpadEncoding;
 
+// Breakdown of Status Report Packet which is sent over USB to communicate
+//  state of controller inputs to Nintendo Switch
 typedef struct {
 	uint8_t yButton : 1;
 	uint8_t bButton : 1;
@@ -1178,97 +1188,54 @@ typedef struct {
 	uint8_t rsvd2 : 4;
 	
 	uint8_t leftAnalogX; // Left = 0x00, Neutral = 0x80, Right = 0xff
-
 	uint8_t leftAnalogY; // Up = 0x00, Neutral = 0x80, Down = 0xff
 
 	uint8_t rightAnalogX; // Left = 0x00, Neutral = 0x80, Right = 0xff
-
 	uint8_t rightAnalogY; // Up = 0x00, Neutral = 0x80, Down = 0xff
 
 	uint8_t rsvd3;
 } ControllreStatusReport;
 
-
-/**
- * @brief Structure to hold mouse data
- */
+// Combines data related to how we communicate controller state to Nin Switch
 typedef struct {
-	USBD_HANDLE_T hUsb;	/*!< Handle to USB stack. */
-	ControllreStatusReport statusReport;	/*!< Last report data  */
-	uint8_t tx_busy;	/*!< Flag indicating whether a report is pending in endpoint queue. */
-} Mouse_Ctrl_T;
+	USBD_HANDLE_T hUsb; // Handle to USB stack. 
+	ControllreStatusReport statusReport; // Last report data. Defines
+		// states of inputs on controller.
+	volatile uint8_t txBusy; // Flag indicating whether a report is pending
+		// in endpoint queue.
+} ControllerUsbData;
 
-/** Singleton instance of mouse control */
-static Mouse_Ctrl_T g_mouse;
-
-/**
- * Convert ADC reading for X direction of analog stick to bounds expected by
- *  Wired Controller Plus (by PowerA) for Nintendo Switch.
- *
- * Note: Make sure updateAdcVals() has been called recently so that the ADC
- *  values used are current.
- *
- * \return X position of Analog stick where Left=0x00, Neutral=0x80, Right=0xff
- */
-static uint8_t getleftAnalogXPowerA(void) {
-	// Joystick X direction (left = 0x338, neutral = 0x20a right = 0x0f0)
-	uint16_t adcVal = 0;
-
-	adcVal = getAdcVal(ADC_JOYSTICK_X);
-
-	if (adcVal < 0x100) {
-		adcVal = 0;
-	} else {
-		adcVal -= 0x100;
-	}
-
-	adcVal >>= 1;
-
-	if (adcVal > 0xff) {
-		adcVal = 0xff;
-	} else if (adcVal < 0x90 && adcVal > 0x70) {
-		adcVal = 0x80;
-	} else if (adcVal < 0x08) {
-		adcVal = 0x00;
-	}
-
-	return ~adcVal;
-}
+static ControllerUsbData controllerUsbData;
 
 /**
- * Convert ADC reading for Y direction of analog stick to bounds expected by
- *  Wired Controller Plus (by PowerA) for Nintendo Switch.
+ * Function for converting raw analog X or Y value to analog X or Y value in
+ *   range expected by Power A USB control packet. 
  *
- * Note: Make sure updateAdcVals() has been called recently so that the ADC
- *  values used are current.
- *
- * \return X position of Analog stick where Up=0x00, Neutral=0x80, Down=0xff
+ * \param rawVal Raw ADC value representing an X or Y position.
+ * \param maxMal The maximum value that rawVal could theoretically be.
+ * \param trim 0.8 fixed point number representing how much of maxVal range to
+ *   ignore. i.e. although X/Y position could technically range from 0 to maxVal
+ *   this will not happen in a real world scenario. Therefore, we must ignore
+ *   some of the upper and lower bounds. This allows this to be customized
+ *   based on the analog input device.
+ * 
+ * \return Value ready for Status Report Analog fields.
  */
-static uint8_t getleftAnalogYPowerA(void) {
-	// Joystick Y direction (up = 0x32a, neutral = 0x207, down = 0xf8)
-	uint16_t adcVal = 0;
+static uint8_t convToPowerAJoyPos(uint32_t rawVal, uint32_t maxVal, uint8_t trim) {
+	const uint32_t POS_MAX = 0xFF;
+	uint32_t adjusted = ((POS_MAX + 1 + 2 * trim) * rawVal) / maxVal;
+	uint8_t retval = 0;
 
-	adcVal = getAdcVal(ADC_JOYSTICK_Y);
-
-	if (adcVal < 0x100) {
-		adcVal = 0;
+	if (adjusted < trim) {
+		retval = 0;
+	} else if (adjusted > POS_MAX + trim) {
+		retval = POS_MAX;
 	} else {
-		adcVal -= 0x100;
+		retval = adjusted - trim;
 	}
 
-	adcVal >>= 1;
-
-	if (adcVal > 0xff) {
-		adcVal = 0xff;
-	} else if (adcVal < 0x90 && adcVal > 0x70) {
-		adcVal = 0x80;
-	} else if (adcVal < 0x08) {
-		adcVal = 0x00;
-	}
-
-	return ~adcVal;
+	return retval;
 }
-
 
 /**
  * Update HID Report(s) for Faux Wired Controller Plus (by PowerA) for Nintendo
@@ -1277,153 +1244,190 @@ static uint8_t getleftAnalogYPowerA(void) {
  *
  * \return None.
  */
-static void updateReports() {
+static void updateReports(void) {
+	// Start long conversions run via IRQs
 	updateAdcVals();
-//TODO: why does adding this result in controller lock up???
-	//trackpadLocUpdate(L_TRACKPAD);
+	trackpadLocUpdate(L_TRACKPAD);
 	trackpadLocUpdate(R_TRACKPAD);
 
-	g_mouse.statusReport.rightTrigger = getRightTriggerState();
-	g_mouse.statusReport.leftTrigger = getLeftTriggerState();
-	g_mouse.statusReport.rightBumper = getRightBumperState();
-	g_mouse.statusReport.leftBumper = getLeftBumperState();
+	// Associate Steam Controller buttons to Switch Controller buttons:
+	controllerUsbData.statusReport.rightTrigger = getRightTriggerState();
+	controllerUsbData.statusReport.leftTrigger = getLeftTriggerState();
+	controllerUsbData.statusReport.rightBumper = getRightBumperState();
+	controllerUsbData.statusReport.leftBumper = getLeftBumperState();
 
-	g_mouse.statusReport.xButton = getYButtonState();
-	g_mouse.statusReport.aButton = getBButtonState();
-	g_mouse.statusReport.bButton = getAButtonState();
-	g_mouse.statusReport.yButton = getXButtonState();
+	controllerUsbData.statusReport.xButton = getYButtonState();
+	controllerUsbData.statusReport.aButton = getBButtonState();
+	controllerUsbData.statusReport.bButton = getAButtonState();
+	controllerUsbData.statusReport.yButton = getXButtonState();
 
-	g_mouse.statusReport.snapshotButton = getLeftGripState();
-	g_mouse.statusReport.homeButton = getSteamButtonState();
+	controllerUsbData.statusReport.snapshotButton = getLeftGripState();
+	controllerUsbData.statusReport.homeButton = getSteamButtonState();
 
-	g_mouse.statusReport.rightAnalogClick = getRightTrackpadClickState();
-	g_mouse.statusReport.leftAnalogClick = getJoyClickState();
-	g_mouse.statusReport.plusButton = getFrontRightButtonState();
-	g_mouse.statusReport.minusButton = getFrontLeftButtonState();
+	controllerUsbData.statusReport.rightAnalogClick = getRightTrackpadClickState();
+	controllerUsbData.statusReport.leftAnalogClick = getJoyClickState();
+	controllerUsbData.statusReport.plusButton = getFrontRightButtonState();
+	controllerUsbData.statusReport.minusButton = getFrontLeftButtonState();
 
-	// TODO: Convert left trackpad finger location to DPAD encoding
-	g_mouse.statusReport.dPad = DPAD_NEUTRAL;
+	// Analog Joystick is Left Analog:
+	controllerUsbData.statusReport.leftAnalogX = convToPowerAJoyPos(
+		JOYSTICK_MAX_X-getAdcVal(ADC_JOYSTICK_X), JOYSTICK_MAX_X, 0x80);
+	controllerUsbData.statusReport.leftAnalogY = convToPowerAJoyPos(
+		JOYSTICK_MAX_Y-getAdcVal(ADC_JOYSTICK_Y), JOYSTICK_MAX_Y, 0x80);
 
-	g_mouse.statusReport.leftAnalogX = getleftAnalogXPowerA();
-	g_mouse.statusReport.leftAnalogY = getleftAnalogYPowerA();
+	uint16_t tpad_x = 0;
+	uint16_t tpad_y = 0;
 
-	uint16_t tpad_r_x = 0;
-	uint16_t tpad_r_y = 0;
-	trackpadGetLastXY(R_TRACKPAD, &tpad_r_x, &tpad_r_y);
+	// Default to neutral position
+	controllerUsbData.statusReport.dPad = DPAD_NEUTRAL;
 
-	uint32_t r_analog_x = (0x120 * tpad_r_x) / TPAD_MAX_X;
-	uint32_t r_analog_y = (0x110 * (TPAD_MAX_Y - tpad_r_y)) / TPAD_MAX_Y;
+	// Have Left Trackpad act as DPAD:
+	// Only check (and convert) finger position to DPAD location on click
+	if (getLeftTrackpadClickState()) {
 
-	if (r_analog_x < 0x10) {
-		r_analog_x = 0;
-	} else if (r_analog_x >= 0x110) {
-		r_analog_x = 0xff;
-	} else {
-		r_analog_x -= 0x11;
+		trackpadGetLastXY(L_TRACKPAD, &tpad_x, &tpad_y);
+
+		if (tpad_x > TPAD_MAX_X * 3/8 && tpad_x < TPAD_MAX_X * 5/8) {
+			if (tpad_y > TPAD_MAX_Y * 3/8 && tpad_y < TPAD_MAX_Y * 5/8) {
+				controllerUsbData.statusReport.dPad = DPAD_NEUTRAL;
+			} else if (tpad_y <= TPAD_MAX_Y * 3/8) {
+				controllerUsbData.statusReport.dPad = DPAD_DOWN;
+			} else {
+				controllerUsbData.statusReport.dPad = DPAD_UP;
+			}
+		} else if (tpad_x <= TPAD_MAX_X * 3/8) {
+			// Put more emphasis into cardinal directions
+			if (tpad_y > TPAD_MAX_Y * 2/8 && tpad_y < TPAD_MAX_Y * 6/8) {
+				controllerUsbData.statusReport.dPad = DPAD_LEFT;
+			} else if (tpad_y <= TPAD_MAX_Y * 2/8) {
+				controllerUsbData.statusReport.dPad = DPAD_DOWN_LEFT;
+			} else {
+				controllerUsbData.statusReport.dPad = DPAD_UP_LEFT;
+			}
+		} else {
+			// Put more emphasis into cardinal directions
+			if (tpad_y > TPAD_MAX_Y * 2/8 && tpad_y < TPAD_MAX_Y * 6/8) {
+				controllerUsbData.statusReport.dPad = DPAD_RIGHT;
+			} else if (tpad_y <= TPAD_MAX_Y * 2/8) {
+				controllerUsbData.statusReport.dPad = DPAD_DOWN_RIGHT;
+			} else {
+				controllerUsbData.statusReport.dPad = DPAD_UP_RIGHT;
+			}
+		}
 	}
 
-	if (r_analog_y < 0x10) {
-		r_analog_y = 0;
-	} else if (r_analog_y >= 0x110) {
-		r_analog_y = 0xff;
-	} else {
-		r_analog_y -= 0x11;
-	}
-
-	// TODO: Convert right trackpad finger location on X axis
-	g_mouse.statusReport.rightAnalogX = r_analog_x;
-	// TODO: Convert right trackpad finger location on Y axis
-	g_mouse.statusReport.rightAnalogY = r_analog_y;
+	// Have Right Trackpad act as Right Analog:
+	trackpadGetLastXY(R_TRACKPAD, &tpad_x, &tpad_y);
+	controllerUsbData.statusReport.rightAnalogX = convToPowerAJoyPos(tpad_x, 
+		TPAD_MAX_X, 0x40);
+	controllerUsbData.statusReport.rightAnalogY = convToPowerAJoyPos(
+		 TPAD_MAX_Y - tpad_y, TPAD_MAX_Y, 0x40);
 }
 
-/* HID Get Report Request Callback. Called automatically on HID Get Report Request */
-static ErrorCode_t Mouse_GetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t *plength)
-{
-	/* ReportID = SetupPacket.wValue.WB.L; */
+/**
+ * HID Get Report Request Callback. Called automatically on HID Get Report Request 
+ */
+static ErrorCode_t ControllerGetReport(USBD_HANDLE_T hHid, 
+	USB_SETUP_PACKET* pSetup, uint8_t* * pBuffer, uint16_t* plength) {
+
+	// ReportID = SetupPacket.wValue.WB.L
 	switch (pSetup->wValue.WB.H) {
 	case HID_REPORT_INPUT:
 		updateReports();
-		*pBuffer = (uint8_t*)&g_mouse.statusReport;
+		*pBuffer = (uint8_t*)&controllerUsbData.statusReport;
 		*plength = sizeof(ControllreStatusReport);
 		break;
 
-	case HID_REPORT_OUTPUT:				/* Not Supported */
-	case HID_REPORT_FEATURE:			/* Not Supported */
+	case HID_REPORT_OUTPUT:	/* Not Supported */
+	case HID_REPORT_FEATURE: /* Not Supported */
 		return ERR_USBD_STALL;
 	}
+
 	return LPC_OK;
 }
 
-/* HID Set Report Request Callback. Called automatically on HID Set Report Request */
-static ErrorCode_t Mouse_SetReport(USBD_HANDLE_T hHid, USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t length)
-{
-	/* we will reuse standard EP0Buf */
+/** 
+ * HID Set Report Request Callback. Called automatically on HID Set Report Request 
+ */
+static ErrorCode_t ControllerSetReport(USBD_HANDLE_T hHid, 
+	USB_SETUP_PACKET *pSetup, uint8_t * *pBuffer, uint16_t length) {
+
+	// we will reuse standard EP0Buf
 	if (length == 0) {
 		return LPC_OK;
 	}
-	/* ReportID = SetupPacket.wValue.WB.L; */
+
+	// ReportID = SetupPacket.wValue.WB.L;
 	switch (pSetup->wValue.WB.H) {
-	case HID_REPORT_INPUT:				/* Not Supported */
-	case HID_REPORT_OUTPUT:				/* Not Supported */
-	case HID_REPORT_FEATURE:			/* Not Supported */
+	case HID_REPORT_INPUT: /* Not Supported */
+	case HID_REPORT_OUTPUT: /* Not Supported */
+	case HID_REPORT_FEATURE: /* Not Supported */
 		return ERR_USBD_STALL;
 	}
+
 	return LPC_OK;
 }
 
-/* HID interrupt IN endpoint handler */
-static ErrorCode_t Mouse_EpIN_Hdlr(USBD_HANDLE_T hUsb, void *data, uint32_t event)
-{
+/**
+ * HID interrupt IN endpoint handler 
+ */
+static ErrorCode_t ControllerEpInHandler(USBD_HANDLE_T hUsb, void *data, 
+	uint32_t event) {
+
 	switch (event) {
 	case USB_EVT_IN:
-		/* USB_EVT_IN occurs when HW completes sending IN packet. So clear the
-		    busy flag for main loop to queue next packet.
-		 */
-		g_mouse.tx_busy = 0;
+		// USB_EVT_IN occurs when HW completes sending IN packet. So 
+		//  clear the busy flag for main loop to queue next packet.
+		controllerUsbData.txBusy = 0;
 		break;
 	}
+
 	return LPC_OK;
 }
 
-/* HID mouse interface init routine */
-static ErrorCode_t Mouse_Init(USBD_HANDLE_T hUsb,
+/**
+ * HID Controller interface init routine 
+ */
+static ErrorCode_t ControllerInit(USBD_HANDLE_T hUsb,
 			   USB_INTERFACE_DESCRIPTOR *pIntfDesc,
 			   uint32_t *mem_base,
-			   uint32_t *mem_size)
-{
+			   uint32_t *mem_size) {
+
 	USBD_HID_INIT_PARAM_T hid_param;
 	USB_HID_REPORT_T reports_data[1];
 	ErrorCode_t ret = LPC_OK;
 
-	/* Do a quick check of if the interface descriptor passed is the right one. */
+	// Do a quick check of if the interface descriptor passed is the right one.
 	if ((pIntfDesc == 0) || (pIntfDesc->bInterfaceClass != USB_DEVICE_CLASS_HUMAN_INTERFACE)) {
 		return ERR_FAILED;
 	}
 
-	/* Init HID params */
+	// Init HID params
 	memset((void *) &hid_param, 0, sizeof(USBD_HID_INIT_PARAM_T));
 	hid_param.max_reports = 1;
 	hid_param.mem_base = *mem_base;
 	hid_param.mem_size = *mem_size;
 	hid_param.intf_desc = (uint8_t *) pIntfDesc;
-	/* user defined functions */
-	hid_param.HID_GetReport = Mouse_GetReport;
-	hid_param.HID_SetReport = Mouse_SetReport;
-	hid_param.HID_EpIn_Hdlr = Mouse_EpIN_Hdlr;
-	//hid_param.HID_EpOut_Hdlr = Mouse_EpOUT_Hdlr;
-	/* Init reports_data */
-	reports_data[0].len = ProController_ReportDescSize;
+
+	// user defined functions
+	hid_param.HID_GetReport = ControllerGetReport;
+	hid_param.HID_SetReport = ControllerSetReport;
+	hid_param.HID_EpIn_Hdlr = ControllerEpInHandler;
+
+	// Init reports_data
+	reports_data[0].len = PowerAReportDescSize;
 	reports_data[0].idle_time = 0;
-	reports_data[0].desc = (uint8_t *) &ProController_ReportDescriptor[0];
+	reports_data[0].desc = (uint8_t *) &PowerAReportDescriptor[0];
 	hid_param.report_data  = reports_data;
 
 	ret = USBD_API->hid->init(hUsb, &hid_param);
 
-	/* update memory variables */
+	// update memory variables
 	*mem_base = hid_param.mem_base;
 	*mem_size = hid_param.mem_size;
-	/* store stack handle for later use. */
-	g_mouse.hUsb = hUsb;
+
+	// store stack handle for later use.
+	controllerUsbData.hUsb = hUsb;
 
 	return ret;
 }
@@ -1483,7 +1487,7 @@ int usbConfig(void){
 	usb_param.mem_base = USB_STACK_MEM_BASE + (USB_STACK_MEM_SIZE 
 		- usb_param.mem_size);
 
-	errCode = Mouse_Init(usbHandle, (USB_INTERFACE_DESCRIPTOR *) &USB_FsConfigDescriptor[sizeof(USB_CONFIGURATION_DESCRIPTOR)],
+	errCode = ControllerInit(usbHandle, (USB_INTERFACE_DESCRIPTOR *) &USB_FsConfigDescriptor[sizeof(USB_CONFIGURATION_DESCRIPTOR)],
 		&usb_param.mem_base, &usb_param.mem_size);
 	if (errCode != LPC_OK) {
 		return -1;
@@ -1497,35 +1501,61 @@ int usbConfig(void){
 	return 0;
 }
 
+/**
+ * If applicable get all the latest state information for the controller and
+ *  send an updated status packet to the Switch via USB.
+ * 
+ * \return None.
+ */
 void updateControllerStatusPacket(void) {
-	/* check device is configured before sending report. */
-	if (USB_IsConfigured(g_mouse.hUsb)) {
-		if (g_mouse.tx_busy == 0) {
-			/* update report based on board state */
+	// check device is configured before sending report.
+	if (USB_IsConfigured(controllerUsbData.hUsb)) {
+		if (controllerUsbData.txBusy == 0) {
+			// Update report based on board state
 			updateReports();
 
-			/* send report data */
-			g_mouse.tx_busy = 1;
-			USBD_API->hw->WriteEP(g_mouse.hUsb, HID_EP_IN, 
-				(uint8_t*)&g_mouse.statusReport, sizeof(ControllreStatusReport));
+			// Send report data
+			controllerUsbData.txBusy = 1;
+			USBD_API->hw->WriteEP(controllerUsbData.hUsb, HID_EP_IN, 
+				(uint8_t*)&controllerUsbData.statusReport, 
+				sizeof(ControllreStatusReport));
 		}
 	} else {
-		/* reset busy flag if we get disconnected. */
-		g_mouse.tx_busy = 0;
+		// Reset busy flag if we get disconnected
+		controllerUsbData.txBusy = 0;
 	}
 }
 
+/**
+ * Not used in this build configuration.
+ */
 int usb_flush(void) {
 	return 0;
 }
+
+/**
+ * Not used in this build configuration.
+ */
 int usb_putc(int character) {
 	return 0;
 }
+
+/**
+ * Not used in this build configuration.
+ */
 void usb_putb(const char* buff, uint32_t len) {
 }
+
+/**
+ * Not used in this build configuration.
+ */
 int usb_tstc(void) {
 	return 0;
 }
+
+/**
+ * Not used in this build configuration.
+ */
 int usb_getc(void) {
 	return 0;
 }

@@ -48,6 +48,9 @@ void initAdc(void);
 void enableTriggers(bool en);
 void enableJoystick(bool en);
 
+#define JOYSTICK_MAX_X (0x400) //!< Defines range for Joystick X Location.
+#define JOYSTICK_MAX_Y (0x400) //!< Defines range for Joystick Y Location.
+
 void updateAdcVals(void);
 uint16_t getAdcVal(AdcChan chan);
 

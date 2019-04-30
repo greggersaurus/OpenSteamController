@@ -268,6 +268,9 @@ static void writeTpadReg(Trackpad trackpad, uint8_t addr, uint8_t val) {
 	uint8_t tx_data[2];
 	uint8_t rx_data[2];
 
+	// Need to disable IRQs so we do not get interrupted during SPI
+	//  transaction and have multiple nCS pulled low or corrupt message
+	//  being sent
 	__disable_irq();
 
 	if (R_TRACKPAD == trackpad) {
@@ -313,6 +316,9 @@ static uint8_t readTpadReg(Trackpad trackpad, uint8_t addr) {
 	uint8_t tx_data[4];
 	uint8_t rx_data[4];
 
+	// Need to disable IRQs so we do not get interrupted during SPI
+	//  transaction and have multiple nCS pulled low or corrupt message
+	//  being sent
 	__disable_irq();
 
 	if (R_TRACKPAD == trackpad) {
@@ -484,6 +490,9 @@ void getAbsDataAndClr(Trackpad trackpad, volatile TrackpadAbsData* absData) {
 	uint8_t tx_data[11];
 	uint8_t rx_data[11];
 
+	// Need to disable IRQs so we do not get interrupted during SPI
+	//  transaction and have multiple nCS pulled low or corrupt message
+	//  being sent
 	__disable_irq();
 
 	if (R_TRACKPAD == trackpad) {
@@ -561,6 +570,9 @@ static int16_t getTpadAdcAndClr(Trackpad trackpad) {
 	uint8_t tx_data[7];
 	uint8_t rx_data[7];
 
+	// Need to disable IRQs so we do not get interrupted during SPI
+	//  transaction and have multiple nCS pulled low or corrupt message
+	//  being sent
 	__disable_irq();
 
 	if (R_TRACKPAD == trackpad) {
@@ -1041,12 +1053,21 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 	printf("\n");
 	*/
 
+	// This has to do with searching across adjacent adc_vals_* in
+	//  search of sine wave(s) representing down fingers
 	enum TransitionState {
-		WAIT_FOR_0_TO_P, 
-		WAIT_FOR_P_TO_N,
-		WAIT_FOR_N_TO_0,
-		WAIT_FOR_END,
-		POS_INVALID};
+		WAIT_FOR_0_TO_P, // Searching for start of sine wave 
+			// representing down finger
+		WAIT_FOR_P_TO_N, // Searching for zero crossing in sine wave
+			// representing donw finger
+		WAIT_FOR_N_TO_0, // Searching for end of sine wave 
+			// representing down finger
+		WAIT_FOR_END, // Waiting for end of data (i.e. expecting nothing
+			// but 0's from this point out).
+		POS_INVALID // Something went "wrong" (i.e. no finger down or
+			// multiple down). 
+	};
+
 	enum TransitionState transition_state = WAIT_FOR_0_TO_P;
 
 	// Checking for finger down based on logic detailed above
@@ -1897,45 +1918,6 @@ int trackpadCmdFnc(int argc, const char* argv[]) {
 			val, addr, trackpad == R_TRACKPAD ? "right":"left");
 		
 		writeTpadReg(trackpad, addr, val);
-	} else if (!strcmp("test", argv[1])) {
-		uint16_t x_loc = 0;
-		uint16_t y_loc = 0;
-
-		Trackpad trackpad = R_TRACKPAD;
-
-		eepromRead(0x602, tpadAdcComps[trackpad], sizeof(uint16_t) * NUM_ANYMEAS_ADCS);
-
-		for (int idx = 0; idx < NUM_ANYMEAS_ADCS; idx++) {
-			printf("comp[%d] = 0x%04x\n", idx, tpadAdcComps[trackpad][idx]);
-		}
-
-		// x = 1051
-		tpadAdcDatas[trackpad][0] = 0xff5e;
-		tpadAdcDatas[trackpad][1] = 0xcca1;
-		tpadAdcDatas[trackpad][2] = 0x0701;
-		tpadAdcDatas[trackpad][3] = 0xe583;
-		tpadAdcDatas[trackpad][4] = 0xf27a;
-		tpadAdcDatas[trackpad][5] = 0xe3db;
-		tpadAdcDatas[trackpad][6] = 0xf38d;
-		tpadAdcDatas[trackpad][7] = 0xeea7;
-		tpadAdcDatas[trackpad][8] = 0x09a4;
-		tpadAdcDatas[trackpad][9] = 0xe585;
-		tpadAdcDatas[trackpad][10] = 0x12ed;
-
-		// y = 235
-		tpadAdcDatas[trackpad][11] = 0x00ae;
-		tpadAdcDatas[trackpad][12] = 0x035b;
-		tpadAdcDatas[trackpad][13] = 0x04df;
-		tpadAdcDatas[trackpad][14] = 0x0386;
-		tpadAdcDatas[trackpad][15] = 0x0286;
-		tpadAdcDatas[trackpad][16] = 0x05d0;
-		tpadAdcDatas[trackpad][17] = 0x0062;
-
-		tpadAdcIdxs[trackpad] = NUM_ANYMEAS_ADCS;
-
-		trackpadGetLastXY(trackpad, &x_loc, &y_loc);
-
-		printf("x = %d, y = %d\n", x_loc, y_loc);	
 	} else {
 		trackpadCmdUsage();
 		return -1;

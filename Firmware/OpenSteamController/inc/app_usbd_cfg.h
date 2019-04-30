@@ -100,11 +100,6 @@ extern USB_INTERFACE_DESCRIPTOR *find_IntfDesc(const uint8_t *pDesc, uint32_t in
 #define HID_EP_IN 0x81
 #define HID_EP_OUT 0x02
 
-/** Interval between mouse reports expressed in milliseconds for full-speed device. */
-#define HID_MOUSE_REPORT_INTERVAL_MS 10
-/* bInterval value used in descriptor. For HS this macro will differ from HID_MOUSE_REPORT_INTERVAL_MS macro. */
-#define HID_MOUSE_REPORT_INTERVAL 10
-
 /* The following manifest constants are used to define this memory area to be used
    by USBD ROM stack.
  */
