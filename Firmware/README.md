@@ -28,7 +28,7 @@ The custom firwmare in this subproject is based on the Steam Controller
  Reverse Engineering subproject. See this project for details on how the
  firmware supported by Valve works, as well as details on the hardware. 
 
-## [FauxControllers](./FauxControllers)
+## [FauxControllers](./WipExplorations/FauxControllers)
 
 The purpose of this project is a workspace to learn about how USB HIDs work, 
  specifically in the context of attempting to use the LPCXpresso11U37H 
