@@ -133,3 +133,24 @@ Some of the data stored in EEPROM is vital to proper operation of the controller
  bricking a controller, or at best making it a challenge to get it running 
  properly again. 
 
+
+
+# TODO
+
+* Add Open Steam Controller Dev Kit Firmware bin to directory
+* Add steps on loading firmware to steam controller
+    * Make a separate .md and link here and in Firmware section
+        * This way we do not miss updates and improvements
+* Add executables for SCJingleConverter to directory
+    * Mac, Linux, Windows
+    * External library issues a concern or all statically linked and built into exe?
+* Revisit this md
+    * Start targeting user who just wants to add Jingle Data to their SC
+    * Keep technical info, but maybe link to separate .md for those who are interested?
+    * Make section on building SCJingleConverter
+* Comments, comments, comments for SCJingleConverter
+* Make SCSerial class
+    * Encompass everything needed to communicate with Open Steam Controller Dev Kit Firmware build
+    * Check version on construction
+    * Allow for sending commands (and pause necessary time to not overflow usb uart)
+
