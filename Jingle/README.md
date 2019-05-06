@@ -138,19 +138,36 @@ Some of the data stored in EEPROM is vital to proper operation of the controller
 # TODO
 
 * Add Open Steam Controller Dev Kit Firmware bin to directory
-* Add steps on loading firmware to steam controller
-    * Make a separate .md and link here and in Firmware section
-        * This way we do not miss updates and improvements
 * Add executables for SCJingleConverter to directory
     * Mac, Linux, Windows
     * External library issues a concern or all statically linked and built into exe?
 * Revisit this md
-    * Start targeting user who just wants to add Jingle Data to their SC
+    * Start byte targeting user who just wants to add Jingle Data to their SC
+    * Mention why musicXML
+    * Walkthrough ways to get music (i.e. use musescore, convert midi to musicxml)
     * Keep technical info, but maybe link to separate .md for those who are interested?
-    * Make section on building SCJingleConverter
+    * Make section on SCJingleConverter
+        * What is purpose?
+        * How to use 
+        * How to build
+    * Add steps on loading firmware to steam controller
+        * Make a separate .md and link here and in Firmware section
+            * This way we do not miss updates and improvements
 * Comments, comments, comments for SCJingleConverter
 * Make SCSerial class
     * Encompass everything needed to communicate with Open Steam Controller Dev Kit Firmware build
     * Check version on construction
     * Allow for sending commands (and pause necessary time to not overflow usb uart)
-
+* Make class to represent each music composition
+    * Idea is to capture all Lines/Notes/Chords from musicxml and allow user to choose what to play on each channel
+* GUI
+    * Allow for changing tempo via GUI
+        * Default fill with value read from xml
+    * Specify start and stop measure instead of number of notes
+        * This should be a single setting for jingle and not unique to channels
+    * Display total bytes/percentage of space used and space used by each jingle as settings are changed
+    * Add button to clear Jingle Data
+        * i.e. remove magic word from EEPROM to use defaults
+* Add jingle command to print hex values for in code init
+    * i.e. we want Mario theme to play for Power A build config of open FW
+    * should we add some sort of industrial tune (terminator?) for dev kit power up?

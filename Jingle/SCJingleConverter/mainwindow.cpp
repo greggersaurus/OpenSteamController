@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "composition.h"
 
 #include <QSerialPortInfo>
 #include <QSerialPort>
@@ -63,17 +64,26 @@ void MainWindow::on_browsePushButton_clicked()
 
 void MainWindow::on_convertPushButton_clicked()
 {
-    QString fileName = ui->musicXmlPathLineEdit->text();
-    // Remove path
-    QStringList list = fileName.split('/');
-    fileName = list[list.size()-1];
-    list = fileName.split('\\');
-    fileName = list[list.size()-1];
-    // Remove .musicxml extension
-    fileName.resize(fileName.size() - QString(".musicxml").size());
-    ui->jingleListWidget->addItem(fileName);
+    QString filename = ui->musicXmlPathLineEdit->text();
 
+    Composition composition(filename);
 
     //TODO: Parse musicxml file and create class that stores all notes
-    //TODO: make map that links trimmed fileName to class?
+    if (composition.parse()) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Failed to parse %1.")
+            .arg(filename));
+    }
+
+    // Create string to identify this Composition
+    // Remove path
+    QStringList list = filename.split('/');
+    filename = list[list.size()-1];
+    list = filename.split('\\');
+    filename = list[list.size()-1];
+    // Remove .musicxml extension
+    filename.resize(filename.size() - QString(".musicxml").size());
+    ui->jingleListWidget->addItem(filename);
+
+    //TODO: make map that links trimmed fileName to Composition class instance (i.e. for moving up and down list and for deleting from list)
 }
