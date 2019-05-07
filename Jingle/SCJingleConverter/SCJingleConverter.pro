@@ -28,11 +28,13 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    composition.cpp
+    composition.cpp \
+    scserial.cpp
 
 HEADERS += \
         mainwindow.h \
-    composition.h
+    composition.h \
+    scserial.h
 
 FORMS += \
         mainwindow.ui

@@ -6,15 +6,23 @@
 #include <cmath>
 
 Composition::Composition(QString filename)
-    :filename(filename)
+    : filename(filename)
+    , xml()
+    , parts(0)
+    , currDivisions(1)
+    , bpm(100)
+    , currPart(0)
 {
-
 }
 
 int Composition::parse() {
     QFile file(filename);
 
-    qDebug() << "parse\n";
+    parts.clear();
+    parts.push_back(Part());
+    currPart = 0;
+
+    qDebug() << "parse";
 
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
         //TODO: add error string to be querired on failure
@@ -23,25 +31,71 @@ int Composition::parse() {
 
     xml.setDevice(&file);
 
-
     while (xml.readNext() != QXmlStreamReader::EndDocument) {
 
-        if (xml.name() == QLatin1String("note")) {
-            parseNote();
+        if (xml.tokenType() == QXmlStreamReader::StartElement) {
+            if (xml.name() == QLatin1String("note")) {
+                parseNote();
+            } else if (xml.name() == QLatin1String("part")) {
+
+            } else if (xml.name() == QLatin1String("backup")) {
+
+            } else if (xml.name() == QLatin1String("measure")) {
+
+            } else if (xml.name() == QLatin1String("per-minute")) {
+                xml.readNext();
+                bpm = xml.text().toUInt();
+            } else if (xml.name() == QLatin1String("divisions")) {
+                xml.readNext();
+                currDivisions = xml.text().toUInt();
+            }
         }
     }
 
-    // Handle Part
-        // Handle Measure
-                // Handle Note
+    qDebug() << "parse done";
+
 
     return 0;
 }
 
+//TODO: will parameters to specify how and what to convert from all possible parts
+std::vector<QString> Composition::getSCCommands() {
+
+    std::vector<QString> cmds(0);
+
+    QString cmd;
+
+    int note_cnt = 0;
+    for (uint32_t parts_idx = 0; parts_idx < parts.size(); parts_idx++) {
+        Part& part = parts[parts_idx];
+
+        for (uint32_t meas_idx = 0; meas_idx < part.measures.size(); meas_idx++) {
+            Measure& meas = part.measures[meas_idx];
+            for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
+                Note& note = meas.notes[notes_idx];
+                cmd = QString("jingle note 0 right ") + QString::number(note_cnt) + QString(" 128 ") +
+                        QString::number(note.frequencies[0]) + QString(" ") +
+                        QString::number(note.duration * 360 * 1000 / bpm) +
+                        QString("\r\n");
+                note_cnt++;
+                cmds.push_back(cmd);
+            }
+        }
+    }
+
+    cmd = QString("jingle add 0 0 ") + QString::number(note_cnt) + QString("\r\n");
+    cmds.insert(cmds.begin(), cmd);
+    cmd = QString("jingle clear\r\n");
+    cmds.insert(cmds.begin(), cmd);
+
+    return cmds;
+}
+
 int Composition::parseNote() {
 
-    int duration = 0;
-    int frequency = 0;
+    float duration = 0.f;
+    float frequency = 0.f;
+    bool isChord = false;
 
     // Check that we are actually at the beginning of an XML note token
     if (xml.name() != QLatin1String("note") || xml.tokenType() != QXmlStreamReader::StartElement) {
@@ -61,20 +115,45 @@ int Composition::parseNote() {
                 frequency = parsePitch();
             } else if (xml.name() == QLatin1String("duration")) {
                 xml.readNext();
-                duration = xml.text().toInt();
+                duration = static_cast<float>(xml.text().toUInt()) / currDivisions;
             } else if (xml.name() == QLatin1String("chord")) {
-
+                isChord = true;
             }
         }
 
     }
 
-    qDebug() << "Note: freq = " << frequency << " dur = " << duration;
+    Part& part = parts[currPart];
+
+    if (part.measures.size() < 1) {
+        part.measures.push_back(Measure());
+    }
+
+    Measure& meas = part.measures.back();
+
+    if (isChord) {
+        if (meas.notes.size() < 1) {
+            //TODO: error out if we received a chord and no note exists for the current measure...
+        }
+
+        Note& note = meas.notes.back();
+
+        //if (note.duration != duration) {
+            // TODO: error if duration does not match for chord
+        //}
+
+        note.frequencies.push_back(frequency);
+    } else {
+        Note note;
+        note.frequencies.push_back(frequency);
+        note.duration = static_cast<float>(duration) / static_cast<float>(currDivisions);
+        meas.notes.push_back(note);
+    }
 
     return 0;
 }
 
-int Composition::parsePitch() {
+float Composition::parsePitch() {
     QChar step = 0;
     int alter = 0;
     int octave = 0;
@@ -138,5 +217,5 @@ int Composition::parsePitch() {
     const double C_0_FREQ = 16.35;
     freq = C_0_FREQ * factor;
 
-    return static_cast<int>(round(freq));
+    return static_cast<float>(freq);
 }

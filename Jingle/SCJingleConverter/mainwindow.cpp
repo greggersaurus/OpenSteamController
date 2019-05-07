@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "composition.h"
+#include "scserial.h"
 
 #include <QSerialPortInfo>
 #include <QSerialPort>
@@ -31,24 +32,21 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_playJinglePushButton_clicked()
 {
-    QSerialPort serial;
     QString serial_port_name = ui->serialPortComboBox->currentText();
-    serial.setPortName(serial_port_name);
-    if (!serial.open(QIODevice::ReadWrite)) {
+    SCSerial serial(serial_port_name);
+
+    if (serial.open()) {
         QMessageBox::information(this, tr("Error"),
-            tr("Cannot open %1. Error Code %2.")
-            .arg(serial_port_name).arg(serial.error()));
+            tr("Cannot open %1.")
+            .arg(serial_port_name));
         return;
     }
 
-    QString currentRequest = "jingle play 3\r\n";
-    const QByteArray requestData = currentRequest.toUtf8();
-    serial.write(requestData);
-    if (!serial.waitForBytesWritten(1000)) {
-        // TODO: error dialog box
+    if (serial.send("jingle play 0\r\n")) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Failed to send command."));
         return;
     }
-
 }
 
 void MainWindow::on_browsePushButton_clicked()
@@ -73,6 +71,11 @@ void MainWindow::on_convertPushButton_clicked()
         QMessageBox::information(this, tr("Error"),
             tr("Failed to parse %1.")
             .arg(filename));
+    }
+
+    std::vector<QString> cmds = composition.getSCCommands();
+    for (uint32_t cmds_idx = 0; cmds_idx < cmds.size(); cmds_idx++) {
+        qDebug() << cmds[cmds_idx];
     }
 
     // Create string to identify this Composition

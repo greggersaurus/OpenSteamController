@@ -161,13 +161,19 @@ Some of the data stored in EEPROM is vital to proper operation of the controller
 * Make class to represent each music composition
     * Idea is to capture all Lines/Notes/Chords from musicxml and allow user to choose what to play on each channel
 * GUI
+    * Think through how full featured we want this to be, v.s. having a user need to prune their jingles before converting to musicxml
+        * Maybe first pass of GUI will be less full featured?
     * Allow for changing tempo via GUI
         * Default fill with value read from xml
+    * Allow for changing octave via GUI?
     * Specify start and stop measure instead of number of notes
         * This should be a single setting for jingle and not unique to channels
     * Display total bytes/percentage of space used and space used by each jingle as settings are changed
     * Add button to clear Jingle Data
         * i.e. remove magic word from EEPROM to use defaults
-* Add jingle command to print hex values for in code init
+* Repeated notes bleed together to form single long tone...
+    * Need to shorten notes and add rests in between if repeated?
+* Add jingle command to print hex values for use in FW 
     * i.e. we want Mario theme to play for Power A build config of open FW
     * should we add some sort of industrial tune (terminator?) for dev kit power up?
+* Need to add jingle_data.c support for adding jingles, etc.
