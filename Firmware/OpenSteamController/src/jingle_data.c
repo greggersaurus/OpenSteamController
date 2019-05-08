@@ -46,6 +46,12 @@ static uint16_t numJingleBytesFree = 0; //!< Updated when adding/removing
 	//!< jingle from data blob. Defines how much space is left in
 	//!< the Jingle Data blob for adding more Jingles.
 
+static const uint8_t MAX_NUM_JINGLES = 14; //!< This is not only the maximum
+	//!< number of Jingles we will allow in the data blob, but also the
+	//!< number of byte offsets that will always be filled in. This is
+	//!< due to the fact that this is how many Jingles are in the default
+	//!< data and (presumably) how many Jingles Steam expects.
+
 /**
  * This is the jingle data in store in raw form. This makes for easier 
  *  initialization and loading/saving from/to EEPROM, etc.
@@ -349,8 +355,9 @@ static uint8_t* rawJingleData = (uint8_t*)rawJingleData32; //!< Granular access
  * \return Byte value at given offset.
  */
 static uint16_t getJingleData16(uint16_t offset) {
-	if (offset >= JINGLE_DATA_MAX_BYTES-1)
+	if (offset >= JINGLE_DATA_MAX_BYTES-1) {
 		return 0;
+	}
 
 	return *(uint16_t*)&rawJingleData[offset];
 }
@@ -364,8 +371,9 @@ static uint16_t getJingleData16(uint16_t offset) {
  * \return 0 on success.
  */
 static int setJingleData16(uint16_t offset, uint16_t data) {
-	if (offset >= JINGLE_DATA_MAX_BYTES-1)
+	if (offset >= JINGLE_DATA_MAX_BYTES-1) {
 		return -1;
+	}
 
 	uint16_t* ptr = (uint16_t*)&rawJingleData[offset];
 
@@ -439,9 +447,11 @@ static bool jingleDataIsValid() {
 static void initJingleData(void) {
 	setMagicWord(JD_MAGIC_WORD);
 	setNumJingles(0);
-	// Leave room for header (i.e. Magic Word, Number of Jingles, packing
-	//  and alignment bytes).
-	numJingleBytesFree = JINGLE_DATA_MAX_BYTES - 6;
+
+	// Take into account header (i.e. Magic Word, Number of Jingles, packing
+	//  and alignment bytes) and offsets for MAX_NUM_JINGLES.
+	numJingleBytesFree = JINGLE_DATA_MAX_BYTES - sizeof(JD_MAGIC_WORD) - 2
+		- sizeof(uint16_t) * MAX_NUM_JINGLES;
 }
 
 /**
@@ -454,11 +464,38 @@ static uint16_t getJingleOffset(uint8_t idx) {
 	if (idx >= getNumJingles()) {
 		return 0;
 	}
-	uint16_t* jingleOffsets = (uint16_t*)&rawJingleData[6];
-	if (jingleOffsets[idx] >= JINGLE_DATA_MAX_BYTES) {
+
+	uint16_t* jingle_offsets = (uint16_t*)&rawJingleData[6];
+
+	if (jingle_offsets[idx] >= JINGLE_DATA_MAX_BYTES) {
 		return 0;
 	}
-	return jingleOffsets[idx];
+
+	return jingle_offsets[idx];
+}
+
+/**
+ * Set the byte offset from the start of the Jingle Data to where the Jingle
+ *	related memory starts.
+ *
+ * \param idx Index of the Jingle begin referred to.
+ * 
+ * \return 0 on success.
+ */
+static int setJingleOffset(uint8_t idx, uint16_t offset) {
+	if (idx >= MAX_NUM_JINGLES) {
+		return -1;
+	}
+
+	if (offset >= JINGLE_DATA_MAX_BYTES) {
+		return -1;
+	}
+
+	uint16_t* jingle_offsets = (uint16_t*)&rawJingleData[6];
+
+	jingle_offsets[idx] = offset;
+
+	return 0;
 }
 
 /**
@@ -470,11 +507,40 @@ static uint16_t getJingleOffset(uint8_t idx) {
  */
 static uint16_t getNumJingleNotes(enum Haptic haptic, uint8_t idx) {
 	uint16_t offset = getJingleOffset(idx);
-	if (!offset)
+	if (!offset) {
 		return 0;
-	if (haptic == L_HAPTIC) 
+	}
+
+	if (haptic == L_HAPTIC) {
 		offset += sizeof(uint16_t);
+	}
+
 	return getJingleData16(offset);
+}
+
+/**
+ * Set the number of notes for the specified Channel for the specified
+ *	Jingle.
+ *
+ * \param haptic Specifies which haptic is being referred to.
+ * \param idx Index of the Jingle being referred to.
+ * \param numNotes The number of notes for the specific Channel for the 
+ *  	specific Jingle.
+ *
+ * \return 0 on success.
+ */
+static int setNumJingleNotes(enum Haptic haptic, uint8_t idx, uint16_t numNotes) {
+	uint16_t offset = getJingleOffset(idx);
+
+	if (!offset) {
+		return 0;
+	}
+
+	if (haptic == L_HAPTIC) {
+		offset += sizeof(uint16_t);
+	}
+
+	return setJingleData16(offset, numNotes);
 }
 
 /**
@@ -486,32 +552,92 @@ static uint16_t getNumJingleNotes(enum Haptic haptic, uint8_t idx) {
  */
 static Note* getJingleNotes(enum Haptic haptic, uint8_t idx) {
 	uint16_t offset = getJingleOffset(idx);
-	if (!offset)
+
+	if (!offset) {
 		return NULL;
+	}
+
 	offset += 2 * sizeof(uint16_t);
-	if (haptic == L_HAPTIC)
+
+	if (haptic == L_HAPTIC) {
 		offset += getNumJingleNotes(R_HAPTIC, idx) * sizeof(Note);
+	}
+
 	return (Note*)&rawJingleData[offset];
 }
 
-//TODO
-static int addJingle(uint8_t idx, uint16_t numNotesRight, uint16_t numNotesLeft) {
-	// check if there is enough room in blob for another Jingle
-	// add offset for new Jingle
-	//	move all jingle data by 2 bytes
-	//	adjust all jingle offsets
-	// Set number of notes for right and left jingle
+/**
+ * Allocates space in Jingle Data for another Jingle. This Jingle will be
+ *  stored immediately following the last Jingle (if there is room). Use
+ *  initJingleData() or delJingle() to make room if needed.
+ *
+ * \param numNotesRight The number of notes for the right channel.
+ * \param numNotesLeft The number of notes for the left channel.
+ *
+ * \return 0 on success.
+ */
+static int addJingle(uint16_t numNotesRight, uint16_t numNotesLeft) {
+	int retval = 0;
+
+	uint8_t num_jingles = getNumJingles();
+	if (num_jingles >= MAX_NUM_JINGLES) {
+		return -1;
+	}
+
+	// Check if there is enough room in blob for another Jingle
+	uint32_t num_jingle_bytes = 2 * sizeof(uint16_t) + 
+		numNotesLeft * sizeof(Note) +
+		numNotesRight * sizeof(Note);
+	if (num_jingle_bytes > numJingleBytesFree) {
+		return -2;
+	}
+
+	// Start with assumption this is the first Jingle
+	uint16_t offset = sizeof(JD_MAGIC_WORD) + 2 + 
+		sizeof(uint16_t) * MAX_NUM_JINGLES;
+
+	// If this is not the first Jingle, data will start after last Jingle
+	if (num_jingles > 0) {
+		offset = getJingleOffset(num_jingles-1) + 2 * sizeof(uint16_t) + 
+			getNumJingleNotes(L_HAPTIC, num_jingles-1) * sizeof(Note) +
+			getNumJingleNotes(R_HAPTIC, num_jingles-1) * sizeof(Note);
+	}
+
+printf("Jingle Offset = 0x%04x\n", offset);
+
+	// Set offset for new Jingle. Also set all remaining possible offsets.
+	for (int idx = num_jingles; idx < MAX_NUM_JINGLES; idx++) {
+		retval = setJingleOffset(idx, offset);
+		if (retval) {
+			return -3;
+		}
+	}
+
 	// Increment number of Jingles
-	// Clear notes
-	// update number of free bytes
-	return -1;
+	setNumJingles(num_jingles+1);
+
+	// Set number of notes for right and left channels
+	retval = setNumJingleNotes(L_HAPTIC, num_jingles, numNotesLeft);
+	if (retval) {
+		setNumJingles(num_jingles);
+		return -4;
+	}
+
+	retval = setNumJingleNotes(R_HAPTIC, num_jingles, numNotesRight);
+	if (retval) {
+		setNumJingles(num_jingles);
+		return -5;
+	}
+
+	// Update number of free bytes
+	numJingleBytesFree -= num_jingle_bytes;
+
+	return 0;
 }	
 
 //TODO
-static int delJingle(uint8_t idx) {
+static int delJingle() {
 	// decrement number of jingles
-	// move all jingle data down by 2 bytes
-	// adjust all remaining offsets
 	// Compute/adjust how much room is left in blob
 	return -1;
 }
@@ -524,10 +650,13 @@ static int delJingle(uint8_t idx) {
 static int printJingleData(void) {
 	printf("Magic Word = 0x%04x\n", getMagicWord());
 	printf("Number of Jingles = %d\n", getNumJingles());
+
 	for (int idx = 0; idx < getNumJingles(); idx++) {
-		printf("Jingle[0] offset = 0x%03x\n", getJingleOffset(idx));
+		printf("Jingle[%d] offset = 0x%03x\n", idx, getJingleOffset(idx));
 	}
+
 	printf("Bytes free in blob = 0x%03x\n", numJingleBytesFree);
+
 	return 0;
 }
 
@@ -564,19 +693,19 @@ static int printJingle(uint8_t idx) {
 		if (!notesRight)
 			break;
 
-		printf("Note[%d] = 0x%04x, 0x%04x, 0x%04x\n", idx,
-			notesRight[idx].dutyCycle, 
-			notesRight[idx].pulseFreq, 
-			notesRight[idx].duration);
+		printf("Note[%d] = 0x%04x (%d), 0x%04x (%d), 0x%04x (%d)\n", idx,
+			notesRight[idx].dutyCycle, notesRight[idx].dutyCycle, 
+			notesRight[idx].pulseFreq, notesRight[idx].pulseFreq, 
+			notesRight[idx].duration, notesRight[idx].duration);
 	}
 	for (int idx = 0; idx < numNotesLeft; idx++) {
 		if (!notesLeft)
 			break;
 
-		printf("Note[%d] = 0x%04x, 0x%04x, 0x%04x\n", idx,
-			notesLeft[idx].dutyCycle,
-			notesLeft[idx].pulseFreq,
-			notesLeft[idx].duration);
+		printf("Note[%d] = 0x%04x (%d), 0x%04x (%d), 0x%04x (%d)\n", idx,
+			notesLeft[idx].dutyCycle, notesLeft[idx].dutyCycle,
+			notesLeft[idx].pulseFreq, notesLeft[idx].pulseFreq,
+			notesLeft[idx].duration, notesLeft[idx].duration);
 	}
 
 	return 0;
@@ -690,15 +819,15 @@ void jingleCmdUsage(void) {
 		"usage: jingle play {jingleIdx}\n"
 		"       jingle print [{jingleIdx}]\n"
 		"       jingle clear\n"
-		"       jingle delete {jingleIdx}\n"
-		"       jingle add {jingleIdx} {numNotesRight} {numNotesLeft}\n"
+		"       jingle delete\n"
+		"       jingle add {numNotesRight} {numNotesLeft}\n"
 		"       jingle note {jingleIdx} {hapticId} {notdeIdx} {dutyCycle} {freq} {dur}\n"
 		"       jingle eeprom {cmd}\n"
 		"\n"
 		"play = play the jingle associated with the given jingleIdx\n"
 		"print = Print info on all the jingles, or details on the notes\n"
 		"       for a jingle associated with a given jingleIdx\n"
-		"delete = Delete Jingle associated with the given jingleIdx\n"
+		"delete = Delete last Jingle in Jingle Data\n"
 		"clear = Initialize the Jingle Data structure to have 0 Jingles\n"
 		"add = Add a new jingle with the specified number of notes\n"
 		"	for each channel (i.e. haptic)\n"
@@ -719,7 +848,6 @@ void jingleCmdUsage(void) {
 		"	 will cause official firmware to use default Jingle\n"
 		"	 Data embedded in firmware.\n"
 	);
-
 }
 
 /**
@@ -749,11 +877,13 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 			printf("jingleIdx must bein range 0 to 255\n");
 			return -1;
 		}
+
 		if (jingle_idx >= getNumJingles()) {
 			printf("Only %d jingles available\n", 
 				getNumJingles());
 			return -1;
 		}
+
 		retval = playJingle(jingle_idx);
 		if (retval) {
 			printf("Error playing Jingle (err = %d)\n", retval);
@@ -787,55 +917,38 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 			jingleCmdUsage();
 			return -1;
 		}
+
 		initJingleData();
 	} else if (!strcmp("delete", argv[1])) {
-		if (argc != 3) {
+		if (argc != 2) {
 			jingleCmdUsage();
 			return -1;
 		}
 
-		jingle_idx = strtol(argv[2], NULL, 0);
-		if (jingle_idx > 255) {
-			printf("jingleIdx must bein range 0 to 255\n");
-			return -1;
-		}
-		if (jingle_idx >= getNumJingles()) {
-			printf("Only %d jingles available\n", 
-				getNumJingles());
-			return -1;
-		}
-		retval = delJingle(jingle_idx);
+		retval = delJingle();
 		if (retval) {
 			printf("Error deleting Jingle (err = %d)\n", retval);
 			return -1;
 		}
 	} else if (!strcmp("add", argv[1])) {
-		if (argc != 5) {
+		if (argc != 4) {
 			jingleCmdUsage();
 			return -1;
 		}
 
-		jingle_idx = strtol(argv[2], NULL, 0);
-		if (jingle_idx > 255) {
-			printf("jingleIdx must bein range 0 to 255\n");
-			return -1;
-		}
-		if (jingle_idx >= getNumJingles()) {
-			printf("Only %d jingles available\n", 
-				getNumJingles());
-			return -1;
-		}
-		uint32_t num_notes_right = strtol(argv[3], NULL, 0);
+		uint32_t num_notes_right = strtol(argv[2], NULL, 0);
 		if (num_notes_right > 65535) {
 			printf("numNotesRight must be in range 0 to 65535\n");
 			return -1;
 		}
-		uint32_t num_notes_left = strtol(argv[4], NULL, 0);
+
+		uint32_t num_notes_left = strtol(argv[3], NULL, 0);
 		if (num_notes_left > 65535) {
 			printf("numNotesLeft must be in range 0 to 65535\n");
 			return -1;
 		}
-		retval = addJingle(jingle_idx, num_notes_right, num_notes_left);
+
+		retval = addJingle(num_notes_right, num_notes_left);
 		if (retval) {
 			printf("Error adding Jingle (err = %d)\n", retval);
 			return -1;

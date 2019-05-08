@@ -119,9 +119,21 @@ If you load this firmware onto a Steam Controller and then connect the controlle
 This is a running list of ways in which I think the [OpenSteamController](./OpenSteamController)
  Firmware could be improved:
 
+1. usb.c/console.c
+    1. Pasting into terminal makes it go crazy sometimes
+        1. Even short prints
+        1. Will cause terminal to keep printing out history buffers until next newline??
+    1. Cannot seem to past series of commands into terminal (related to above??)
+        1. Maybe just need longer delay between commands...?
+
+    
+
 1. Faux Switch Controller
     1. Add startup jingle...?
         1. Mario theme??
+
+1. Step through all usages and make sure they are consistent
+    1. Are we using {arg_name} to distinguish arguments?
 
 1. Building
     1. Test Release build and move away from working with Debug
