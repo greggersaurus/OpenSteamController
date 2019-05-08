@@ -83,7 +83,7 @@ std::vector<QString> Composition::getSCCommands() {
         }
     }
 
-    cmd = QString("jingle add 0 0 ") + QString::number(note_cnt) + QString("\r\n");
+    cmd = QString("jingle add ") + QString::number(note_cnt) + QString(" 0\r\n");
     cmds.insert(cmds.begin(), cmd);
     cmd = QString("jingle clear\r\n");
     cmds.insert(cmds.begin(), cmd);

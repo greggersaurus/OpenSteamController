@@ -73,9 +73,25 @@ void MainWindow::on_convertPushButton_clicked()
             .arg(filename));
     }
 
+    QString serial_port_name = ui->serialPortComboBox->currentText();
+    SCSerial serial(serial_port_name);
+
+    if (serial.open()) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Cannot open %1.")
+            .arg(serial_port_name));
+        return;
+    }
+
     std::vector<QString> cmds = composition.getSCCommands();
     for (uint32_t cmds_idx = 0; cmds_idx < cmds.size(); cmds_idx++) {
         qDebug() << cmds[cmds_idx];
+
+        if (serial.send(cmds[cmds_idx])) {
+            QMessageBox::information(this, tr("Error"),
+                tr("Failed to send command."));
+            return;
+        }
     }
 
     // Create string to identify this Composition
