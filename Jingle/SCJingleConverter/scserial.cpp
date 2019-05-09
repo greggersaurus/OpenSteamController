@@ -1,6 +1,7 @@
 #include "scserial.h"
 
 #include <QThread>
+#include <QDebug>
 
 SCSerial::SCSerial(QString portName)
 {
@@ -28,8 +29,19 @@ int SCSerial::send(QString command) {
         return -1;
     }
 
+    // TODO: Check responses (maybe accept parameter for what check string should be?)
+    if (serial.waitForReadyRead(1000)) {
+        QByteArray responseData = serial.readAll();
+        while (serial.waitForReadyRead(10))
+            responseData += serial.readAll();
+
+        const QString response = QString::fromUtf8(responseData);
+        qDebug() << "response = " << response;
+    }
+
     // Pause after each command to avoid overflowing NXP's faulty USB CDC UART stack
-    QThread::msleep(100);
+    //TODO: what is the right value for this...
+    QThread::msleep(50);
 
     return 0;
 }

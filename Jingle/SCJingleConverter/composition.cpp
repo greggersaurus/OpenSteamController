@@ -65,6 +65,8 @@ std::vector<QString> Composition::getSCCommands() {
 
     QString cmd;
 
+    bpm *= 4;
+
     int note_cnt = 0;
     for (uint32_t parts_idx = 0; parts_idx < parts.size(); parts_idx++) {
         Part& part = parts[parts_idx];
@@ -76,16 +78,21 @@ std::vector<QString> Composition::getSCCommands() {
                 cmd = QString("jingle note 0 right ") + QString::number(note_cnt) + QString(" 128 ") +
                         QString::number(note.frequencies[0]) + QString(" ") +
                         QString::number(note.duration * 360 * 1000 / bpm) +
-                        QString("\r\n");
-                note_cnt++;
+                        QString("\n");
                 cmds.push_back(cmd);
+                cmd = QString("jingle note 0 left ") + QString::number(note_cnt) + QString(" 128 ") +
+                        QString::number(note.frequencies[0]) + QString(" ") +
+                        QString::number(note.duration * 360 * 1000 / bpm) +
+                        QString("\n");
+                cmds.push_back(cmd);
+                note_cnt++;
             }
         }
     }
 
-    cmd = QString("jingle add ") + QString::number(note_cnt) + QString(" 0\r\n");
+    cmd = QString("jingle add ") + QString::number(note_cnt) + QString(" ") + QString::number(note_cnt) + QString("\n");
     cmds.insert(cmds.begin(), cmd);
-    cmd = QString("jingle clear\r\n");
+    cmd = QString("jingle clear\n");
     cmds.insert(cmds.begin(), cmd);
 
     return cmds;
