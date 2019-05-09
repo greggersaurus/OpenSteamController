@@ -119,14 +119,6 @@ If you load this firmware onto a Steam Controller and then connect the controlle
 This is a running list of ways in which I think the [OpenSteamController](./OpenSteamController)
  Firmware could be improved:
 
-1. usb.c/console.c
-    1. Pasting into terminal makes it go crazy sometimes
-        1. Even short prints
-        1. Will cause terminal to keep printing out history buffers until next newline??
-    1. Cannot seem to past series of commands into terminal (related to above??)
-        1. Maybe just need longer delay between commands...?
-
-    
 
 1. Faux Switch Controller
     1. Add startup jingle...?
@@ -172,6 +164,8 @@ This is a running list of ways in which I think the [OpenSteamController](./Open
     1. Make regression tests (i.e. testPrint)
         1. Buffer overflow related
         1. __disable_irq() related (i.e. ADC IRQs causing double prints or data loss...)
+        1. Can we make input related ones
+            1. Think through but just fixed where system would loop through rx buffer due to bug in wrapIdx logic
     1. Try to fix CDC UART overflow issues (can we without rewriting USB ROM code though...?)
         1. The issues stems from the fact that USB ROM code ACKs data packets before calling callbacks
             1. This means that in callback if we don't have room, we cannot tell the host to wait

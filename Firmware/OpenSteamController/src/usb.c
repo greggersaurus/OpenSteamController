@@ -508,16 +508,21 @@ static void rcvUartData(UsbUartData* uartData) {
 		if (uartData->rxWrIdx + USB_MAX_PACKET_SZ >= 
 			USB_UART_TXFIFO_SZ) {
 
-			// Write pointer moving to read pointer (or beyond) is 
-			//  overflow
+			// At this point we know rxWrIdx needs to wrap to 0:
+
+			// If rxRdIdx is 0 this would look like FIFO is empty, 
+			//  so stall until reads occur
 			if (uartData->rxRdIdx == 0) {
 				// Mark as stalled we so try again next getc()
 				uartData->rxStalled = 1;
 				return;
 			}
 
-			// There is not enough room until end of buffer so we 
-			//  establish a new wrap point and keep checking
+			// If FIFO is empty we also need to move rxRdIdx so
+			//  that garbage samples are not read
+			if (uartData->rxRdIdx == uartData->rxWrIdx) {
+				uartData->rxRdIdx = 0;
+			}
 			uartData->rxWrapIdx = uartData->rxWrIdx;
 			uartData->rxWrIdx = 0;
 		}
@@ -540,12 +545,9 @@ static void rcvUartData(UsbUartData* uartData) {
 
 	uartData->rxWrIdx += bytes_rcvd;
 
-	if (uartData->rxWrIdx > uartData->rxWrapIdx) {
+	if (uartData->rxWrIdx >= uartData->rxWrapIdx) {
 		// Update wrap index if necessary
-		uartData->rxWrapIdx = uartData->rxWrIdx;
-	} else if (uartData->rxWrIdx == uartData->rxWrapIdx) {
-		// Wrap wrIdx back to start of FIFO if necessary
-		uartData->rxWrIdx = 0;
+		uartData->rxWrapIdx = uartData->rxWrIdx + 1;
 	}
 }
 
