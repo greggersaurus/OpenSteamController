@@ -1,47 +1,103 @@
+/**
+ * \file scserial.cpp
+ * \brief This encapsulates the ability to communicate with the Open Steam
+ *      Controller Firmware Dev Kit via the USB CDC Serial Port.
+ *
+ * MIT License
+ *
+ * Copyright (c) 2019 Gregory Gluszek
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #include "scserial.h"
 
 #include <QThread>
 #include <QDebug>
 
-SCSerial::SCSerial(QString portName)
-{
+/**
+ * @brief SCSerial::SCSerial Constructor for class to communicate with Open
+ *      Steam Controller Dev Kit FW.
+ *
+ * @param portName Defines which serial port is associated with this class. Use
+ *      QSerialPortInfo::availablePorts() to get a list of available port names.
+ */
+SCSerial::SCSerial(QString portName) {
     serial.setPortName(portName);
 }
 
-int SCSerial::open() {
+/**
+ * @brief SCSerial::open Attempt to establish connection with Open Steam Controller
+ *      Dev Kit FW via this serial port.
+ *
+ * @return SCSerial::ErrorCode
+ */
+SCSerial::ErrorCode SCSerial::open() {
     if (!serial.open(QIODevice::ReadWrite)) {
-        //TODO: better error reporting (string update?)
-        return -1;
+        qDebug() << "serial.open() error: " << serial.error();
+        return SERIAL_OPEN;
     }
 
-    //TODO: use "version" command to verify this is valid serial port
+    // Verify we can communicate with the controller
+    ErrorCode err_code = send("version\n", "version\n\rOpenSteamController Ver 1.0.\n\r");
 
-    return 0;
+    return err_code;
 }
 
-int SCSerial::send(QString command) {
-    const QByteArray requestData = command.toUtf8();
+/**
+ * @brief SCSerial::send Send a command to the Steam Controller.
+ *
+ * @param command Command to send to Steam Controller.
+ * @param response Expected response from Steam Controller after sending command.
+ *
+ * @return SCSerial::ErrorCode
+ */
+SCSerial::ErrorCode SCSerial::send(QString command, QString response) {
+    const QByteArray request_data = command.toUtf8();
 
-    serial.write(requestData);
+    serial.write(request_data);
 
     if (!serial.waitForBytesWritten(1000)) {
-        // TODO: better error reporting (string update?)
-        return -1;
+        qDebug() << "serial.waitForBytesWritten() error: " << serial.error();
+        return COMMAND_SEND_TIMEOUT;
     }
 
-    // TODO: Check responses (maybe accept parameter for what check string should be?)
-    if (serial.waitForReadyRead(1000)) {
-        QByteArray responseData = serial.readAll();
-        while (serial.waitForReadyRead(10))
-            responseData += serial.readAll();
+    if (!serial.waitForReadyRead(1000)) {
+        qDebug() << "serial.waitForReadyRead() error: " << serial.error();
+        return RESPONSE_RCV_TIMEOUT;
+    }
 
-        const QString response = QString::fromUtf8(responseData);
-        qDebug() << "response = " << response;
+    QByteArray response_data = serial.readAll();
+    while (serial.waitForReadyRead(10)) {
+        response_data += serial.readAll();
+    }
+
+    const QString rcvd_response = QString::fromUtf8(response_data);
+    if (rcvd_response != response) {
+        qDebug() << "expected response = " << response;
+        qDebug() << "rcvd_response = " << rcvd_response;
+        return RESPONSE_MISMATCH;
     }
 
     // Pause after each command to avoid overflowing NXP's faulty USB CDC UART stack
-    //TODO: what is the right value for this...
+    // This can be removed if USB CDC UART stack issues are ever fixed
     QThread::msleep(50);
 
-    return 0;
+    return NO_ERROR;
 }

@@ -35,14 +35,18 @@ void MainWindow::on_playJinglePushButton_clicked()
     QString serial_port_name = ui->serialPortComboBox->currentText();
     SCSerial serial(serial_port_name);
 
-    if (serial.open()) {
+    SCSerial::ErrorCode serial_err_code = serial.open();
+    if (serial_err_code != SCSerial::NO_ERROR) {
         QMessageBox::information(this, tr("Error"),
-            tr("Cannot open %1.")
-            .arg(serial_port_name));
+            tr("Cannot open %1.\n\nError: %2")
+            .arg(serial_port_name)
+            .arg(SCSerial::getErrorString(serial_err_code)));
         return;
     }
 
-    if (serial.send("jingle play 0\r\n")) {
+    const QString cmd("jingle play 0\n");
+    const QString resp = cmd + "\rJingle play started successfully.\n\r";
+    if (serial.send(cmd, resp)) {
         QMessageBox::information(this, tr("Error"),
             tr("Failed to send command."));
         return;
@@ -57,7 +61,6 @@ void MainWindow::on_browsePushButton_clicked()
         ("musixXML (*.musicxml)"));
 
     ui->musicXmlPathLineEdit->setText(fileName);
-
 }
 
 void MainWindow::on_convertPushButton_clicked()
@@ -76,23 +79,17 @@ void MainWindow::on_convertPushButton_clicked()
     QString serial_port_name = ui->serialPortComboBox->currentText();
     SCSerial serial(serial_port_name);
 
-    if (serial.open()) {
+    SCSerial::ErrorCode serial_err_code = serial.open();
+    if (serial_err_code != SCSerial::NO_ERROR) {
         QMessageBox::information(this, tr("Error"),
-            tr("Cannot open %1.")
-            .arg(serial_port_name));
+            tr("Cannot open %1.\n\nError: %2")
+            .arg(serial_port_name)
+            .arg(SCSerial::getErrorString(serial_err_code)));
         return;
     }
 
-    std::vector<QString> cmds = composition.getSCCommands();
-    for (uint32_t cmds_idx = 0; cmds_idx < cmds.size(); cmds_idx++) {
-        qDebug() << cmds[cmds_idx];
-
-        if (serial.send(cmds[cmds_idx])) {
-            QMessageBox::information(this, tr("Error"),
-                tr("Failed to send command."));
-            return;
-        }
-    }
+    Composition::ErrorCode comp_err_code = composition.download(serial, 0);
+    // TODO: check error code
 
     // Create string to identify this Composition
     // Remove path
