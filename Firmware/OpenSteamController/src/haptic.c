@@ -143,7 +143,11 @@ static void startHapticNote(Haptic haptic, const struct Note* note) {
 
 		pulseHiDur[haptic] = (pulse_width * note->dutyCycle) / 512;
 		pulseLoDur[haptic] = pulse_width - pulseHiDur[haptic];
-		pulseRptCntr[haptic] = (note->duration * note->pulseFreq) / 1000;
+		// We add one repeat count as for last repeat count we do not
+		//  actually pull GPIO high, but stay low for a fixed duration
+		//  to create gap between notes (otherwise the same note repeated 
+		//  will bleed together and create a continuous tone).
+		pulseRptCntr[haptic] = 1 + (note->duration * note->pulseFreq) / 1000;
 
 		// Start with haptic GPIO in high state
 		setHapticGpioState(haptic, true);
@@ -183,12 +187,22 @@ static void nextHapticState(Haptic haptic) {
 
 		// Check if another pulse is to be generated for this Note
 		if (pulseRptCntr[haptic]) {
-			// Start another high portion of pulse
-			setHapticGpioState(haptic, true);
-			// Setup interrupt to occur when high portion is done
-			hapticTimer->MR[getHapticMR(haptic)] = 
-				pulseHiDur[haptic] + 
-				Chip_TIMER_ReadCount(hapticTimer);
+			// If this is last repeat count stay low to create a
+			//  distinct break between notes
+			if (pulseRptCntr[haptic] > 1) {
+				// Start another high portion of pulse
+				setHapticGpioState(haptic, true);
+
+				// Setup interrupt to occur when high portion is done
+				hapticTimer->MR[getHapticMR(haptic)] = 
+					pulseHiDur[haptic] + 
+					Chip_TIMER_ReadCount(hapticTimer);
+			} else {
+				// Setup interrupt to occur after fixed time so
+				//  that concurrent notes do not bleed together
+				hapticTimer->MR[getHapticMR(haptic)] = 
+					100 + Chip_TIMER_ReadCount(hapticTimer);
+			}
 		} else {
 			// Attempt to move onto next note in sequence
 			hapticBusy[haptic] = false;			
