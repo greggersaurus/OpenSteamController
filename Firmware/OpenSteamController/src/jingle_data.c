@@ -603,8 +603,6 @@ static int addJingle(uint16_t numNotesRight, uint16_t numNotesLeft) {
 			getNumJingleNotes(R_HAPTIC, num_jingles-1) * sizeof(Note);
 	}
 
-printf("Jingle Offset = 0x%04x\n", offset);
-
 	// Set offset for new Jingle. Also set all remaining possible offsets.
 	for (int idx = num_jingles; idx < MAX_NUM_JINGLES; idx++) {
 		retval = setJingleOffset(idx, offset);
@@ -771,8 +769,22 @@ static int loadJingleEEPROM(void) {
  * \return 0 on success.
  */
 static int saveJingleEEPROM(void) {
+	// Make sure we report there are MAX_NUM_JINGLES in the data blob
+	//  as this is what Steam and the official FW are setup to expect.
+	//  If there are fewer than MAX_NUM_JINGLES the addition spots will
+	//  simply reference back to the last Jingle (this is ensured by 
+	//  addJingle()
+	uint8_t num_jingles = getNumJingles();
+	setNumJingles(MAX_NUM_JINGLES);
+
 	int retval = eepromWrite(JINGLE_DATA_EEPROM_OFFSET, rawJingleData, 
 		JINGLE_DATA_MAX_BYTES);
+
+	// Restore the number of Jingles back to original in case user wants to
+	//  continue to change data blob
+	setNumJingles(num_jingles);
+
+	// Now check if EEPROM write succeeded
 	if (retval) {
 		return -1;
 	}
@@ -889,6 +901,8 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 			printf("Error playing Jingle (err = %d)\n", retval);
 			return -1;
 		}
+
+		printf("Jingle play started successfully.\n");
 	} else if (!strcmp("print", argv[1])) {
 		if (argc == 2) {
 			printJingleData();	
@@ -919,6 +933,8 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 		}
 
 		initJingleData();
+
+		printf("Jingle data cleared successfully.\n");
 	} else if (!strcmp("delete", argv[1])) {
 		if (argc != 2) {
 			jingleCmdUsage();
@@ -930,6 +946,8 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 			printf("Error deleting Jingle (err = %d)\n", retval);
 			return -1;
 		}
+
+		printf("Jingle deleted successfully.\n");
 	} else if (!strcmp("add", argv[1])) {
 		if (argc != 4) {
 			jingleCmdUsage();
@@ -953,6 +971,8 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 			printf("Error adding Jingle (err = %d)\n", retval);
 			return -1;
 		}
+
+		printf("Jingle added successfully.\n");
 	} else if (!strcmp("note", argv[1])) {
 		if (argc != 8) {
 			jingleCmdUsage();
