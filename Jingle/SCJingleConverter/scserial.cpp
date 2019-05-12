@@ -55,7 +55,15 @@ SCSerial::ErrorCode SCSerial::open() {
     }
 
     // Verify we can communicate with the controller
-    ErrorCode err_code = send("version\n", "version\n\rOpenSteamController Ver 1.0.\n\r");
+    const QString ver_cmd = "version\n";
+    const QString ver_resp = ver_cmd + "\rOpenSteamController Ver 1.0.\n\r";
+    ErrorCode err_code = send(ver_cmd, ver_resp);
+    if (err_code != NO_ERROR) {
+        // Try once more, just in case there was a partial command in the
+        //  Controller FW command buffer or data being output by controller
+        //  upon connection
+        err_code = send(ver_cmd, ver_resp);
+    }
 
     return err_code;
 }
