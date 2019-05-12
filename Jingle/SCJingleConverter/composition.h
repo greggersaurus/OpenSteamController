@@ -35,6 +35,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include <stack>
 
 #include "scserial.h"
 
@@ -125,6 +126,7 @@ public:
     int getOctaveAdjust();
     ErrorCode setOctaveAdjust(int adjust);
 
+    //TODO: implement this and have this set member vars that download() references
     ErrorCode configureChan(Channel chan, int partIdx, int measStartIdx, int measEndIdx);
 
     uint32_t getMemUsage();
@@ -136,11 +138,11 @@ private:
     struct Note {
         Note()
             : frequencies(0)
-            , duration(0.f)
+            , length(0.f)
         {}
         std::vector<float> frequencies; // Frequency of note in Hz. Could be multiple
             // frequencies in case of chord
-        float duration; // Number of beats that Note/Chord lasts for
+        float length; // Number of beats that Note/Chord lasts for
     };
 
     /**
@@ -151,8 +153,13 @@ private:
     struct Measure {
         Measure()
             : notes(0)
+            , xmlDurationSum(0)
         {}
         std::vector<Note> notes;
+        uint32_t xmlDurationSum; // Accumulation the raw musicxml duration
+            // values seen in this measure. This helps with distinguishing
+            // if backup tag is indicating a new part or that notes should
+            // be added to this measure
     };
 
     /**
@@ -167,6 +174,7 @@ private:
 
     ErrorCode parseXmlNote();
     ErrorCode parseXmlPitch(float& freq);
+    ErrorCode parseXmlBackup();
     QString noteToCmd(const Note& note, Channel chan, uint32_t jingleIdx,
         uint32_t noteIdx, uint32_t chordIdx);
 
@@ -176,7 +184,17 @@ private:
 
     uint32_t currDivisions; // Current conversion factor for Note duration to Number of beats.
     uint32_t bpm; // Beats per minute. Tempo for playback of compostion.
+
     uint32_t currPart; // Defines which part is currently being built from parsed XML.
+
+    std::stack<uint32_t> backups; // This keeps track of specified backup durations
+        // so that we know how many notes should be added to a part, before switching
+        // back to adding notes to other parts (i.e. a backup indicates we are about
+        // to receive notes for a new part, but once we receive this notes, there is
+        // no indication we should go back to the previous part. Therefore, we need
+        // to track when to transition back).
+    std::stack<uint32_t> prevParts; // Used on conjunction with backups to know which
+        // part to jump back to when backup duration is complete.
 };
 
 #endif // COMPOSITION_H

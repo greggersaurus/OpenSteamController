@@ -60,7 +60,6 @@ Composition::ErrorCode Composition::parse() {
     QFile file(filename);
 
     parts.clear();
-    parts.push_back(Part());
     currPart = 0;
 
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
@@ -79,11 +78,31 @@ Composition::ErrorCode Composition::parse() {
                     qDebug() << "parseXmlNote() failed. Error: " << getErrorString(code);
                     return code;
                 }
-            } else if (xml.name() == QLatin1String("part")) {
-
             } else if (xml.name() == QLatin1String("backup")) {
-                //TODO: push down into next Part (creating one if necessary)
+                ErrorCode code = parseXmlBackup();
+                if (code != NO_ERROR) {
+                    qDebug() << "parseXmlBackup() failed. Error: " << getErrorString(code);
+                    return code;
+                }
             } else if (xml.name() == QLatin1String("measure")) {
+                // Double check that all specified backups were seen through
+                while(backups.size()) {
+                    if (backups.top() != 0) {
+                        qDebug() << "Reached beginning of measure with " << backups.size() << " backups "
+                            "and top having value of " << backups.top();
+                        return XML_PARSE;
+                    }
+                    backups.pop();
+                    currPart = prevParts.top();
+                    prevParts.pop();
+                }
+
+                // Add new measures for all parts below current
+                for (uint32_t parts_idx = currPart; parts_idx < parts.size(); parts_idx++) {
+                    Part& part = parts[parts_idx];
+
+                    part.measures.push_back(Measure());
+                }
 
             } else if (xml.name() == QLatin1String("per-minute")) {
                 xml.readNext();
@@ -91,6 +110,22 @@ Composition::ErrorCode Composition::parse() {
             } else if (xml.name() == QLatin1String("divisions")) {
                 xml.readNext();
                 currDivisions = xml.text().toUInt();
+            }
+        } else if (xml.tokenType() == QXmlStreamReader::EndElement) {
+            if (xml.name() == QLatin1String("part")) {
+                // Double check that all specified backups were seen through
+                while(backups.size()) {
+                    if (backups.top() != 0) {
+                        qDebug() << "Reached end of part with " << backups.size() << " backups "
+                            "and top having value of " << backups.top();
+                        return XML_PARSE;
+                    }
+                    backups.pop();
+                    currPart = prevParts.top();
+                    prevParts.pop();
+                }
+
+                currPart++;
             }
         }
     }
@@ -128,14 +163,14 @@ QString Composition::noteToCmd(const Note& note, Channel chan, uint32_t jingleId
 
     //TODO: adjust frequency based on octave adjust setting
 
-    uint32_t duration = static_cast<uint32_t>(note.duration * 60 * 1000 / bpm);
+    uint32_t duration_ms = static_cast<uint32_t>(note.length * 60 * 1000 / bpm);
 
     QString cmd = QString("jingle note ") + QString::number(jingleIdx) + QString(" ") +
             chan_str + QString(" ") +
             QString::number(noteIdx) + QString(" ") +
             QString::number(duty_cydle) + QString(" ") +
             QString::number(frequency) + QString(" ") +
-            QString::number(duration) + QString("\n");
+            QString::number(duration_ms) + QString("\n");
 
     return cmd;
 }
@@ -166,14 +201,21 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
         return CMD_ERR;
     }
 
-    int num_notes = 0;
-    for (uint32_t parts_idx = 0; parts_idx < parts.size(); parts_idx++) {
-        Part& part = parts[parts_idx];
+    // TODO: part selection and measure range should be based on configuration settings...
+    const int parts_idx = 0;
 
-        for (uint32_t meas_idx = 0; meas_idx < part.measures.size(); meas_idx++) {
-            Measure& meas = part.measures[meas_idx];
-            num_notes += meas.notes.size();
-        }
+    int num_notes = 0;
+
+    if (parts_idx >= parts.size()) {
+        qDebug() << "Not enough parts";
+        return NO_ERROR;
+    }
+
+    Part& part = parts[parts_idx];
+
+    for (uint32_t meas_idx = 0; meas_idx < part.measures.size(); meas_idx++) {
+        Measure& meas = part.measures[meas_idx];
+        num_notes += meas.notes.size();
     }
 
     cmd = "jingle add ";
@@ -187,31 +229,28 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
     }
 
     uint32_t note_cnt = 0;
-    for (uint32_t parts_idx = 0; parts_idx < parts.size(); parts_idx++) {
-        Part& part = parts[parts_idx];
 
-        for (uint32_t meas_idx = 0; meas_idx < part.measures.size(); meas_idx++) {
-            Measure& meas = part.measures[meas_idx];
-            for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
-                //TODO: note should be pulled based on channel...
-                Note& note = meas.notes[notes_idx];
+    for (uint32_t meas_idx = 0; meas_idx < part.measures.size(); meas_idx++) {
+        Measure& meas = part.measures[meas_idx];
+        for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
+            //TODO: note should be pulled based on channel...
+            Note& note = meas.notes[notes_idx];
 
-                cmd = noteToCmd(note, RIGHT, jingleIdx, note_cnt, 0);
-                resp = cmd + "\rNote updated successfully.\n\r";
-                serial_err_code = serial.send(cmd, resp);
-                if (serial_err_code != SCSerial::NO_ERROR) {
-                    qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
-                    return CMD_ERR;
-                }
-                cmd = noteToCmd(note, LEFT, jingleIdx, note_cnt, 0);
-                resp = cmd + "\rNote updated successfully.\n\r";
-                serial_err_code = serial.send(cmd, resp);
-                if (serial_err_code != SCSerial::NO_ERROR) {
-                    qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
-                    return CMD_ERR;
-                }
-                note_cnt++;
+            cmd = noteToCmd(note, RIGHT, jingleIdx, note_cnt, 0);
+            resp = cmd + "\rNote updated successfully.\n\r";
+            serial_err_code = serial.send(cmd, resp);
+            if (serial_err_code != SCSerial::NO_ERROR) {
+                qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
+                return CMD_ERR;
             }
+            cmd = noteToCmd(note, LEFT, jingleIdx, note_cnt, 0);
+            resp = cmd + "\rNote updated successfully.\n\r";
+            serial_err_code = serial.send(cmd, resp);
+            if (serial_err_code != SCSerial::NO_ERROR) {
+                qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
+                return CMD_ERR;
+            }
+            note_cnt++;
         }
     }
 
@@ -219,13 +258,58 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
 }
 
 /**
- * @brief Composition::parseNote Parse note token from xml. This assumes xml is at
+ * @brief Composition::parseXmlBackup Parse backup token from xml. This assumes xml is at
+ *      desired backup token to be parsed.
+ *
+ * @return Composition::ErrorCode
+ */
+Composition::ErrorCode Composition::parseXmlBackup() {
+    uint32_t duration = 0;
+
+    // Check that we are actually at the beginning of an XML backup token
+    if (xml.name() != QLatin1String("backup") || xml.tokenType() != QXmlStreamReader::StartElement) {
+        qDebug() << "XML is not at backup Start Element. XML Error String:" << xml.errorString();
+        return XML_PARSE;
+    }
+
+    // Read all child tokens of backup token
+    while(1) {
+        xml.readNext();
+
+        // Exit when all child tokens of backup token have been read
+        if (xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QLatin1String("backup")) {
+            break;
+        }
+
+        if (xml.tokenType() == QXmlStreamReader::StartElement) {
+            if (xml.name() == QLatin1String("duration")) {
+                xml.readNext();
+                duration = static_cast<float>(xml.text().toUInt());
+            }
+        }
+    }
+
+    if (duration == 0) {
+        qDebug() << "0 valued duration within backup token encountered";
+        return XML_PARSE;
+    }
+
+    backups.push(duration);
+    prevParts.push(currPart);
+    currPart++;
+
+    return NO_ERROR;
+}
+
+/**
+ * @brief Composition::parseXmlNote Parse note token from xml. This assumes xml is at
  *      desired note token to be parsed.
  *
  * @return Composition::ErrorCode
  */
 Composition::ErrorCode Composition::parseXmlNote() {
-    float duration = 0.f;
+    uint32_t raw_xml_duration = 0;
+    float length = 0.f;
     float frequency = 0.f;
     bool isChord = false;
 
@@ -233,6 +317,15 @@ Composition::ErrorCode Composition::parseXmlNote() {
     if (xml.name() != QLatin1String("note") || xml.tokenType() != QXmlStreamReader::StartElement) {
         qDebug() << "XML is not at note Start Element. XML Error String:" << xml.errorString();
         return XML_PARSE;
+    }
+
+    // Check if we should pop back up to part because we have covered duration we backed up via this note
+    if (backups.size()) {
+        if (backups.top() == 0) {
+            backups.pop();
+            currPart = prevParts.top();
+            prevParts.pop();
+        }
     }
 
     // Read all child tokens of note token
@@ -253,12 +346,17 @@ Composition::ErrorCode Composition::parseXmlNote() {
                 }
             } else if (xml.name() == QLatin1String("duration")) {
                 xml.readNext();
-                duration = static_cast<float>(xml.text().toUInt()) / currDivisions;
+                length = static_cast<float>(xml.text().toUInt()) / currDivisions;
+                raw_xml_duration = static_cast<float>(xml.text().toUInt());
             } else if (xml.name() == QLatin1String("chord")) {
                 isChord = true;
             }
         }
 
+    }
+
+    if (currPart >= parts.size()) {
+        parts.push_back(Part());
     }
 
     Part& part = parts[currPart];
@@ -277,25 +375,37 @@ Composition::ErrorCode Composition::parseXmlNote() {
 
         Note& note = meas.notes.back();
 
-        if (static_cast<int>(note.duration) != static_cast<int>(duration)) {
-            qDebug() << "Warning: Duration not consistent across notes in chord";
+        if (static_cast<int>(note.length) != static_cast<int>(length)) {
+            qDebug() << "Warning: Length not consistent across notes in chord";
         }
 
         note.frequencies.push_back(frequency);
     } else {
         Note note;
         note.frequencies.push_back(frequency);
-        note.duration = static_cast<float>(duration) / static_cast<float>(currDivisions);
+        note.length = static_cast<float>(length);
         meas.notes.push_back(note);
-    }
+        meas.xmlDurationSum += raw_xml_duration;
 
-    //TODO: check if we should pop back up to part because we have covered duration we backed up via this note
+        if (backups.size()) {
+            uint32_t backup_dur = backups.top();
+            if (raw_xml_duration > backup_dur) {
+                qDebug() << "Remaining backup duration (" << backup_dur << ") is less than"
+                    " current Note duration (" << raw_xml_duration << ")";
+                return XML_PARSE;
+            }
+
+            // Update backup duration counter
+            backups.pop();
+            backups.push(backup_dur - raw_xml_duration);
+        }
+    }
 
     return NO_ERROR;
 }
 
 /**
- * @brief Composition::parsePitch Parse pitch token from xml. This assumes xml is at
+ * @brief Composition::parseXmlPitch Parse pitch token from xml. This assumes xml is at
  *      desired pitch token to be parsed.
  *
  * @param[out] freq Frequency in Hz calculated from musicxml data.
