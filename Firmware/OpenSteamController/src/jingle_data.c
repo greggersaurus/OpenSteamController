@@ -592,8 +592,9 @@ static int addJingle(uint16_t numNotesRight, uint16_t numNotesLeft) {
 		return -2;
 	}
 
-	// Start with assumption this is the first Jingle
-	uint16_t offset = sizeof(JD_MAGIC_WORD) + 2 + 
+	// Start with assumption this is the first Jingle. Save room for
+	//  Magic Word, Reserved uint16_t, Number of Jingles, Reserved uint8_t
+	uint16_t offset = sizeof(JD_MAGIC_WORD) + 2 + 1 + 1 +
 		sizeof(uint16_t) * MAX_NUM_JINGLES;
 
 	// If this is not the first Jingle, data will start after last Jingle
