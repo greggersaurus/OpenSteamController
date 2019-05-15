@@ -3,6 +3,10 @@
 
 #include <QMainWindow>
 
+#include <vector>
+
+#include "composition.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -25,8 +29,21 @@ private slots:
 
     void on_convertPushButton_clicked();
 
+    void on_delJingleToolButton_clicked();
+
+    void on_mvJingleDownToolButton_clicked();
+
+    void on_mvJingleUpToolButton_clicked();
+
 private:
+    static const uint32_t MAX_NUM_COMPS = 14;
+
+    void updateMemUsage();
+    void updateCompositionDisplay();
+
     Ui::MainWindow *ui;
+
+    std::vector<Composition> compositions;
 };
 
 #endif // MAINWINDOW_H

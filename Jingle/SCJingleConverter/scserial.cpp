@@ -105,7 +105,8 @@ SCSerial::ErrorCode SCSerial::send(QString command, QString response) {
 
     // Pause after each command to avoid overflowing NXP's faulty USB CDC UART stack
     // This can be removed if USB CDC UART stack issues are ever fixed
-    QThread::msleep(50);
+//TODO: how much can we decrease this?
+    QThread::msleep(5);
 
     return NO_ERROR;
 }

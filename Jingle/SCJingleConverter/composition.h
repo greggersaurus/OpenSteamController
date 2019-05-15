@@ -47,6 +47,7 @@ public:
         FILE_OPEN,
         XML_PARSE,
         CMD_ERR,
+        BAD_IDX,
     };
 
     /**
@@ -66,6 +67,8 @@ public:
             return "Error parsing musicxml file.";
         case CMD_ERR:
             return "Error sending command to controller.";
+        case BAD_IDX:
+            return "Specified index out of bouds.";
         }
 
         return "Unknown Error";
@@ -75,6 +78,12 @@ public:
         RIGHT,
         LEFT
     };
+
+    static const uint32_t EEPROM_HDR_NUM_BYTES = 2 + 2 + 1 + 1 + 2 * 14; // See offset
+        // default calculation in function addJingle in jingle_data.c in
+        // OpenSteamController FW for additional details. The firmware needs
+        // a certain number of bytes in the EEPROM Jingle Data memory for header
+        // information (i.e. Magic word
 
     Composition(QString filename);
 
@@ -100,8 +109,8 @@ public:
         return static_cast<uint32_t>(parts.size());
     }
 
-    int getNumMeasures(); //TODO: should be constant across all parts, right?
-    int getNumChords(int partIdx);
+    uint32_t getNumMeasures();
+    uint32_t getNumChords(uint32_t partIdx, uint32_t measStartIdx, uint32_t measEndIdx);
 
     /**
      * @brief getBpm
@@ -123,11 +132,35 @@ public:
         this->bpm = bpm;
     }
 
-    int getOctaveAdjust();
-    ErrorCode setOctaveAdjust(int adjust);
+    /**
+     * @brief setOctaveAdjust Allows for manually adjusting all imported Note
+     *  frequencies.
+     *
+     * @param adjust Adjustment factor to be multiplied by each Note frequency.
+     *
+     * @return None.
+     */
+    void setOctaveAdjust(float adjust) {
+        octaveAdjust = adjust;
+    }
 
-    //TODO: implement this and have this set member vars that download() references
-    ErrorCode configureChan(Channel chan, int partIdx, int measStartIdx, int measEndIdx);
+    /**
+     * @brief getOctaveAdjust
+     *
+     * @return The adjustment factor used to change all Note frequencies.
+     */
+    float getOctaveAdjust() {
+        return octaveAdjust;
+    }
+
+    ErrorCode setPartIdx(Channel chan, uint32_t partIdx);
+    uint32_t getPartIdx(Channel chan);
+
+    ErrorCode setMeasStartIdx(uint32_t measStartIdx);
+    uint32_t getMeasStartIdx();
+
+    ErrorCode setMeasEndIdx(uint32_t measEndIdx);
+    uint32_t getMeasEndIdx();
 
     uint32_t getMemUsage();
 
@@ -172,14 +205,13 @@ private:
         std::vector<Measure> measures;
     };
 
-    ErrorCode parseXmlNote();
-    ErrorCode parseXmlPitch(float& freq);
-    ErrorCode parseXmlBackup();
+    ErrorCode parseXmlNote(QXmlStreamReader& xml);
+    ErrorCode parseXmlPitch(QXmlStreamReader& xml, float& freq);
+    ErrorCode parseXmlBackup(QXmlStreamReader& xml);
     QString noteToCmd(const Note& note, Channel chan, uint32_t jingleIdx,
         uint32_t noteIdx, uint32_t chordIdx);
 
     QString filename; // Filename for musicxml file we are extracting data from
-    QXmlStreamReader xml; // Used to parse musixcml file
     std::vector<Part> parts; // Data parsed from musicxml file.
 
     uint32_t currDivisions; // Current conversion factor for Note duration to Number of beats.
@@ -195,6 +227,18 @@ private:
         // to track when to transition back).
     std::stack<uint32_t> prevParts; // Used on conjunction with backups to know which
         // part to jump back to when backup duration is complete.
+
+    float octaveAdjust; // Control for manually scaling octave of notes in case
+        // user wants a different sound relative to what is imported
+
+    uint32_t partIdxR; // Configuration for right channel as to what Part to
+        // pull notes from.
+    uint32_t partIdxL; // Configuration for left channel as to what Part to
+        // pull notes from.
+    uint32_t measStartIdx; // Defines where Jingle data is configured to start
+        // in parsed Part data.
+    uint32_t measEndIdx; // Defines where Jingle data is configured to ends
+        // in parsed Part data.
 };
 
 #endif // COMPOSITION_H

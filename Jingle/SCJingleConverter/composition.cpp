@@ -42,11 +42,15 @@
  */
 Composition::Composition(QString filename)
     : filename(filename)
-    , xml()
     , parts(0)
     , currDivisions(1)
     , bpm(100)
     , currPart(0)
+    , octaveAdjust(1.f)
+    , partIdxR(0)
+    , partIdxL(0)
+    , measStartIdx(0)
+    , measEndIdx(0)
 {
 }
 
@@ -59,11 +63,13 @@ Composition::Composition(QString filename)
 Composition::ErrorCode Composition::parse() {
     QFile file(filename);
 
+    QXmlStreamReader xml; //TODO: create on heap instead of stack maybe??
+
     parts.clear();
     currPart = 0;
 
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        //TODO: add error string to be querired on failure
+        qDebug() << "Failed to open file " << filename;
         return FILE_OPEN;
     }
 
@@ -73,13 +79,13 @@ Composition::ErrorCode Composition::parse() {
 
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
             if (xml.name() == QLatin1String("note")) {
-                ErrorCode code = parseXmlNote();
+                ErrorCode code = parseXmlNote(xml);
                 if (code != NO_ERROR) {
                     qDebug() << "parseXmlNote() failed. Error: " << getErrorString(code);
                     return code;
                 }
             } else if (xml.name() == QLatin1String("backup")) {
-                ErrorCode code = parseXmlBackup();
+                ErrorCode code = parseXmlBackup(xml);
                 if (code != NO_ERROR) {
                     qDebug() << "parseXmlBackup() failed. Error: " << getErrorString(code);
                     return code;
@@ -130,6 +136,11 @@ Composition::ErrorCode Composition::parse() {
         }
     }
 
+    // TODO: final checks on parsed data?
+    // TODO: make sure all parts have the same number of measures?
+
+    // TODO: set default configurations for LEFT and RIGHT channels
+
     return NO_ERROR;
 }
 
@@ -156,12 +167,11 @@ QString Composition::noteToCmd(const Note& note, Channel chan, uint32_t jingleId
     uint32_t duty_cydle = 128;
     uint32_t frequency = 0;
     if (chordIdx < note.frequencies.size()) {
-        frequency = static_cast<uint32_t>(note.frequencies[chordIdx]);
+        frequency = static_cast<uint32_t>(note.frequencies[chordIdx] * octaveAdjust);
     } else {
         qDebug() << "warning: chordIdx " << chordIdx << " out of range for note.frequencies.size() = " << note.frequencies.size();
     }
 
-    //TODO: adjust frequency based on octave adjust setting
 
     uint32_t duration_ms = static_cast<uint32_t>(note.length * 60 * 1000 / bpm);
 
@@ -193,13 +203,7 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
     QString cmd;
     QString resp;
 
-    cmd = "jingle clear\n";
-    resp = cmd + "\rJingle data cleared successfully.\n\r";
-    serial_err_code = serial.send(cmd, resp);
-    if (serial_err_code != SCSerial::NO_ERROR) {
-        qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
-        return CMD_ERR;
-    }
+//TODO: Also think through adding and jingleIdx, how do we make sure these line up...?
 
     // TODO: part selection and measure range should be based on configuration settings...
     const int parts_idx = 0;
@@ -263,7 +267,7 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
  *
  * @return Composition::ErrorCode
  */
-Composition::ErrorCode Composition::parseXmlBackup() {
+Composition::ErrorCode Composition::parseXmlBackup(QXmlStreamReader& xml) {
     uint32_t duration = 0;
 
     // Check that we are actually at the beginning of an XML backup token
@@ -284,7 +288,7 @@ Composition::ErrorCode Composition::parseXmlBackup() {
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
             if (xml.name() == QLatin1String("duration")) {
                 xml.readNext();
-                duration = static_cast<float>(xml.text().toUInt());
+                duration = xml.text().toUInt();
             }
         }
     }
@@ -307,7 +311,7 @@ Composition::ErrorCode Composition::parseXmlBackup() {
  *
  * @return Composition::ErrorCode
  */
-Composition::ErrorCode Composition::parseXmlNote() {
+Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml) {
     uint32_t raw_xml_duration = 0;
     float length = 0.f;
     float frequency = 0.f;
@@ -339,7 +343,7 @@ Composition::ErrorCode Composition::parseXmlNote() {
 
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
             if (xml.name() == QLatin1String("pitch")) {
-                ErrorCode code = parseXmlPitch(frequency);
+                ErrorCode code = parseXmlPitch(xml, frequency);
                 if (code != NO_ERROR) {
                     qDebug() << "parsePitch() failed. Error: " << getErrorString(code);
                     return code;
@@ -347,7 +351,7 @@ Composition::ErrorCode Composition::parseXmlNote() {
             } else if (xml.name() == QLatin1String("duration")) {
                 xml.readNext();
                 length = static_cast<float>(xml.text().toUInt()) / currDivisions;
-                raw_xml_duration = static_cast<float>(xml.text().toUInt());
+                raw_xml_duration = xml.text().toUInt();
             } else if (xml.name() == QLatin1String("chord")) {
                 isChord = true;
             }
@@ -412,7 +416,7 @@ Composition::ErrorCode Composition::parseXmlNote() {
  *
  * @return Composition::ErrorCode
  */
-Composition::ErrorCode Composition::parseXmlPitch(float& freq) {
+Composition::ErrorCode Composition::parseXmlPitch(QXmlStreamReader& xml, float& freq) {
     QChar step = 0;
     int alter = 0;
     int octave = 0;
@@ -479,4 +483,208 @@ Composition::ErrorCode Composition::parseXmlPitch(float& freq) {
     freq = static_cast<float>(C_0_FREQ * factor);
 
     return NO_ERROR;
+}
+
+/**
+ * @brief Composition::getMemUsage Function for calculating how the much EEPROM
+ *      memory the Jingle data from this composition will take up. This is
+ *      varies based on configuration and is used to make sure we do not try to
+ *      write too much, or invalid, Jingle Data to the EEPROM.
+ *
+ * @return The number of bytes required to store the Jingle data, as currently
+ *      configured, in EEPROM of the Controller.
+ */
+uint32_t Composition::getMemUsage() {
+    static const uint32_t NUM_JINGLE_HDR_BYTES = 4;// Number of bytes required for each
+            // Jingle to give data on Jingle (i.e. number of Notes per channel)
+    static const uint32_t BYTES_PER_NOTE = 6; // Number of bytes required to store
+        // a single Note in EEPROM
+
+    uint32_t byte_cnt = NUM_JINGLE_HDR_BYTES;
+
+    uint32_t part_idx_r = getPartIdx(RIGHT);
+    uint32_t part_idx_l = getPartIdx(LEFT);
+    uint32_t meas_start_idx = getMeasStartIdx();
+    uint32_t meas_end_idx = getMeasEndIdx();
+    const Part& part_r = parts[part_idx_r];
+    const Part& part_l = parts[part_idx_l];
+    for (uint32_t meas_idx = meas_start_idx; meas_idx < meas_end_idx; meas_idx++) {
+        const Measure& meas_r = part_r.measures[meas_idx];
+        byte_cnt += meas_r.notes.size() * BYTES_PER_NOTE;
+        const Measure& meas_l = part_l.measures[meas_idx];
+        byte_cnt += meas_l.notes.size() * BYTES_PER_NOTE;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief getNumMeasures Returns the number of measures in each of the
+ *      parts. This allows a user to know how they can trim the Jingle data.
+ *
+ * @return The number of measure parsed from the musicxml file.
+ */
+uint32_t Composition::getNumMeasures() {
+    if (!parts.size())
+        return 0;
+
+    return static_cast<uint32_t>(parts[0].measures.size());
+}
+
+/**
+ * @brief getNumChords Given a range for a particular part this function
+ *      checks for the largest chord. This is done as a user may want both
+ *      channels to use the same part, but different notes from chords that
+ *      might be withing that range.
+ *
+ * @param partIdx Defines which Part to consider.
+ * @param measStartIdx Defines range of Measures to consider.
+ * @param measEndIdx Defines range of Measures to consider.
+ *
+ * @return The size of the largest chord within the specified drange.
+ */
+uint32_t Composition::getNumChords(uint32_t partIdx, uint32_t measStartIdx, uint32_t measEndIdx) {
+    if (partIdx >= parts.size()) {
+        qDebug() << "Invalid partIdx of " << partIdx << " specified in CompositiongetNumChords";
+        return 0;
+    }
+
+    const Part& part = parts[partIdx];
+
+    if (measStartIdx >= part.measures.size() || measEndIdx >= part.measures.size()) {
+        qDebug() << "Invalid range of " << measStartIdx << " to " << measEndIdx <<
+            " specified in CompositiongetNumChords";
+        return 0;
+    }
+
+    uint32_t max_chord_size = 0;
+    for (uint32_t meas_idx = measStartIdx; meas_idx < measEndIdx; meas_idx++) {
+        const Measure& meas = part.measures[meas_idx];
+        for (uint32_t note_idx = 0; note_idx < meas.notes.size(); note_idx++) {
+            const Note& note = meas.notes[note_idx];
+            if (note.frequencies.size() > max_chord_size) {
+                max_chord_size = static_cast<uint32_t>(note.frequencies.size());
+            }
+        }
+    }
+
+    return max_chord_size;
+}
+
+/**
+ * @brief Composition::setPartIdx Configure a channel regarding which part
+ *      it gets its Jingle Data from.
+ *
+ * @param chan Defines which haptic/output channel is being configured.
+ * @param partIdx Defines which part to use for specified channel.
+ *
+ * @return NO_ERROR on success;
+ */
+Composition::ErrorCode Composition::setPartIdx(Channel chan, uint32_t partIdx) {
+    switch (chan) {
+    case RIGHT:
+        if (partIdx >= parts.size()) {
+            qDebug() << "Bad partIdx " << partIdx << " specified for Right Channel";
+            return BAD_IDX;
+        }
+        partIdxR = partIdx;
+        break;
+
+    case LEFT:
+        if (partIdx >= parts.size()) {
+            qDebug() << "Bad partIdx " << partIdx << " specified for Left Channel";
+            return BAD_IDX;
+        }
+        partIdxL = partIdx;
+        break;
+    }
+
+    return NO_ERROR;
+}
+
+/**
+ * @brief Composition::getPartIdx
+ *
+ * @param chan Defines which haptic/output channel is being referred to.
+ *
+ * @return Index relating with Part specified channel is pulling notes from.
+ */
+uint32_t Composition::getPartIdx(Channel chan) {
+    switch (chan) {
+    case RIGHT:
+        return partIdxR;
+
+    case LEFT:
+        return partIdxL;
+    }
+}
+
+/**
+ * @brief Composition::setMeasStartIdx Allows for trimming where Jingle Data
+ *      starts in parsed data.
+ *
+ * @param measStartIdx Defines start point of Jingle Data.
+ *
+ * @return NO_ERROR on success.
+ */
+Composition::ErrorCode Composition::setMeasStartIdx(uint32_t measStartIdx) {
+    if (!parts.size()) {
+        qDebug() << "Cannot setMeasStartIdx if there are no parts";
+        return BAD_IDX;
+    }
+
+    const Part& part = parts[0];
+
+    if (measStartIdx >= part.measures.size()) {
+        qDebug() << "Invalid range measStartIdx " << measStartIdx << " specified";
+        return BAD_IDX;
+    }
+
+    this->measStartIdx = measStartIdx;
+
+    return NO_ERROR;
+}
+
+/**
+ * @brief Composition::getMeasStartIdx
+ *
+ * @return Where Jingle data is configured to start in parsed data.
+ */
+uint32_t Composition::getMeasStartIdx() {
+    return measStartIdx;
+}
+
+/**
+ * @brief Composition::setMeasEndIdx Allows for trimming where Jingle Data
+ *      ends in parsed data.
+ *
+ * @param measStartIdx Defines start point of Jingle Data.
+ *
+ * @return NO_ERROR on success.
+ */
+Composition::ErrorCode Composition::setMeasEndIdx(uint32_t measEndIdx) {
+    if (!parts.size()) {
+        qDebug() << "Cannot setMeasEndIdx if there are no parts";
+        return BAD_IDX;
+    }
+
+    const Part& part = parts[0];
+
+    if (measStartIdx >= part.measures.size()) {
+        qDebug() << "Invalid range measStartIdx " << measStartIdx << " specified";
+        return BAD_IDX;
+    }
+
+    this->measEndIdx = measEndIdx;
+
+    return NO_ERROR;
+}
+
+/**
+ * @brief Composition::getMeasEndIdx
+ *
+ * @return Where Jingle data is configured to endin parsed data.
+ */
+uint32_t Composition::getMeasEndIdx() {
+    return measEndIdx;
 }
