@@ -35,11 +35,23 @@ private slots:
 
     void on_mvJingleUpToolButton_clicked();
 
+    void on_jingleListWidget_clicked(const QModelIndex &index);
+
+    void on_chanSourceLeftComboBox_activated(int index);
+
+    void on_chanSourceRightComboBox_activated(int index);
+
 private:
-    static const uint32_t MAX_NUM_COMPS = 14;
+    static const uint32_t MAX_NUM_COMPS = 14; // The maximum number of Jingles
+        // that can be loaded onto the Steam Controller. This is set based on
+        // what Steam expects based on default Jingles.
+    static const uint32_t MAX_EEPROM_BITES = 0x400; // The maximum number of
+        // bytes that all Jingle Data can take up.
 
     void updateMemUsage();
     void updateCompositionDisplay();
+    void updateChordComboL(Composition& composition);
+    void updateChordComboR(Composition& composition);
 
     Ui::MainWindow *ui;
 

@@ -76,6 +76,7 @@ void MainWindow::on_playJinglePushButton_clicked()
         return;
     }
 
+
     cmd = "jingle play 0\n";
     resp = cmd + "\rJingle play started successfully.\n\r";
     if (serial.send(cmd, resp)) {
@@ -132,7 +133,7 @@ void MainWindow::on_convertPushButton_clicked()
     ui->jingleListWidget->setCurrentItem(ui->jingleListWidget->item(ui->jingleListWidget->count()-1));
     ui->jingleListWidget->repaint();
 
-    // Fill out GUI with details from this newly added Composition
+    // Update GUI to show specs on newly added Composition
     updateCompositionDisplay();
 
     // Update memory usage display since Composition has been added
@@ -140,18 +141,103 @@ void MainWindow::on_convertPushButton_clicked()
 }
 
 void MainWindow::updateMemUsage() {
-    const int num_comps = ui->jingleListWidget->count();
-//TODO: do this right
-    ui->progressBar->setValue(num_comps * 10);
+    uint32_t num_bytes = Composition::EEPROM_HDR_NUM_BYTES;
+
+    for (uint32_t comp_idx = 0; comp_idx < compositions.size(); comp_idx++) {
+        num_bytes += compositions[comp_idx].getMemUsage();
+    }
+
+    if (num_bytes >= MAX_EEPROM_BITES) {
+        ui->memUsageProgressBar->setValue(100);
+    } else {
+        ui->memUsageProgressBar->setValue(100 * num_bytes / MAX_EEPROM_BITES);
+    }
+    ui->memUsageProgressBar->update();
+    ui->memUsageProgressBar->repaint();
+
+    QString bytes_used_str = QString::number(num_bytes) +
+            "/" + QString::number(MAX_EEPROM_BITES) + " bytes used";
+    ui->memUsageCurrBytesLabel->setText(bytes_used_str);
+    ui->memUsageCurrBytesLabel->update();
+    ui->memUsageCurrBytesLabel->repaint();
 }
 
 void MainWindow::updateCompositionDisplay() {
-    /*
+
+    const int comp_idx = ui->jingleListWidget->currentRow();
+    if (comp_idx > static_cast<int>(compositions.size()) || comp_idx < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Composition selected"));
+        return;
+    }
+
+    Composition& composition = compositions.at(static_cast<uint32_t>(comp_idx));
+
     ui->startMeasComboBox->clear();
-    ui->startMeasComboBox->addItem("test");
-    ui->startMeasComboBox->addItem("test2");
-    ui->startMeasComboBox->setCurrentIndex(1);
-    */
+    ui->endMeasComboBox->clear();
+    for (uint32_t meas_idx = 0; meas_idx < composition.getNumMeasures(); meas_idx++) {
+        ui->startMeasComboBox->addItem(QString::number(meas_idx));
+        ui->endMeasComboBox->addItem(QString::number(meas_idx));
+    }
+    ui->startMeasComboBox->setCurrentIndex(static_cast<int>(composition.getMeasStartIdx()));
+    ui->endMeasComboBox->setCurrentIndex(static_cast<int>(composition.getMeasEndIdx()));
+    ui->startMeasComboBox->update();
+    ui->startMeasComboBox->repaint();
+    ui->endMeasComboBox->update();
+    ui->endMeasComboBox->repaint();
+
+    ui->bpmLineEdit->setText(QString::number(composition.getBpm()));
+    ui->bpmLineEdit->update();
+    ui->bpmLineEdit->repaint();
+    ui->octaveAdjustLineEdit->setText(QString().setNum(composition.getOctaveAdjust(), 'f', 2));
+    ui->octaveAdjustLineEdit->update();
+    ui->octaveAdjustLineEdit->repaint();
+
+    ui->chanSourceLeftComboBox->clear();
+    ui->chanSourceRightComboBox->clear();
+    for (uint32_t part_idx = 0; part_idx < composition.getNumParts(); part_idx++) {
+        ui->chanSourceLeftComboBox->addItem(QString::number(part_idx));
+        ui->chanSourceRightComboBox->addItem(QString::number(part_idx));
+    }
+    ui->chanSourceLeftComboBox->setCurrentIndex(static_cast<int>(composition.getPartIdx(Composition::LEFT)));
+    ui->chanSourceRightComboBox->setCurrentIndex(static_cast<int>(composition.getPartIdx(Composition::RIGHT)));
+    ui->chanSourceLeftComboBox->update();
+    ui->chanSourceLeftComboBox->repaint();
+    ui->chanSourceRightComboBox->update();
+    ui->chanSourceRightComboBox->repaint();
+
+    updateChordComboL(composition);
+    updateChordComboR(composition);
+}
+
+void MainWindow::updateChordComboL(Composition& composition) {
+    const uint32_t part_idx = composition.getPartIdx(Composition::LEFT);
+    const uint32_t meas_start_idx = composition.getMeasStartIdx();
+    const uint32_t meas_end_idx = composition.getMeasEndIdx();
+    const uint32_t num_chords = composition.getNumChords(part_idx, meas_start_idx, meas_end_idx);
+
+    ui->chanChordLeftComboBox->clear();
+    for (uint32_t chord_idx = 0; chord_idx < num_chords; chord_idx++) {
+        ui->chanChordLeftComboBox->addItem(QString::number(chord_idx));
+    }
+    ui->chanChordLeftComboBox->setCurrentIndex(static_cast<int>(composition.getChordIdx(Composition::LEFT)));
+    ui->chanChordLeftComboBox->update();
+    ui->chanChordLeftComboBox->repaint();
+}
+
+void MainWindow::updateChordComboR(Composition& composition) {
+    const uint32_t part_idx = composition.getPartIdx(Composition::RIGHT);
+    const uint32_t meas_start_idx = composition.getMeasStartIdx();
+    const uint32_t meas_end_idx = composition.getMeasEndIdx();
+    const uint32_t num_chords = composition.getNumChords(part_idx, meas_start_idx, meas_end_idx);
+
+    ui->chanChordRightComboBox->clear();
+    for (uint32_t chord_idx = 0; chord_idx < num_chords; chord_idx++) {
+        ui->chanChordRightComboBox->addItem(QString::number(chord_idx));
+    }
+    ui->chanChordRightComboBox->setCurrentIndex(static_cast<int>(composition.getChordIdx(Composition::RIGHT)));
+    ui->chanChordRightComboBox->update();
+    ui->chanChordRightComboBox->repaint();
 }
 
 void MainWindow::on_delJingleToolButton_clicked()
@@ -165,9 +251,38 @@ void MainWindow::on_delJingleToolButton_clicked()
 
     compositions.erase(compositions.begin() + comp_idx);
     ui->jingleListWidget->takeItem(comp_idx);
-    ui->jingleListWidget->setCurrentItem(NULL);
+    ui->jingleListWidget->setCurrentItem(nullptr);
     ui->jingleListWidget->update();
     ui->jingleListWidget->repaint();
+
+    // Clear out all ui elements related to Composition
+    ui->startMeasComboBox->clear();
+    ui->startMeasComboBox->update();
+    ui->startMeasComboBox->repaint();
+    ui->endMeasComboBox->clear();
+    ui->endMeasComboBox->update();
+    ui->endMeasComboBox->repaint();
+
+    ui->bpmLineEdit->clear();
+    ui->bpmLineEdit->update();
+    ui->bpmLineEdit->repaint();
+    ui->octaveAdjustLineEdit->clear();
+    ui->octaveAdjustLineEdit->update();
+    ui->octaveAdjustLineEdit->repaint();
+
+    ui->chanSourceLeftComboBox->clear();
+    ui->chanSourceLeftComboBox->update();
+    ui->chanSourceLeftComboBox->repaint();
+    ui->chanSourceRightComboBox->clear();
+    ui->chanSourceRightComboBox->update();
+    ui->chanSourceRightComboBox->repaint();
+
+    ui->chanChordRightComboBox->clear();
+    ui->chanChordRightComboBox->update();
+    ui->chanChordRightComboBox->repaint();
+    ui->chanChordLeftComboBox->clear();
+    ui->chanChordLeftComboBox->update();
+    ui->chanChordLeftComboBox->repaint();
 }
 
 void MainWindow::on_mvJingleDownToolButton_clicked()
@@ -216,4 +331,58 @@ void MainWindow::on_mvJingleUpToolButton_clicked()
     Composition comp = compositions.at(static_cast<uint32_t>(comp_idx));
     compositions[static_cast<uint32_t>(comp_idx)] = compositions[static_cast<uint32_t>(comp_idx)-1];
     compositions[static_cast<uint32_t>(comp_idx)-1] = comp;
+}
+
+void MainWindow::on_jingleListWidget_clicked(const QModelIndex &index)
+{
+    Q_UNUSED(index);
+
+    if (ui->jingleListWidget->currentRow() < 0)
+        return;
+
+    updateCompositionDisplay();
+}
+
+void MainWindow::on_chanSourceLeftComboBox_activated(int index)
+{
+    const int comp_idx = ui->jingleListWidget->currentRow();
+    if (comp_idx > static_cast<int>(compositions.size()) || comp_idx < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Composition selected"));
+        return;
+    }
+
+    Composition& comp = compositions.at(static_cast<uint32_t>(comp_idx));
+
+    if (index < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Channel Source selected"));
+        return;
+    }
+
+    comp.setPartIdx(Composition::LEFT, static_cast<uint32_t>(index));
+
+    updateChordComboL(comp);
+}
+
+void MainWindow::on_chanSourceRightComboBox_activated(int index)
+{
+    const int comp_idx = ui->jingleListWidget->currentRow();
+    if (comp_idx > static_cast<int>(compositions.size()) || comp_idx < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Composition selected"));
+        return;
+    }
+
+    Composition& comp = compositions.at(static_cast<uint32_t>(comp_idx));
+
+    if (index < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Channel Source selected"));
+        return;
+    }
+
+    comp.setPartIdx(Composition::RIGHT, static_cast<uint32_t>(index));
+
+    updateChordComboR(comp);
 }

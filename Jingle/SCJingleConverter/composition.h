@@ -162,6 +162,9 @@ public:
     ErrorCode setMeasEndIdx(uint32_t measEndIdx);
     uint32_t getMeasEndIdx();
 
+    ErrorCode setChordIdx(Channel chan, uint32_t chordIdx);
+    uint32_t getChordIdx(Channel chan);
+
     uint32_t getMemUsage();
 
 private:
@@ -239,6 +242,10 @@ private:
         // in parsed Part data.
     uint32_t measEndIdx; // Defines where Jingle data is configured to ends
         // in parsed Part data.
+    uint32_t chordIdxR; // Configuraiton for right channel as to what frequency
+        // in chord to play.
+    uint32_t chordIdxL; // Configuraiton for left channel as to what frequency
+    // in chord to play.
 };
 
 #endif // COMPOSITION_H

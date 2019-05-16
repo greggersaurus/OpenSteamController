@@ -385,11 +385,11 @@
      </rect>
     </property>
    </widget>
-   <widget class="QProgressBar" name="progressBar">
+   <widget class="QProgressBar" name="memUsageProgressBar">
     <property name="geometry">
      <rect>
       <x>140</x>
-      <y>333</y>
+      <y>330</y>
       <width>271</width>
       <height>20</height>
      </rect>
@@ -418,6 +418,22 @@
     </property>
     <property name="text">
      <string>Jingle Mem Used:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="memUsageCurrBytesLabel">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>340</y>
+      <width>271</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>0/1024 bytes used</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
     </property>
    </widget>
   </widget>
