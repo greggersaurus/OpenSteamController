@@ -41,6 +41,18 @@ private slots:
 
     void on_chanSourceRightComboBox_activated(int index);
 
+    void on_startMeasComboBox_activated(int index);
+
+    void on_endMeasComboBox_activated(int index);
+
+    void on_octaveAdjustLineEdit_editingFinished();
+
+    void on_bpmLineEdit_editingFinished();
+
+    void on_chanChordLeftComboBox_activated(int index);
+
+    void on_chanChordRightComboBox_activated(int index);
+
 private:
     static const uint32_t MAX_NUM_COMPS = 14; // The maximum number of Jingles
         // that can be loaded onto the Steam Controller. This is set based on

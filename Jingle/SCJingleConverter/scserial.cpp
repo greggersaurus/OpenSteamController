@@ -81,12 +81,12 @@ SCSerial::ErrorCode SCSerial::send(QString command, QString response) {
 
     serial.write(request_data);
 
-    if (!serial.waitForBytesWritten(1000)) {
+    if (!serial.waitForBytesWritten(250)) {
         qDebug() << "serial.waitForBytesWritten() error: " << serial.error();
         return COMMAND_SEND_TIMEOUT;
     }
 
-    if (!serial.waitForReadyRead(1000)) {
+    if (!serial.waitForReadyRead(250)) {
         qDebug() << "serial.waitForReadyRead() error: " << serial.error();
         return RESPONSE_RCV_TIMEOUT;
     }
@@ -102,6 +102,8 @@ SCSerial::ErrorCode SCSerial::send(QString command, QString response) {
         qDebug() << "rcvd_response = " << rcvd_response;
         return RESPONSE_MISMATCH;
     }
+
+    qDebug() << command;
 
     // Pause after each command to avoid overflowing NXP's faulty USB CDC UART stack
     // This can be removed if USB CDC UART stack issues are ever fixed

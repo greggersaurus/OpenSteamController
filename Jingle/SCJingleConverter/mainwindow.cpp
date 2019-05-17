@@ -57,7 +57,17 @@ void MainWindow::on_playJinglePushButton_clicked()
         return;
     }
 
-//TODO: make sure there is enough memory to download Jingle...
+    // Make sure there is enough memory to download Jingle...
+    uint32_t num_bytes = Composition::EEPROM_HDR_NUM_BYTES + composition.getMemUsage();
+
+    if (num_bytes > MAX_EEPROM_BITES) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Jingle is too large (%1/%2 bytes). Try using configuration "
+               "options to reduce size.")
+            .arg(num_bytes)
+            .arg(MAX_EEPROM_BITES));
+        return;
+    }
 
     QString cmd("jingle clear\n");
     QString resp = cmd + "\rJingle data cleared successfully.\n\r";
@@ -385,4 +395,128 @@ void MainWindow::on_chanSourceRightComboBox_activated(int index)
     comp.setPartIdx(Composition::RIGHT, static_cast<uint32_t>(index));
 
     updateChordComboR(comp);
+}
+
+void MainWindow::on_startMeasComboBox_activated(int index)
+{
+    const int comp_idx = ui->jingleListWidget->currentRow();
+    if (comp_idx > static_cast<int>(compositions.size()) || comp_idx < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Composition selected"));
+        return;
+    }
+
+    Composition& comp = compositions.at(static_cast<uint32_t>(comp_idx));
+
+    if (index < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Start Measure selected"));
+        return;
+    }
+
+    comp.setMeasStartIdx(static_cast<uint32_t>(index));
+
+    updateChordComboR(comp);
+    updateChordComboL(comp);
+}
+
+void MainWindow::on_endMeasComboBox_activated(int index)
+{
+    const int comp_idx = ui->jingleListWidget->currentRow();
+    if (comp_idx > static_cast<int>(compositions.size()) || comp_idx < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Composition selected"));
+        return;
+    }
+
+    Composition& comp = compositions.at(static_cast<uint32_t>(comp_idx));
+
+    if (index < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Start Measure selected"));
+        return;
+    }
+
+    comp.setMeasEndIdx(static_cast<uint32_t>(index));
+
+    updateChordComboR(comp);
+    updateChordComboL(comp);
+}
+
+void MainWindow::on_octaveAdjustLineEdit_editingFinished()
+{
+    const int comp_idx = ui->jingleListWidget->currentRow();
+    if (comp_idx > static_cast<int>(compositions.size()) || comp_idx < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Composition selected"));
+        return;
+    }
+
+    Composition& comp = compositions.at(static_cast<uint32_t>(comp_idx));
+
+    float octave_adjust = ui->octaveAdjustLineEdit->text().toFloat();
+
+    qDebug() << "Adjusting Octave scaling factor to " << octave_adjust;
+
+    comp.setOctaveAdjust(octave_adjust);
+}
+
+void MainWindow::on_bpmLineEdit_editingFinished()
+{
+    const int comp_idx = ui->jingleListWidget->currentRow();
+    if (comp_idx > static_cast<int>(compositions.size()) || comp_idx < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Composition selected"));
+        return;
+    }
+
+    Composition& comp = compositions.at(static_cast<uint32_t>(comp_idx));
+
+    uint32_t bpm = ui->bpmLineEdit->text().toUInt();
+
+    qDebug() << "Adjusting BPM to " << bpm;
+
+    comp.setBpm(bpm);
+}
+
+void MainWindow::on_chanChordLeftComboBox_activated(int index)
+{
+    const int comp_idx = ui->jingleListWidget->currentRow();
+    if (comp_idx > static_cast<int>(compositions.size()) || comp_idx < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Composition selected"));
+        return;
+    }
+
+    Composition& comp = compositions.at(static_cast<uint32_t>(comp_idx));
+
+    if (index < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Left Chord Index selected"));
+        return;
+    }
+
+    qDebug() << "Left Chord Idx Set to " << index;
+
+    comp.setChordIdx(Composition::LEFT, static_cast<uint32_t>(index));
+}
+
+void MainWindow::on_chanChordRightComboBox_activated(int index)
+{
+    const int comp_idx = ui->jingleListWidget->currentRow();
+    if (comp_idx > static_cast<int>(compositions.size()) || comp_idx < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Composition selected"));
+        return;
+    }
+
+    Composition& comp = compositions.at(static_cast<uint32_t>(comp_idx));
+
+    if (index < 0) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Invalid Right Chord Index selected"));
+        return;
+    }
+
+    comp.setChordIdx(Composition::RIGHT, static_cast<uint32_t>(index));
 }

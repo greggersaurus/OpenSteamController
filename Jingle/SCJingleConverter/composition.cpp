@@ -46,6 +46,8 @@ Composition::Composition(QString filename)
     , currDivisions(1)
     , bpm(100)
     , currPart(0)
+    , backupCnt(0)
+    , prevPart(0)
     , octaveAdjust(1.f)
     , partIdxR(0)
     , partIdxL(0)
@@ -69,6 +71,8 @@ Composition::ErrorCode Composition::parse() {
 
     parts.clear();
     currPart = 0;
+    backupCnt = 0;
+    prevPart = 0;
 
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
         qDebug() << "Failed to open file " << filename;
@@ -78,7 +82,6 @@ Composition::ErrorCode Composition::parse() {
     xml.setDevice(&file);
 
     while (xml.readNext() != QXmlStreamReader::EndDocument) {
-
         if (xml.tokenType() == QXmlStreamReader::StartElement) {
             if (xml.name() == QLatin1String("note")) {
                 ErrorCode code = parseXmlNote(xml);
@@ -92,17 +95,18 @@ Composition::ErrorCode Composition::parse() {
                     qDebug() << "parseXmlBackup() failed. Error: " << getErrorString(code);
                     return code;
                 }
+            } else if (xml.name() == QLatin1String("forward")) {
+                ErrorCode code = parseXmlForward(xml);
+                if (code != NO_ERROR) {
+                    qDebug() << "parseXmlForward() failed. Error: " << getErrorString(code);
+                    return code;
+                }
             } else if (xml.name() == QLatin1String("measure")) {
-                // Double check that all specified backups were seen through
-                while(backups.size()) {
-                    if (backups.top() != 0) {
-                        qDebug() << "Reached beginning of measure with " << backups.size() << " backups "
-                            "and top having value of " << backups.top();
-                        return XML_PARSE;
-                    }
-                    backups.pop();
-                    currPart = prevParts.top();
-                    prevParts.pop();
+                // Check that all specified backups were seen through
+                if(backupCnt) {
+                    qDebug() << "Reached beginning of Measure with non-zero backupCnt: "
+                        << backupCnt;
+                    return XML_PARSE;
                 }
 
                 // Add new measures for all parts below current
@@ -111,7 +115,6 @@ Composition::ErrorCode Composition::parse() {
 
                     part.measures.push_back(Measure());
                 }
-
             } else if (xml.name() == QLatin1String("per-minute")) {
                 xml.readNext();
                 bpm = xml.text().toUInt();
@@ -121,19 +124,18 @@ Composition::ErrorCode Composition::parse() {
             }
         } else if (xml.tokenType() == QXmlStreamReader::EndElement) {
             if (xml.name() == QLatin1String("part")) {
-                // Double check that all specified backups were seen through
-                while(backups.size()) {
-                    if (backups.top() != 0) {
-                        qDebug() << "Reached end of part with " << backups.size() << " backups "
-                            "and top having value of " << backups.top();
-                        return XML_PARSE;
-                    }
-                    backups.pop();
-                    currPart = prevParts.top();
-                    prevParts.pop();
+                // Check that all specified backups were seen through
+                if (backupCnt) {
+                    qDebug() << "Reached end of Part with non-zero backupCnt: "
+                        << backupCnt;
+                    return XML_PARSE;
                 }
 
-                currPart++;
+                //TODO: check that all number of measure is the same for all Parts thus far?
+
+                // If there are more part tokens, ensure they will start new parts
+                currPart = static_cast<uint32_t>(parts.size());
+                prevPart = currPart;
             }
         }
     }
@@ -148,8 +150,18 @@ Composition::ErrorCode Composition::parse() {
     chordIdxR = 0;
     chordIdxL = 0;
 
-    // TODO: final checks on parsed data?
-    // TODO: make sure all parts have the same number of measures?
+    // Make sure all Parts have the same number of measures
+    const uint32_t num_measures = getNumMeasures();
+    for (uint32_t parts_idx = 1; parts_idx < parts.size(); parts_idx++) {
+        uint32_t meas_cnt = 0;
+        Part& part = parts[parts_idx];
+        meas_cnt += part.measures.size();
+        if (meas_cnt != num_measures) {
+            qDebug() << "Number of measures differs at Part " << parts_idx
+                << " . " << meas_cnt << " != " << num_measures;
+            return XML_PARSE;
+        }
+    }
 
     return NO_ERROR;
 }
@@ -175,12 +187,9 @@ QString Composition::noteToCmd(const Note& note, Channel chan, uint32_t jingleId
     }
 
     uint32_t duty_cydle = 128;
-    uint32_t frequency = 0;
+    uint32_t frequency = static_cast<uint32_t>(note.frequencies.back() * octaveAdjust);
     if (chordIdx < note.frequencies.size()) {
         frequency = static_cast<uint32_t>(note.frequencies[chordIdx] * octaveAdjust);
-    } else {
-        qDebug() << "warning: chordIdx " << chordIdx <<
-            " out of range for note.frequencies.size() = " << note.frequencies.size();
     }
 
     uint32_t duration_ms = static_cast<uint32_t>(note.length * 60 * 1000 / bpm);
@@ -226,7 +235,6 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
         qDebug() << "Bad part index specified for download";
         return BAD_IDX;
     }
-
 
     const uint32_t meas_start_idx = getMeasStartIdx();
     const uint32_t meas_end_idx = getMeasEndIdx();
@@ -274,7 +282,7 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
         for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
             Note& note = meas.notes[notes_idx];
 
-            cmd = noteToCmd(note, LEFT, jingleIdx, note_cnt, 0);
+            cmd = noteToCmd(note, LEFT, jingleIdx, note_cnt, chordIdxL);
             resp = cmd + "\rNote updated successfully.\n\r";
             serial_err_code = serial.send(cmd, resp);
             if (serial_err_code != SCSerial::NO_ERROR) {
@@ -292,7 +300,7 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
         for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
             Note& note = meas.notes[notes_idx];
 
-            cmd = noteToCmd(note, RIGHT, jingleIdx, note_cnt, 0);
+            cmd = noteToCmd(note, RIGHT, jingleIdx, note_cnt, chordIdxR);
             resp = cmd + "\rNote updated successfully.\n\r";
             serial_err_code = serial.send(cmd, resp);
             if (serial_err_code != SCSerial::NO_ERROR) {
@@ -343,9 +351,104 @@ Composition::ErrorCode Composition::parseXmlBackup(QXmlStreamReader& xml) {
         return XML_PARSE;
     }
 
-    backups.push(duration);
-    prevParts.push(currPart);
-    currPart++;
+    if (backupCnt) {
+        qDebug() << "New backup of " << duration << " specified while backupCnt is "
+            << backupCnt;
+    }
+
+    backupCnt = duration;
+    Part& part = parts[currPart];
+    if (part.measures.size() > 1) {
+        if (currPart == parts.size()-1) {
+            // This the case where effectively a new Part has been introduced after
+            //  the first measure when the number of parts has already be established
+            //  therefore, we clear out Notes in the oldest Part and refill them with
+            //  whatever comes next. This is an uninformed descision (i.e. how do
+            //  we know which Part is best to overwrite?) but we will just do what is
+            //  is easiest. If this is not what the user wants they can trim the
+            //  input file in MuseScore or something similar
+            // Or someone can contribute and come up with a better way to handle this!
+            uint32_t backup_clr_ctr = backupCnt;
+            Measure& meas = part.measures.back();
+            // Clear out Notes to make room for Notes to be added during backup
+            qDebug() << "start backup clear " << part.measures.size();
+            while (backup_clr_ctr) {
+                Note& note = meas.notes.back();
+                qDebug() << backup_clr_ctr << " " << note.xmlDuration;
+                if (note.xmlDuration > backup_clr_ctr) {
+                    qDebug() << "Error clearing out Notes when backing up for late added Part";
+                    return XML_PARSE;
+                }
+                meas.notes.pop_back();
+                backup_clr_ctr -= note.xmlDuration;
+            }
+        } else {
+            // Backup will add Notes to next Part
+            prevPart = currPart;
+            currPart++;
+        }
+    } else {
+        // It is only OK to add another part if we are still in the first Measure
+        prevPart = currPart;
+        currPart++;
+    }
+
+    return NO_ERROR;
+}
+
+/**
+ * @brief Composition::parseXmlForward Parse forward token from xml. This assumes xml is at
+ *      desired forward token to be parsed.
+ *
+ * @return Composition::ErrorCode
+ */
+Composition::ErrorCode Composition::parseXmlForward(QXmlStreamReader& xml) {
+    uint32_t duration = 0;
+
+    // Check that we are actually at the beginning of an XML forward token
+    if (xml.name() != QLatin1String("forward") || xml.tokenType() != QXmlStreamReader::StartElement) {
+        qDebug() << "XML is not at forward Start Element. XML Error String:" << xml.errorString();
+        return XML_PARSE;
+    }
+
+    // Read all child tokens of forward token
+    while(1) {
+        xml.readNext();
+
+        // Exit when all child tokens of forward token have been read
+        if (xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QLatin1String("forward")) {
+            break;
+        }
+
+        if (xml.tokenType() == QXmlStreamReader::StartElement) {
+            if (xml.name() == QLatin1String("duration")) {
+                xml.readNext();
+                duration = xml.text().toUInt();
+            }
+        }
+    }
+
+    if (duration == 0) {
+        qDebug() << "0 valued duration within forward token encountered";
+        return XML_PARSE;
+    }
+
+    //TODO: probably should be able to handle moving forward if not already backed up...
+    if (!backupCnt) {
+        qDebug() << "Told to move forward before being backed up...";
+        return XML_PARSE;
+    }
+
+    if (duration > backupCnt) {
+        qDebug() << "Instructed to move forward farther than previously backed up";
+        return XML_PARSE;
+    }
+
+    // Take into account forward movement
+    backupCnt -= duration;
+    if (!backupCnt) {
+        currPart = prevPart;
+    }
 
     return NO_ERROR;
 }
@@ -366,15 +469,6 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml) {
     if (xml.name() != QLatin1String("note") || xml.tokenType() != QXmlStreamReader::StartElement) {
         qDebug() << "XML is not at note Start Element. XML Error String:" << xml.errorString();
         return XML_PARSE;
-    }
-
-    // Check if we should pop back up to part because we have covered duration we backed up via this note
-    if (backups.size()) {
-        if (backups.top() == 0) {
-            backups.pop();
-            currPart = prevParts.top();
-            prevParts.pop();
-        }
     }
 
     // Read all child tokens of note token
@@ -434,20 +528,23 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml) {
         Note note;
         note.frequencies.push_back(frequency);
         note.length = static_cast<float>(length);
+        note.xmlDuration = raw_xml_duration;
         meas.notes.push_back(note);
-        meas.xmlDurationSum += raw_xml_duration;
 
-        if (backups.size()) {
-            uint32_t backup_dur = backups.top();
-            if (raw_xml_duration > backup_dur) {
-                qDebug() << "Remaining backup duration (" << backup_dur << ") is less than"
+        if (backupCnt) {
+            if (raw_xml_duration > backupCnt) {
+                qDebug() << "Remaining backup duration (" << backupCnt << ") is less than"
                     " current Note duration (" << raw_xml_duration << ")";
                 return XML_PARSE;
             }
 
             // Update backup duration counter
-            backups.pop();
-            backups.push(backup_dur - raw_xml_duration);
+            backupCnt -= raw_xml_duration;
+
+            // Step back up to previous part if we just drained backupCnt
+            if (!backupCnt) {
+                currPart = prevPart;
+            }
         }
     }
 

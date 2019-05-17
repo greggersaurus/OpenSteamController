@@ -175,10 +175,15 @@ private:
         Note()
             : frequencies(0)
             , length(0.f)
+            , xmlDuration(0)
         {}
         std::vector<float> frequencies; // Frequency of note in Hz. Could be multiple
             // frequencies in case of chord
         float length; // Number of beats that Note/Chord lasts for
+        uint32_t xmlDuration; // Copy of value in musicxml duration token. This is
+            // used in case we need to remove notes due to "odd" backups. See the
+            // length field for the duration value converted to a more usable
+            // format in terms of how long a frequency should be played.
     };
 
     /**
@@ -189,13 +194,8 @@ private:
     struct Measure {
         Measure()
             : notes(0)
-            , xmlDurationSum(0)
         {}
         std::vector<Note> notes;
-        uint32_t xmlDurationSum; // Accumulation the raw musicxml duration
-            // values seen in this measure. This helps with distinguishing
-            // if backup tag is indicating a new part or that notes should
-            // be added to this measure
     };
 
     /**
@@ -211,6 +211,7 @@ private:
     ErrorCode parseXmlNote(QXmlStreamReader& xml);
     ErrorCode parseXmlPitch(QXmlStreamReader& xml, float& freq);
     ErrorCode parseXmlBackup(QXmlStreamReader& xml);
+    ErrorCode parseXmlForward(QXmlStreamReader& xml);
     QString noteToCmd(const Note& note, Channel chan, uint32_t jingleIdx,
         uint32_t noteIdx, uint32_t chordIdx);
 
@@ -222,14 +223,11 @@ private:
 
     uint32_t currPart; // Defines which part is currently being built from parsed XML.
 
-    std::stack<uint32_t> backups; // This keeps track of specified backup durations
-        // so that we know how many notes should be added to a part, before switching
-        // back to adding notes to other parts (i.e. a backup indicates we are about
-        // to receive notes for a new part, but once we receive this notes, there is
-        // no indication we should go back to the previous part. Therefore, we need
-        // to track when to transition back).
-    std::stack<uint32_t> prevParts; // Used on conjunction with backups to know which
-        // part to jump back to when backup duration is complete.
+    uint32_t backupCnt; // This keeps track of the remaining backup duration
+        // previously specified by a backup musicxml token. This allows us to
+        // know when to switch which Part Notes are being added to.
+    uint32_t prevPart; // This lets us know which part to switch to after
+        // backupCnt is depleted.
 
     float octaveAdjust; // Control for manually scaling octave of notes in case
         // user wants a different sound relative to what is imported
