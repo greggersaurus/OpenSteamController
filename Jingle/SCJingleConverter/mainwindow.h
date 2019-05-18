@@ -37,10 +37,6 @@ private slots:
 
     void on_jingleListWidget_clicked(const QModelIndex &index);
 
-    void on_chanSourceLeftComboBox_activated(int index);
-
-    void on_chanSourceRightComboBox_activated(int index);
-
     void on_startMeasComboBox_activated(int index);
 
     void on_endMeasComboBox_activated(int index);
@@ -52,6 +48,10 @@ private slots:
     void on_chanChordLeftComboBox_activated(int index);
 
     void on_chanChordRightComboBox_activated(int index);
+
+    void on_chanSourceLeftComboBox_activated(const QString &arg1);
+
+    void on_chanSourceRightComboBox_activated(const QString &arg1);
 
 private:
     static const uint32_t MAX_NUM_COMPS = 14; // The maximum number of Jingles

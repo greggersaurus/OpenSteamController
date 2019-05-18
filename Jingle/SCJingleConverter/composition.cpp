@@ -42,17 +42,13 @@
  */
 Composition::Composition(QString filename)
     : filename(filename)
-    , parts(0)
     , currDivisions(1)
     , bpm(100)
-    , currPart(0)
-    , backupCnt(0)
-    , prevPart(0)
     , octaveAdjust(1.f)
-    , partIdxR(0)
-    , partIdxL(0)
     , measStartIdx(0)
     , measEndIdx(0)
+    , voiceStrL(Composition::getNoVoiceStr())
+    , voiceStrR(Composition::getNoVoiceStr())
     , chordIdxR(0)
     , chordIdxL(0)
 {
@@ -67,12 +63,20 @@ Composition::Composition(QString filename)
 Composition::ErrorCode Composition::parse() {
     QFile file(filename);
 
-    QXmlStreamReader xml; //TODO: create on heap instead of stack maybe??
+    QXmlStreamReader xml;
 
-    parts.clear();
-    currPart = 0;
-    backupCnt = 0;
-    prevPart = 0;
+    measCnt = 0;
+    voices.clear();
+
+    voiceStrL = Composition::getNoVoiceStr();
+    voiceStrR = Composition::getNoVoiceStr();
+    measStartIdx = 0;
+    measEndIdx = 0;
+    chordIdxR = 0;
+    chordIdxL = 0;
+
+    bpm = 100;
+    octaveAdjust = 1.f;
 
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
         qDebug() << "Failed to open file " << filename;
@@ -81,374 +85,51 @@ Composition::ErrorCode Composition::parse() {
 
     xml.setDevice(&file);
 
+    uint32_t part_cnt = 0;
+
     while (xml.readNext() != QXmlStreamReader::EndDocument) {
-        if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == QLatin1String("note")) {
-                ErrorCode code = parseXmlNote(xml);
+        if (xml.name() == QLatin1String("note")) {
+            if (xml.tokenType() == QXmlStreamReader::StartElement) {
+                ErrorCode code = parseXmlNote(xml, "Part " + QString::number(part_cnt));
                 if (code != NO_ERROR) {
                     qDebug() << "parseXmlNote() failed. Error: " << getErrorString(code);
                     return code;
                 }
-            } else if (xml.name() == QLatin1String("backup")) {
-                ErrorCode code = parseXmlBackup(xml);
-                if (code != NO_ERROR) {
-                    qDebug() << "parseXmlBackup() failed. Error: " << getErrorString(code);
-                    return code;
-                }
-            } else if (xml.name() == QLatin1String("forward")) {
-                ErrorCode code = parseXmlForward(xml);
-                if (code != NO_ERROR) {
-                    qDebug() << "parseXmlForward() failed. Error: " << getErrorString(code);
-                    return code;
-                }
-            } else if (xml.name() == QLatin1String("measure")) {
-                // Check that all specified backups were seen through
-                if(backupCnt) {
-                    qDebug() << "Reached beginning of Measure with non-zero backupCnt: "
-                        << backupCnt;
-                    return XML_PARSE;
-                }
-
-                // Add new measures for all parts below current
-                for (uint32_t parts_idx = currPart; parts_idx < parts.size(); parts_idx++) {
-                    Part& part = parts[parts_idx];
-
-                    part.measures.push_back(Measure());
-                }
-            } else if (xml.name() == QLatin1String("per-minute")) {
+            }
+        } else if (xml.name() == QLatin1String("measure")) {
+            if (xml.tokenType() == QXmlStreamReader::StartElement) {
+                measCnt++;
+            }
+        } else if (xml.name() == QLatin1String("per-minute")) {
+            if (xml.tokenType() == QXmlStreamReader::StartElement) {
                 xml.readNext();
                 bpm = xml.text().toUInt();
-            } else if (xml.name() == QLatin1String("divisions")) {
+            }
+        } else if (xml.name() == QLatin1String("divisions")) {
+            if (xml.tokenType() == QXmlStreamReader::StartElement) {
                 xml.readNext();
                 currDivisions = xml.text().toUInt();
             }
-        } else if (xml.tokenType() == QXmlStreamReader::EndElement) {
-            if (xml.name() == QLatin1String("part")) {
-                // Check that all specified backups were seen through
-                if (backupCnt) {
-                    qDebug() << "Reached end of Part with non-zero backupCnt: "
-                        << backupCnt;
-                    return XML_PARSE;
-                }
-
-                //TODO: check that all number of measure is the same for all Parts thus far?
-
-                // If there are more part tokens, ensure they will start new parts
-                currPart = static_cast<uint32_t>(parts.size());
-                prevPart = currPart;
+        } else if (xml.name() == QLatin1String("part")) {
+            if (xml.tokenType() == QXmlStreamReader::StartElement) {
+                measCnt = 0;
+                part_cnt++;
             }
         }
     }
 
-    // Set default configurations
-    octaveAdjust = 1.f;
-
-    partIdxR = 0;
-    partIdxL = 0;
-    measStartIdx = 0;
+    // Update default configurations
     measEndIdx = getNumMeasures()-1;
-    chordIdxR = 0;
-    chordIdxL = 0;
 
-    // Make sure all Parts have the same number of measures
-    const uint32_t num_measures = getNumMeasures();
-    for (uint32_t parts_idx = 1; parts_idx < parts.size(); parts_idx++) {
-        uint32_t meas_cnt = 0;
-        Part& part = parts[parts_idx];
-        meas_cnt += part.measures.size();
-        if (meas_cnt != num_measures) {
-            qDebug() << "Number of measures differs at Part " << parts_idx
-                << " . " << meas_cnt << " != " << num_measures;
-            return XML_PARSE;
-        }
-    }
+//TODO: Make sure all Voices have the same number of measures. If they don't add more (i.e. some parts may not
+//  have filled in final measures if they went away, right?)
 
-    return NO_ERROR;
-}
-
-/**
- * @brief Composition::noteToCmd Convert information into command string to send to
- *      Controller via serial.
- *
- * @param[in] note Contains Note data.
- * @param chan Specificies which channel Note will be played on.
- * @param jingleIdx Defines which Jingle index the Jingle Data will exist under.
- * @param noteIdx Defines which Note in the Jingle we are programming.
- * @param chordIdx Defines which Note in chord to use.
- *
- * @return Command string to send to Controller via serial.
- */
-QString Composition::noteToCmd(const Note& note, Channel chan, uint32_t jingleIdx,
-        uint32_t noteIdx, uint32_t chordIdx) {
-
-    QString chan_str("right");
-    if (chan == LEFT) {
-        chan_str = "left";
-    }
-
-    uint32_t duty_cydle = 128;
-    uint32_t frequency = static_cast<uint32_t>(note.frequencies.back() * octaveAdjust);
-    if (chordIdx < note.frequencies.size()) {
-        frequency = static_cast<uint32_t>(note.frequencies[chordIdx] * octaveAdjust);
-    }
-
-    uint32_t duration_ms = static_cast<uint32_t>(note.length * 60 * 1000 / bpm);
-
-    QString cmd = QString("jingle note ") + QString::number(jingleIdx) + QString(" ") +
-            chan_str + QString(" ") +
-            QString::number(noteIdx) + QString(" ") +
-            QString::number(duty_cydle) + QString(" ") +
-            QString::number(frequency) + QString(" ") +
-            QString::number(duration_ms) + QString("\n");
-
-    return cmd;
-}
-
-/**
- * @brief Composition::download Download the Jingle data for each channel
- *      to the Controller via the providied serial port. This assumes that
- *      the musicxml has been successfully parsed and that the channels
- *      have been configured appropriately.
- *
- * @param serial Allows for communicating with Controller.
- * @param jingleIdx Defines which Jingle index the Jingle Data will exist under.
- *
- * @return Composition::ErrorCode
- */
-Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleIdx) {
-    // TODO: bounds check jingleIdx
-
-    SCSerial::ErrorCode serial_err_code = SCSerial::NO_ERROR;
-    QString cmd;
-    QString resp;
-
-//TODO: think through adding and jingleIdx, how do we make sure these line up...?
-// Maybe have jingle add take index and fail if it does not match where next jingle goes?
+//TODO: Check all measures. Make sure they either all have the same cumulative length, or if they are zero make
+//      them have a Note rest of a length to match the other measures
 
 
-    const uint32_t parts_idx_l = getPartIdx(LEFT);
-    const uint32_t parts_idx_r = getPartIdx(RIGHT);
+//TODO: any additional final sanity checks?
 
-    qDebug() << QString::number(parts_idx_l) << " " << QString::number(parts_idx_r);
-
-    if (parts_idx_l >= parts.size() || parts_idx_r >= parts.size()) {
-        qDebug() << "Bad part index specified for download";
-        return BAD_IDX;
-    }
-
-    const uint32_t meas_start_idx = getMeasStartIdx();
-    const uint32_t meas_end_idx = getMeasEndIdx();
-
-    Part& part_l = parts[parts_idx_l];
-    uint32_t num_notes_l = 0;
-
-    if (meas_start_idx >= part_l.measures.size() || meas_end_idx >= part_l.measures.size()) {
-        qDebug() << "Start or End Measure Index out of bounds for Left Channel in download()";
-        return BAD_IDX;
-    }
-
-    for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
-        Measure& meas = part_l.measures[meas_idx];
-        num_notes_l += meas.notes.size();
-    }
-
-    Part& part_r = parts[parts_idx_r];
-    uint32_t num_notes_r = 0;
-
-    if (meas_start_idx >= part_r.measures.size() || meas_end_idx >= part_r.measures.size()) {
-        qDebug() << "Start or End Measure Index out of bounds for Right Channel in download()";
-        return BAD_IDX;
-    }
-
-    for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
-        Measure& meas = part_r.measures[meas_idx];
-        num_notes_r += meas.notes.size();
-    }
-
-    cmd = "jingle add ";
-    cmd += QString::number(num_notes_r) + QString(" ");
-    cmd += QString::number(num_notes_l) + QString("\n");
-    resp = cmd + "\rJingle added successfully.\n\r";
-    serial_err_code = serial.send(cmd, resp);
-    if (serial_err_code != SCSerial::NO_ERROR) {
-        qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
-        return CMD_ERR;
-    }
-
-    uint32_t note_cnt = 0;
-
-    for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
-        Measure& meas = part_l.measures[meas_idx];
-        for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
-            Note& note = meas.notes[notes_idx];
-
-            cmd = noteToCmd(note, LEFT, jingleIdx, note_cnt, chordIdxL);
-            resp = cmd + "\rNote updated successfully.\n\r";
-            serial_err_code = serial.send(cmd, resp);
-            if (serial_err_code != SCSerial::NO_ERROR) {
-                qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
-                return CMD_ERR;
-            }
-            note_cnt++;
-        }
-    }
-
-    note_cnt = 0;
-
-    for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
-        Measure& meas = part_r.measures[meas_idx];
-        for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
-            Note& note = meas.notes[notes_idx];
-
-            cmd = noteToCmd(note, RIGHT, jingleIdx, note_cnt, chordIdxR);
-            resp = cmd + "\rNote updated successfully.\n\r";
-            serial_err_code = serial.send(cmd, resp);
-            if (serial_err_code != SCSerial::NO_ERROR) {
-                qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
-                return CMD_ERR;
-            }
-            note_cnt++;
-        }
-    }
-
-    return NO_ERROR;
-}
-
-/**
- * @brief Composition::parseXmlBackup Parse backup token from xml. This assumes xml is at
- *      desired backup token to be parsed.
- *
- * @return Composition::ErrorCode
- */
-Composition::ErrorCode Composition::parseXmlBackup(QXmlStreamReader& xml) {
-    uint32_t duration = 0;
-
-    // Check that we are actually at the beginning of an XML backup token
-    if (xml.name() != QLatin1String("backup") || xml.tokenType() != QXmlStreamReader::StartElement) {
-        qDebug() << "XML is not at backup Start Element. XML Error String:" << xml.errorString();
-        return XML_PARSE;
-    }
-
-    // Read all child tokens of backup token
-    while(1) {
-        xml.readNext();
-
-        // Exit when all child tokens of backup token have been read
-        if (xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QLatin1String("backup")) {
-            break;
-        }
-
-        if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == QLatin1String("duration")) {
-                xml.readNext();
-                duration = xml.text().toUInt();
-            }
-        }
-    }
-
-    if (duration == 0) {
-        qDebug() << "0 valued duration within backup token encountered";
-        return XML_PARSE;
-    }
-
-    if (backupCnt) {
-        qDebug() << "New backup of " << duration << " specified while backupCnt is "
-            << backupCnt;
-    }
-
-    backupCnt = duration;
-    Part& part = parts[currPart];
-    if (part.measures.size() > 1) {
-        if (currPart == parts.size()-1) {
-            // This the case where effectively a new Part has been introduced after
-            //  the first measure when the number of parts has already be established
-            //  therefore, we clear out Notes in the oldest Part and refill them with
-            //  whatever comes next. This is an uninformed descision (i.e. how do
-            //  we know which Part is best to overwrite?) but we will just do what is
-            //  is easiest. If this is not what the user wants they can trim the
-            //  input file in MuseScore or something similar
-            // Or someone can contribute and come up with a better way to handle this!
-            uint32_t backup_clr_ctr = backupCnt;
-            Measure& meas = part.measures.back();
-            // Clear out Notes to make room for Notes to be added during backup
-            qDebug() << "start backup clear " << part.measures.size();
-            while (backup_clr_ctr) {
-                Note& note = meas.notes.back();
-                qDebug() << backup_clr_ctr << " " << note.xmlDuration;
-                if (note.xmlDuration > backup_clr_ctr) {
-                    qDebug() << "Error clearing out Notes when backing up for late added Part";
-                    return XML_PARSE;
-                }
-                meas.notes.pop_back();
-                backup_clr_ctr -= note.xmlDuration;
-            }
-        } else {
-            // Backup will add Notes to next Part
-            prevPart = currPart;
-            currPart++;
-        }
-    } else {
-        // It is only OK to add another part if we are still in the first Measure
-        prevPart = currPart;
-        currPart++;
-    }
-
-    return NO_ERROR;
-}
-
-/**
- * @brief Composition::parseXmlForward Parse forward token from xml. This assumes xml is at
- *      desired forward token to be parsed.
- *
- * @return Composition::ErrorCode
- */
-Composition::ErrorCode Composition::parseXmlForward(QXmlStreamReader& xml) {
-    uint32_t duration = 0;
-
-    // Check that we are actually at the beginning of an XML forward token
-    if (xml.name() != QLatin1String("forward") || xml.tokenType() != QXmlStreamReader::StartElement) {
-        qDebug() << "XML is not at forward Start Element. XML Error String:" << xml.errorString();
-        return XML_PARSE;
-    }
-
-    // Read all child tokens of forward token
-    while(1) {
-        xml.readNext();
-
-        // Exit when all child tokens of forward token have been read
-        if (xml.tokenType() == QXmlStreamReader::EndElement && xml.name() == QLatin1String("forward")) {
-            break;
-        }
-
-        if (xml.tokenType() == QXmlStreamReader::StartElement) {
-            if (xml.name() == QLatin1String("duration")) {
-                xml.readNext();
-                duration = xml.text().toUInt();
-            }
-        }
-    }
-
-    if (duration == 0) {
-        qDebug() << "0 valued duration within forward token encountered";
-        return XML_PARSE;
-    }
-
-    //TODO: probably should be able to handle moving forward if not already backed up...
-    if (!backupCnt) {
-        qDebug() << "Told to move forward before being backed up...";
-        return XML_PARSE;
-    }
-
-    if (duration > backupCnt) {
-        qDebug() << "Instructed to move forward farther than previously backed up";
-        return XML_PARSE;
-    }
-
-    // Take into account forward movement
-    backupCnt -= duration;
-    if (!backupCnt) {
-        currPart = prevPart;
-    }
 
     return NO_ERROR;
 }
@@ -457,13 +138,16 @@ Composition::ErrorCode Composition::parseXmlForward(QXmlStreamReader& xml) {
  * @brief Composition::parseXmlNote Parse note token from xml. This assumes xml is at
  *      desired note token to be parsed.
  *
+ * @param[in] xml Used for parsing musicxml file.
+ * @param[in] partName Used as first part of creating key to access voices.
+ *
  * @return Composition::ErrorCode
  */
-Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml) {
-    uint32_t raw_xml_duration = 0;
+Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QString& partName) {
     float length = 0.f;
     float frequency = 0.f;
     bool isChord = false;
+    QString voice_id = " Voice?"; // Used for second part of key to access voices
 
     // Check that we are actually at the beginning of an XML note token
     if (xml.name() != QLatin1String("note") || xml.tokenType() != QXmlStreamReader::StartElement) {
@@ -492,24 +176,26 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml) {
             if (xml.tokenType() == QXmlStreamReader::StartElement) {
                 xml.readNext();
                 length = static_cast<float>(xml.text().toUInt()) / currDivisions;
-                raw_xml_duration = xml.text().toUInt();
+            }
+        } else if (xml.name() == QLatin1String("voice")) {
+            if (xml.tokenType() == QXmlStreamReader::StartElement) {
+                xml.readNext();
+                voice_id = " Voice" + xml.text();
             }
         } else if (xml.name() == QLatin1String("chord")) {
             isChord = true;
         }
     }
 
-    if (currPart >= parts.size()) {
-        parts.push_back(Part());
+    QString voice_key = partName + voice_id;
+
+    Voice& voice = voices[voice_key];
+
+    while (voice.measures.size() < measCnt) {
+        voice.measures.push_back(Measure());
     }
 
-    Part& part = parts[currPart];
-
-    if (part.measures.size() < 1) {
-        part.measures.push_back(Measure());
-    }
-
-    Measure& meas = part.measures.back();
+    Measure& meas = voice.measures.back();
 
     if (isChord) {
         if (meas.notes.size() < 1) {
@@ -528,24 +214,7 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml) {
         Note note;
         note.frequencies.push_back(frequency);
         note.length = static_cast<float>(length);
-        note.xmlDuration = raw_xml_duration;
         meas.notes.push_back(note);
-
-        if (backupCnt) {
-            if (raw_xml_duration > backupCnt) {
-                qDebug() << "Remaining backup duration (" << backupCnt << ") is less than"
-                    " current Note duration (" << raw_xml_duration << ")";
-                return XML_PARSE;
-            }
-
-            // Update backup duration counter
-            backupCnt -= raw_xml_duration;
-
-            // Step back up to previous part if we just drained backupCnt
-            if (!backupCnt) {
-                currPart = prevPart;
-            }
-        }
     }
 
     return NO_ERROR;
@@ -629,37 +298,145 @@ Composition::ErrorCode Composition::parseXmlPitch(QXmlStreamReader& xml, float& 
 }
 
 /**
- * @brief Composition::getMemUsage Function for calculating how the much EEPROM
- *      memory the Jingle data from this composition will take up. This is
- *      varies based on configuration and is used to make sure we do not try to
- *      write too much, or invalid, Jingle Data to the EEPROM.
+ * @brief Composition::download Download the Jingle data for each channel
+ *      to the Controller via the providied serial port. This assumes that
+ *      the musicxml has been successfully parsed and that the channels
+ *      have been configured appropriately.
  *
- * @return The number of bytes required to store the Jingle data, as currently
- *      configured, in EEPROM of the Controller.
+ * @param serial Allows for communicating with Controller.
+ * @param jingleIdx Defines which Jingle index the Jingle Data will exist under.
+ *
+ * @return Composition::ErrorCode
  */
-uint32_t Composition::getMemUsage() {
-    static const uint32_t NUM_JINGLE_HDR_BYTES = 4;// Number of bytes required for each
-            // Jingle to give data on Jingle (i.e. number of Notes per channel)
-    static const uint32_t BYTES_PER_NOTE = 6; // Number of bytes required to store
-        // a single Note in EEPROM
+Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleIdx) {
+    SCSerial::ErrorCode serial_err_code = SCSerial::NO_ERROR;
+    QString cmd;
+    QString resp;
 
-    uint32_t byte_cnt = NUM_JINGLE_HDR_BYTES;
+// TODO: bounds check jingleIdx
 
-    uint32_t part_idx_r = getPartIdx(RIGHT);
-    uint32_t part_idx_l = getPartIdx(LEFT);
-    uint32_t meas_start_idx = getMeasStartIdx();
-    uint32_t meas_end_idx = getMeasEndIdx();
-    const Part& part_r = parts[part_idx_r];
-    const Part& part_l = parts[part_idx_l];
-    for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
-        const Measure& meas_r = part_r.measures[meas_idx];
-        byte_cnt += meas_r.notes.size() * BYTES_PER_NOTE;
-        const Measure& meas_l = part_l.measures[meas_idx];
-        byte_cnt += meas_l.notes.size() * BYTES_PER_NOTE;
+//TODO: think through adding and jingleIdx, how do we make sure these line up...?
+// Maybe have jingle add take index and fail if it does not match where next jingle goes?
+
+    const uint32_t meas_start_idx = getMeasStartIdx();
+    const uint32_t meas_end_idx = getMeasEndIdx();
+
+    const uint32_t num_notes_l = getNumNotes(LEFT);
+    const uint32_t num_notes_r = getNumNotes(RIGHT);
+
+    // No notes so do nothing
+    if (!num_notes_l && !num_notes_r) {
+        qDebug() << "No Notes in Right or Left Channel";
+        return NO_NOTES;
     }
 
-    return byte_cnt;
+    cmd = "jingle add ";
+    cmd += QString::number(num_notes_r) + QString(" ");
+    cmd += QString::number(num_notes_l) + QString("\n");
+    resp = cmd + "\rJingle added successfully.\n\r";
+    serial_err_code = serial.send(cmd, resp);
+    if (serial_err_code != SCSerial::NO_ERROR) {
+        qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
+        return CMD_ERR;
+    }
+
+    uint32_t note_cnt = 0;
+
+    if (voices.count(voiceStrL)) {
+        for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
+            Measure& meas = voices[voiceStrL].measures[meas_idx];
+            for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
+                Note& note = meas.notes[notes_idx];
+
+                cmd = noteToCmd(note, LEFT, jingleIdx, note_cnt, chordIdxL);
+                resp = cmd + "\rNote updated successfully.\n\r";
+                serial_err_code = serial.send(cmd, resp);
+                if (serial_err_code != SCSerial::NO_ERROR) {
+                    qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
+                    return CMD_ERR;
+                }
+                note_cnt++;
+            }
+        }
+    }
+
+    if (voices.count(voiceStrR)) {
+        note_cnt = 0;
+
+        for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
+            Measure& meas = voices[voiceStrR].measures[meas_idx];
+            for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
+                Note& note = meas.notes[notes_idx];
+
+                cmd = noteToCmd(note, RIGHT, jingleIdx, note_cnt, chordIdxR);
+                resp = cmd + "\rNote updated successfully.\n\r";
+                serial_err_code = serial.send(cmd, resp);
+                if (serial_err_code != SCSerial::NO_ERROR) {
+                    qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
+                    return CMD_ERR;
+                }
+                note_cnt++;
+            }
+        }
+    }
+
+    return NO_ERROR;
 }
+
+/**
+ * @brief Composition::noteToCmd Convert information into command string to send to
+ *      Controller via serial.
+ *
+ * @param[in] note Contains Note data.
+ * @param chan Specificies which channel Note will be played on.
+ * @param jingleIdx Defines which Jingle index the Jingle Data will exist under.
+ * @param noteIdx Defines which Note in the Jingle we are programming.
+ * @param chordIdx Defines which Note in chord to use.
+ *
+ * @return Command string to send to Controller via serial.
+ */
+QString Composition::noteToCmd(const Note& note, Channel chan, uint32_t jingleIdx,
+        uint32_t noteIdx, uint32_t chordIdx) {
+
+    QString chan_str("right");
+    if (chan == LEFT) {
+        chan_str = "left";
+    }
+
+    uint32_t duty_cydle = 128;
+    uint32_t frequency = static_cast<uint32_t>(note.frequencies.back() * octaveAdjust);
+    if (chordIdx < note.frequencies.size()) {
+        frequency = static_cast<uint32_t>(note.frequencies[chordIdx] * octaveAdjust);
+    }
+
+    uint32_t duration_ms = static_cast<uint32_t>(note.length * 60 * 1000 / bpm);
+
+    QString cmd = QString("jingle note ") + QString::number(jingleIdx) + QString(" ") +
+            chan_str + QString(" ") +
+            QString::number(noteIdx) + QString(" ") +
+            QString::number(duty_cydle) + QString(" ") +
+            QString::number(frequency) + QString(" ") +
+            QString::number(duration_ms) + QString("\n");
+
+    return cmd;
+}
+
+/**
+ * @brief Composition::getVoiceStrs
+ *
+ * @return A vector of Strings representing the different Voices that a Channel can
+ *      be configured to play.
+ */
+std::vector<QString> Composition::getVoiceStrs() {
+    std::vector<QString> voice_strs(0);
+
+    for (std::map<QString, Voice>::iterator itr = voices.begin(); itr != voices.end(); itr++) {
+        voice_strs.push_back(itr->first);
+    }
+
+    return voice_strs;
+}
+
 
 /**
  * @brief getNumMeasures Returns the number of measures in each of the
@@ -668,98 +445,7 @@ uint32_t Composition::getMemUsage() {
  * @return The number of measure parsed from the musicxml file.
  */
 uint32_t Composition::getNumMeasures() {
-    if (!parts.size())
-        return 0;
-
-    return static_cast<uint32_t>(parts[0].measures.size());
-}
-
-/**
- * @brief getNumChords Given a range for a particular part this function
- *      checks for the largest chord. This is done as a user may want both
- *      channels to use the same part, but different notes from chords that
- *      might be withing that range.
- *
- * @param partIdx Defines which Part to consider.
- * @param measStartIdx Defines range of Measures to consider.
- * @param measEndIdx Defines range of Measures to consider.
- *
- * @return The size of the largest chord within the specified drange.
- */
-uint32_t Composition::getNumChords(uint32_t partIdx, uint32_t measStartIdx, uint32_t measEndIdx) {
-    if (partIdx >= parts.size()) {
-        qDebug() << "Invalid partIdx of " << partIdx << " specified in CompositiongetNumChords";
-        return 0;
-    }
-
-    const Part& part = parts[partIdx];
-
-    if (measStartIdx >= part.measures.size() || measEndIdx >= part.measures.size()) {
-        qDebug() << "Invalid range of " << measStartIdx << " to " << measEndIdx <<
-            " specified in CompositiongetNumChords";
-        return 0;
-    }
-
-    uint32_t max_chord_size = 0;
-    for (uint32_t meas_idx = measStartIdx; meas_idx <= measEndIdx; meas_idx++) {
-        const Measure& meas = part.measures[meas_idx];
-        for (uint32_t note_idx = 0; note_idx < meas.notes.size(); note_idx++) {
-            const Note& note = meas.notes[note_idx];
-            if (note.frequencies.size() > max_chord_size) {
-                max_chord_size = static_cast<uint32_t>(note.frequencies.size());
-            }
-        }
-    }
-
-    return max_chord_size;
-}
-
-/**
- * @brief Composition::setPartIdx Configure a channel regarding which part
- *      it gets its Jingle Data from.
- *
- * @param chan Defines which haptic/output channel is being configured.
- * @param partIdx Defines which part to use for specified channel.
- *
- * @return NO_ERROR on success;
- */
-Composition::ErrorCode Composition::setPartIdx(Channel chan, uint32_t partIdx) {
-    switch (chan) {
-    case RIGHT:
-        if (partIdx >= parts.size()) {
-            qDebug() << "Bad partIdx " << partIdx << " specified for Right Channel";
-            return BAD_IDX;
-        }
-        partIdxR = partIdx;
-        break;
-
-    case LEFT:
-        if (partIdx >= parts.size()) {
-            qDebug() << "Bad partIdx " << partIdx << " specified for Left Channel";
-            return BAD_IDX;
-        }
-        partIdxL = partIdx;
-        break;
-    }
-
-    return NO_ERROR;
-}
-
-/**
- * @brief Composition::getPartIdx
- *
- * @param chan Defines which haptic/output channel is being referred to.
- *
- * @return Index relating with Part specified channel is pulling notes from.
- */
-uint32_t Composition::getPartIdx(Channel chan) {
-    switch (chan) {
-    case RIGHT:
-        return partIdxR;
-
-    case LEFT:
-        return partIdxL;
-    }
+    return measCnt;
 }
 
 /**
@@ -771,15 +457,13 @@ uint32_t Composition::getPartIdx(Channel chan) {
  * @return NO_ERROR on success.
  */
 Composition::ErrorCode Composition::setMeasStartIdx(uint32_t measStartIdx) {
-    if (!parts.size()) {
-        qDebug() << "Cannot setMeasStartIdx if there are no parts";
+    if (!voices.size()) {
+        qDebug() << "Cannot setMeasStartIdx if there are no Voices.";
         return BAD_IDX;
     }
 
-    const Part& part = parts[0];
-
-    if (measStartIdx >= part.measures.size()) {
-        qDebug() << "Invalid range measStartIdx " << measStartIdx << " specified";
+    if (measStartIdx >= measCnt) {
+        qDebug() << "Invalid range measStartIdx " << measStartIdx << " specified.";
         return BAD_IDX;
     }
 
@@ -806,15 +490,13 @@ uint32_t Composition::getMeasStartIdx() {
  * @return NO_ERROR on success.
  */
 Composition::ErrorCode Composition::setMeasEndIdx(uint32_t measEndIdx) {
-    if (!parts.size()) {
-        qDebug() << "Cannot setMeasEndIdx if there are no parts";
+    if (!voices.size()) {
+        qDebug() << "Cannot setMeasEndIdx if there are no Voices.";
         return BAD_IDX;
     }
 
-    const Part& part = parts[0];
-
-    if (measStartIdx >= part.measures.size()) {
-        qDebug() << "Invalid range measStartIdx " << measStartIdx << " specified";
+    if (measStartIdx >= measCnt) {
+        qDebug() << "Invalid range measStartIdx " << measStartIdx << " specified.";
         return BAD_IDX;
     }
 
@@ -833,6 +515,93 @@ uint32_t Composition::getMeasEndIdx() {
 }
 
 /**
+ * @brief Composition::setVoice Configure which Voice is associated with a channel
+ *
+ * @param chan Defines which channel is being configured.
+ * @param voiceStr Indicates which voice to associate with given channel.
+ *
+ * @return Composition::ErrorCode
+ */
+Composition::ErrorCode Composition::setVoice(Channel chan, QString voiceStr) {
+    if (voiceStr != getNoVoiceStr()) {
+        if (1 != voices.count((voiceStr))) {
+            qDebug() << "Invalid voiceStr " << voiceStr << " in setVoice.";
+            return BAD_IDX;
+        }
+    }
+
+    switch (chan) {
+    case RIGHT:
+        voiceStrR = voiceStr;
+        break;
+
+    case LEFT:
+        voiceStrL = voiceStr;
+        break;
+    }
+
+    return NO_ERROR;
+}
+
+/**
+ * @brief Composition::getVoice
+ *
+ * @param chan Defines which channel we are referring to.
+ *
+ * @return String that is associated with Voice configured for given channel.
+ */
+const QString& Composition::getVoice(Channel chan) {
+    switch (chan) {
+    case RIGHT:
+        return voiceStrR;
+
+    case LEFT:
+        return voiceStrL;
+    }
+}
+
+/**
+ * @brief getNumChords Given a range for a particular part this function
+ *      checks for the largest chord. This is done as a user may want both
+ *      channels to use the same part, but different notes from chords that
+ *      might be withing that range.
+ *
+ * @param voiceStr Defines which Voice we are referring to.
+ * @param measStartIdx Defines range of Measures to consider.
+ * @param measEndIdx Defines range of Measures to consider.
+ *
+ * @return The size of the largest chord within the specified drange.
+ */
+uint32_t Composition::getNumChords(QString voiceStr, uint32_t measStartIdx, uint32_t measEndIdx) {
+    if (1 != voices.count(voiceStr)) {
+        qDebug() << "Invalid voiceStr " << voiceStr << " with count " << voices.count(voiceStr)
+            <<  " specified in CompositiongetNumChords";
+        return 0;
+    }
+
+    const Voice& voice = voices[voiceStr];
+
+    if (measStartIdx >= voice.measures.size() || measEndIdx >= voice.measures.size()) {
+        qDebug() << "Invalid range of " << measStartIdx << " to " << measEndIdx <<
+            " specified in CompositiongetNumChords";
+        return 0;
+    }
+
+    uint32_t max_chord_size = 0;
+    for (uint32_t meas_idx = measStartIdx; meas_idx <= measEndIdx; meas_idx++) {
+        const Measure& meas = voice.measures[meas_idx];
+        for (uint32_t note_idx = 0; note_idx < meas.notes.size(); note_idx++) {
+            const Note& note = meas.notes[note_idx];
+            if (note.frequencies.size() > max_chord_size) {
+                max_chord_size = static_cast<uint32_t>(note.frequencies.size());
+            }
+        }
+    }
+
+    return max_chord_size;
+}
+
+/**
  * @brief Composition::setChordIdx Define which frequency to play in
  *      case of Chord Note.
  *
@@ -842,11 +611,11 @@ uint32_t Composition::getMeasEndIdx() {
  * @return Composition::ErrorCode
  */
 Composition::ErrorCode Composition::setChordIdx(Channel chan, uint32_t chordIdx) {
-    uint32_t part_idx = getPartIdx(chan);
-    uint32_t num_chords = getNumChords(part_idx, getMeasStartIdx(), getMeasEndIdx());
+    uint32_t num_chords = 0;
 
     switch (chan) {
     case RIGHT:
+        num_chords = getNumChords(voiceStrR, getMeasStartIdx(), getMeasEndIdx());
         if (chordIdx >= num_chords) {
             qDebug() << "Bad chordIdx " << chordIdx << " specified for Right Channel";
             return BAD_IDX;
@@ -855,6 +624,7 @@ Composition::ErrorCode Composition::setChordIdx(Channel chan, uint32_t chordIdx)
         break;
 
     case LEFT:
+        num_chords = getNumChords(voiceStrR, getMeasStartIdx(), getMeasEndIdx());
         if (chordIdx >= num_chords) {
             qDebug() << "Bad chordIdx " << chordIdx << " specified for Left Channel";
             return BAD_IDX;
@@ -881,4 +651,74 @@ uint32_t Composition::getChordIdx(Channel chan) {
     case LEFT:
         return chordIdxL;
     }
+}
+
+/**
+ * @brief Composition::getMemUsage Function for calculating how the much EEPROM
+ *      memory the Jingle data from this composition will take up. This is
+ *      varies based on configuration and is used to make sure we do not try to
+ *      write too much, or invalid, Jingle Data to the EEPROM.
+ *
+ * @return The number of bytes required to store the Jingle data, as currently
+ *      configured, in EEPROM of the Controller.
+ */
+uint32_t Composition::getMemUsage() {
+    static const uint32_t NUM_JINGLE_HDR_BYTES = 4;// Number of bytes required for each
+            // Jingle to give data on Jingle (i.e. number of Notes per channel)
+    static const uint32_t BYTES_PER_NOTE = 6; // Number of bytes required to store
+        // a single Note in EEPROM
+
+    uint32_t byte_cnt = NUM_JINGLE_HDR_BYTES;
+
+    const uint32_t num_notes_l = getNumNotes(LEFT);
+    const uint32_t num_notes_r = getNumNotes(RIGHT);
+
+    byte_cnt += num_notes_l * BYTES_PER_NOTE;
+    byte_cnt += num_notes_r * BYTES_PER_NOTE;
+
+    return byte_cnt;
+}
+
+/**
+ * @brief Composition::getNumNotes
+ *
+ * @param chan Indicates which channel being referred to.
+ *
+ * @return The number of Notes for the given channel given the currently
+ *      configured Measure Start and Stop Indices.
+ */
+uint32_t Composition::getNumNotes(Channel chan) {
+    const uint32_t meas_start_idx = getMeasStartIdx();
+    const uint32_t meas_end_idx = getMeasEndIdx();
+
+    uint32_t num_notes = 0;
+
+    Voice* voice = nullptr;
+    switch (chan) {
+    case RIGHT:
+        if (voices.count(voiceStrR)) {
+            voice = &voices[voiceStrR];
+        }
+        break;
+
+    case LEFT:
+        if (voices.count(voiceStrL)) {
+            voice = &voices[voiceStrL];
+        }
+        break;
+    }
+
+    if (voice) {
+        if (meas_start_idx >= voice->measures.size() || meas_end_idx >= voice->measures.size()) {
+            qDebug() << "Start or End Measure Index out of bounds for Channel in getNumNotes()";
+            return 0;
+        }
+
+        for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
+            Measure& meas = voice->measures[meas_idx];
+            num_notes += meas.notes.size();
+        }
+    }
+
+    return num_notes;
 }

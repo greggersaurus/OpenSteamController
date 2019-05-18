@@ -35,7 +35,7 @@
 
 #include <stdint.h>
 #include <vector>
-#include <stack>
+#include <map>
 
 #include "scserial.h"
 
@@ -48,6 +48,7 @@ public:
         XML_PARSE,
         CMD_ERR,
         BAD_IDX,
+        NO_NOTES,
     };
 
     /**
@@ -69,6 +70,8 @@ public:
             return "Error sending command to controller.";
         case BAD_IDX:
             return "Specified index out of bouds.";
+        case NO_NOTES:
+            return "No Notes in specified Channel(s).";
         }
 
         return "Unknown Error";
@@ -99,18 +102,14 @@ public:
     ErrorCode parse();
     ErrorCode download(SCSerial& serial, uint32_t jingleIdx);
 
-    /**
-     * @brief getNumParts Get information on how many parts a user can select
-     *      from when configuring a channel.
-     *
-     * @return Number of parts parsed from XML.
-     */
-    uint32_t getNumParts() {
-        return static_cast<uint32_t>(parts.size());
-    }
-
+    std::vector<QString> getVoiceStrs();
     uint32_t getNumMeasures();
-    uint32_t getNumChords(uint32_t partIdx, uint32_t measStartIdx, uint32_t measEndIdx);
+
+    ErrorCode setMeasStartIdx(uint32_t measStartIdx);
+    uint32_t getMeasStartIdx();
+
+    ErrorCode setMeasEndIdx(uint32_t measEndIdx);
+    uint32_t getMeasEndIdx();
 
     /**
      * @brief getBpm
@@ -153,14 +152,21 @@ public:
         return octaveAdjust;
     }
 
-    ErrorCode setPartIdx(Channel chan, uint32_t partIdx);
-    uint32_t getPartIdx(Channel chan);
+    ErrorCode setVoice(Channel chan, QString voiceStr);
+    const QString& getVoice(Channel chan);
 
-    ErrorCode setMeasStartIdx(uint32_t measStartIdx);
-    uint32_t getMeasStartIdx();
+    /**
+     * @brief getNoVoiceStr
+     *
+     * @return String used to indicate Channel is configured to not have a Voice
+     *      associated with it.
+     */
+    static const QString& getNoVoiceStr() {
+        static QString str("None");
+        return str;
+    }
 
-    ErrorCode setMeasEndIdx(uint32_t measEndIdx);
-    uint32_t getMeasEndIdx();
+    uint32_t getNumChords(QString voiceStr, uint32_t measStartIdx, uint32_t measEndIdx);
 
     ErrorCode setChordIdx(Channel chan, uint32_t chordIdx);
     uint32_t getChordIdx(Channel chan);
@@ -175,15 +181,10 @@ private:
         Note()
             : frequencies(0)
             , length(0.f)
-            , xmlDuration(0)
         {}
         std::vector<float> frequencies; // Frequency of note in Hz. Could be multiple
             // frequencies in case of chord
         float length; // Number of beats that Note/Chord lasts for
-        uint32_t xmlDuration; // Copy of value in musicxml duration token. This is
-            // used in case we need to remove notes due to "odd" backups. See the
-            // length field for the duration value converted to a more usable
-            // format in terms of how long a frequency should be played.
     };
 
     /**
@@ -199,51 +200,49 @@ private:
     };
 
     /**
-     * @brief The Part struct contains music information for a single channel.
+     * @brief The Voice struct contains music information for a single channel.
      */
-    struct Part {
-        Part()
+    struct Voice {
+        Voice()
             : measures(0)
         {}
         std::vector<Measure> measures;
     };
 
-    ErrorCode parseXmlNote(QXmlStreamReader& xml);
+    ErrorCode parseXmlNote(QXmlStreamReader& xml, const QString& partName);
     ErrorCode parseXmlPitch(QXmlStreamReader& xml, float& freq);
-    ErrorCode parseXmlBackup(QXmlStreamReader& xml);
-    ErrorCode parseXmlForward(QXmlStreamReader& xml);
+
+    uint32_t getNumNotes(Channel chan);
+
     QString noteToCmd(const Note& note, Channel chan, uint32_t jingleIdx,
         uint32_t noteIdx, uint32_t chordIdx);
 
     QString filename; // Filename for musicxml file we are extracting data from
-    std::vector<Part> parts; // Data parsed from musicxml file.
+
+    uint32_t measCnt; // Counts how many measures have been parsed from XML for the
+        // current Part
+    std::map<QString, Voice> voices; // A series of sequential Measures
+        // (containing Notes) that make up data to be played on an output channel.
+        // The QString Key is of the Form "Part{n} Voice{m}" where n is the Part{n} is the
+        // part id (with {n} changing for different parts) and Voice{m} designates
+        // which voice within the part we are referring to.
 
     uint32_t currDivisions; // Current conversion factor for Note duration to Number of beats.
     uint32_t bpm; // Beats per minute. Tempo for playback of compostion.
 
-    uint32_t currPart; // Defines which part is currently being built from parsed XML.
-
-    uint32_t backupCnt; // This keeps track of the remaining backup duration
-        // previously specified by a backup musicxml token. This allows us to
-        // know when to switch which Part Notes are being added to.
-    uint32_t prevPart; // This lets us know which part to switch to after
-        // backupCnt is depleted.
-
     float octaveAdjust; // Control for manually scaling octave of notes in case
         // user wants a different sound relative to what is imported
 
-    uint32_t partIdxR; // Configuration for right channel as to what Part to
-        // pull notes from.
-    uint32_t partIdxL; // Configuration for left channel as to what Part to
-        // pull notes from.
     uint32_t measStartIdx; // Defines where Jingle data is configured to start
         // in parsed Part data.
     uint32_t measEndIdx; // Defines where Jingle data is configured to ends
         // in parsed Part data.
+    QString voiceStrL; // Key for accessing Left Channel Voice.
+    QString voiceStrR; // Key for accessing Right Channel Voice.
     uint32_t chordIdxR; // Configuraiton for right channel as to what frequency
         // in chord to play.
     uint32_t chordIdxL; // Configuraiton for left channel as to what frequency
-    // in chord to play.
+        // in chord to play.
 };
 
 #endif // COMPOSITION_H
