@@ -186,6 +186,8 @@ Some of the data stored in EEPROM is vital to proper operation of the controller
 * Make child SCSerial class for case of not having controller connected?
     * Allows user to select method that writes commands out to file for manual input later??
 * GUI
+    * Accept compressed musicXML (.mxl)
+        * Can use https://musescore.com/sheetmusic to get new tunes directly?
     * Add window to show serial communications
         * Gives user idea of what we are doing when Jingles are being updated on controller
     * Think through how full featured we want this to be, v.s. having a user need to prune their jingles before converting to musicxml

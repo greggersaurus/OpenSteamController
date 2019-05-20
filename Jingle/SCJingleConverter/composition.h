@@ -56,7 +56,7 @@ public:
      *
      * @param code Error code to get String description of.
      *
-     * @return String describing code.
+     * @return String describing code and what may have caused the error.
      */
     static QString getErrorString(ErrorCode code) {
         switch (code) {
@@ -82,11 +82,19 @@ public:
         LEFT
     };
 
-    static const uint32_t EEPROM_HDR_NUM_BYTES = 2 + 2 + 1 + 1 + 2 * 14; // See offset
+    static const uint32_t MAX_EEPROM_BYTES = 0x400; // The maximum number of
+        // bytes that all Jingle Data can take up.
+
+    static const uint32_t MAX_NUM_COMPS = 14; // The maximum number of Jingles
+        // that can be loaded onto the Steam Controller. This is set based on
+        // what Steam expects based on default Jingles.
+
+    static const uint32_t EEPROM_HDR_NUM_BYTES = 2 + 2 + 1 + 1 + 2 * MAX_NUM_COMPS; // See offset
         // default calculation in function addJingle in jingle_data.c in
         // OpenSteamController FW for additional details. The firmware needs
         // a certain number of bytes in the EEPROM Jingle Data memory for header
-        // information (i.e. Magic word
+        // information (i.e. Magic word + num Jingles + packing bytes +
+        // offsets for MAX_NUM_COMPS).
 
     Composition(QString filename);
 
@@ -114,7 +122,7 @@ public:
     /**
      * @brief getBpm
      *
-     * @return Return Beats per minute setting for composition;
+     * @return Return Beats Per Minute setting for composition.
      */
     uint32_t getBpm() {
         return bpm;
@@ -123,7 +131,7 @@ public:
     /**
      * @brief setBpm Adjust BPM setting from what was parsed from file.
      *
-     * @param bpm Beats per minute
+     * @param bpm Beats Per Minute
      *
      * @return None.
      */
@@ -146,7 +154,7 @@ public:
     /**
      * @brief getOctaveAdjust
      *
-     * @return The adjustment factor used to change all Note frequencies.
+     * @return The adjustment factor to be multiplied with all Note frequencies.
      */
     float getOctaveAdjust() {
         return octaveAdjust;
@@ -175,7 +183,8 @@ public:
 
 private:
     /**
-     * @brief The Note struct stores data relating to an
+     * @brief The Note struct stores data relating to frequency and duration
+     *      of sound(s) to generate that represent a musical note.
      */
     struct Note {
         Note()
@@ -183,14 +192,15 @@ private:
             , length(0.f)
         {}
         std::vector<float> frequencies; // Frequency of note in Hz. Could be multiple
-            // frequencies in case of chord
+            // frequencies in case of chord. Frequencies to be sorted into descending
+            // order at end of parse.
         float length; // Number of beats that Note/Chord lasts for
     };
 
     /**
      * @brief The Measure struct is a grouping of a series of Notes. This allows
-     *      Parts to be trimmed in a way that maintains time coherency across
-     *      parts.
+     *      Voices to be trimmed in a way that maintains time coherency across
+     *      Voices.
      */
     struct Measure {
         Measure()
@@ -200,7 +210,9 @@ private:
     };
 
     /**
-     * @brief The Voice struct contains music information for a single channel.
+     * @brief The Voice struct contains music information for a single Channel.
+     *      At the root this is a series of Notes that can be played on a Channel
+     *      to represent portion of a Composition/Melody/Jingle/Tune.
      */
     struct Voice {
         Voice()
@@ -220,11 +232,12 @@ private:
     QString filename; // Filename for musicxml file we are extracting data from
 
     uint32_t measCnt; // Counts how many measures have been parsed from XML for the
-        // current Part
+        // current Part. At completion of parse() this stores how many Measures
+        // are in each Voice.
     std::map<QString, Voice> voices; // A series of sequential Measures
-        // (containing Notes) that make up data to be played on an output channel.
-        // The QString Key is of the Form "Part{n} Voice{m}" where n is the Part{n} is the
-        // part id (with {n} changing for different parts) and Voice{m} designates
+        // (containing Notes) that make up data that can be played on an output channel.
+        // The QString Key is of the Form "Part {n} Voice {m}" where n is the Part {n} is the
+        // part id (with {n} changing for different parts) and Voice {m} designates
         // which voice within the part we are referring to.
 
     uint32_t currDivisions; // Current conversion factor for Note duration to Number of beats.
@@ -237,8 +250,10 @@ private:
         // in parsed Part data.
     uint32_t measEndIdx; // Defines where Jingle data is configured to ends
         // in parsed Part data.
-    QString voiceStrL; // Key for accessing Left Channel Voice.
-    QString voiceStrR; // Key for accessing Right Channel Voice.
+    QString voiceStrL; // Key for accessing Left Channel Voice. Set to getNoVoiceStr()
+        // if this Channel is disabled.
+    QString voiceStrR; // Key for accessing Right Channel Voice. Set to getNoVoiceStr()
+        // if this Channel is disabled.
     uint32_t chordIdxR; // Configuraiton for right channel as to what frequency
         // in chord to play.
     uint32_t chordIdxL; // Configuraiton for left channel as to what frequency

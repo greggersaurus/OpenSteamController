@@ -32,7 +32,9 @@
 #include <QFile>
 #include <QMessageBox>
 #include <QDebug>
+
 #include <cmath>
+#include <algorithm>
 
 /**
  * @brief Composition::Composition Constructor for class to help parse musicxml
@@ -121,15 +123,63 @@ Composition::ErrorCode Composition::parse() {
     // Update default configurations
     measEndIdx = getNumMeasures()-1;
 
-//TODO: Make sure all Voices have the same number of measures. If they don't add more (i.e. some parts may not
-//  have filled in final measures if they went away, right?)
+    // Final data sanity checks and adjustments:
+    float max_meas_len = 0.f;
 
-//TODO: Check all measures. Make sure they either all have the same cumulative length, or if they are zero make
-//      them have a Note rest of a length to match the other measures
+    for (std::map<QString, Voice>::iterator itr = voices.begin(); itr != voices.end(); itr++) {
+        Voice& voice = itr->second;
 
+        // Make sure all Voices have the same number of measures. It is possible that some Voices
+        //  have fewer Measures as they come and go
+        while (voice.measures.size() < measCnt) {
+            voice.measures.push_back(Measure());
+        }
 
-//TODO: any additional final sanity checks?
+        // Calculate what the maximum cumulative Note length is in the Measure
+        for (uint32_t meas_idx = 0; meas_idx < voice.measures.size(); meas_idx++) {
+            float meas_len = 0.f;
+            Measure& meas = voice.measures[meas_idx];
+            for (uint32_t note_idx = 0; note_idx < meas.notes.size(); note_idx++) {
+                Note& note = meas.notes[note_idx];
+                meas_len += note.length;
+            }
 
+            if (meas_len > max_meas_len) {
+                max_meas_len = meas_len;
+            }
+        }
+    }
+
+    for (std::map<QString, Voice>::iterator itr = voices.begin(); itr != voices.end(); itr++) {
+        Voice& voice = itr->second;
+        for (uint32_t meas_idx = 0; meas_idx < voice.measures.size(); meas_idx++) {
+            Measure& meas = voice.measures[meas_idx];
+
+            if (!meas.notes.size()) {
+                // If Measure is empty, add Note that is length of all other Measures
+                meas.notes.push_back(Note());
+                meas.notes[0].length = max_meas_len;
+                meas.notes[0].frequencies.push_back(0.f);
+            } else {
+                // If Measure is not empty, make sure length matchs all other Measures
+                float meas_len = 0.f;
+
+                for (uint32_t note_idx = 0; note_idx < meas.notes.size(); note_idx++) {
+                    Note& note = meas.notes[note_idx];
+                    meas_len += note.length;
+
+                    // Make sure frequencies are in descending order
+                    std::sort(note.frequencies.begin(), note.frequencies.end(), std::greater<float>());
+                }
+
+                if (roundf(meas_len) != roundf(max_meas_len)) {
+                    qDebug() << "Measure length of " << meas_len << " detected."
+                        << "All measures should have length " << max_meas_len;
+                    return XML_PARSE;
+                }
+            }
+        }
+    }
 
     return NO_ERROR;
 }
@@ -138,7 +188,7 @@ Composition::ErrorCode Composition::parse() {
  * @brief Composition::parseXmlNote Parse note token from xml. This assumes xml is at
  *      desired note token to be parsed.
  *
- * @param[in] xml Used for parsing musicxml file.
+ * @param[inout] xml Used for parsing musicxml file.
  * @param[in] partName Used as first part of creating key to access voices.
  *
  * @return Composition::ErrorCode
@@ -147,7 +197,7 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QS
     float length = 0.f;
     float frequency = 0.f;
     bool isChord = false;
-    QString voice_id = " Voice?"; // Used for second part of key to access voices
+    QString voice_id = " Voice ?"; // Used for second part of key to access voices
 
     // Check that we are actually at the beginning of an XML note token
     if (xml.name() != QLatin1String("note") || xml.tokenType() != QXmlStreamReader::StartElement) {
@@ -180,14 +230,14 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QS
         } else if (xml.name() == QLatin1String("voice")) {
             if (xml.tokenType() == QXmlStreamReader::StartElement) {
                 xml.readNext();
-                voice_id = " Voice" + xml.text();
+                voice_id = " Voice " + xml.text();
             }
         } else if (xml.name() == QLatin1String("chord")) {
             isChord = true;
         }
     }
 
-    QString voice_key = partName + voice_id;
+    const QString voice_key = partName + voice_id;
 
     Voice& voice = voices[voice_key];
 
@@ -199,7 +249,7 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QS
 
     if (isChord) {
         if (meas.notes.size() < 1) {
-            qDebug() << "Received chord, but no note exists for the current measure...";
+            qDebug() << "Received chord, but no Note exists for the current measure...";
             return XML_PARSE;
         }
 
@@ -213,7 +263,8 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QS
     } else {
         Note note;
         note.frequencies.push_back(frequency);
-        note.length = static_cast<float>(length);
+        note.length = length;
+
         meas.notes.push_back(note);
     }
 
@@ -224,6 +275,7 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QS
  * @brief Composition::parseXmlPitch Parse pitch token from xml. This assumes xml is at
  *      desired pitch token to be parsed.
  *
+ * @param[inout] xml Used for parsing musicxml file.
  * @param[out] freq Frequency in Hz calculated from musicxml data.
  *
  * @return Composition::ErrorCode
@@ -232,6 +284,8 @@ Composition::ErrorCode Composition::parseXmlPitch(QXmlStreamReader& xml, float& 
     QChar step = 0;
     int alter = 0;
     int octave = 0;
+
+    freq = 0.f;
 
     if (xml.name() != QLatin1String("pitch") || xml.tokenType() != QXmlStreamReader::StartElement) {
         qDebug() << "XML is not at pitch Start Element. XML Error String:" << xml.errorString();
@@ -298,12 +352,12 @@ Composition::ErrorCode Composition::parseXmlPitch(QXmlStreamReader& xml, float& 
 }
 
 /**
- * @brief Composition::download Download the Jingle data for each channel
+ * @brief Composition::download Download the Jingle data for each Channel
  *      to the Controller via the providied serial port. This assumes that
  *      the musicxml has been successfully parsed and that the channels
  *      have been configured appropriately.
  *
- * @param serial Allows for communicating with Controller.
+ * @param[in] serial Allows for communicating with Controller.
  * @param jingleIdx Defines which Jingle index the Jingle Data will exist under.
  *
  * @return Composition::ErrorCode
@@ -326,7 +380,7 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
 
     // No notes so do nothing
     if (!num_notes_l && !num_notes_r) {
-        qDebug() << "No Notes in Right or Left Channel";
+        qDebug() << "No Notes in Right and Left Channel";
         return NO_NOTES;
     }
 
@@ -403,13 +457,14 @@ QString Composition::noteToCmd(const Note& note, Channel chan, uint32_t jingleId
         chan_str = "left";
     }
 
-    uint32_t duty_cydle = 128;
+    // TODO: should this ever be different?
+    const uint32_t duty_cydle = 128;
     uint32_t frequency = static_cast<uint32_t>(note.frequencies.back() * octaveAdjust);
     if (chordIdx < note.frequencies.size()) {
         frequency = static_cast<uint32_t>(note.frequencies[chordIdx] * octaveAdjust);
     }
 
-    uint32_t duration_ms = static_cast<uint32_t>(note.length * 60 * 1000 / bpm);
+    const uint32_t duration_ms = static_cast<uint32_t>(note.length * 60 * 1000 / bpm);
 
     QString cmd = QString("jingle note ") + QString::number(jingleIdx) + QString(" ") +
             chan_str + QString(" ") +
@@ -436,7 +491,6 @@ std::vector<QString> Composition::getVoiceStrs() {
 
     return voice_strs;
 }
-
 
 /**
  * @brief getNumMeasures Returns the number of measures in each of the
@@ -561,9 +615,9 @@ const QString& Composition::getVoice(Channel chan) {
 }
 
 /**
- * @brief getNumChords Given a range for a particular part this function
- *      checks for the largest chord. This is done as a user may want both
- *      channels to use the same part, but different notes from chords that
+ * @brief getNumChords Given a range for a particular Voice this function
+ *      checks for the largest Chord. This is done as a user may want both
+ *      channels to use the same Voice, but different Notes from Chords that
  *      might be withing that range.
  *
  * @param voiceStr Defines which Voice we are referring to.
@@ -583,7 +637,7 @@ uint32_t Composition::getNumChords(QString voiceStr, uint32_t measStartIdx, uint
 
     if (measStartIdx >= voice.measures.size() || measEndIdx >= voice.measures.size()) {
         qDebug() << "Invalid range of " << measStartIdx << " to " << measEndIdx <<
-            " specified in CompositiongetNumChords";
+            " specified in CompositiongetNumChords. Max is " << voice.measures.size()-1;
         return 0;
     }
 
@@ -606,7 +660,7 @@ uint32_t Composition::getNumChords(QString voiceStr, uint32_t measStartIdx, uint
  *      case of Chord Note.
  *
  * @param chan Channel being referred to.
- * @param chordIdx Defines which frequency to play in case of chord.
+ * @param chordIdx Defines which frequency to play in case of Chord.
  *
  * @return Composition::ErrorCode
  */
@@ -655,7 +709,7 @@ uint32_t Composition::getChordIdx(Channel chan) {
 
 /**
  * @brief Composition::getMemUsage Function for calculating how the much EEPROM
- *      memory the Jingle data from this composition will take up. This is
+ *      memory the Jingle data from this composition will take up. This
  *      varies based on configuration and is used to make sure we do not try to
  *      write too much, or invalid, Jingle Data to the EEPROM.
  *

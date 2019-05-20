@@ -1,3 +1,30 @@
+/**
+ * \file mainwindow.cpp
+ * \brief GUI for customizing Steam Controller Jingles.
+ *
+ * MIT License
+ *
+ * Copyright (c) 2019 Gregory Gluszek
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
@@ -18,9 +45,6 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
-
-signals:
-    void error(const QString &s);
 
 private slots:
     void on_playJinglePushButton_clicked();
@@ -54,20 +78,18 @@ private slots:
     void on_chanSourceRightComboBox_activated(const QString &arg1);
 
 private:
-    static const uint32_t MAX_NUM_COMPS = 14; // The maximum number of Jingles
-        // that can be loaded onto the Steam Controller. This is set based on
-        // what Steam expects based on default Jingles.
-    static const uint32_t MAX_EEPROM_BITES = 0x400; // The maximum number of
-        // bytes that all Jingle Data can take up.
+    Composition* getSelectedComposition();
 
     void updateMemUsage();
     void updateCompositionDisplay();
-    void updateChordComboL(Composition& composition);
-    void updateChordComboR(Composition& composition);
+    void updateChordComboBox(Composition::Channel chan);
 
     Ui::MainWindow *ui;
 
-    std::vector<Composition> compositions;
+    std::vector<Composition> compositions; // The compositions that
+        // have been loaded from file, parsed and configured. This
+        // is the data we read from when writing Jingle Data to
+        // the Steam Controller EEPROM.
 };
 
 #endif // MAINWINDOW_H

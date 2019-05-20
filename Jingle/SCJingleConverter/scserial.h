@@ -51,7 +51,7 @@ public:
      *
      * @param code Error code to get String description of.
      *
-     * @return String describing code.
+     * @return String describing code and what may have caused the error.
      */
     static QString getErrorString(ErrorCode code) {
         switch (code) {
