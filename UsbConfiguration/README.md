@@ -68,3 +68,8 @@ This sections outlines how USB commands are captured for analysis.
     * ssh into Steam Box and cat usbmon file
     * Perform distinct actions and capture data
     * Isolate variables with slight variations on actions
+
+
+# TODO
+
+See [TODO](./TODO.md) for details.

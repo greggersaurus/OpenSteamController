@@ -129,3 +129,8 @@ Use to get an idea of what changed from firmware to firwmare release.
 
 * [Official Group](http://steamcommunity.com/games/353370#announcements/detail/901091250587237164)
 * [Custom Sounds Discussion](https://steamcommunity.com/app/353370/discussions/0/458607699626517823/)
+
+
+# TODO
+
+Future improvements, goals and known bugs are outlined in [TODO](./TODO.md).
