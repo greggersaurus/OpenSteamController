@@ -973,7 +973,7 @@ int jingleCmdFnc(int argc, const char* argv[]) {
 			return -1;
 		}
 
-		printf("Jingle added successfully.\n");
+		printf("Jingle %d added successfully.\n", getNumJingles()-1);
 	} else if (!strcmp("note", argv[1])) {
 		if (argc != 8) {
 			jingleCmdUsage();
