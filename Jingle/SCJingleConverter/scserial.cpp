@@ -73,10 +73,13 @@ SCSerial::ErrorCode SCSerial::open() {
  *
  * @param command Command to send to Steam Controller.
  * @param response Expected response from Steam Controller after sending command.
+ * @param fullRespDelay Number of ms after initial response to wait for all response
+ *      values to be received. Default 10 ms, but may need to extend if action takes
+ *      longer than usual (i.e. EEPROM save).
  *
  * @return SCSerial::ErrorCode
  */
-SCSerial::ErrorCode SCSerial::send(QString command, QString response) {
+SCSerial::ErrorCode SCSerial::send(QString command, QString response, int fullRespDelay) {
     const QByteArray request_data = command.toUtf8();
 
     serial.write(request_data);
@@ -92,7 +95,7 @@ SCSerial::ErrorCode SCSerial::send(QString command, QString response) {
     }
 
     QByteArray response_data = serial.readAll();
-    while (serial.waitForReadyRead(10)) {
+    while (serial.waitForReadyRead(fullRespDelay)) {
         response_data += serial.readAll();
     }
 

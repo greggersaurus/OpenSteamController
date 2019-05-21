@@ -77,6 +77,10 @@ private slots:
 
     void on_chanSourceRightComboBox_activated(const QString &arg1);
 
+    void on_clearJinglesPushButton_clicked();
+
+    void on_saveJinglesPushButton_clicked();
+
 private:
     Composition* getSelectedComposition();
 

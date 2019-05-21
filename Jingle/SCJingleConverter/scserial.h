@@ -71,7 +71,7 @@ public:
     }
 
     ErrorCode open();
-    ErrorCode send(QString command, QString response);
+    ErrorCode send(QString command, QString response, int fullRespDelay=10);
 
 private:
     QSerialPort serial; // Allows for sending command strings and receiving responses.

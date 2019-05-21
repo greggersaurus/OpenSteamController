@@ -436,8 +436,13 @@ void MainWindow::on_startMeasComboBox_activated(int index)
         return;
     }
 
-    //TODO: check error
-    composition->setMeasStartIdx(static_cast<uint32_t>(index));
+    Composition::ErrorCode comp_err_code =  composition->setMeasStartIdx(static_cast<uint32_t>(index));
+    if (comp_err_code != Composition::NO_ERROR) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Error setting Start Measure Index.\n\nError: %1")
+            .arg(Composition::getErrorString(comp_err_code)));
+        return;
+    }
 
     updateChordComboBox(Composition::LEFT);
     updateChordComboBox(Composition::RIGHT);
@@ -458,8 +463,13 @@ void MainWindow::on_endMeasComboBox_activated(int index)
         return;
     }
 
-    //TODO: check error
-    composition->setMeasEndIdx(static_cast<uint32_t>(index));
+    Composition::ErrorCode comp_err_code =  composition->setMeasEndIdx(static_cast<uint32_t>(index));
+    if (comp_err_code != Composition::NO_ERROR) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Error setting End Measure Index.\n\nError: %1")
+            .arg(Composition::getErrorString(comp_err_code)));
+        return;
+    }
 
     updateChordComboBox(Composition::LEFT);
     updateChordComboBox(Composition::RIGHT);
@@ -508,10 +518,13 @@ void MainWindow::on_chanChordLeftComboBox_activated(int index)
         return;
     }
 
-    qDebug() << "Left Chord Idx Set to " << index;
-
-    //TODO: check error
-    composition->setChordIdx(Composition::LEFT, static_cast<uint32_t>(index));
+    Composition::ErrorCode comp_err_code = composition->setChordIdx(Composition::LEFT, static_cast<uint32_t>(index));
+    if (comp_err_code != Composition::NO_ERROR) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Error setting Chord Index.\n\nError: %1")
+            .arg(Composition::getErrorString(comp_err_code)));
+        return;
+    }
 }
 
 void MainWindow::on_chanChordRightComboBox_activated(int index)
@@ -527,8 +540,13 @@ void MainWindow::on_chanChordRightComboBox_activated(int index)
         return;
     }
 
-    //TODO: check error
-    composition->setChordIdx(Composition::RIGHT, static_cast<uint32_t>(index));
+    Composition::ErrorCode comp_err_code = composition->setChordIdx(Composition::RIGHT, static_cast<uint32_t>(index));
+    if (comp_err_code != Composition::NO_ERROR) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Error setting Chord Index.\n\nError: %1")
+            .arg(Composition::getErrorString(comp_err_code)));
+        return;
+    }
 }
 
 void MainWindow::on_chanSourceLeftComboBox_activated(const QString& voiceStr)
@@ -538,8 +556,13 @@ void MainWindow::on_chanSourceLeftComboBox_activated(const QString& voiceStr)
         return;
     }
 
-    //TODO: check error
-    composition->setVoice(Composition::LEFT, voiceStr);
+    Composition::ErrorCode comp_err_code = composition->setVoice(Composition::LEFT, voiceStr);
+    if (comp_err_code != Composition::NO_ERROR) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Error setting Voice.\n\nError: %1")
+            .arg(Composition::getErrorString(comp_err_code)));
+        return;
+    }
 
     updateChordComboBox(Composition::LEFT);
 
@@ -553,10 +576,119 @@ void MainWindow::on_chanSourceRightComboBox_activated(const QString& voiceStr)
         return;
     }
 
-    //TODO: check error
-    composition->setVoice(Composition::RIGHT, voiceStr);
+    Composition::ErrorCode comp_err_code = composition->setVoice(Composition::RIGHT, voiceStr);
+    if (comp_err_code != Composition::NO_ERROR) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Error setting Voice.\n\nError: %1")
+            .arg(Composition::getErrorString(comp_err_code)));
+        return;
+    }
 
     updateChordComboBox(Composition::RIGHT);
 
     updateMemUsage();
+}
+
+/**
+ * @brief MainWindow::on_clearJinglesPushButton_clicked User is instructing us to clear EEPROM so
+ *      that Steam Controller uses defaults baked into official Firmware.
+ */
+void MainWindow::on_clearJinglesPushButton_clicked()
+{
+    QString serial_port_name = ui->serialPortComboBox->currentText();
+    SCSerial serial(serial_port_name);
+
+    SCSerial::ErrorCode serial_err_code = serial.open();
+    if (serial_err_code != SCSerial::NO_ERROR) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Cannot open %1.\n\nError: %2")
+            .arg(serial_port_name)
+            .arg(SCSerial::getErrorString(serial_err_code)));
+        return;
+    }
+
+    QString cmd("jingle eeprom clear\n");
+    QString resp = cmd + "\rClear complete\n\r";
+    if (serial.send(cmd, resp)) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Failed to clear Jingle Data."));
+        return;
+    }
+
+    QMessageBox::information(this, tr("Success!"),
+        tr("EEPROM cleared of custom Jingle Data."));
+}
+
+/**
+ * @brief MainWindow::on_saveJinglesPushButton_clicked User is instructing us to save all
+ *      converted Compositions to Jingle Data to EEPROM so that when official firmware is
+ *      loaded the controller will still use the customized Jingles.
+ */
+void MainWindow::on_saveJinglesPushButton_clicked()
+{
+    QString serial_port_name = ui->serialPortComboBox->currentText();
+    SCSerial serial(serial_port_name);
+    if (!compositions.size()) {
+        QMessageBox::information(this, tr("Error"),
+            tr("No Compositions to Save to EEPROM"));
+        return;
+    }
+
+    SCSerial::ErrorCode serial_err_code = serial.open();
+    if (serial_err_code != SCSerial::NO_ERROR) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Cannot open %1.\n\nError: %2")
+            .arg(serial_port_name)
+            .arg(SCSerial::getErrorString(serial_err_code)));
+        return;
+    }
+
+    // Make sure there is enough memory to download all Jingle Data...
+    uint32_t num_bytes = Composition::EEPROM_HDR_NUM_BYTES;
+    for (uint32_t comp_idx = 0; comp_idx < compositions.size(); comp_idx++) {
+        num_bytes += compositions[comp_idx].getMemUsage();
+    }
+
+    if (num_bytes > Composition::MAX_EEPROM_BYTES) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Total Jingle Data is too large (%1/%2 bytes). Try using configuration "
+               "options to reduce size.")
+            .arg(num_bytes)
+            .arg(Composition::MAX_EEPROM_BYTES));
+        return;
+    }
+
+    // Start fresh with Jingle Data in RAM
+    QString cmd("jingle clear\n");
+    QString resp = cmd + "\rJingle data cleared successfully.\n\r";
+    if (serial.send(cmd, resp)) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Failed to clear Jingle Data."));
+        return;
+    }
+
+    // Attempt to write each Jingle to RAM
+    for (uint32_t comp_idx = 0; comp_idx < compositions.size(); comp_idx++) {
+        Composition::ErrorCode comp_err_code = compositions[comp_idx].download(serial, comp_idx);
+        if (comp_err_code != Composition::NO_ERROR) {
+            QMessageBox::information(this, tr("Error"),
+                tr("Failed downloading Jingle %1 via %2.\n\nError: %3")
+                .arg(comp_idx)
+                .arg(serial_port_name)
+                .arg(Composition::getErrorString(comp_err_code)));
+            return;
+        }
+    }
+
+    // Save Jingle data in controller RAM to EEPROM
+    cmd = "jingle eeprom save\n";
+    resp = cmd + "\rSave complete\n\r";
+    if (serial.send(cmd, resp, 100)) {
+        QMessageBox::information(this, tr("Error"),
+            tr("Failed to save Jingle Data."));
+        return;
+    }
+
+    QMessageBox::information(this, tr("Success!"),
+        tr("Jingle Data Saved to EEPROM."));
 }

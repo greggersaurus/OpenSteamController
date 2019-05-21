@@ -367,10 +367,11 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
     QString cmd;
     QString resp;
 
-// TODO: bounds check jingleIdx
-
-//TODO: think through adding and jingleIdx, how do we make sure these line up...?
-// Maybe have jingle add take index and fail if it does not match where next jingle goes?
+    // Bounds check jingleIdx
+    if (jingleIdx >= MAX_NUM_COMPS) {
+        qDebug() << "Specified jingleIdx is out of bounds " << jingleIdx;
+        return BAD_IDX;
+    }
 
     const uint32_t meas_start_idx = getMeasStartIdx();
     const uint32_t meas_end_idx = getMeasEndIdx();
@@ -387,7 +388,7 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
     cmd = "jingle add ";
     cmd += QString::number(num_notes_r) + QString(" ");
     cmd += QString::number(num_notes_l) + QString("\n");
-    resp = cmd + "\rJingle added successfully.\n\r";
+    resp = cmd + "\rJingle " + QString::number(jingleIdx) + " added successfully.\n\r";
     serial_err_code = serial.send(cmd, resp);
     if (serial_err_code != SCSerial::NO_ERROR) {
         qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
