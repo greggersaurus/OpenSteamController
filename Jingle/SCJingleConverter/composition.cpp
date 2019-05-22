@@ -77,7 +77,7 @@ Composition::ErrorCode Composition::parse() {
     chordIdxR = 0;
     chordIdxL = 0;
 
-    bpm = 100;
+    bpm = 0;
     octaveAdjust = 1.f;
 
     if (!file.open(QFile::ReadOnly | QFile::Text)) {
@@ -105,7 +105,9 @@ Composition::ErrorCode Composition::parse() {
         } else if (xml.name() == QLatin1String("per-minute")) {
             if (xml.tokenType() == QXmlStreamReader::StartElement) {
                 xml.readNext();
-                bpm = xml.text().toUInt();
+                if (xml.text().toUInt() > bpm) {
+                    bpm = xml.text().toUInt();
+                }
             }
         } else if (xml.name() == QLatin1String("divisions")) {
             if (xml.tokenType() == QXmlStreamReader::StartElement) {
@@ -123,40 +125,50 @@ Composition::ErrorCode Composition::parse() {
     // Update default configurations
     measEndIdx = getNumMeasures()-1;
 
-    // Final data sanity checks and adjustments:
-    float max_meas_len = 0.f;
+    if (!bpm) {
+        qDebug() << "No BPM specification found. Defaulting to 100 bpm.";
+        bpm = 100;
+    }
 
+    // Make sure all Voices have the same number of measures. It is possible that some Voices
+    //  have fewer Measures as they come and go
     for (std::map<QString, Voice>::iterator itr = voices.begin(); itr != voices.end(); itr++) {
         Voice& voice = itr->second;
 
-        // Make sure all Voices have the same number of measures. It is possible that some Voices
-        //  have fewer Measures as they come and go
         while (voice.measures.size() < measCnt) {
             voice.measures.push_back(Measure());
         }
-
-        // Calculate what the maximum cumulative Note length is in the Measure
-        for (uint32_t meas_idx = 0; meas_idx < voice.measures.size(); meas_idx++) {
-            float meas_len = 0.f;
-            Measure& meas = voice.measures[meas_idx];
-            for (uint32_t note_idx = 0; note_idx < meas.notes.size(); note_idx++) {
-                Note& note = meas.notes[note_idx];
-                meas_len += note.length;
-            }
-
-            if (meas_len > max_meas_len) {
-                max_meas_len = meas_len;
-            }
-        }
     }
 
-    for (std::map<QString, Voice>::iterator itr = voices.begin(); itr != voices.end(); itr++) {
-        Voice& voice = itr->second;
-        for (uint32_t meas_idx = 0; meas_idx < voice.measures.size(); meas_idx++) {
+    // Make sure each measure is the same length (adding appropriate length rests to empty Measures)
+    for (uint32_t meas_idx = 0; meas_idx <= measEndIdx; meas_idx++) {
+
+        // First find out what the maximum length is across all Voices for this Measure
+        float max_meas_len = 0.f;
+
+        for (std::map<QString, Voice>::iterator itr = voices.begin(); itr != voices.end(); itr++) {
+            Voice& voice = itr->second;
+            Measure& meas = voice.measures[meas_idx];
+
+            float meas_length = 0.f;
+            for (uint32_t note_idx = 0; note_idx < meas.notes.size(); note_idx++) {
+                Note& note = meas.notes[note_idx];
+                meas_length += note.length;
+            }
+
+            if (meas_length > max_meas_len) {
+                max_meas_len = meas_length;
+            }
+        }
+
+        // Now fill empty Measures with rests of the max length, and make sure all non-empty measures
+        //  match the max length
+        for (std::map<QString, Voice>::iterator itr = voices.begin(); itr != voices.end(); itr++) {
+            Voice& voice = itr->second;
             Measure& meas = voice.measures[meas_idx];
 
             if (!meas.notes.size()) {
-                // If Measure is empty, add Note that is length of all other Measures
+                // If Measure is empty, add reset Note that is length of all other Measures
                 meas.notes.push_back(Note());
                 meas.notes[0].length = max_meas_len;
                 meas.notes[0].frequencies.push_back(0.f);
@@ -172,7 +184,7 @@ Composition::ErrorCode Composition::parse() {
                     std::sort(note.frequencies.begin(), note.frequencies.end(), std::greater<float>());
                 }
 
-                if (roundf(meas_len) != roundf(max_meas_len)) {
+                if (fabs(meas_len- max_meas_len) >= 0.01) {
                     qDebug() << "Measure length of " << meas_len << " detected."
                         << "All measures should have length " << max_meas_len;
                     return XML_PARSE;
@@ -241,6 +253,8 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QS
 
     Voice& voice = voices[voice_key];
 
+    // Add Measures if needed so this Note data ends up in the correct place
+    //  Empty measures will be filled in with appropriate rests at the end of the parse
     while (voice.measures.size() < measCnt) {
         voice.measures.push_back(Measure());
     }
@@ -460,12 +474,13 @@ QString Composition::noteToCmd(const Note& note, Channel chan, uint32_t jingleId
 
     // TODO: should this ever be different?
     const uint32_t duty_cydle = 128;
+
     uint32_t frequency = static_cast<uint32_t>(note.frequencies.back() * octaveAdjust);
     if (chordIdx < note.frequencies.size()) {
         frequency = static_cast<uint32_t>(note.frequencies[chordIdx] * octaveAdjust);
     }
 
-    const uint32_t duration_ms = static_cast<uint32_t>(note.length * 60 * 1000 / bpm);
+    const uint32_t duration_ms = static_cast<uint32_t>(round(note.length * 60 * 1000 / bpm));
 
     QString cmd = QString("jingle note ") + QString::number(jingleIdx) + QString(" ") +
             chan_str + QString(" ") +

@@ -24,25 +24,28 @@ These items relate to improving the experience of customizing Jingles
         * What if you didn't backup your fw?
             * Test to make sure that updating to ble fw via Steam then updating LPC FW to 2016 fw manually will not cause issues
             * Steps on how to download from the web... Link to Steam help forum source
-* Comments, comments, comments for SCJingleConverter
-    * Mostly just needed in mainwindow at this point
 
 * The immediate path to being done
+    * Accept compressed musicXML (.mxl) as input
+        * Can use https://musescore.com/sheetmusic to get new tunes directly?
+    * Comments, comments, comments for SCJingleConverter
+        * Mostly just needed in mainwindow at this point
     * Review and see if there are any major TODOs left for GUI functionality
     * Move onto documentation/presentation for this and the remainder of the project
     * Use tools to add Mario Theme to Faux Pro Controller
 
-* Something off with Channels lining up sometimes...
+* Bug: Consecutive notes still seem to bleed together...
+    * Is extension of Notes to eliminate bleed leading to drift?!?!?
+    * Try saving to EEPROM and see if song that drifts sounds better...
+* Bug: Something off with Channels lining up sometimes...
     * Mario Maker 2 with Measure 2 - 6 and Part 1 Voice 1 and Part 1 Voice 5
+    * Seems to be a drift over time issue... round seems to have improved it
+        * Add additional verification step in download?
+        * See if it sounds better in with official FW?
+    
 
-* Testing
-    * Start using musicxml files that have not been trimmed
-    * Try to find musicxml configuration we are not prepared for
-        * Could backup be used to designate more than two "parts" within an official part token?
 * Make child SCSerial class for case of not having controller connected?
     * Allows user to select method that writes commands out to file for manual input later??
 * GUI
-    * Accept compressed musicXML (.mxl)
-        * Can use https://musescore.com/sheetmusic to get new tunes directly?
     * Add window to show serial communications?
         * Gives user idea of what we are doing when Jingles are being updated on controller
