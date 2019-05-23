@@ -45,6 +45,8 @@ public:
     enum ErrorCode {
         NO_ERROR,
         FILE_OPEN,
+        BAD_FILE_TYPE,
+        DECOMPRESS_FAILURE,
         XML_PARSE,
         CMD_ERR,
         BAD_IDX,
@@ -64,6 +66,10 @@ public:
             return "No error.";
         case FILE_OPEN:
             return "Failed to open musicxml file.";
+        case BAD_FILE_TYPE:
+            return "Unknown file type provided.";
+        case DECOMPRESS_FAILURE:
+            return "Failed to decompress .mxl file data.";
         case XML_PARSE:
             return "Error parsing musicxml file.";
         case CMD_ERR:

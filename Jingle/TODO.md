@@ -26,12 +26,11 @@ These items relate to improving the experience of customizing Jingles
             * Steps on how to download from the web... Link to Steam help forum source
 
 * The immediate path to being done
-    * Accept compressed musicXML (.mxl) as input
-        * Can use https://musescore.com/sheetmusic to get new tunes directly?
     * Comments, comments, comments for SCJingleConverter
         * Mostly just needed in mainwindow at this point
     * Review and see if there are any major TODOs left for GUI functionality
     * Move onto documentation/presentation for this and the remainder of the project
+        * Mention use of https://musescore.com/sheetmusic to get new tunes directly?
     * Use tools to add Mario Theme to Faux Pro Controller
 
 * Bug: Consecutive notes still seem to bleed together...
@@ -43,9 +42,13 @@ These items relate to improving the experience of customizing Jingles
         * Add additional verification step in download?
         * See if it sounds better in with official FW?
     
-
 * Make child SCSerial class for case of not having controller connected?
     * Allows user to select method that writes commands out to file for manual input later??
-* GUI
-    * Add window to show serial communications?
-        * Gives user idea of what we are doing when Jingles are being updated on controller
+* Add window to show serial communications?
+    * Gives user idea of what we are doing when Jingles are being updated on controller
+* Accept compressed musicXML (.mxl) as input?
+    * Would mean one less step when using https://musescore.com/sheetmusic (i.e. no .mxl to musicxml conversion)
+    * Hooks are in GUI for adding this
+    * However, .mxl file format is more complex than just using zlib to decompress...
+        * Need functionality to navigate .mxl to find where comprssed .musicxml data exists...
+        * See MuseScore source (mscore/importxml.cpp) for example

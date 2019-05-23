@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent)
 }
 
 /**
- * @brief MainWindow::~MainWindow Desctructor.
+ * @brief MainWindow::~MainWindow Destructor.
  */
 MainWindow::~MainWindow() {
     delete ui;
@@ -84,6 +84,12 @@ Composition* MainWindow::getSelectedComposition() {
     return &compositions[static_cast<uint32_t>(comp_idx)];
 }
 
+/**
+ * @brief MainWindow::on_playJinglePushButton_clicked User has pressed button to
+ *  demo what a single Jingle will sound like via the Haptics as currently configured.
+ *
+ * @return None.
+ */
 void MainWindow::on_playJinglePushButton_clicked() {
     QString serial_port_name = ui->serialPortComboBox->currentText();
     SCSerial serial(serial_port_name);
@@ -107,7 +113,8 @@ void MainWindow::on_playJinglePushButton_clicked() {
         return;
     }
 
-    // Make sure there is enough memory to download Jingle...
+    // Make sure there is enough memory to download selected Jingle
+    //  as currently configured
     uint32_t num_bytes = Composition::EEPROM_HDR_NUM_BYTES +
             composition->getMemUsage();
 
@@ -120,6 +127,8 @@ void MainWindow::on_playJinglePushButton_clicked() {
         return;
     }
 
+    // Since this is a demo mode, we are only concerned with the single
+    //  Jingle. Best to start by clearing Steam Controller Jingle Data in RAM
     QString cmd("jingle clear\n");
     QString resp = cmd + "\rJingle data cleared successfully.\n\r";
     if (serial.send(cmd, resp)) {
@@ -128,6 +137,7 @@ void MainWindow::on_playJinglePushButton_clicked() {
         return;
     }
 
+    // Since we clear before add Jingle, it will always be at index 0
     Composition::ErrorCode comp_err_code = composition->download(serial, 0);
     if (comp_err_code != Composition::NO_ERROR) {
         QMessageBox::information(this, tr("Error"),
@@ -137,7 +147,7 @@ void MainWindow::on_playJinglePushButton_clicked() {
         return;
     }
 
-    // Since we clear before add Jingle, it will always be at index 0
+    // Now instruct the Controller to play the Jingle downloaded to index 0
     cmd = "jingle play 0\n";
     resp = cmd + "\rJingle play started successfully.\n\r";
     if (serial.send(cmd, resp)) {
@@ -147,16 +157,34 @@ void MainWindow::on_playJinglePushButton_clicked() {
     }
 }
 
+/**
+ * @brief MainWindow::on_browsePushButton_clicked Button to bring up a file
+ *      brower so that user can find their MusicXML files that contain the
+ *      Jingles they want to try and download.
+ *
+ * @return None.
+ */
 void MainWindow::on_browsePushButton_clicked()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
         ("Open musicXML File"),
         QDir::homePath(),
-        ("musixXML (*.musicxml)"));
+        ("MusicXML Files (*.musicxml)"));
+        // For when .mxl import support is added (maybe)
+        //("MusicXML Files (*.musicxml *.mxl)"));
 
     ui->musicXmlPathLineEdit->setText(fileName);
 }
 
+/**
+ * @brief MainWindow::on_convertPushButton_clicked One file path line edit
+ *      has been filled in (either manually or via the Browse button)
+ *      convert instructs us to actually parse the MusicXML file so that
+ *      the Composition can be configured in order to download the
+ *      desired Notes as a Jingle.
+ *
+ * @return None.
+ */
 void MainWindow::on_convertPushButton_clicked()
 {
     if (compositions.size() > Composition::MAX_NUM_COMPS) {
@@ -166,31 +194,46 @@ void MainWindow::on_convertPushButton_clicked()
         return;
     }
 
-    QString filename = ui->musicXmlPathLineEdit->text();
+    QString full_filename = ui->musicXmlPathLineEdit->text();
+    QString reduced_filename = full_filename;
 
-    compositions.push_back(Composition(filename));
+    // Remove .musicxml extension or .mxl extension
+    if (full_filename.endsWith(".musicxml")) {
+        reduced_filename.resize(reduced_filename.size() - QString(".musicxml").size());
+    // Add back in when/if support for .mxl is added
+    /*
+    } else if (full_filename.endsWith(".mxl")) {
+        reduced_filename.resize(reduced_filename.size() - QString(".mxl").size());
+    */
+    } else {
+        QMessageBox::information(this, tr("Error"),
+            tr("Bad extension on file '%1'.\nError: %2")
+            .arg(full_filename));
+        return;
+    }
+
+    // Create string to identify this Composition
+    // Remove path
+    QStringList list = reduced_filename.split('/');
+    reduced_filename = list[list.size()-1];
+    list = reduced_filename.split('\\');
+    reduced_filename = list[list.size()-1];
+
+    compositions.push_back(Composition(full_filename));
     Composition& composition = compositions.back();
 
     Composition::ErrorCode comp_err_code = composition.parse();
     if (Composition::NO_ERROR != comp_err_code) {
         QMessageBox::information(this, tr("Error"),
             tr("Failed to parse file '%1'.\nError: %2")
-            .arg(filename)
+            .arg(full_filename)
             .arg(Composition::getErrorString(comp_err_code)));
         compositions.pop_back();
         return;
     }
 
-    // Create string to identify this Composition
-    // Remove path
-    QStringList list = filename.split('/');
-    filename = list[list.size()-1];
-    list = filename.split('\\');
-    filename = list[list.size()-1];
-    // Remove .musicxml extension
-    filename.resize(filename.size() - QString(".musicxml").size());
     // Add identifier string and make sure it is selected
-    ui->jingleListWidget->addItem(filename);
+    ui->jingleListWidget->addItem(reduced_filename);
     ui->jingleListWidget->setCurrentItem(ui->jingleListWidget->item(ui->jingleListWidget->count()-1));
     ui->jingleListWidget->repaint();
 
@@ -201,6 +244,16 @@ void MainWindow::on_convertPushButton_clicked()
     updateMemUsage();
 }
 
+/**
+ * @brief MainWindow::updateMemUsage The Steam Controller only has EEPROM_HDR_NUM_BYTES
+ *      of EEPROM to work with in terms of Jingle Data. (This is determined by the
+ *      official controller firmware). A progress bar and label convey to the user
+ *      how much of that data they are currently using with their Compositions
+ *      Configured as is. Call this function any time a new Composition is added
+ *      or Composition configured is changed.
+ *
+ * @return None.
+ */
 void MainWindow::updateMemUsage() {
     const int PROG_BAR_MAX = 100;
 
@@ -227,6 +280,14 @@ void MainWindow::updateMemUsage() {
     ui->memUsageCurrBytesLabel->repaint();
 }
 
+/**
+ * @brief MainWindow::updateCompositionDisplay This updates the GUI elements that are
+ *      specific to the selected Composition. When a Composition is selected (or new
+ *      one added) these fields need to be updated based on the configuration for
+ *      that Composition.
+ *
+ * @return None.
+ */
 void MainWindow::updateCompositionDisplay() {
     Composition* composition = getSelectedComposition();
     if (!composition) {
@@ -279,6 +340,16 @@ void MainWindow::updateCompositionDisplay() {
     updateChordComboBox(Composition::RIGHT);
 }
 
+/**
+ * @brief MainWindow::updateChordComboBox Chord combo boxes allow a user to
+ *      select which Note in a chord is to be played. However, what selections
+ *      are available can change based on a variety of actions (i.e. changing
+ *      the start and/or stop measure).
+ *
+ * @param chan Defines which Channel/Haptic we are referring to.
+ *
+ * @return None.
+ */
 void MainWindow::updateChordComboBox(Composition::Channel chan) {
     Composition* composition = getSelectedComposition();
     if (!composition) {
@@ -318,6 +389,12 @@ void MainWindow::updateChordComboBox(Composition::Channel chan) {
     combo_box->repaint();
 }
 
+/**
+ * @brief MainWindow::on_delJingleToolButton_clicked Used has pressed button
+ *      to remove a Jingle that was previously added.
+ *
+ * @return None.
+ */
 void MainWindow::on_delJingleToolButton_clicked()
 {
     Composition* composition = getSelectedComposition();
@@ -365,6 +442,13 @@ void MainWindow::on_delJingleToolButton_clicked()
     updateMemUsage();
 }
 
+/**
+ * @brief MainWindow::on_mvJingleDownToolButton_clicked For organizing
+ *      the order of the Jingles. This determines which index they become
+ *      when saved to EEPROM.
+ *
+ * @return None.
+ */
 void MainWindow::on_mvJingleDownToolButton_clicked()
 {
     Composition* composition = getSelectedComposition();
@@ -389,6 +473,13 @@ void MainWindow::on_mvJingleDownToolButton_clicked()
     compositions[static_cast<uint32_t>(comp_idx)+1] = comp;
 }
 
+/**
+ * @brief MainWindow::on_mvJingleUpToolButton_clicked Similar to
+ *      on_mvJingleDownToolButton_clicked except moving Composition in other
+ *      direction on list.
+ *
+ * @return None.
+ */
 void MainWindow::on_mvJingleUpToolButton_clicked()
 {
     Composition* composition = getSelectedComposition();
@@ -413,6 +504,14 @@ void MainWindow::on_mvJingleUpToolButton_clicked()
     compositions[static_cast<uint32_t>(comp_idx)-1] = comp;
 }
 
+/**
+ * @brief MainWindow::on_jingleListWidget_clicked User has selected a
+ *      Composition to configure or test play.
+ *
+ * @param index Unused.
+ *
+ * @return None.
+ */
 void MainWindow::on_jingleListWidget_clicked(const QModelIndex &index)
 {
     Q_UNUSED(index);
@@ -423,6 +522,14 @@ void MainWindow::on_jingleListWidget_clicked(const QModelIndex &index)
     updateCompositionDisplay();
 }
 
+/**
+ * @brief MainWindow::on_startMeasComboBox_activated Used has changed Start
+ *      Measure configuration for currently selected Composition.
+ *
+ * @param index Defines Start Measure index that has been selected.
+ *
+ * @return None.
+ */
 void MainWindow::on_startMeasComboBox_activated(int index)
 {
     Composition* composition = getSelectedComposition();
@@ -450,6 +557,14 @@ void MainWindow::on_startMeasComboBox_activated(int index)
     updateMemUsage();
 }
 
+/**
+ * @brief MainWindow::on_endMeasComboBox_activated Used has changed End
+ *      Measure configuration for currently selected Composition.
+ *
+ * @param index Defines End Measure index that has been selected.
+ *
+ * @return None.
+ */
 void MainWindow::on_endMeasComboBox_activated(int index)
 {
     Composition* composition = getSelectedComposition();
@@ -477,6 +592,12 @@ void MainWindow::on_endMeasComboBox_activated(int index)
     updateMemUsage();
 }
 
+/**
+ * @brief MainWindow::on_octaveAdjustLineEdit_editingFinished Allows user to
+ *      specificy multiplication factor for adjusting all Note frequencies.
+ *
+ * @return None.
+ */
 void MainWindow::on_octaveAdjustLineEdit_editingFinished()
 {
     Composition* composition = getSelectedComposition();
@@ -491,6 +612,12 @@ void MainWindow::on_octaveAdjustLineEdit_editingFinished()
     composition->setOctaveAdjust(octave_adjust);
 }
 
+/**
+ * @brief MainWindow::on_bpmLineEdit_editingFinished Allows user to adjust
+ *      playback speed.
+ *
+ * @return None.
+ */
 void MainWindow::on_bpmLineEdit_editingFinished()
 {
     Composition* composition = getSelectedComposition();
@@ -505,6 +632,14 @@ void MainWindow::on_bpmLineEdit_editingFinished()
     composition->setBpm(bpm);
 }
 
+/**
+ * @brief MainWindow::on_chanChordLeftComboBox_activated Allows user to specify
+ *      which Frequency in Chord Notes is to be played.
+ *
+ * @param index Defines which Chord Index selection was made.
+ *
+ * @return None.
+ */
 void MainWindow::on_chanChordLeftComboBox_activated(int index)
 {
     Composition* composition = getSelectedComposition();
@@ -527,6 +662,14 @@ void MainWindow::on_chanChordLeftComboBox_activated(int index)
     }
 }
 
+/**
+ * @brief MainWindow::on_chanChordRightComboBox_activated Allows user to specify
+ *      which Frequency in Chord Notes is to be played.
+ *
+ * @param index Defines which Chord Index selection was made.
+ *
+ * @return None.
+ */
 void MainWindow::on_chanChordRightComboBox_activated(int index)
 {
     Composition* composition = getSelectedComposition();
@@ -549,6 +692,14 @@ void MainWindow::on_chanChordRightComboBox_activated(int index)
     }
 }
 
+/**
+ * @brief MainWindow::on_chanSourceLeftComboBox_activated User selects which
+ *      Voice of Composition will be played on Left Haptic.
+ *
+ * @param voiceStr Key used to refer to Notes in a particular Voice.
+ *
+ * @return None.
+ */
 void MainWindow::on_chanSourceLeftComboBox_activated(const QString& voiceStr)
 {
     Composition* composition = getSelectedComposition();
@@ -569,6 +720,14 @@ void MainWindow::on_chanSourceLeftComboBox_activated(const QString& voiceStr)
     updateMemUsage();
 }
 
+/**
+ * @brief MainWindow::on_chanSourceRightComboBox_activated User selects which
+ *      Voice of Composition will be played on Right Haptic.
+ *
+ * @param voiceStr Key used to refer to Notes in a particular Voice.
+ *
+ * @return None.
+ */
 void MainWindow::on_chanSourceRightComboBox_activated(const QString& voiceStr)
 {
     Composition* composition = getSelectedComposition();
@@ -592,6 +751,8 @@ void MainWindow::on_chanSourceRightComboBox_activated(const QString& voiceStr)
 /**
  * @brief MainWindow::on_clearJinglesPushButton_clicked User is instructing us to clear EEPROM so
  *      that Steam Controller uses defaults baked into official Firmware.
+ *
+ * @return None.
  */
 void MainWindow::on_clearJinglesPushButton_clicked()
 {
@@ -623,6 +784,8 @@ void MainWindow::on_clearJinglesPushButton_clicked()
  * @brief MainWindow::on_saveJinglesPushButton_clicked User is instructing us to save all
  *      converted Compositions to Jingle Data to EEPROM so that when official firmware is
  *      loaded the controller will still use the customized Jingles.
+ *
+ * @return None.
  */
 void MainWindow::on_saveJinglesPushButton_clicked()
 {

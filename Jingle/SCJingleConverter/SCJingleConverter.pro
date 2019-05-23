@@ -25,6 +25,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11
 
+# zlib is being used to decompress .mxl (compressed musicxml) files
+LIBS += -lz
+
 SOURCES += \
         main.cpp \
         mainwindow.cpp \

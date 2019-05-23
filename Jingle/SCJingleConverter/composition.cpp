@@ -36,6 +36,8 @@
 #include <cmath>
 #include <algorithm>
 
+#include "zlib.h"
+
 /**
  * @brief Composition::Composition Constructor for class to help parse musicxml
  *      file and communicate Jingle Data to Steam Controller.
@@ -64,8 +66,92 @@ Composition::Composition(QString filename)
  */
 Composition::ErrorCode Composition::parse() {
     QFile file(filename);
-
     QXmlStreamReader xml;
+
+    if (filename.endsWith(".musicxml")) {
+        // Open uncompressed musicxml file and connected with xml reader
+        if (!file.open(QFile::ReadOnly | QFile::Text)) {
+            qDebug() << "Failed to open file " << filename;
+            return FILE_OPEN;
+        }
+
+        xml.setDevice(&file);
+    } else if (filename.endsWith(".mxl")) {
+
+        // .mxl file format is more complex than originally thought... Leaving some of this
+        //   here in case someone find it useful to adding support later...
+        return BAD_FILE_TYPE;
+        /*
+        // Decomporess data and then add data to xml reader
+        const int CHUNK_SIZE = 16384;
+
+        // Based on zlib example https://zlib.net/zlib_how.html
+        int ret, flush;
+        unsigned have;
+        z_stream strm;
+        unsigned char in[CHUNK_SIZE];
+        unsigned char out[CHUNK_SIZE];
+
+        // Allocate inflate state
+        strm.zalloc = Z_NULL;
+        strm.zfree = Z_NULL;
+        strm.opaque = Z_NULL;
+        strm.avail_in = 0;
+        strm.next_in = Z_NULL;
+
+        ret = inflateInit2(&strm, -MAX_WBITS);
+        if (ret != Z_OK) {
+            qDebug() << "inflateInit() failed.";
+            return DECOMPRESS_FAILURE;
+        }
+
+        FILE* source = fopen(filename.toStdString().c_str(), "rb");
+        if (!source) {
+            qDebug() << "Failed to open file " << filename;
+            return FILE_OPEN;
+        }
+
+        // Decompress until deflate stream ends or end of file
+        do {
+            strm.avail_in = static_cast<uInt>(fread(in, 1, CHUNK_SIZE, source));
+            if (ferror(source)) {
+                inflateEnd(&strm);
+                qDebug() << "Error reading chunk from input file.";
+                return DECOMPRESS_FAILURE;
+            }
+
+            if (strm.avail_in == 0)
+                break;
+
+            strm.next_in = in;
+
+            // Run inflate() on input until output buffer not full
+            do {
+                strm.avail_out = CHUNK_SIZE;
+                strm.next_out = out;
+
+                ret = inflate(&strm, Z_NO_FLUSH);
+                if (ret != Z_OK) {
+                    inflateEnd(&strm);
+                    qDebug() << "inflate() failed (" << ret << "): " << strm.msg;
+                    return DECOMPRESS_FAILURE;
+                }
+
+                have = CHUNK_SIZE - strm.avail_out;
+                for (int idx = 0; idx < have; idx++) {
+                    printf("%c", out[idx]);
+                }
+                //TODO: write decompressed data to byte array
+            } while (strm.avail_out == 0);
+        } while (ret != Z_STREAM_END);
+
+        inflateEnd(&strm);
+
+        xml.addData();
+        */
+    } else {
+        return BAD_FILE_TYPE;
+    }
 
     measCnt = 0;
     voices.clear();
@@ -79,13 +165,6 @@ Composition::ErrorCode Composition::parse() {
 
     bpm = 0;
     octaveAdjust = 1.f;
-
-    if (!file.open(QFile::ReadOnly | QFile::Text)) {
-        qDebug() << "Failed to open file " << filename;
-        return FILE_OPEN;
-    }
-
-    xml.setDevice(&file);
 
     uint32_t part_cnt = 0;
 
