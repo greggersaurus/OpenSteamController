@@ -5,6 +5,33 @@ The purpose of this document is to track information regarding the software that
  with 16-bit Thumb ISA and includes Thumb-2 technology.
 
 
+# Reverse Engineering Artifacts
+
+This section details the results of the reverse engineering effort. These are 
+ the final references that contain data which is the basis for other Subprojects.
+
+Now that the artifacts below pertain to the vcf_wired_controller_d0g_57bf5c10.bin
+ firmware provided by Valve.
+
+## vcf_wired_controller_d0g_57bf5c10.c
+
+This file contains data on how the simulation has show the controller to behave
+ in different scenarios. The idea is to capture and identify as many actions
+ as possible (with a focus on finding recurring code and memory usage) so that
+ controller behavior can be understood to the extent and completely custom
+ firmware can be created. 
+
+## vcf_wired_controller_d0g_57bf5c10.h
+
+This file tracks unique functions called in vcf_wired_controller_d0g_57bf5c10.c
+ and attempts to document each function as best as possible.
+
+## vcf_wired_controller_d0g_57bf5c10.mem
+
+The file tracks memory usage and attempts to identify how different section of 
+ memory are used by the firmware. 
+
+
 # Resources 
 
 * [Datasheet](http://www.nxp.com/documents/data_sheet/LPC11U3X.pdf?fasp=1&WT_TYPE=Data%20Sheets&WT_VENDOR=FREESCALE&WT_FILE_FORMAT=pdf&WT_ASSET=Documentation&fileExt=.pdf)

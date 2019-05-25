@@ -22,6 +22,8 @@ These items relate to better understanding how the official Steam Controller
     1. Try putting dead (or nearly dead) battery in and checking
         1. But maybe GPIOs, etc. need to be set differently?
 
+1. Documentation
+    1. Update http://media.steampowered.com/controller_config//firmware/vcf_wired_controller_d0g_57bf5c10.bin with datasheets, etc.
 1. Make TODOs for maybe in the future getting more details on following IRQs
     1. PINT0
     1. PINT1
@@ -36,9 +38,6 @@ These items relate to better understanding how the official Steam Controller
 1. USB related callbacks (at leats resume one...)
     1. Seems some variable related to wfi loop in main path may be related to USB (and maybe changed in callback functions?)
 
-1. Consider converting project(s) to CPP
-    1. What version does compiler support?
-        1. constexpr goodness?
 1. Consider latest firmware update from Valve (new firmware to enable BLE for new Steam Link app)
     1. Look at what has changed?
     1. Will new tooling help to decompose the new firmware faster?

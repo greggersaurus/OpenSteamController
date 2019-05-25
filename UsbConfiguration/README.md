@@ -1,9 +1,11 @@
 # USB Configuration 
 
-Steam offers the ability to change certain configuration options for a Steam
- Controller (i.e. change LED brightness, change jingle to one of a few 
- pre-defined options). This directory contains work for understanding, 
- reproducing and, maybe, expanding upon this functionality.
+The work in this directory focuses on interfacing with the official firmware of
+ the Steam Controller via USB. Steam offers the ability to change certain 
+ configuration options for a Steam Controller (i.e. change LED brightness, 
+ change Jingle to one of a few pre-defined options). This directory contains 
+ work for understanding, reproducing and, maybe, expanding upon this functionality.
+
 
 # Goals 
 
@@ -55,6 +57,7 @@ The following detail the various pieces of controller information that I want to
 * Reproduction of what Steam does automatically when it detects out of date firmware, but this will allow for loading custom firmware or specifying which previous firmware specified in vdf should be installed
 * Status: Captured USB data 
 * TODO: Analyze USB data and implement function. Look for failure retry in captured data. 
+
 
 # USB Data Capture
 

@@ -3,6 +3,10 @@
 This is a running list of ways in which I think the [OpenSteamController](./OpenSteamController)
  Firmware could be improved:
 
+1. Make youtube walkthrough videos
+    1. Firmware Switch Controller Build
+    1. Firmware Dev Build
+
 1. all
     1. Used #elif where applicable... (see main.c changes...)
 
@@ -18,7 +22,8 @@ This is a running list of ways in which I think the [OpenSteamController](./Open
         1. Debug isn't buying us anything on this platform anyways, right?
     1. Better build solution?
         1. Docker?
-        1. Try with latest tools from NXP?
+        1. Try with latest tools (IDE) from NXP?
+    1. Consider C++ instead of C?
 1. Documentation
     1. Create videos to illustrate custom firmware?
         1. Loading new FW
@@ -28,8 +33,6 @@ This is a running list of ways in which I think the [OpenSteamController](./Open
         1. Details on where lpc project came from
         1. Intention and requirements (i.e. lpc project) for OpenSteamController project
     1. Make sure all functions have usage 
-1. jingle_data.c
-    1. Needs more support functions for adding new Jingles, notes, etc.
 1. haptic.c
     1. Check range on input arguments
     1. playHaptic() should copy data?
@@ -40,7 +43,7 @@ This is a running list of ways in which I think the [OpenSteamController](./Open
             1. Need bounds check on how interrupt variables are setup to stop this from happening???
 1. init.c
     1. Verify values for OscRateIn and ExtRateIn
-    1. Evaluate if busy wait loop in stage1Init can/should be changed
+    1. Evaluate if (duration of?) busy wait loop in stage1Init can/should be changed
     1. Use #defines for GPIOs?
 1. led_ctrl.c
     1. Command to allow LED to blink

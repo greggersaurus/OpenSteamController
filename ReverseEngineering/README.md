@@ -1,8 +1,8 @@
 # Reverse Engineering
 
-The work in this directory focuses on deconstructing the firmware and hardware
+The work in this directory focuses on deconstructing the official firmware and hardware
  of the Steam Controller. The understanding gained from this is the basis for
- the other work being done in this project. 
+ the other Subprojects in the Open Steam Controller Project.
 
 
 # Understanding the Hardware

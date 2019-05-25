@@ -1,137 +1,121 @@
 # Jingle 
 
-We are defining a Jingle to be the series of Notes that are played on the 
- Right and Left Haptics when the Steam Controller powers up and powers down.
- The work in this directory will be geared towards understanding how Valve's 
- official firmware defines a Jingle and how we can leverage this to expand
- upon the default Jingles offered by Valve.
+The work in this directory is geared towards creating a user friendly way for
+ customizing what Jingles play when the Steam Controller starts up and shuts down
+ with the official firmare installed. A Jingle is defined to be the series of Notes that 
+ are played on the Right and Left Haptics.
+
+
+# Customizing Jingles
+
+This section details how a user can create and download custom Jingles onto
+ the Steam Controller. These Jingles will persist when the official firmware is
+ loaded and allows for customization of start up and shutdown Jingles without
+ having to move away from the official firmware provided by Valve.
+
+## Specifying New Jingles
+
+New Jingles are specified via Uncompressed MusicXML formatted files. MusicXML
+ is a standard format for sharing sheet music. This was chosen as the 
+ input format as there is already a plethora of music available. For example,
+ refer to [musescore.com](https://musescore.com) for a wide variety of songs. 
+
+Note that downloading a program like [musescore](https://musescore.org) may
+ be necessary. Not only does this allow for exporting music to the necessary
+ format (Uncompressed MusicXML with the extension .musicxml), but it also
+ provides tools for creating or precise modifying of already created songs.
+
+Once you have a series of .musicxml files that contain songs, or portions of
+ songs, you are looking to download as Jingles to the Steam Controller you
+ are ready for the next step of Prepping the Controller.
+
+## Prepping the Controller
+
+In order to custom the Jingles on the Steam Controller, the Steam Controller
+ must be running a specific version of the Open Steam Controller Firmware.
+ The binary that works with the SCJingle GUI is 
+ [OpenSteamController.bin](./bin/OpenSteamController.bin).
+
+First follow steps section Backing Up the Firmware of [Loading Firmware](../LoadingFirmware.md) 
+ to create a back up the firmware currently on your Steam Controller. 
+
+Second, follow steps section Manually Loading Firmware of [Loading Firmware](../LoadingFirmware.md)
+ to download [OpenSteamController.bin](./bin/OpenSteamController.bin) to your
+ controller.
+
+Once your controller is connected to your PC with the Open Steam Controller
+ Firmware running on it, you are ready to start Downloading Jingle Data to
+ the Controller. 
+
+## Downloading Jingle Data to the Controller
+
+SCJingle is a GUI created Qt which converts .musicxml files to Jingle Data
+ format and sends that data to the Steam Controller running Open Steam Controller 
+ Firmware.
+
+First, make sure the Steam Controller is connected to your PC and running
+ [OpenSteamController.bin](./bin/OpenSteamController.bin).
+
+Second, launch the GUI:
+* For macOS run [SCJingle](./bin/TODO).
+* For Windows run [SCJingle](./bin/TODO).
+* For Linux run [SCJingle](./bin/TODO).
+
+Third, load your .musicxml files using the Browse and Convert buttons. 
+
+Fourth, customize each Jingle by selecting them in the Converted Jingles 
+ display and then using the controls on the right to select Start/End Measure, 
+ Left/Right Channel Source, etc. Note that you can test play Jingles as you
+ customize what portion will play to see how they will sound. 
+
+Finally, save the Jingle Data to EEPROM. Once you have configured all the 
+ Jingles and customized them so that they fit within the Jingle Memory (see
+ the Jingle Memm Used Bar in the GUI for details), you can press the
+ Save to EEPROM button. Once this compelte successfully you rae ready to
+ restore the Official Controller Firmware.
+
+
+## Restoring the Official Controller Firmware
+
+Once custom Jingle Data has been saved to EEPROM you can restore the Steam
+ Controller firmware to the officially supported firmware and use the controller
+ like normal. 
+
+Use the previously backed firmware and follow the steps in [Loading Firmware](../LoadingFirmware.md) 
+ to manually restore this firmware. 
+
+If you did not backup the firmware or it became corrupted or was lost, follow the
+ Restoring Firmware section in [Loading Firmware](../LoadingFirmware.md).
+
+Once the officially supported firmware is loaded onto the controller it should
+ behave like normal, except that the custom Jingle Data you loaded will play
+ on start up and shutdown.
+
+
+## Clearing Jingle Data
+
+If you decide you want to go back to the default Jingle offered by Valve, follow
+ the steps outlined above, but after launching the SCJingle GUI, click the 
+ "Clear EEPROM" button and then restore the Official Controller Firmware. 
+
+
+# Jingle Data Details 
+
+See the [Jingle Data Details](./JingleData.md) document for details on what a
+ Jingle is and how the official firmware expects this to be organized.
+
+
+# Sources
 
 All the information in this document was deciphered via reverse engingineering
  Valve's official firmware. Refer to the 
- [Reverse Engineering](../ReverseEngineering/) subproject for details.
+ [Reverse Engineering](../ReverseEngineering/) Subproject for details. 
 
-TODO: mention jingle_data.c and how that is an implementation of the data captured here (also mention haptic.c as it details how haptics are controlled to produce Jingle)
-
-
-# Jingle Data Format
-
-This section details what a Jingle is, and how that information is represented
- as bits and bytes.
-
-## Note
-
-A Note is defined a generating a particular frequency via a haptic for a 
- particular amount of time. Notes are specified via the following data
- structure:
-
-| Byte Offset(s) | Field Name | Description | 
-|---------------:|------------|-------------|
-|              0 | Duty Cycle | Percentage time that pulse wave is high. 0 = 0% duty cycle and 511 = 100% duty cycle. |
-|              1 | Reserved   | Unused. |
-|            2:3 | Frequency  | Frequency of the pulse wave being generated for this Note in Hz. |
-|            4:5 | Duration   | The number of milliseconds for which the pulse wave is generated. |
-
-## Jingle
-
-A Jingle defines a sequence of of Notes to be played on each channel (i.e. 
- Haptic). Jingles are specified via the following data structure:
-
-| Byte Offset(s)                                                           |      Field Name | Description | 
-|-------------------------------------------------------------------------:|-----------------|-------------|
-|                                                                      0:1 | Num Notes Right | The Number of Notes to be played on the Right Haptic. |
-|                                                                      2:3 |  Num Notes Left | The Number of Notes to be played on the Left Haptic. |
-|                                              3:(2 + sizeof(Notes Right)) |     Notes Right | The sequence of Notes to be played on the Right Haptic. |
-| (3 + sizeof(Notes Right)):(2 + sizeof(Notes Right) + sizeof(Notes Left)) |      Notes Left | The sequence of Notes to be played on the Left Haptic. |
-
-## Jingle Data
-
-The Jingle Data structure stores information on multiple Jingles. This is what
- the official firmware reads into memory and references when instructed to
- play a Jingle at a specified index. Jingle Data is specified via the following
- data structure:
-
-|                                                Byte Offset(s) |       Field Name | Description | 
-|--------------------------------------------------------------:|------------------|-------------|
-|                                                           0:1 |       Magic Word | Word that indicates if Jingle Data is valid or not. 0xbead indicates valid data.  |
-|                                                           2:3 |         Reserved | Unused. |
-|                                                             4 |      Num Jingles | Defines how many Jingles are stored in this data structure. |
-|                                                             5 |         Reserved | Unused. |
-|                                       (6 + 2 * n):(7 + 2 * n) | Jingle[n] Offset | Byte offset (from beginning of Jingle Data structure) to beginning of data for Jingle at index n |
-| (Jingle[n] Offset):(Jingle[n] Offset + sizeof(Jingle[n]) - 1) |        Jingle[n] | See [Jingle](#Jingle) Section for further details. |
-
-
-# Jingle Data Locations
-
-This section details the different memory locations where Jingle Data may be 
- read from.
-
-## Default Jingle Data
-
-TODO: Mention packed into firmware, then read into ... Finally copied over onto ... (if EEPROM data is invalid)
-
-## EEPROM Jingle Data
-
-Upon boot offset 0x200 bytes are read from offset 0x800 in EEPROM. If the data
- read contains valid Jingle Data (i.e. Magic Word is 0xbead), this will be used
- in place of the default Jingle Data.
-
-
-# Creating Custom Jingles
-
-This section details how a user is given the tools to create their own Jingles.
-
-## Open Steam Controller Console Approach
-
-## MusicXML Approach
-
-
-# Custom Jingles
-
-This section details different approaches for allowing a user to customize
- the available Jingles that can be played.
-
-## Overwriting Default Jingle Data
-
-TODO: mention changing packed data in firmware, or changing assembly to read blob from previously empty section of firmware that we fill in with custom data
-
-For Firmware vcf_wired_controller_d0g_57bf5c10.bin:
-	(uint32_t*)0x000065d0 Stores how many bytes are in default Jingle Data (i.e. 0x3fa or 0x400)
-	(uint32_t*)0x000065d4 Stores location of where Jingle Data resides (i.e. 0x100003b8, which could be changed to address in flash that we fill with custom data...?)
-
-### Approach
-
-1. Modify default Jingle Data read from firmware
-    1. Not Great: data is packed into firmware (i.e. all 0 bytes/words are not actually in firmware, but handled upon read in) and this is another level to understand (and which may not be consistent with never versions)
-1. Modify firmware to read default Jingle Data from different location
-    1. Create Jingle Data blob (unpacked)
-    1. Write into unused section of firmware
-        1. Assumes we can detect unused section
-        1. Assumes contiguous 0x400 byte of unused space
-    1. Modify copy to 0x10001200 to read from flash instead of RAM
-        1. Will this actually work?
-
-### Risks
-
-## Specifying EEPROM Jingle Data
-
-This approach leverages the fact that the official firmware checks EEPROM to 
- see if it has valid Jingle Data in it. If we can provide users a way to 
- create custom Jingle Data and save it to EEPROM, this will allow them to
- have custom Jingles without needing to modifying the official firmware. 
-
-### Approach
-
-1. USB command (if it exists)
-    1. Need to simulate and see if this even possibly exists
-1. DevBoard/CustomFW
-    1. Clunky having to use cli to input new data
-
-### Risks
-
-Some of the data stored in EEPROM is vital to proper operation of the controller
- (i.e. Hardware Revision information). If this gets corrupted we run the risk of
- bricking a controller, or at best making it a challenge to get it running 
- properly again. 
+Additionally the [Firmware](../Firmware) Subproject has details and examples of
+ how this information is used to play a Jingle via the Steam Controller. See
+ [jingle_data.c](../Firmware/OpenSteamController/src/jingle_data.c) and 
+ [haptic.c](../Firmware/OpenSteamController/src/haptic.c) specifically for 
+ further details.
 
 
 # TODO
