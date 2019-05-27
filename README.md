@@ -2,7 +2,7 @@
 
 Welcome to the Open Steam Controller Project!
 
-The primary intention of this project is to explore, deconstruct and, hopefully,
+The primary intention of this project is to explore, deconstruct and
  expand upon configuration options and usages for the Steam Controller. 
 
 A secondary intention is for this project to be an educational and/or 
@@ -14,14 +14,14 @@ Note that this project started with a much smaller scope and you may come across
  echoes of that. Originally the hope was that this would be a small project that
  would provide a method to modify Valve's official firmware in order
  to customize the start up and shutdown Jingles played by the controller using
- the haptics. However, the process of attempting to figure out to do this
+ the haptics. However, the process of attempting to figure out how to do this
  turned into a significant reverse engineering effort. The knowledge gained so 
- far is allows for doing much more with the Steam Controller than originally 
+ far allows for doing much more with the Steam Controller than originally 
  intended, and while a major goal still is to provide a user friendly method to 
  allow a user to modify the Jingles played by Valve's official firmware, 
  that is no longer the sole goal of this project. 
 
-For a starting point on additional details on the accomplishments and future
+For a starting point on additional details and the accomplishments and future
  intentions of this project please see the Subprojects section below. 
 
 
@@ -39,13 +39,13 @@ Also please note this is being shared primarily for educational purposes. While
  this may allow a user to do things such as use the Steam Controller on the
  Nintendo Switch, please recognize that this is almost definitely going to be
  coming with trade-offs compared to officially supported hardware and firmware.
- I recommend that if you want a cheap Switch Controller and are OK with it being
- wired check out what ones PowerA or Hori makes. If you want a fully featured
- controller consider spending the extra money and get a Pro Controller (it 
+ If you want a cheap Switch Controller and are OK with it being
+ wired, check out the ones PowerA or Hori makes. If you want a fully featured
+ controller, consider spending the extra money and get a Pro Controller (it 
  really is worth it).  
 
 Finally note that I say all of this with the hope of not discouraging anyone.
- Please dive in and get your hands dirty. Just please me away that there is a 
+ Please dive in and get your hands dirty. Just please be aware that there is a 
  (hopefully) very small, but non-zero, chance that a mistake could lead to 
  bricked or broken hardware. 
 
@@ -55,8 +55,8 @@ Finally note that I say all of this with the hope of not discouraging anyone.
 ## [Reverse Engineering](./ReverseEngineering/)
 
 The work in this directory focuses on deconstructing the firmware and hardware
- of the Steam Controller. The understanding gained from this is the basis for
- the other work being done in this project. 
+ of the Steam Controller. The understanding gained from this often is a  
+ significant part of the other Subprojects. 
 
 ## [Firmware](./Firmware/)
 
@@ -114,7 +114,7 @@ When reporting a bug/issue, please make sure to provide sufficient details. Key
 # Resources and Influences
 
 This section lists some projects that influenced this project, as well as links
- to some resources that may continue to be helpful to stay abreast of.
+ to some resources that may continue to be helpful to stay current on.
 
 ## [Pilatomic Steam Controller Singer](https://gitlab.com/Pilatomic/SteamControllerSinger)
 
@@ -139,13 +139,13 @@ This section lists some projects that influenced this project, as well as links
 
 ## [Steam Controller Update News](http://store.steampowered.com/news/?appids=353370)
 
-* Useful to get an idea of what changed from firmware to firmware release.
+* Useful to get an idea of what changed from official firmware to firmware release.
 
 ## [UnBricking Steam Controller (Manual Firmware Update, Rollback)](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
 
 * Step by step guide on how to manually change the Steam Controller firmware. 
-* Much of this information is captured in [Loading Firmware](./LoadingFirmware.md)
-    * This presents the information in the context of how it applies to this Project and its Subprojects
+* Much of this information is captured in [Loading Firmware](./LoadingFirmware.md).
+    * [Loading Firmware](./LoadingFirmware.md) presents the information in the context of how it applies to Open Steam Controller Project and its Subprojects.
 
 ## Steam Communities
 
