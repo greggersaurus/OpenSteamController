@@ -44,18 +44,21 @@ static LPC_TIMER_T* hapticTimer = LPC_TIMER32_0; //!< Timer used to toggle
 
 static volatile bool hapticBusy[2]; //!< non-zero if the haptic is currently 
 	//!< playing a sequence.
-static const Note* volatile hapticNotes[2]; //!< Pointer to the first note in a 
+static const Note* hapticNotes[2]; //!< Pointer to the first note in a 
  	//!< sequence to play on the haptics.
-static volatile int hapticNotesIdx[2]; //!< Index of which note is currently
+static int hapticNotesIdx[2]; //!< Index of which note is currently
 	//!< being played on a haptic.
-static volatile int hapticNotesLen[2]; //!< The number of notes in a sequence 
+static int hapticNotesLen[2]; //!< The number of notes in a sequence 
 	//!< to be played on a haptic.
-static volatile uint32_t pulseHiDur[2]; //!< Number of microseconds for which
+static uint32_t pulseHiDur[2]; //!< Number of microseconds for which
 	//!< Haptic GPIO is high for pulse being generated for current Note.
-static volatile uint32_t pulseLoDur[2]; //!< Number of microseconds for which
+static uint32_t pulseLoDur[2]; //!< Number of microseconds for which
 	//!< Haptic GPIO is low for pulse being generated for current Note.
-static volatile uint32_t pulseRptCntr[2]; //!< Down counter for the number of
+static uint32_t pulseRptCntr[2]; //!< Down counter for the number of
 	//!< of times to geneate the pulse sequence.
+static uint32_t nextMR[2]; //!< Calculated value of what MR should be set to
+	//!< so that next IRQ occurs to change GPIO states to produce desired
+	//!< frequency. 
 
 static const uint8_t SLEEP_MR = 3; //!< MR used for sleep functionality.
 static volatile bool sleepDoneHaptic = true; //!< Flag used to indicate 
@@ -136,25 +139,23 @@ static void startHapticNote(Haptic haptic, const struct Note* note) {
 		pulseRptCntr[haptic] = 1;
 
 		// Setup interrupt to occur after full delay
-		hapticTimer->MR[getHapticMR(haptic)] = note->duration * 1000 + 
+		nextMR[haptic] = note->duration * 1000 + 
 			Chip_TIMER_ReadCount(hapticTimer);
+		hapticTimer->MR[getHapticMR(haptic)] = nextMR[haptic]; 
 	} else {
 		uint32_t pulse_width = 1000000 / note->pulseFreq;
 
 		pulseHiDur[haptic] = (pulse_width * note->dutyCycle) / 512;
 		pulseLoDur[haptic] = pulse_width - pulseHiDur[haptic];
-		// We add one repeat count as for last repeat count we do not
-		//  actually pull GPIO high, but stay low for a fixed duration
-		//  to create gap between notes (otherwise the same note repeated 
-		//  will bleed together and create a continuous tone).
-		pulseRptCntr[haptic] = 1 + (note->duration * note->pulseFreq) / 1000;
+		pulseRptCntr[haptic] = (note->duration * note->pulseFreq) / 1000;
 
 		// Start with haptic GPIO in high state
 		setHapticGpioState(haptic, true);
 
 		// Setup interrupt to occur when high portion is done
-		hapticTimer->MR[getHapticMR(haptic)] = pulseHiDur[haptic] + 
+		nextMR[haptic] = pulseHiDur[haptic] + 
 			Chip_TIMER_ReadCount(hapticTimer);
+		hapticTimer->MR[getHapticMR(haptic)] = nextMR[haptic]; 
 	}
 
 	// Mark that note is being played
@@ -179,8 +180,8 @@ static void nextHapticState(Haptic haptic) {
 		// High portion of pulse is finished, on to low portion
 		setHapticGpioState(haptic, false);
 		// Setup interrupt to occur when low portion is done
-		hapticTimer->MR[getHapticMR(haptic)] = 
-			pulseLoDur[haptic] + Chip_TIMER_ReadCount(hapticTimer);
+		nextMR[haptic] += pulseLoDur[haptic];
+		hapticTimer->MR[getHapticMR(haptic)] = nextMR[haptic];
 	} else {
 		// Pulse low finished (i.e. iteration of pulse is complete)
 		pulseRptCntr[haptic]--;
@@ -194,14 +195,17 @@ static void nextHapticState(Haptic haptic) {
 				setHapticGpioState(haptic, true);
 
 				// Setup interrupt to occur when high portion is done
+				nextMR[haptic] += pulseHiDur[haptic];
 				hapticTimer->MR[getHapticMR(haptic)] = 
-					pulseHiDur[haptic] + 
-					Chip_TIMER_ReadCount(hapticTimer);
+					nextMR[haptic];
 			} else {
-				// Setup interrupt to occur after fixed time so
-				//  that concurrent notes do not bleed together
+				// Since we are not changing GPIO state, we 
+				//  do not want to come back to ISR until
+				//  a full period has elapsed
+				nextMR[haptic] += pulseHiDur[haptic] + 
+					pulseLoDur[haptic];
 				hapticTimer->MR[getHapticMR(haptic)] = 
-					100 + Chip_TIMER_ReadCount(hapticTimer);
+					nextMR[haptic];
 			}
 		} else {
 			// Attempt to move onto next note in sequence

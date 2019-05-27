@@ -36,8 +36,6 @@ This is a running list of ways in which I think the [OpenSteamController](./Open
 1. haptic.c
     1. Check range on input arguments
     1. playHaptic() should copy data?
-    1. Dig into inaccuracy in haptic output
-        1. Use violin tuner app and notice how the higher the frequencey the larger the gap in frequency output and what app measures...
     1. Dig into infinite pulse on haptic bug
         1. There was a bug where Note was pointing to bogus data that resulted in a interrupt that never seemed to end
             1. Need bounds check on how interrupt variables are setup to stop this from happening???
