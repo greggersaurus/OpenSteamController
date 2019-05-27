@@ -2,7 +2,7 @@
 
 The work in this directory is geared towards creating a user friendly way for
  customizing what Jingles play when the Steam Controller starts up and shuts down
- with the official firmare installed. A Jingle is defined to be the series of Notes that 
+ with the official firmware installed. A Jingle is defined to be the series of Notes that 
  are played on the Right and Left Haptics.
 
 
@@ -70,8 +70,8 @@ Fourth, customize each Jingle by selecting them in the Converted Jingles
 
 Finally, save the Jingle Data to EEPROM. Once you have configured all the 
  Jingles and customized them so that they fit within the Jingle Memory (see
- the Jingle Memm Used Bar in the GUI for details), you can press the
- Save to EEPROM button. Once this compelte successfully you rae ready to
+ the Jingle Mem Used Bar in the GUI for details), you can press the
+ Save to EEPROM button. Once this complete successfully you rae ready to
  restore the Official Controller Firmware.
 
 
@@ -107,7 +107,7 @@ See the [Jingle Data Details](./JingleData.md) document for details on what a
 
 # Sources
 
-All the information in this document was deciphered via reverse engingineering
+All the information in this document was deciphered via reverse engineering
  Valve's official firmware. Refer to the 
  [Reverse Engineering](../ReverseEngineering/) Subproject for details. 
 

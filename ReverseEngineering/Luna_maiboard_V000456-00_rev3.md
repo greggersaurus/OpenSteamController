@@ -5,7 +5,7 @@ This document exists to track information regarding the Steam Controller
 
 Note that this [Teardown of Steam Controller](https://www.ifixit.com/Teardown/Steam+Controller+Teardown/52578)
  was extremely helpful in identifying chips and offering guidance in disassembling
- the Steam Controlle to ohm out connections, etc.
+ the Steam Controller to ohm out connections, etc.
 
 
 # LPC11U37F/501
@@ -32,7 +32,7 @@ This sections details how the pins of the process are configured and (potentiall
 |             2 | PIO1_25               | PIO1_25          | In            | S14 - Left inner grip button |
 |             3 | PIO1_19               | PIO1_19          | In            | S18 - Steam button |
 |             4 | PIO0_0/nRESET         |                  |               | |
-|             5 | PIO0_1                |                  |               | Connected to S6 - RT (Right trigger digital) for purpose of enacting USB In-Systen Programming (i.e. update firwmare via "FAT" file system) |
+|             5 | PIO0_1                |                  |               | Connected to S6 - RT (Right trigger digital) for purpose of enacting USB In-Systen Programming (i.e. update firmware via "FAT" file system) |
 |             6 | PIO1_7                | PIO1_7           | Out           | Active Low haptics enable. |
 |             7 | V<sub>SS</sub>        | V<sub>SS</sub>   | In            | V<sub>SS</sub> |
 |             8 | XTALIN                |                  |               | |
@@ -67,7 +67,7 @@ This sections details how the pins of the process are configured and (potentiall
 |            37 | PIO0_9                | MOSI0            | Out           | Master Out Slave In for SSP0. Connected to MOSI on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            38 | SWCLK/PIO0_10         | SWCLK?           |               | Connected to DEBUG interface for LPC11U37F |
 |            39 | PIO1_8                | PIO1_8           | In?           | Related to PIO1_24. Related to USART maybe? TODO|
-|            40 | PIO0_22               | AD6              | In            | Measures voltage that matters when no USB power is present? (trace leads to C6, continutes to R10 near power...) |
+|            40 | PIO0_22               | AD6              | In            | Measures voltage that matters when no USB power is present? (trace leads to C6, continues to R10 near power...) |
 |            41 | PIO1_29               | SCK0             | Out           | Serial clock for SSP0. Connected to SCLK on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            42 | TDI/PIO0_11           | AD0              | In            | Measures Left Analog trigger position (when PIO1_1 is low) (Note: Functions as TDI for short time during initialization) |
 |            43 | PIO1_11               | PIO1_11          | In            | S9 - Y Button |
@@ -88,7 +88,7 @@ This sections details how the pins of the process are configured and (potentiall
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            59 | PIO1_12               | PIO1_12          | Out           | Right Haptic Activate. Toggle to generate vibrations (TODO: need better details on this). Initially input. Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. Later set to output and driven low (before PIO0_18 is set to output and driven low). |
 |            60 | PIO0_17               | PIO0_17          | In            | S1 - A Button |
-|            61 | PIO0_18               | PIO0_18          | Out           | Left Haptic Activate. Toggle to generate vibrations (TODO: need better details on this). Initially input (If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB))? Later output related to hatpics? | 
+|            61 | PIO0_18               | PIO0_18          | Out           | Left Haptic Activate. Toggle to generate vibrations (TODO: need better details on this). Initially input (If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB))? Later output related to haptics? | 
 |            62 | PIO0_19               | PIO0_19          | Out           | Active high enable for powering Joystick to produce X and Y position ADC values. |
 |            63 | PIO1_16               | PIO1_16          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Left Trackpad/Haptic. |
 |            64 | PIO1_6                | PIO1_6           | Out           | Chip Select/SS for Left Trackpad/Haptic (active low) |

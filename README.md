@@ -60,10 +60,10 @@ The work in this directory focuses on deconstructing the firmware and hardware
 
 ## [Firmware](./Firmware/)
 
-The work in this directory is geared towards creating a completely custom firwmare
+The work in this directory is geared towards creating a completely custom firmware
  build for the Steam Controller. This project can be configured to have the
- controller act as a devleopment system that allows for querying peripherals
- and exploring or verifying system bejaviors. Additionally the project can
+ controller act as a development system that allows for querying peripherals
+ and exploring or verifying system behaviors. Additionally the project can
  be configured for more practical purpose, such as behaving like a wired
  Nintendo Switch controller.
 
@@ -101,7 +101,7 @@ Note that there is are TODO documents for each Subproject. The idea
 I will do my best to provide easy to use and robust software. However, there
  will still most likely be bugs. If you find a bug, please report it. 
 
-The best way to report a bug is to use the Issues tab on github. 
+The best way to report a bug is to use the Issues tab on GitHub. 
 
 When reporting a bug/issue, please make sure to provide sufficient details. Key
  details to include are:
@@ -138,7 +138,7 @@ This section lists some projects that influenced this project, as well as links
 
 ## [Steam Controller Update News](http://store.steampowered.com/news/?appids=353370)
 
-* Useful to get an idea of what changed from firmware to firwmare release.
+* Useful to get an idea of what changed from firmware to firmware release.
 
 ## [UnBricking Steam Controller (Manual Firmware Update, Rollback)](https://steamcommunity.com/sharedfiles/filedetails/?id=572740074)
 

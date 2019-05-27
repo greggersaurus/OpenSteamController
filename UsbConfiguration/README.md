@@ -24,11 +24,11 @@ The following detail the various pieces of controller information that I want to
 
 ### Board Revision
 
-* In 0x83 repsonse
+* In 0x83 response
 
 ### Firmware Revision
 
-* In 0x83 repsonse
+* In 0x83 response
 
 ### Radio Firmware Revision
 

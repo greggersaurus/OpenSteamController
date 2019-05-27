@@ -5,7 +5,7 @@ These items relate to improving the experience of customizing Jingles
 
 * Add executables for SCJingleConverter to directory
     * Mac, Linux, Windows
-* Exploure ideas to better explain GUI usage
+* Explore ideas to better explain GUI usage
     * Create walkthrough video on customizing Jingles and uploaded to youtube
     * More details in README.md (with pictures?)
     * Tool tips?
@@ -28,11 +28,11 @@ These items relate to improving the experience of customizing Jingles
     * Would mean one less step when using https://musescore.com/sheetmusic (i.e. no .mxl to musicxml conversion)
     * Hooks are in GUI for adding this
     * However, .mxl file format is more complex than just using zlib to decompress...
-        * Need functionality to navigate .mxl to find where comprssed .musicxml data exists...
+        * Need functionality to navigate .mxl to find where compressed .musicxml data exists...
         * See MuseScore source (mscore/importxml.cpp) for example
 * Explore idea of different intensity/duty cycle for different Notes
     * Can we pull anything from .musicxml to indicate this?
-* Exploure idea of having a trimming method that is more fine grain than by Measure
+* Explore idea of having a trimming method that is more fine grain than by Measure
     * Think through scenario of melody ending in middle of Measure
     * Currently user can use MuseScore to trim a Composition
 * Experiment with lowering scserial command delay time

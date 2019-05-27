@@ -1,6 +1,6 @@
 # Firmware
 
-The work in this directory is geared towards a completely custom firwmare for 
+The work in this directory is geared towards a completely custom firmware for 
  the Steam Controller. The primary purpose is for this firmware to act as a 
  development environment for interfacing with the peripherals available on the 
  Steam Controller hardware. This firmware also acts as a jumping off point for 
@@ -73,10 +73,10 @@ There are two primary modes this firmware can be compiled with: DEV_BOARD_FW
 When FIRMWARE_BEHAVIOR is set to DEV_BOARD_FW the firmware that is built will
  turn the Steam Controller into a development board-like system. The USB
  interfaces acts as a serial device, which presents a command line interface
- for interogating different peripherals on the Steam Controller. 
+ for interrogating different peripherals on the Steam Controller. 
 
 If you connect the Steam Controller via USB to a PC once this firmware is loaded
- you should see a serial device appear (i.e. in OS X you will see someting
+ you should see a serial device appear (i.e. in OS X you will see something
  like /dev/tty.usbmodem1781). Using any number of programs with
  serial communication capabilities (i.e. screen, TeraTerm, putty) should allow
  you to access the command line interface (i.e. screen /dev/tty.usbmodem1781).

@@ -72,5 +72,5 @@ If the last official firmware loaded by Steam was not backed up properly, these
 * The "firmwarebinary" will give you a portion of the URL you need to download the firmware
 * Add the "firmwarebinary" string to the end of http://media.steampowered.com/controller_config/ to create a URL to download the firmware
     * For example http://media.steampowered.com/controller_config//firmware/vcf_wired_controller_d0g_57bf5c10.bin allows for downloading a copy of the firmware with the timestamp 57bf5c10 (Thursday, August 25, 2016 8:58:56 PM GMT).
-* Pasting the URL into a web browswer will allow you to download the .bin file that can be loaded onto the controller following the steps in Manually Loading Firmware
+* Pasting the URL into a web browser will allow you to download the .bin file that can be loaded onto the controller following the steps in Manually Loading Firmware
 

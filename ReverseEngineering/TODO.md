@@ -32,10 +32,10 @@ These items relate to better understanding how the official Steam Controller
 1. Decode functions from new sim data now that variable changed by SysTick handler moves us forward
     1. Don't lose track of other variables checked in previous wfi path. They might still matter...
 1. Dev Board comms with Radio Chip via UART
-    1. Monitor PIO1_5 and (anything else we can watch?) to check for change after sending same mesages?
+    1. Monitor PIO1_5 and (anything else we can watch?) to check for change after sending same messages?
 1. Monitor GPIO1_5 when RF dongle is plugged in or not
     1. Scope with official FW?
-1. USB related callbacks (at leats resume one...)
+1. USB related callbacks (at least resume one...)
     1. Seems some variable related to wfi loop in main path may be related to USB (and maybe changed in callback functions?)
 
 1. Consider latest firmware update from Valve (new firmware to enable BLE for new Steam Link app)

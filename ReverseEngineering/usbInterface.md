@@ -1,8 +1,8 @@
 # USB Interface
 
-The purpoes of this document is to track details on the USB interface for the
+The purpose of this document is to track details on the USB interface for the
  Steam Controller. This is done so that EP actions on the firmware side, 
- obvserved in simulation, can match up to real-world behavior. This will be
+ observed in simulation, can match up to real-world behavior. This will be
  used to categorize more actions, memory usage, etc.
 
 ## EP1 (Keyboard)

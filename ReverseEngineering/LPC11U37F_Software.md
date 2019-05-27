@@ -41,7 +41,7 @@ The file tracks memory usage and attempts to identify how different section of
 * [ISA](http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.subset.architecture.reference/index.html)
 
 
-# Disassembling the Firwmare
+# Disassembling the Firmware
 
 This section details the approaches attempted and ultimately used to reverse 
  engineer the Steam Controller firmware running on the LPC11U37.
@@ -59,7 +59,7 @@ This is the primary method used for simulating the firmware and deconstructing
 * I have forked this repo and am working on custom functionality geared specfically towards the Steam Controller reverse engineering effort.
     * Logging (--logExe chipType)
         * Creates csv log of all instructions and memory accesses executed during simulation.
-        * Creates C log of actions, which allows seconday way of visualizing simulation.
+        * Creates C log of actions, which allows secondary way of visualizing simulation.
         * Currently "LPC11U37" is the only supported chip type
     * Disassembly
         * TODO: Worth spending time on option to out asm after running simulation? (will only cover instructions that were executed during sim)
@@ -103,7 +103,7 @@ Simulation is allowed to run with minimal intervention (i.e. loops waiting for
  PLLs to lock or other hardware reactions are simulated as needed, pauses are
  made to adjust values "read" from EEPROM). 
 
-Uknown paths are identified to be revisisted lated with further stimuli to
+Unknown paths are identified to be revisited lated with further stimuli to
  simulation runs. These are being marked by TODO: UNKOWN PATHS.
 
 Attempts are made being made to identify SRAM0 memory usage.
@@ -113,7 +113,7 @@ Attempts are made being made to identify SRAM0 memory usage.
 This section details attempts to simulate certain exception paths. This is being 
  pursued as Reset/Init path eventually called WFI instruction. This implies
  interrupts occurring is a necessary part of system boot (i.e. either successful
- connection or shutdown due to connectin timeout).
+ connection or shutdown due to connection timeout).
 
 Simulating an exception can be achieved by setting the PC register to the 
  instruction specified in the Vector Table. However, keep in mind the nuances
@@ -137,7 +137,7 @@ Also, according 24.3.3.6.1 LR is set to EXC_RETURN upon interrupt entry. Thus a
 This is only being used to display the Vector Table.
 
 The original idea was to create disassembler that can recreate assembly file, 
-distinguishing data versus instructions by evaulating code and all possible
+distinguishing data versus instructions by evaluating code and all possible
 branches. 
 
 In the end this was a larger undertaking than expected. It would make more 
@@ -160,12 +160,12 @@ Somewhat different approach than pinkySim in that we are looking at assembly and
  actions taken during simulation and why they were taken (and maybe should not have been).
 
 * [Steep learning curve](https://www.gitbook.com/book/radare/radare2book/details)
-    * Videos for learning basics (specifically related to firmware reverese engineering)
+    * Videos for learning basics (specifically related to firmware reverse engineering)
         * https://www.youtube.com/watch?v=R3sGlzXfEkU
         * https://www.youtube.com/watch?v=GIU4yJn2-2A
         * https://www.youtube.com/watch?v=iTKra0XD6z4
 * Has option to disassemble ARM, but how exactly does it handle ARMv6-M?
-    * What about #if 0  section iwth armv6 options?
+    * What about #if 0  section with armv6 options?
 * How to deal with firmware stripped binary format (i.e. no code/data sections information)?
     * Build up scripting tooling to handle this? (i.e. don't decode instructions we "know" we "cannot reach")
         * Scripting to identify code/data semi-automatically? 
