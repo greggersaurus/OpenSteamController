@@ -1,6 +1,6 @@
 # TODO
 
-These items relate to a better understanding of the [USB Communications](./README.md) with
+These items relate to a better understanding of the [USB Communications](./) with
  the official Steam Controller Firmware. The hope/thought/dream is that this
  might help to improve other Subprojects such as the Jingle Customization:
 

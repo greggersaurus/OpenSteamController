@@ -1,7 +1,8 @@
 # TODO
 
-Top level TODO items are captured here. See other documents linked below for
- TODO items related specifically to the Subprojects.
+Top level TODO items for the [Open Steam Controller Project](./) are captured 
+ here. See other documents linked below for TODO items related specifically to 
+ the Subprojects.
 
 1. Fresh walkthrough of all TODOs
     1. Focus on perspective of new user

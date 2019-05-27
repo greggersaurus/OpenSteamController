@@ -1,7 +1,7 @@
 # TODO
 
 This is a running list of ways in which I think the Open Steam Controller 
- [Firmware](./README.md) could be improved:
+ [Firmware](./) could be improved:
 
 1. Make youtube walkthrough videos
     1. Firmware Switch Controller Build
