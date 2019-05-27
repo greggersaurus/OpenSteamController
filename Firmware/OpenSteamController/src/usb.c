@@ -905,9 +905,7 @@ int usbConfig(void){
 	return 0;
 }
 
-#endif
-
-#if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
+#elif (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
 
 /**
  * HID Report Descriptor. Binary copied from Wired Power A Controller.

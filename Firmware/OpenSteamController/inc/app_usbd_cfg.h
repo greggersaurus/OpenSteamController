@@ -91,10 +91,8 @@ extern USB_INTERFACE_DESCRIPTOR *find_IntfDesc(const uint8_t *pDesc, uint32_t in
 /**
  * @}
  */
-#endif
 
-
-#if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
+#elif (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
 
 /* HID In/Out Endpoint Address */
 #define HID_EP_IN 0x81

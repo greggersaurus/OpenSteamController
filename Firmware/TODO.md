@@ -7,9 +7,6 @@ This is a running list of ways in which I think the Open Steam Controller
     1. Firmware Switch Controller Build
     1. Firmware Dev Build
 
-1. all
-    1. Used #elif where applicable... (see main.c changes...)
-
 1. Faux Switch Controller
     1. Add startup jingle...?
         1. Mario theme??

@@ -74,6 +74,10 @@ int main(void){
 #if (FIRMWARE_BEHAVIOR == DEV_BOARD_FW)
 	usleep(1000000);
 
+	// This upsets serial communications when connected to Windows
+	//  Maybe we can dig deeper into why and how to add this back in in
+	//  some form?
+	/*
 	while(!usb_tstc()) {
 		usleep(50000);
 
@@ -82,6 +86,7 @@ int main(void){
 			DEV_BOARD_FW_VER_MINOR, getUsTickCnt());
 	}
 	printf("\n");
+	*/
 
 	// Main execution loop
 	while(1) {
@@ -90,9 +95,9 @@ int main(void){
 		// Sleep until next IRQ happens
 		__WFI();
 	}
-#endif
 
-#if (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
+#elif (FIRMWARE_BEHAVIOR == SWITCH_WIRED_POWERA_FW)
+
 	// Main execution loop
 	while(1) {
 		// Update USB status packet sent to Switch
