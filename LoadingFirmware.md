@@ -35,10 +35,11 @@ In order to return the controller to the last known working state, it is
 * Connect the controller to a PC as outlined in Accessing the Firmware
 * Save the firmware to file on your PC
     * On macOS (Tested specifically on 10.12.6):
+        * Copy firmware.bin from "CRP DISABLD" mount to backup file (i.e. backup.bin):
+            * cat /Volumes/CRP\ DISABLD/firmware.bin > backup.bin
+    * On Linux systems (Test on Ubuntu 18.04):
         * TODO
-    * On Linux systems ():
-        * TODO
-    * On Windows (Untested. See remark in Section 3 of AN11305v1 from NXP for source):
+    * On Windows (Tested on Windows 10):
         * TODO
 
 ## Manually Loading Firmware

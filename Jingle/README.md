@@ -57,9 +57,9 @@ First, make sure the Steam Controller is connected to your PC and running
  [OpenSteamController.bin](./bin/OpenSteamController.bin).
 
 Second, launch the GUI:
-* For macOS run [SCJingleConverter](./bin/SCJingleConverter.app).
-* For Windows run [SCJingleConverter](./bin/TODO).
-* For Linux run [SCJingleConverter](./bin/TODO).
+* For macOS download and run SCJingleConverter.app [bin](./bin).
+* For Windows run TODO in [bin](./bin).
+* For Linux run TODO in [bin](./bin).
 
 Third, load your .musicxml files using the Browse and Convert buttons. 
 
