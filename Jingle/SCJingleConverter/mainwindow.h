@@ -81,6 +81,8 @@ private slots:
 
     void on_saveJinglesPushButton_clicked();
 
+    void on_noteIntensityLineEdit_editingFinished();
+
 private:
     Composition* getSelectedComposition();
 

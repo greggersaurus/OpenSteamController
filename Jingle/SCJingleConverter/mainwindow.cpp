@@ -48,10 +48,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     const auto infos = QSerialPortInfo::availablePorts();
 
+    // Populate combo box with all available serial ports
     for (const QSerialPortInfo &info : infos) {
         ui->serialPortComboBox->addItem(info.portName());
     }
 
+    // Setup icons so user's know what these buttons do
     ui->delJingleToolButton->setIcon(ui->delJingleToolButton->style()->standardIcon(QStyle::SP_TrashIcon));
     ui->mvJingleUpToolButton->setIcon(ui->mvJingleUpToolButton->style()->standardIcon(QStyle::SP_ArrowUp));
     ui->mvJingleDownToolButton->setIcon(ui->mvJingleDownToolButton->style()->standardIcon(QStyle::SP_ArrowDown));
@@ -65,7 +67,9 @@ MainWindow::~MainWindow() {
 }
 
 /**
- * @brief MainWindow::getSelectedComposition
+ * @brief MainWindow::getSelectedComposition Common function for
+ *      getting a pointer to the Composition that related to whicih
+ *      one has been selected in the GUI.
  *
  * @return A pointer to the selected composition or nullptr if
  *      no valid Composition is selected. In case of nullptr
@@ -128,7 +132,8 @@ void MainWindow::on_playJinglePushButton_clicked() {
     }
 
     // Since this is a demo mode, we are only concerned with the single
-    //  Jingle. Best to start by clearing Steam Controller Jingle Data in RAM
+    //  Jingle. Best to start by clearing Steam Controller Jingle Data in
+    //  controller RAM
     QString cmd("jingle clear\n");
     QString resp = cmd + "\rJingle data cleared successfully.\n\r";
     if (serial.send(cmd, resp)) {
@@ -166,21 +171,32 @@ void MainWindow::on_playJinglePushButton_clicked() {
  */
 void MainWindow::on_browsePushButton_clicked()
 {
+    QString dir = ui->musicXmlPathLineEdit->text();
+
+    // If previously selected directory does not exist,
+    //  default to home directory
+    if (dir.length() == 0) {
+        dir = QDir::homePath();
+    }
+
     QString fileName = QFileDialog::getOpenFileName(this,
         ("Open musicXML File"),
-        QDir::homePath(),
+        dir,
         ("MusicXML Files (*.musicxml)"));
         // For when .mxl import support is added (maybe)
         //("MusicXML Files (*.musicxml *.mxl)"));
 
-    ui->musicXmlPathLineEdit->setText(fileName);
+    // Only update line edit if user selected a file
+    if (fileName.length() > 0) {
+        ui->musicXmlPathLineEdit->setText(fileName);
+    }
 }
 
 /**
- * @brief MainWindow::on_convertPushButton_clicked One file path line edit
+ * @brief MainWindow::on_convertPushButton_clicked Once file path line edit
  *      has been filled in (either manually or via the Browse button)
- *      convert instructs us to actually parse the MusicXML file so that
- *      the Composition can be configured in order to download the
+ *      the Convert Button instructs us to actually parse the MusicXML file so
+ *      that the Composition can be configured in order to download the
  *      desired Notes as a Jingle.
  *
  * @return None.
@@ -207,7 +223,7 @@ void MainWindow::on_convertPushButton_clicked()
     */
     } else {
         QMessageBox::information(this, tr("Error"),
-            tr("Bad extension on file '%1'.\nError: %2")
+            tr("Bad extension on file '%1'.")
             .arg(full_filename));
         return;
     }
@@ -245,8 +261,8 @@ void MainWindow::on_convertPushButton_clicked()
 }
 
 /**
- * @brief MainWindow::updateMemUsage The Steam Controller only has EEPROM_HDR_NUM_BYTES
- *      of EEPROM to work with in terms of Jingle Data. (This is determined by the
+ * @brief MainWindow::updateMemUsage The Steam Controller only has MAX_EEPROM_BYTES
+ *      of EEPROM to work with in terms of Jingle Data. (This is set by the design of the
  *      official controller firmware). A progress bar and label convey to the user
  *      how much of that data they are currently using with their Compositions
  *      Configured as is. Call this function any time a new Composition is added
@@ -310,6 +326,9 @@ void MainWindow::updateCompositionDisplay() {
     ui->bpmLineEdit->setText(QString::number(composition->getBpm()));
     ui->bpmLineEdit->update();
     ui->bpmLineEdit->repaint();
+    ui->noteIntensityLineEdit->setText(QString::number(composition->getNoteIntensity()));
+    ui->noteIntensityLineEdit->update();
+    ui->noteIntensityLineEdit->repaint();
     ui->octaveAdjustLineEdit->setText(QString().setNum(composition->getOctaveAdjust(), 'f', 2));
     ui->octaveAdjustLineEdit->update();
     ui->octaveAdjustLineEdit->repaint();
@@ -342,7 +361,7 @@ void MainWindow::updateCompositionDisplay() {
 
 /**
  * @brief MainWindow::updateChordComboBox Chord combo boxes allow a user to
- *      select which Note in a chord is to be played. However, what selections
+ *      select which Frequency in a chord is to be played. However, what selections
  *      are available can change based on a variety of actions (i.e. changing
  *      the start and/or stop measure).
  *
@@ -390,7 +409,7 @@ void MainWindow::updateChordComboBox(Composition::Channel chan) {
 }
 
 /**
- * @brief MainWindow::on_delJingleToolButton_clicked Used has pressed button
+ * @brief MainWindow::on_delJingleToolButton_clicked User has pressed button
  *      to remove a Jingle that was previously added.
  *
  * @return None.
@@ -421,6 +440,9 @@ void MainWindow::on_delJingleToolButton_clicked()
     ui->bpmLineEdit->clear();
     ui->bpmLineEdit->update();
     ui->bpmLineEdit->repaint();
+    ui->noteIntensityLineEdit->clear();
+    ui->noteIntensityLineEdit->update();
+    ui->noteIntensityLineEdit->repaint();
     ui->octaveAdjustLineEdit->clear();
     ui->octaveAdjustLineEdit->update();
     ui->octaveAdjustLineEdit->repaint();
@@ -444,8 +466,7 @@ void MainWindow::on_delJingleToolButton_clicked()
 
 /**
  * @brief MainWindow::on_mvJingleDownToolButton_clicked For organizing
- *      the order of the Jingles. This determines which index they become
- *      when saved to EEPROM.
+ *      the order of the Jingles. This moves a Jingle down on the list.
  *
  * @return None.
  */
@@ -523,7 +544,7 @@ void MainWindow::on_jingleListWidget_clicked(const QModelIndex &index)
 }
 
 /**
- * @brief MainWindow::on_startMeasComboBox_activated Used has changed Start
+ * @brief MainWindow::on_startMeasComboBox_activated User has changed Start
  *      Measure configuration for currently selected Composition.
  *
  * @param index Defines Start Measure index that has been selected.
@@ -558,7 +579,7 @@ void MainWindow::on_startMeasComboBox_activated(int index)
 }
 
 /**
- * @brief MainWindow::on_endMeasComboBox_activated Used has changed End
+ * @brief MainWindow::on_endMeasComboBox_activated User has changed End
  *      Measure configuration for currently selected Composition.
  *
  * @param index Defines End Measure index that has been selected.
@@ -656,7 +677,7 @@ void MainWindow::on_chanChordLeftComboBox_activated(int index)
     Composition::ErrorCode comp_err_code = composition->setChordIdx(Composition::LEFT, static_cast<uint32_t>(index));
     if (comp_err_code != Composition::NO_ERROR) {
         QMessageBox::information(this, tr("Error"),
-            tr("Error setting Chord Index.\n\nError: %1")
+            tr("Error setting Left Chord Index.\n\nError: %1")
             .arg(Composition::getErrorString(comp_err_code)));
         return;
     }
@@ -686,7 +707,7 @@ void MainWindow::on_chanChordRightComboBox_activated(int index)
     Composition::ErrorCode comp_err_code = composition->setChordIdx(Composition::RIGHT, static_cast<uint32_t>(index));
     if (comp_err_code != Composition::NO_ERROR) {
         QMessageBox::information(this, tr("Error"),
-            tr("Error setting Chord Index.\n\nError: %1")
+            tr("Error setting Right Chord Index.\n\nError: %1")
             .arg(Composition::getErrorString(comp_err_code)));
         return;
     }
@@ -854,4 +875,28 @@ void MainWindow::on_saveJinglesPushButton_clicked()
 
     QMessageBox::information(this, tr("Success!"),
         tr("Jingle Data Saved to EEPROM."));
+}
+
+/**
+ * @brief MainWindow::on_noteIntensityLineEdit_editingFinished This allows user to
+ *      adjust how loud/intense each Note of a Jingle is.
+ *
+ * @return None.
+ */
+void MainWindow::on_noteIntensityLineEdit_editingFinished()
+{
+    Composition* composition = getSelectedComposition();
+    if (!composition) {
+        return;
+    }
+
+    uint32_t note_intensity = ui->noteIntensityLineEdit->text().toUInt();
+
+    if (note_intensity > 255) {
+        note_intensity = 255;
+    }
+
+    qDebug() << "Adjusting Note Intensity to " << note_intensity;
+
+    composition->setNoteIntensity(note_intensity);
 }

@@ -33,7 +33,7 @@ Once you have a series of .musicxml files that contain songs, or portions of
 
 In order to custom the Jingles on the Steam Controller, the Steam Controller
  must be running a specific version of the Open Steam Controller Firmware.
- The binary that works with the SCJingle GUI is 
+ The binary that works with the SCJingleConverter GUI is 
  [OpenSteamController.bin](./bin/OpenSteamController.bin).
 
 First follow steps section Backing Up the Firmware of [Loading Firmware](../LoadingFirmware.md) 
@@ -49,7 +49,7 @@ Once your controller is connected to your PC with the Open Steam Controller
 
 ## Downloading Jingle Data to the Controller
 
-SCJingle is a GUI created Qt which converts .musicxml files to Jingle Data
+SCJingleConverter is a GUI created Qt which converts .musicxml files to Jingle Data
  format and sends that data to the Steam Controller running Open Steam Controller 
  Firmware.
 
@@ -57,9 +57,9 @@ First, make sure the Steam Controller is connected to your PC and running
  [OpenSteamController.bin](./bin/OpenSteamController.bin).
 
 Second, launch the GUI:
-* For macOS run [SCJingle](./bin/TODO).
-* For Windows run [SCJingle](./bin/TODO).
-* For Linux run [SCJingle](./bin/TODO).
+* For macOS run [SCJingleConverter](./bin/TODO).
+* For Windows run [SCJingleConverter](./bin/TODO).
+* For Linux run [SCJingleConverter](./bin/TODO).
 
 Third, load your .musicxml files using the Browse and Convert buttons. 
 
@@ -95,7 +95,7 @@ Once the officially supported firmware is loaded onto the controller it should
 ## Clearing Jingle Data
 
 If you decide you want to go back to the default Jingle offered by Valve, follow
- the steps outlined above, but after launching the SCJingle GUI, click the 
+ the steps outlined above, but after launching the SCJingleConverter GUI, click the 
  "Clear EEPROM" button and then restore the Official Controller Firmware. 
 
 

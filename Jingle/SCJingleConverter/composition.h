@@ -2,7 +2,7 @@
  * \file composition.h
  * \brief This encapsulates a song composition. This includes the capability to
  *      parse a musicxml file and communicate the Notes (or some of the notes)
- *      to the Steam Controller.
+ *      to the Steam Controller as a Jingle.
  *
  * MIT License
  *
@@ -146,6 +146,26 @@ public:
     }
 
     /**
+     * @brief setNoteIntesity Defines how loud/intense the Notes are.
+     *
+     * @param intensity 255 is most intense.
+     *
+     * @return None.
+     */
+    void setNoteIntensity(uint8_t intensity) {
+        this->noteIntensity = intensity;
+    }
+
+    /**
+     * @brief getNoteIntensity Get current setting for how loud/intense the Notes are.
+     *
+     * @return 255 is most intense/loud.
+     */
+    uint8_t getNoteIntensity() {
+        return noteIntensity;
+    }
+
+    /**
      * @brief setOctaveAdjust Allows for manually adjusting all imported Note
      *  frequencies.
      *
@@ -249,6 +269,8 @@ private:
     uint32_t currDivisions; // Current conversion factor for Note duration to Number of beats.
     uint32_t bpm; // Beats per minute. Tempo for playback of compostion.
 
+    uint8_t noteIntensity; // Controls setting for Duty Cycle of Note, which defines how
+        // intense Notes will be.
     float octaveAdjust; // Control for manually scaling octave of notes in case
         // user wants a different sound relative to what is imported
 

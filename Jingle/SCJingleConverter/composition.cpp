@@ -2,7 +2,7 @@
  * \file composition.cpp
  * \brief This encapsulates a song composition. This includes the capability to
  *      parse a musicxml file and communicate the Notes (or some of the notes)
- *      to the Steam Controller.
+ *      to the Steam Controller as a Jingle.
  *
  * MIT License
  *
@@ -48,6 +48,7 @@ Composition::Composition(QString filename)
     : filename(filename)
     , currDivisions(1)
     , bpm(100)
+    , noteIntensity(128)
     , octaveAdjust(1.f)
     , measStartIdx(0)
     , measEndIdx(0)
@@ -210,7 +211,8 @@ Composition::ErrorCode Composition::parse() {
     }
 
     // Make sure all Voices have the same number of measures. It is possible that some Voices
-    //  have fewer Measures as they come and go
+    //  have fewer Measures at this point as they may have not been present for every measure
+    //  throughout parsing
     for (std::map<QString, Voice>::iterator itr = voices.begin(); itr != voices.end(); itr++) {
         Voice& voice = itr->second;
 
@@ -490,6 +492,7 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
 
     uint32_t note_cnt = 0;
 
+    // Add Notes to Left Channel
     if (voices.count(voiceStrL)) {
         for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
             Measure& meas = voices[voiceStrL].measures[meas_idx];
@@ -508,6 +511,7 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
         }
     }
 
+    // Add Notes to Right Channel
     if (voices.count(voiceStrR)) {
         note_cnt = 0;
 
@@ -551,8 +555,7 @@ QString Composition::noteToCmd(const Note& note, Channel chan, uint32_t jingleId
         chan_str = "left";
     }
 
-    // TODO: should this ever be different?
-    const uint32_t duty_cydle = 128;
+    const uint32_t duty_cydle = noteIntensity;
 
     uint32_t frequency = static_cast<uint32_t>(note.frequencies.back() * octaveAdjust);
     if (chordIdx < note.frequencies.size()) {
@@ -724,7 +727,7 @@ const QString& Composition::getVoice(Channel chan) {
 uint32_t Composition::getNumChords(QString voiceStr, uint32_t measStartIdx, uint32_t measEndIdx) {
     if (1 != voices.count(voiceStr)) {
         qDebug() << "Invalid voiceStr " << voiceStr << " with count " << voices.count(voiceStr)
-            <<  " specified in CompositiongetNumChords";
+            <<  " specified in CompositionGetNumChords";
         return 0;
     }
 
@@ -773,7 +776,7 @@ Composition::ErrorCode Composition::setChordIdx(Channel chan, uint32_t chordIdx)
         break;
 
     case LEFT:
-        num_chords = getNumChords(voiceStrR, getMeasStartIdx(), getMeasEndIdx());
+        num_chords = getNumChords(voiceStrL, getMeasStartIdx(), getMeasEndIdx());
         if (chordIdx >= num_chords) {
             qDebug() << "Bad chordIdx " << chordIdx << " specified for Left Channel";
             return BAD_IDX;
