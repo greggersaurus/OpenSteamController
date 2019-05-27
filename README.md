@@ -70,7 +70,8 @@ The work in this directory is geared towards creating a completely custom firmwa
 ## [Jingle](./Jingle)
 
 The work in this directory is geared towards creating a user friendly way to
- customize what Jingles are when the Steam Controller starts up and shuts down.
+ customize what Jingles are played when the Steam Controller starts up and 
+ shuts down.
 
 ## [USB Configuration](./UsbConfiguration)
 
