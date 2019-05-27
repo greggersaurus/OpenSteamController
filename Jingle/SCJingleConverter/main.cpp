@@ -1,12 +1,12 @@
 /**
  * \file main.cpp
  * \brief Entry point for SCJingleConverter. The purpose of this GUI is to provide
- *      a means to customize the Jingles that the Steam Controller plays as
+ *      a means to customize the Jingles that the Steam Controller plays at
  *      startup and shutdown. Valve offers 14 default Jingles that are baked
  *      into their firmware. However, their firmware also has an unused feature
  *      where it checks if EEPROM has valid non-default Jingle Data. This GUI,
  *      in combination with the Open Steam Controller Firmware, allows for
- *      writing Jingle Data to that EEPROM so that even with the official
+ *      writing Jingle Data to EEPROM so that even with the official
  *      firmware running on the Steam Controller it will still play customized
  *      Jingles on powerup and shutdown.
  *

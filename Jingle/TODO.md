@@ -3,9 +3,6 @@
 These items relate to improving the experience of customizing Jingles
  for the Steam Controller:
 
-* Clean up, commit and update TODOs regarding haptic.c changes
-    * Update firmware.bin stored in Jingle/bin
-
 * Add executables for SCJingleConverter to directory
     * Mac, Linux, Windows
 * Exploure ideas to better explain GUI usage

@@ -57,7 +57,7 @@ First, make sure the Steam Controller is connected to your PC and running
  [OpenSteamController.bin](./bin/OpenSteamController.bin).
 
 Second, launch the GUI:
-* For macOS run [SCJingleConverter](./bin/TODO).
+* For macOS run [SCJingleConverter](./bin/SCJingleConverter.app).
 * For Windows run [SCJingleConverter](./bin/TODO).
 * For Linux run [SCJingleConverter](./bin/TODO).
 
