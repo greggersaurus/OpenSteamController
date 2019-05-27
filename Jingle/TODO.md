@@ -1,6 +1,6 @@
 # TODO
 
-These items relate to improving the experience of customizing Jingles
+These items relate to improving the experience of customizing [Jingles](./README.md)
  for the Steam Controller:
 
 * Add executables for SCJingleConverter to directory

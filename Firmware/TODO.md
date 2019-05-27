@@ -1,7 +1,7 @@
-#TODO
+# TODO
 
-This is a running list of ways in which I think the [OpenSteamController](./OpenSteamController)
- Firmware could be improved:
+This is a running list of ways in which I think the Open Steam Controller 
+ [Firmware](./README.md) could be improved:
 
 1. Make youtube walkthrough videos
     1. Firmware Switch Controller Build

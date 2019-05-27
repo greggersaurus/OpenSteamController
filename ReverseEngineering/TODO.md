@@ -1,8 +1,8 @@
 # TODO
 
-These items relate to better understanding how the official Steam Controller
- Firmware works. The idea is to use this knowledge to help with adding features
- to the other Subprojects:
+These items relate [Reverse Engineering](./README.md) official Steam Controller
+ firmware in order to better understanding how it works. The idea is to use 
+ this knowledge to help with adding features to the other Subprojects:
 
 
 1. Jingle Sim related
