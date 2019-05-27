@@ -40,7 +40,8 @@ In order to return the controller to the last known working state, it is
     * On Linux systems (Test on Ubuntu 18.04):
         * TODO
     * On Windows (Tested on Windows 10):
-        * TODO
+        * A new drive will appear with the name CRP DISABLD (i.e. E: CRP DISABLD)
+        * Navigate to the drive using Windows explorer and copy firmware.bin to another directory
 
 ## Manually Loading Firmware
 
@@ -55,11 +56,14 @@ These steps outline how to manually download new firmware onto the controller.
         * Load new firmware binary with command "cat new_firmware.bin > /Volumes/CRP\ DISABLD/firmware.bin"
         * eject "CRP DISABLD"
     * On Linux systems (As reported by @rigidsh):
-        * If you will use  "cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin" on ubuntu(or similar linux) firmware will be corrupted and controller will not start.
-        * To prevent it, use command: `dd conv=nocreat,notrunc oflag=direct bs=512 if=<path to your firmware> of=<path to sc flash>/firmware.bin`
-    * On Windows (Untested. See remark in Section 3 of AN11305v1 from NXP for source):
-        * "Any standard program or tool can be used to write new firmware to the LPC11U37." 
-        * "In a Windows Explorer window, a user can delete firmware.bin and drag over a new file to program the flash."
+        * Use command: `dd conv=nocreat,notrunc oflag=direct bs=512 if=<path to your firmware> of=<path to sc flash>/firmware.bin`
+            * "cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin" will corrupt downloaded firmware.
+    * On Windows (Tested in Window 10):
+        * A new drive will appear with the name CRP DISABLD (i.e. E: CRP DISABLD)
+        * Navigate to the drive using Windows explorer and delete firmware.bin
+        * Make sure the firmware updated file is named firmware.bin
+        * Copy the update file (firmware.bin) to the new drive (i.e. E: CRP DISABLD)
+        * Eject the drive
 
 ## Restoring Firmware
 

@@ -77,7 +77,8 @@ When FIRMWARE_BEHAVIOR is set to DEV_BOARD_FW the firmware that is built will
 
 If you connect the Steam Controller via USB to a PC once this firmware is loaded
  you should see a serial device appear (i.e. in OS X you will see something
- like /dev/tty.usbmodem1781). Using any number of programs with
+ like /dev/tty.usbmodem1781, in Windows you will see something like "USB Serial
+ Device (COM3)"). Using any number of programs with
  serial communication capabilities (i.e. screen, TeraTerm, putty) should allow
  you to access the command line interface (i.e. screen /dev/tty.usbmodem1781).
  Once you are connected the 'help' command is a great place to start to see
