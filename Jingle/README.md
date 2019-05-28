@@ -105,6 +105,28 @@ See the [Jingle Data Details](./JingleData.md) document for details on what a
  Jingle is and how the official firmware expects this to be organized.
 
 
+# Building SCJingleConverter
+
+This section outlines how to build the SCJingleConverter GUI:
+
+* Download Qt Open Source Version
+* Install and make Qt Creator AND a toolchain are selected for installation
+    * For macOS 10.12.6 GUI was successfully built with Qt Creator 4.8.0 and Qt 5.12.0 Clang 64-it toolchain/kit
+    * For Windows 10 May 2019 Update GUI was successfully built with Qt Creator 4.9.0 and Qt 5.12.12 MinGW 64-bit toolchain/kit
+    * For Linux Ubuntu 18.04.2 GUI was successfully built with Qt Creator 4.9.0 and Qt 5.12.12 GCC 64-bit toolchain/kit
+* Open Qt Creator
+* Open SCJingleConverter.pro
+* Select the appropriate toolchain/kit and Configure the Project
+* You should be able to build and run the project via Qt Creator once it finishes configuration
+
+## Creating Stand Alone Executable
+
+There are additional steps to follow to produce an executable that can properly
+ run on its own (i.e. not launched via Qt Creator) and be distributed:
+
+TODO
+
+
 # Sources
 
 All the information in this document was deciphered via reverse engineering

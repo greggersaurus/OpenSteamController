@@ -1,8 +1,13 @@
 # TODO
 
-Top level TODO items for the [Open Steam Controller Project](./) are captured 
+Top level TODO items for the Open Steam Controller Project are captured 
  here. See other documents linked below for TODO items related specifically to 
  the Subprojects.
+
+1. Figure out how to create exe for all platforms
+    1. macOS: TODO
+    1. Windows: .exe does not seem to be linking against or including qt dlls...
+    1. Linux: TODO
 
 1. Fresh walkthrough of all TODOs
     1. Focus on perspective of new user
@@ -10,8 +15,6 @@ Top level TODO items for the [Open Steam Controller Project](./) are captured
     1. From eyes of someone who knows nothing about this
         1. What will they see first?
         1. What is their goal and can they acheive it with ease?
-
-1. Fill out details in LoadingFirmware.md for all Operating Systems
 
 ## Firmware
 

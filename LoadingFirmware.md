@@ -38,10 +38,13 @@ In order to return the controller to the last known working state, it is
         * Copy firmware.bin from "CRP DISABLD" mount to backup file (i.e. backup.bin):
             * cat /Volumes/CRP\ DISABLD/firmware.bin > backup.bin
     * On Linux systems (Test on Ubuntu 18.04):
-        * TODO
-    * On Windows (Tested on Windows 10):
-        * A new drive will appear with the name CRP DISABLD (i.e. E: CRP DISABLD)
-        * Navigate to the drive using Windows explorer and copy firmware.bin to another directory
+        * Locate mount point of CRP DISABLD
+            * The following command may help: `mount | grep DISABLD`
+        * Backup the firmware file
+            * dd if=<path to mount>/firmware.bin of=backup.bin
+    * On Windows (Tested on Windows 10 May 2019 Update):
+        * A new removable drive will appear with the name CRP DISABLD (i.e. "CRP DISABLD (E:)")
+        * Navigate to the drive using Windows File Explorer and copy firmware.bin to another directory
 
 ## Manually Loading Firmware
 
@@ -53,14 +56,17 @@ These steps outline how to manually download new firmware onto the controller.
 * Download the firmware .bin file:
     * On macOS (Tested specifically on 10.12.6):
         * Mount "CRP DISABLD" will appear
-        * Load new firmware binary with command "cat new_firmware.bin > /Volumes/CRP\ DISABLD/firmware.bin"
-        * eject "CRP DISABLD"
+        * Load new firmware binary with command `cat new_firmware.bin > /Volumes/CRP\ DISABLD/firmware.bin`
+        * Eject "CRP DISABLD"
     * On Linux systems (As reported by @rigidsh):
-        * Use command: `dd conv=nocreat,notrunc oflag=direct bs=512 if=<path to your firmware> of=<path to sc flash>/firmware.bin`
+        * Locate mount point of CRP DISABLD
+            * The following command may help: `mount | grep DISABLD`
+        * Load new firmware binary with command: `dd conv=nocreat,notrunc oflag=direct bs=512 if=<path to your firmware> of=<path to sc flash>/firmware.bin`
             * "cat new_firmware.bin > /mount/CRP\ DISABLD/firmware.bin" will corrupt downloaded firmware.
-    * On Windows (Tested in Window 10):
-        * A new drive will appear with the name CRP DISABLD (i.e. E: CRP DISABLD)
-        * Navigate to the drive using Windows explorer and delete firmware.bin
+        * Unmount CRP DISABLD
+    * On Windows (Tested on Window 10 May 2019 Update):
+        * A new removable drive will appear with the name CRP DISABLD (i.e. "CRP DISABLD (E:)")
+        * Navigate to the drive using Windows File Explorer and delete firmware.bin
         * Make sure the firmware updated file is named firmware.bin
         * Copy the update file (firmware.bin) to the new drive (i.e. E: CRP DISABLD)
         * Eject the drive
