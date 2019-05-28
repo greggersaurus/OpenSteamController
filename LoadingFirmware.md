@@ -36,12 +36,12 @@ In order to return the controller to the last known working state, it is
 * Save the firmware to file on your PC
     * On macOS (Tested specifically on 10.12.6):
         * Copy firmware.bin from "CRP DISABLD" mount to backup file (i.e. backup.bin):
-            * cat /Volumes/CRP\ DISABLD/firmware.bin > backup.bin
+            * `cat /Volumes/CRP\ DISABLD/firmware.bin > backup.bin`
     * On Linux systems (Test on Ubuntu 18.04):
         * Locate mount point of CRP DISABLD
             * The following command may help: `mount | grep DISABLD`
         * Backup the firmware file
-            * dd if=<path to mount>/firmware.bin of=backup.bin
+            * `dd if=<path to mount>/firmware.bin of=backup.bin`
     * On Windows (Tested on Windows 10 May 2019 Update):
         * A new removable drive will appear with the name CRP DISABLD (i.e. "CRP DISABLD (E:)")
         * Navigate to the drive using Windows File Explorer and copy firmware.bin to another directory
