@@ -6,6 +6,21 @@ The work in this directory is geared towards creating a user friendly way for
  are played on the Right and Left Haptics.
 
 
+# Building SCJingleConverter
+
+This section outlines how to build the SCJingleConverter GUI:
+
+* Download Qt (Open Source Version)
+* Install and make sure Qt Creator AND a toolchain are selected for installation
+    * For macOS 10.12.6 known to successfully build with Qt Creator 4.8.0 and Qt 5.12.0 Clang 64-it toolchain/kit
+    * For Windows 10 May 2019 known to successfully build with Qt Creator 4.9.0 and Qt 5.12.12 MinGW 64-bit toolchain/kit
+    * For Linux Ubuntu 18.04.2 known to successfully build with Qt Creator 4.9.0 and Qt 5.12.12 GCC 64-bit toolchain/kit
+* Open Qt Creator
+* Open SCJingleConverter.pro
+* Select the appropriate toolchain/kit and Configure the Project
+* You should be able to build and run the project via Qt Creator once it finishes configuration
+
+
 # Customizing Jingles
 
 This section details how a user can create and download custom Jingles onto
@@ -56,10 +71,8 @@ SCJingleConverter is a GUI created Qt which converts .musicxml files to Jingle D
 First, make sure the Steam Controller is connected to your PC and running
  [OpenSteamController.bin](./bin/OpenSteamController.bin).
 
-Second, launch the GUI:
-* For macOS download and run SCJingleConverter.app [bin](./bin).
-* For Windows run TODO in [bin](./bin).
-* For Linux run TODO in [bin](./bin).
+Second, build and launch the SCJingleConverter GUI. See Building SCJingleConverter
+ section above for details.
 
 Third, load your .musicxml files using the Browse and Convert buttons. 
 
@@ -105,29 +118,7 @@ See the [Jingle Data Details](./JingleData.md) document for details on what a
  Jingle is and how the official firmware expects this to be organized.
 
 
-# Building SCJingleConverter
-
-This section outlines how to build the SCJingleConverter GUI:
-
-* Download Qt Open Source Version
-* Install and make Qt Creator AND a toolchain are selected for installation
-    * For macOS 10.12.6 GUI was successfully built with Qt Creator 4.8.0 and Qt 5.12.0 Clang 64-it toolchain/kit
-    * For Windows 10 May 2019 Update GUI was successfully built with Qt Creator 4.9.0 and Qt 5.12.12 MinGW 64-bit toolchain/kit
-    * For Linux Ubuntu 18.04.2 GUI was successfully built with Qt Creator 4.9.0 and Qt 5.12.12 GCC 64-bit toolchain/kit
-* Open Qt Creator
-* Open SCJingleConverter.pro
-* Select the appropriate toolchain/kit and Configure the Project
-* You should be able to build and run the project via Qt Creator once it finishes configuration
-
-## Creating Stand Alone Executable
-
-There are additional steps to follow to produce an executable that can properly
- run on its own (i.e. not launched via Qt Creator) and be distributed:
-
-TODO
-
-
-# Sources
+# Resources
 
 All the information in this document was deciphered via reverse engineering
  Valve's official firmware. Refer to the 

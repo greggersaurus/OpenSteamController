@@ -3,13 +3,15 @@
 These items relate to improving the experience of customizing [Jingles](./)
  for the Steam Controller:
 
-* Add executables for SCJingleConverter to directory
-    * Mac, Linux, Windows
 * Explore ideas to better explain GUI usage
     * Create walkthrough video on customizing Jingles and uploaded to youtube
     * More details in README.md (with pictures?)
-    * Tool tips?
+    * Tool tips in GUI itself?
 
+* Create standalone executable for all platforms? (worth the trouble?)
+    * macOS: Look into https://doc.qt.io/archives/qt-4.8/deployment-mac.html
+    * Windows: Look into https://wiki.qt.io/Build_Standalone_Qt_Application_for_Windows
+    * Linux: This help any https://stackoverflow.com/questions/45423815/building-standalone-qt-linux-executable?
 * Explore tests and results they produce
     * How well does Open Steam Controller FW mimic official firmware?
     * If issues exist in official FW, explore if/when SCJingleConverter can compensate for them 
