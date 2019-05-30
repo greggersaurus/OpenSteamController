@@ -11,7 +11,7 @@ These items relate [Reverse Engineering](./) official Steam Controller
 1. Clean, clean, clean
     1. gdbCmdFile, gdbCustomCmds, gdbOldRef
     1. PINT3 dump
-    1. Cleaning other ISRs and looping paths so that they make when I come back after I have forgotten everything.
+    1. Cleaning other ISRs and looping paths so that they make sense when I come back after I have forgotten everything.
     1. Make sure all known functions have details in .h file
 
 1. Is AD6 battery gauge/power?

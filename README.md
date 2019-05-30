@@ -90,7 +90,7 @@ If you would like to offer contributions back to this repo that would be great.
  That could come in the form of issues/discussions on how this could be more
  user friendly or by adding features or support that is not yet there. 
 
-Note that there is are TODO documents for each Subproject. The idea
+Note that there are TODO documents for each Subproject. The idea
  is to outline goals I would like to accomplish. If you want to help with any of
  these that would be awesome. It would be even more awesome if you started a
  conversation regarding your intentions so as to limit the chances of duplicated

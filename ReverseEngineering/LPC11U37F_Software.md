@@ -15,7 +15,7 @@ Now that the artifacts below pertain to the vcf_wired_controller_d0g_57bf5c10.bi
 
 ## vcf_wired_controller_d0g_57bf5c10.c
 
-This file contains data on how the simulation has show the controller to behave
+This file contains data on how the simulation has shown the controller to behave
  in different scenarios. The idea is to capture and identify as many actions
  as possible (with a focus on finding recurring code and memory usage) so that
  controller behavior can be understood to the extent and completely custom
