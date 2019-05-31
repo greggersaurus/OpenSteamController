@@ -89,6 +89,14 @@ The intention of this build configuration is to learn more about the
  peripherals and interfaces on the Steam Controller. This also provides a 
  platform to monitor controller states to verify or feed data back into
  Reverse Engineering simulations to observe different behaviors. 
+ 
+See the video below for a demonstration of this firmware build:
+
+Open Steam Controller: Development Board
+
+ <a href="http://www.youtube.com/watch?feature=player_embedded&v=6n_3tYg0XP8
+" target="_blank"><img src="http://img.youtube.com/vi/6n_3tYg0XP8/0.jpg" 
+alt="Open Steam Controller: Development Board" width="240" height="180" border="10" /></a>
 
 ### SWITCH_WIRED_POWERA_FW 
 
@@ -102,6 +110,14 @@ If you load this firmware onto a Steam Controller and then connect the controlle
  your Switch. Have fun, but note this was created for educational purposes
  and probably will not perform as well as an officially licensed Nintendo
  product. 
+ 
+ See the video below for a demonstration of this firmware build:
+ 
+ Open Steam Controller: Nintendo Switch
+ 
+ <a href="http://www.youtube.com/watch?feature=player_embedded&v=fT7ddPzb7A8
+" target="_blank"><img src="http://img.youtube.com/vi/fT7ddPzb7A8/0.jpg" 
+alt="Open Steam Controller: Nintendo Switch" width="240" height="180" border="10" /></a>
 
 
 # TODO
