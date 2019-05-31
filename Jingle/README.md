@@ -4,6 +4,14 @@ The work in this directory is geared towards creating a user friendly way for
  customizing what Jingles play when the Steam Controller starts up and shuts down
  with the official firmware installed. A Jingle is defined to be the series of Notes that 
  are played on the Right and Left Haptics.
+ 
+ The video and instructions below offer details on how to customize the Jingles on a Steam Controller:
+ 
+ Open Steam Controller: Jingle Customization
+
+ <a href="http://www.youtube.com/watch?feature=player_embedded&v=TDFC0Q24lQA
+" target="_blank"><img src="http://img.youtube.com/vi/TDFC0Q24lQA/0.jpg" 
+alt="Open Steam Controller: Jingle Customization" width="240" height="180" border="10" /></a>
 
 
 # Building SCJingleConverter
