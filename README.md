@@ -52,12 +52,6 @@ Finally note that I say all of this with the hope of not discouraging anyone.
 
 # Subprojects
 
-## [Reverse Engineering](./ReverseEngineering/)
-
-The work in this directory focuses on deconstructing the firmware and hardware
- of the Steam Controller. The understanding gained from this often is a  
- significant part of the other Subprojects. 
-
 ## [Firmware](./Firmware/)
 
 The work in this directory is geared towards creating a completely custom firmware
@@ -66,12 +60,40 @@ The work in this directory is geared towards creating a completely custom firmwa
  and exploring or verifying system behaviors. Additionally the project can
  be configured for more practical purpose, such as behaving like a wired
  Nintendo Switch controller.
+ 
+ Below are some videos demonstrating the different firmware builds:
+ 
+ Open Steam Controller: Nintendo Switch
+ 
+ <a href="http://www.youtube.com/watch?feature=player_embedded&v=fT7ddPzb7A8
+" target="_blank"><img src="http://img.youtube.com/vi/fT7ddPzb7A8/0.jpg" 
+alt="Open Steam Controller: Nintendo Switch" width="240" height="180" border="10" /></a>
+
+Open Steam Controller: Development Board
+
+ <a href="http://www.youtube.com/watch?feature=player_embedded&v=6n_3tYg0XP8
+" target="_blank"><img src="http://img.youtube.com/vi/6n_3tYg0XP8/0.jpg" 
+alt="Open Steam Controller: Development Board" width="240" height="180" border="10" /></a>
 
 ## [Jingle](./Jingle)
 
 The work in this directory is geared towards creating a user friendly way to
  customize what Jingles are played when the Steam Controller starts up and 
  shuts down.
+ 
+ Below is a video demonstrating how to customize Jingles on the Steam Controller:
+ 
+ Open Steam Controller: Jingle Customization
+
+ <a href="http://www.youtube.com/watch?feature=player_embedded&v=TDFC0Q24lQA
+" target="_blank"><img src="http://img.youtube.com/vi/TDFC0Q24lQA/0.jpg" 
+alt="Open Steam Controller: Jingle Customization" width="240" height="180" border="10" /></a>
+ 
+## [Reverse Engineering](./ReverseEngineering/)
+
+The work in this directory focuses on deconstructing the firmware and hardware
+ of the Steam Controller. The understanding gained from this often is a  
+ significant part of the other Subprojects. 
 
 ## [USB Configuration](./UsbConfiguration)
 
