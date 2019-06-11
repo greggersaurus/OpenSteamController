@@ -4,7 +4,6 @@ These items relate to improving the experience of customizing [Jingles](./)
  for the Steam Controller:
 
 * Explore ideas to better explain GUI usage
-    * Create walkthrough video on customizing Jingles and uploaded to youtube
     * More details in README.md (with pictures?)
     * Tool tips in GUI itself?
 

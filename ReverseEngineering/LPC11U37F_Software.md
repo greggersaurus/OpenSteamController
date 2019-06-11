@@ -1,8 +1,9 @@
 # LPC11U37F/501 Software
 
 The purpose of this document is to track information regarding the software that
- runs on the LPC11U37F. The LPC11U37F is a 32-bit processor ARMv6-M architecture 
- with 16-bit Thumb ISA and includes Thumb-2 technology.
+ runs on the LPC11U37F main/master processor of the controller. The LPC11U37F 
+ is a 32-bit processor ARMv6-M architecture with 16-bit Thumb ISA and includes 
+ Thumb-2 technology.
 
 
 # Reverse Engineering Artifacts

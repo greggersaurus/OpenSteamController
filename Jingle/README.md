@@ -1,11 +1,24 @@
 # Jingle 
 
-The work in this directory is geared towards creating a user friendly way for
- customizing what Jingles play when the Steam Controller starts up and shuts down
- with the official firmware installed. A Jingle is defined to be the series of Notes that 
- are played on the Right and Left Haptics.
- 
- The video and instructions below offer details on how to customize the Jingles on a Steam Controller:
+One of the features I found the most intriguing when I bought a Steam Controller is 
+ that when the controller powers up and shuts down, it plays a little song. These
+ songs (or Jingles as I often refer to them) can be configured via Steam. 
+ However, the choices are limited, with only 14 options being available. 
+
+The work in this directory is the result of me wanting to understand
+ how these Jingles are produced and wondering if there was any way to customize
+ them, without otherwise impacting the operation of the official firmware. It
+ turns out there is a very clean way to accomplish exactly what I wanted, as
+ it seems Valve may have been planning to add such customization options. 
+ Specifically what I am referring to here is that the official firmware 
+ has a mechanism for checking non-volatile memory (EEPROM) and if that data
+ is valid it uses it instead of the default Jingles. My guess is that this was
+ the beginnings of a feature that never received support from Steam. However,
+ now that I understand how it works, I am able to provide software to take
+ advantage of it. 
+
+Check out the video below for how this Subproject allows you to customize the
+ start up and shut down Jingles on a Steam Controller:
  
  Open Steam Controller: Jingle Customization
 

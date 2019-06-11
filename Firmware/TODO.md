@@ -3,10 +3,6 @@
 This is a running list of ways in which I think the Open Steam Controller 
  [Firmware](./) could be improved:
 
-1. Make youtube walkthrough videos
-    1. Firmware Switch Controller Build
-    1. Firmware Dev Build
-
 1. Faux Switch Controller
     1. Add startup jingle...?
         1. Mario theme??
@@ -14,6 +10,16 @@ This is a running list of ways in which I think the Open Steam Controller
 1. Step through all usages and make sure they are consistent
     1. Are we using {arg_name} to distinguish arguments?
 
+1. motion.c
+    1. Add support for interfacing with MPU-6500 Six-Axis (Gyro + Accelerometer)
+    1. Accumualte all relevant datasheets
+1. radio.c
+    1. Add support for interfacing with nRF51822 Radio Chip
+    1. Accumualte all relevant datasheets
+        1. Make sure we get enough info to run DFU and (hopefully) dump what is currently programmed onto Radio Chip
+        1. Should be able to verify by seeing this change when switching to Beta Firmware with BLE support
+        1. Will Steam be able to fix system where FW on Radio Chip is corrupted?
+            1. How "safe" do I need to be here...
 1. Building
     1. Test Release build and move away from working with Debug
         1. Debug isn't buying us anything on this platform anyways, right?
@@ -60,10 +66,6 @@ This is a running list of ways in which I think the Open Steam Controller
 1. test.c
     1. Clean up and add more tests
     1. Create (at least manual) test procedure?
-1. motion.c
-    1. Add support for interfacing with MPU-6500 Six-Axis (Gyro + Accelerometer)
-1. radio.c
-    1. Add support for interfacing with nRF51822 Radio Chip
 1. trackpad.c
     1. Dig into oddities in X/Y data (~5 degree clockwise rotation... or maybe skew is better description...)
     1. Understand sample [18]. How, why and when could this be used.

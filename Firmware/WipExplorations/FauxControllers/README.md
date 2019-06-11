@@ -6,7 +6,7 @@ The purpose of this project is a workspace to learn about how USB HIDs work,
  Nintendo Switch Pro Controller).
 
 Ideally, once the USB communications side of things is understood this project
- will be merged into the Steam Controller Custom Firmware efforts and married
+ will be merged into the Open Steam Controller Firmware efforts and married
  to logic interfacing with the Steam Controller peripherals so that the 
  Steam Controller can act as known commercial controllers, such as the Nintendo
  Switch Pro Controller. 
@@ -18,6 +18,7 @@ Note this is being pursued for educational and hobby purposes only. This seemed
 
 Also note this project is based off of the nxp_lpcxpresso_11u37_usbd_rom_hid_mouse
  example project distributed by NXP via lpcopen_v2_03_lpcxpresso_nxp_lpcxpresso_11u37h. 
+ Sorry for shoddy work and not taking time to change function names, etc. 
 
 # Building
 
