@@ -142,7 +142,7 @@ This section lists some projects that influenced this project, as well as links
 
 * Example of using the haptics to play music.
 * Example of PC side code written in C using libusb.
-* Downside is that this takes over the controller when playing custom music and requires the PC to constantly be sending Notes.
+* Allows for playing songs of any length, but at cost of controller being occupied by Singer software.
 
 ## [HID Joy-Con Whispering](https://github.com/shinyquagsire23/HID-Joy-Con-Whispering)
 
