@@ -169,7 +169,10 @@ Composition::ErrorCode Composition::parse() {
 
     uint32_t part_cnt = 0;
 
-    while (xml.readNext() != QXmlStreamReader::EndDocument) {
+    // Read until end of document or error occurs
+    while (!xml.atEnd()) {
+        xml.readNext();
+
         if (xml.name() == QLatin1String("note")) {
             if (xml.tokenType() == QXmlStreamReader::StartElement) {
                 ErrorCode code = parseXmlNote(xml, "Part " + QString::number(part_cnt));
@@ -200,6 +203,12 @@ Composition::ErrorCode Composition::parse() {
                 part_cnt++;
             }
         }
+    }
+
+    // Check if we exited loop above due to error
+    if (xml.hasError()) {
+        qDebug() << "QXmlStreamReader detected error: " << xml.errorString();
+        return XML_PARSE;
     }
 
     // Update default configurations
