@@ -1,9 +1,21 @@
-# TODO
+# [Reverse Engineering](./) TODO
 
-These items relate [Reverse Engineering](./) official Steam Controller
- firmware in order to better understanding how it works. The idea is to use 
- this knowledge to help with adding features to the other Subprojects:
+For the most part the Reverse Engineering subtask has served its purpose. At 
+ this point a developer should be able to continue onto firmware tasks based
+ on previous work and datasheets. There are two reasons why the Reverse 
+ Engineering effort might be further continued at this point:
 
+1. In hopes of finding other unused or hidden features (i.e. USB communications protocol that could allow for adding custom Jingles without needing to update firmware).
+2. For the sake of completeness (i.e. mapping out all functions, IRQs, callbacks, etc.). Might be educational to see how all of this was implemented. 
+
+I am considering both of these to be low priority and most likely will not
+ put much effort into further Reverse Engineering.
+
+
+# Notes
+
+Below are less verbose notes on items I would like to dig into. These are a bit
+ terse and may not be worded well. Please ask if you have any questions:
 
 1. Jingle Sim related
     1. Details on CT32B0 ISR based on simulation results?

@@ -1,7 +1,27 @@
-# TODO
+# [Firmware](./) TODO
 
-This is a running list of ways in which I think the Open Steam Controller 
- [Firmware](./) could be improved:
+The custom firmware Subproject is at a good starting point. Most of the primary
+ controller peripherals have drivers and example usage. However, two peripherals
+ have still not been integrated. 
+
+1. The Radio Chip (i.e. nRF51822), which would allow for wireless communications 
+    1. This could possibly allow for expanding the Nintendo Switch Controller build to function wirelessly
+    1. This could allow for pointless/silly applications such as turning the controller into a bluetooth speaker that uses the haptics as speakers
+        1. I have not actually done the math to check if we can get good enough rates for this to be worth it even purely for amusement
+    1. Next steps
+        1. Dig into using the UART interface to enact DFU and get custom code running on the Radio Chip
+            1. WARNING: I do not know if Valve's wired FW update process will program this chip if it gets erased... Exploring this may leads to wireless function being bricked on your hardware
+2. The Gyro Chip (i.e. MPU-6500), which allows for tracking how the controller moves (i.e. motion controls)
+    1. It would be neat to see this data in action, even just with the DEV_BOARD_FW build printing status
+    1. This could be used to improve the Nintendo Switch controller build
+        1. Note that additional work would need to be done to reverse engineer the Pro Controller Wired protocol as the Power A has no gyro
+            1. Note it does seem possible to do this (I may have previously come to the conclusion it was not). Look up videos of the The Exlene wired USB controller for Nintendo Switch for proof/example
+
+
+# Notes
+
+Below are less verbose notes on items I would like to dig into. These are a bit
+ terse and may not be worded well. Please ask if you have any questions:
 
 1. Faux Switch Controller
     1. Add startup jingle...?
@@ -12,10 +32,10 @@ This is a running list of ways in which I think the Open Steam Controller
 
 1. motion.c
     1. Add support for interfacing with MPU-6500 Six-Axis (Gyro + Accelerometer)
-    1. Accumualte all relevant datasheets
+    1. Accumulate all relevant datasheets
 1. radio.c
     1. Add support for interfacing with nRF51822 Radio Chip
-    1. Accumualte all relevant datasheets
+    1. Accumulate all relevant datasheets
         1. Make sure we get enough info to run DFU and (hopefully) dump what is currently programmed onto Radio Chip
         1. Should be able to verify by seeing this change when switching to Beta Firmware with BLE support
         1. Will Steam be able to fix system where FW on Radio Chip is corrupted?

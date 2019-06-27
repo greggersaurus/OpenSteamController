@@ -1,12 +1,25 @@
-# TODO
+# [Jingle](./) TODO
 
-These items relate to improving the experience of customizing [Jingles](./)
- for the Steam Controller:
+The functionality for the customizing Jingles is in a good place at this point. 
+ The priorities I have for this project fall more under the category of niceties.
+
+1. Having the SCJingleConverter take compressed MusicXML files would be nice. Especially since musescore.com allows you to download this format directly.
+2. Port the SCJingleConverter application to Python. This could lead to an easier path of creating a distributable executables for all OS platforms, while giving me more experience with Python.
+3. Explore the possibility of other ways to get Jingle Data into EEPROM. Maybe there is an unknown USB command in the official firmware that could be leveraged? The hope is to simplify the customization process so that users do not need to change the Steam Controller firmware. 
+
+
+# Notes
+
+Below are less verbose notes on items I would like to dig into. These are a bit
+ terse and may not be worded well. Please ask if you have any questions:
 
 * Explore ideas to better explain GUI usage
     * More details in README.md (with pictures?)
     * Tool tips in GUI itself?
 
+* Port SCJingleConverter to Python 
+    * Easier to install/distribute?
+    * Access to more libraries, etc. which might make adding new features easier (i.e. compressed MusicXML?)
 * Create standalone executable for all platforms? (worth the trouble?)
     * macOS: Look into https://doc.qt.io/archives/qt-4.8/deployment-mac.html
     * Windows: Look into https://wiki.qt.io/Build_Standalone_Qt_Application_for_Windows
