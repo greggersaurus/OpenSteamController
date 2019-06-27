@@ -11,21 +11,21 @@ This is a project where I have been working to deconstruct, document,
 First, it is important to talk a little about the Steam Controller (the
  hardware that this project is focused on).
 
-[[https://github.com/greggersaurus/OpenSteamController/blob/master/img/SteamControllerBox.png|alt=SteamControllerBox]]
+![SteamControllerBox](./img/SteamControllerBox.png)
 
 The Steam Controller is a video game controller released by Valve Corporation
  on November 10, 2015. This was part of Valve's initiative to give PC gamers the
  option of a console-like experience (i.e. the couch gamer who sits in front of
  a TV and uses a controller instead of keyboard and mouse).
 
-[[https://github.com/greggersaurus/OpenSteamController/blob/master/img/SteamControllerFront.png|alt=SteamControllerFront]]
+![SteamControllerFront](./img/SteamControllerFront.png)
 
 The Steam Controller tried to keep some aspects familiar to modern video game
  controllers (i.e. a left analog stick, four face buttons, two shoulder and 
  bumper buttons) while also changing up some of the norms we have come to
  expect (i.e. replacing the directional pad and right analog stick with trackpads). 
 
-[[https://github.com/greggersaurus/OpenSteamController/blob/master/img/SteamControllerBack.png|alt=SteamControllerBack]]
+![SteamControllerBack](./img/SteamControllerBack.png)
 
 Additional details on the controller can be found on the official 
   [Product Page](https://store.steampowered.com/app/353370/Steam_Controller/)
