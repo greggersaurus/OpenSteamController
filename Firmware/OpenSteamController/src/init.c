@@ -146,6 +146,16 @@ void stage2Init(uint32_t hwVersion){
 	pio0_3_start_val = usb_volt_detect;
 
 	if (!usb_volt_detect) {
+		// Wait here and the board will power off because we are
+		//  not enabling battery power. Remove this while loop to
+		//  be able to run the controller on battery power, but know
+		//  that at the moment this means the controller will
+		//  run off battery even after USB is connected and there
+		//  will be no way to turn off the controler except by
+		//  removing the battery
+		while(1) {
+		}
+
 		// Check for brown out detect
 		if (Chip_SYSCTL_GetSystemRSTStatus() & SYSCTL_RST_BOD) {
 			// Clear BOD

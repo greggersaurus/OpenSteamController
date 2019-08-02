@@ -17,6 +17,18 @@ The custom firmware Subproject is at a good starting point. Most of the primary
         1. Note that additional work would need to be done to reverse engineer the Pro Controller Wired protocol as the Power A has no gyro
             1. Note it does seem possible to do this (I may have previously come to the conclusion it was not). Look up videos of the The Exlene wired USB controller for Nintendo Switch for proof/example
 
+Additionally, the following points outline interfaces that could have better or
+ more full featured implementations. 
+
+1. The Power/Steam Button and Battery Power
+    1. Currently the functionality to use this button to start up the controller and use battery power is disabled. 
+    1. It would be nice to put together the support to be able to use battery power and still be able to power down the controller (without having to remove the batteries...)
+        1. Will need to remove while loop in stage2Init() (when usb_volt_detect = false)
+        1. Will need to handle PIO0_3 (USB voltage detected) changing state during normal operation
+            1. Use interrupt
+            1. Change whether battery is being used or not based on connect/disconnect of USB cable
+        1. Add ability to shutdown controller (by holding power button for N seconds?)
+
 
 # Notes
 
