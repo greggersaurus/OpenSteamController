@@ -60,7 +60,14 @@ Open the LPCXpresso IDE and import projects [OpenSteamController](./OpenSteamCon
 A project can be imported into LPCXpresso by selecting: 
  File -> Import -> General -> Existing Project into Workspace -> Select root directory
 
-Run Project -> Build All to compile.
+Right Click on a Projet and select "Build Project" to build. 
+
+For a more in depth explanation check out the following video:
+
+Open Steam Controller: Building the Firmware
+
+ <a href="http://www.youtube.com/watch?feature=player_embedded&v=VxD9rCuD9Vc" target="_blank"><img src="http://img.youtube.com/vi/VxD9rCuD9Vc/1.jpg" 
+alt="Open Steam Controller: Building the Firmware" width="240" height="180" border="10" /></a>
 
 ## Firmware Configuration
 
@@ -116,7 +123,7 @@ If you load this firmware onto a Steam Controller and then connect the controlle
  Open Steam Controller: Nintendo Switch
  
  <a href="http://www.youtube.com/watch?feature=player_embedded&v=fT7ddPzb7A8
-" target="_blank"><img src="http://img.youtube.com/vi/fT7ddPzb7A8/0.jpg" 
+" target="_blank"><img src="http://img.youtube.com/vi/fT7ddPzb7A8/1.jpg" 
 alt="Open Steam Controller: Nintendo Switch" width="240" height="180" border="10" /></a>
 
 
