@@ -1212,29 +1212,50 @@ static ControllerUsbData controllerUsbData;
  *   range expected by Power A USB control packet. 
  *
  * \param rawVal Raw ADC value representing an X or Y position.
- * \param maxMal The maximum value that rawVal could theoretically be.
- * \param trim 0.8 fixed point number representing how much of maxVal range to
- *   ignore. i.e. although X/Y position could technically range from 0 to maxVal
- *   this will not happen in a real world scenario. Therefore, we must ignore
- *   some of the upper and lower bounds. This allows this to be customized
- *   based on the analog input device.
+ * \param centerWidth Number of ADC counts that define an area for 
+ *   which the control stick is considered to be in the neutral position. This 
+ *   is required as the raw ADC results returned from the analog stick being in
+ *   a neutral position vary from controller to controller and even from usage
+ *   to usage (i.e. moving and releasing the control stick).
+ * \param activeWidth Number ADC counts that define the maximum area the 
+ *   control stick is expected to travel. Anything beyond this will be railed
+ *   high or low, depending on which extreme is closer.
+ * \param maxRawVal Max ADC count that could be returned for rawVal.
  * 
  * \return Value ready for Status Report Analog fields.
  */
-static uint8_t convToPowerAJoyPos(uint32_t rawVal, uint32_t maxVal, uint8_t trim) {
-	const uint32_t POS_MAX = 0xFF;
-	uint32_t adjusted = ((POS_MAX + 1 + 2 * trim) * rawVal) / maxVal;
-	uint8_t retval = 0;
+static uint8_t convToPowerAJoyPos(uint32_t rawVal, uint32_t centerWidth, 
+	uint32_t activeWidth, uint32_t maxRawVal) {
 
-	if (adjusted < trim) {
-		retval = 0;
-	} else if (adjusted > POS_MAX + trim) {
-		retval = POS_MAX;
-	} else {
-		retval = adjusted - trim;
+	const uint32_t POS_MAX = 0xFF;
+	const uint32_t MID_VAL = (POS_MAX+1)/2;
+
+	// Defines where neutral deadzone starts and ends
+	const uint32_t NEUTRAL_HI_LIM = maxRawVal/2 + centerWidth/2;
+	const uint32_t NEUTRAL_LO_LIM = maxRawVal/2 - centerWidth/2;
+
+	// Defines where the saturation points are for the extremes
+	const uint32_t MAX_HI_LIM = maxRawVal/2 + activeWidth/2;
+	const uint32_t MAX_LO_LIM = maxRawVal/2 - activeWidth/2;
+
+	// Used to properly convert ADC counts in active range to POWER A units
+	const uint32_t TRAVEL_DIST = (activeWidth - centerWidth)/2;
+
+	if (rawVal > MAX_HI_LIM) {
+		return POS_MAX;
 	}
 
-	return retval;
+	if (rawVal < MAX_LO_LIM) {
+		return 0;
+	}
+
+	if (rawVal >= NEUTRAL_HI_LIM) { 
+		return MID_VAL + (MID_VAL * (rawVal - NEUTRAL_HI_LIM))/TRAVEL_DIST;
+	} else if (rawVal <= NEUTRAL_LO_LIM) {
+		return (MID_VAL * (rawVal - MAX_LO_LIM))/TRAVEL_DIST;
+	}
+
+	return MID_VAL;
 }
 
 /**
@@ -1271,9 +1292,11 @@ static void updateReports(void) {
 
 	// Analog Joystick is Left Analog:
 	controllerUsbData.statusReport.leftAnalogX = convToPowerAJoyPos(
-		JOYSTICK_MAX_X-getAdcVal(ADC_JOYSTICK_X), JOYSTICK_MAX_X, 0x80);
+		JOYSTICK_MAX_X-getAdcVal(ADC_JOYSTICK_X), 128, JOYSTICK_MAX_X/2,
+		JOYSTICK_MAX_X);
 	controllerUsbData.statusReport.leftAnalogY = convToPowerAJoyPos(
-		JOYSTICK_MAX_Y-getAdcVal(ADC_JOYSTICK_Y), JOYSTICK_MAX_Y, 0x80);
+		JOYSTICK_MAX_Y-getAdcVal(ADC_JOYSTICK_Y), 128, JOYSTICK_MAX_Y/2,
+		JOYSTICK_MAX_Y);
 
 	uint16_t tpad_x = 0;
 	uint16_t tpad_y = 0;
@@ -1319,9 +1342,9 @@ static void updateReports(void) {
 	// Have Right Trackpad act as Right Analog:
 	trackpadGetLastXY(R_TRACKPAD, &tpad_x, &tpad_y);
 	controllerUsbData.statusReport.rightAnalogX = convToPowerAJoyPos(tpad_x, 
-		TPAD_MAX_X, 0x40);
+		0, TPAD_MAX_X/2, TPAD_MAX_X);
 	controllerUsbData.statusReport.rightAnalogY = convToPowerAJoyPos(
-		 TPAD_MAX_Y - tpad_y, TPAD_MAX_Y, 0x40);
+		 TPAD_MAX_Y - tpad_y, 0, TPAD_MAX_Y/2, TPAD_MAX_Y);
 }
 
 /**

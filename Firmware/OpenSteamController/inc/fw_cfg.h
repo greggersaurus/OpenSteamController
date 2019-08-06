@@ -32,7 +32,7 @@
 #ifndef _FIRMWARE_CONFIG_
 #define _FIRMWARE_CONFIG_
 
-#define DEV_BOARD_FW_VER_MINOR (0)
+#define DEV_BOARD_FW_VER_MINOR (1)
 #define DEV_BOARD_FW_VER_MAJOR (1)
 
 // These define how the built firwmware causes the Steam Controller to behave
