@@ -283,6 +283,8 @@ Composition::ErrorCode Composition::parse() {
         }
     }
 
+    optimizeNotes();
+
     return NO_ERROR;
 }
 
@@ -299,6 +301,7 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QS
     float length = 0.f;
     float frequency = 0.f;
     bool isChord = false;
+    bool isTied = false;
     QString voice_id = " Voice ?"; // Used for second part of key to access voices
 
     // Check that we are actually at the beginning of an XML note token
@@ -336,6 +339,12 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QS
             }
         } else if (xml.name() == QLatin1String("chord")) {
             isChord = true;
+        } else if (xml.name() == QLatin1String("tie")) {
+            if (xml.tokenType() == QXmlStreamReader::StartElement) {
+                if (xml.attributes().value(QLatin1String("type")) == QLatin1String("start")) {
+                    isTied = true;
+                }
+            }
         }
     }
 
@@ -368,6 +377,10 @@ Composition::ErrorCode Composition::parseXmlNote(QXmlStreamReader& xml, const QS
         Note note;
         note.frequencies.push_back(frequency);
         note.length = length;
+        note.tied = isTied;
+        if (frequency == 0.f) {
+            note.tied = true; // Auto-tie all rests.
+        }
 
         meas.notes.push_back(note);
     }
@@ -477,9 +490,6 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
         return BAD_IDX;
     }
 
-    const uint32_t meas_start_idx = getMeasStartIdx();
-    const uint32_t meas_end_idx = getMeasEndIdx();
-
     const uint32_t num_notes_l = getNumNotes(LEFT);
     const uint32_t num_notes_r = getNumNotes(RIGHT);
 
@@ -503,20 +513,17 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
 
     // Add Notes to Left Channel
     if (voices.count(voiceStrL)) {
-        for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
-            Measure& meas = voices[voiceStrL].measures[meas_idx];
-            for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
-                Note& note = meas.notes[notes_idx];
+        for (uint32_t notes_idx = 0; notes_idx < optimizedNotesL.size(); notes_idx++) {
+            Note& note = optimizedNotesL[notes_idx];
 
-                cmd = noteToCmd(note, LEFT, jingleIdx, note_cnt, chordIdxL);
-                resp = cmd + "\rNote updated successfully.\n\r";
-                serial_err_code = serial.send(cmd, resp);
-                if (serial_err_code != SCSerial::NO_ERROR) {
-                    qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
-                    return CMD_ERR;
-                }
-                note_cnt++;
+            cmd = noteToCmd(note, LEFT, jingleIdx, note_cnt, chordIdxL);
+            resp = cmd + "\rNote updated successfully.\n\r";
+            serial_err_code = serial.send(cmd, resp);
+            if (serial_err_code != SCSerial::NO_ERROR) {
+                qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
+                return CMD_ERR;
             }
+            note_cnt++;
         }
     }
 
@@ -524,20 +531,17 @@ Composition::ErrorCode Composition::download(SCSerial& serial, uint32_t jingleId
     if (voices.count(voiceStrR)) {
         note_cnt = 0;
 
-        for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
-            Measure& meas = voices[voiceStrR].measures[meas_idx];
-            for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
-                Note& note = meas.notes[notes_idx];
+        for (uint32_t notes_idx = 0; notes_idx < optimizedNotesR.size(); notes_idx++) {
+            Note& note = optimizedNotesR[notes_idx];
 
-                cmd = noteToCmd(note, RIGHT, jingleIdx, note_cnt, chordIdxR);
-                resp = cmd + "\rNote updated successfully.\n\r";
-                serial_err_code = serial.send(cmd, resp);
-                if (serial_err_code != SCSerial::NO_ERROR) {
-                    qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
-                    return CMD_ERR;
-                }
-                note_cnt++;
+            cmd = noteToCmd(note, RIGHT, jingleIdx, note_cnt, chordIdxR);
+            resp = cmd + "\rNote updated successfully.\n\r";
+            serial_err_code = serial.send(cmd, resp);
+            if (serial_err_code != SCSerial::NO_ERROR) {
+                qDebug() << "serial.send() Error String: " << SCSerial::getErrorString(serial_err_code);
+                return CMD_ERR;
             }
+            note_cnt++;
         }
     }
 
@@ -630,6 +634,8 @@ Composition::ErrorCode Composition::setMeasStartIdx(uint32_t measStartIdx) {
 
     this->measStartIdx = measStartIdx;
 
+    optimizeNotes();
+
     return NO_ERROR;
 }
 
@@ -662,6 +668,8 @@ Composition::ErrorCode Composition::setMeasEndIdx(uint32_t measEndIdx) {
     }
 
     this->measEndIdx = measEndIdx;
+
+    optimizeNotes();
 
     return NO_ERROR;
 }
@@ -700,6 +708,8 @@ Composition::ErrorCode Composition::setVoice(Channel chan, QString voiceStr) {
         voiceStrL = voiceStr;
         break;
     }
+
+    optimizeNotes();
 
     return NO_ERROR;
 }
@@ -849,37 +859,137 @@ uint32_t Composition::getMemUsage() {
  *      configured Measure Start and Stop Indices.
  */
 uint32_t Composition::getNumNotes(Channel chan) {
+    if (chan == RIGHT) {
+        return optimizedNotesR.size();
+    } else {
+        return optimizedNotesL.size();
+    }
+}
+
+/**
+ * @brief Composition::optimizeNotes Condenses and trims notes to take up
+ *  less space when downloaded to the Steam Controller.
+ */
+void Composition::optimizeNotes() {
     const uint32_t meas_start_idx = getMeasStartIdx();
     const uint32_t meas_end_idx = getMeasEndIdx();
 
-    uint32_t num_notes = 0;
+    optimizedNotesL.clear();
+    optimizedNotesR.clear();
 
-    Voice* voice = nullptr;
-    switch (chan) {
-    case RIGHT:
-        if (voices.count(voiceStrR)) {
-            voice = &voices[voiceStrR];
-        }
-        break;
+    uint32_t removed_notes = 0;
 
-    case LEFT:
-        if (voices.count(voiceStrL)) {
-            voice = &voices[voiceStrL];
-        }
-        break;
-    }
-
-    if (voice) {
-        if (meas_start_idx >= voice->measures.size() || meas_end_idx >= voice->measures.size()) {
-            qDebug() << "Start or End Measure Index out of bounds for Channel in getNumNotes()";
-            return 0;
-        }
-
+    // Optimize Notes in Left Channel
+    if (voices.count(voiceStrL)) {
+        // Collect notes into single vector
         for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
-            Measure& meas = voice->measures[meas_idx];
-            num_notes += meas.notes.size();
+            Measure& meas = voices[voiceStrL].measures[meas_idx];
+            for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
+                optimizedNotesL.push_back(meas.notes[notes_idx]);
+            }
+        }
+
+        // Combine ties
+        for (uint32_t notes_idx = optimizedNotesL.size()-1; notes_idx-- > 0; ) {
+            Note& note = optimizedNotesL[notes_idx];
+
+            if (note.tied && notes_idx < optimizedNotesL.size()-1) {
+                Note& tie = optimizedNotesL[notes_idx+1];
+
+                float note_frequency = note.frequencies.back();
+                float tie_frequency = tie.frequencies.back();
+                if (chordIdxL < note.frequencies.size()) {
+                    note_frequency = note.frequencies[chordIdxL];
+                }
+                if (chordIdxL < tie.frequencies.size()) {
+                    tie_frequency = tie.frequencies[chordIdxL];
+                }
+
+                if (note_frequency == tie_frequency) {
+                    note.length += tie.length;
+                    optimizedNotesL.erase(optimizedNotesL.begin()+notes_idx+1);
+                    removed_notes++;
+                }
+            }
+        }
+
+        // Remove trailing the trailing rest (should only be one max)
+        if (optimizedNotesL[optimizedNotesL.size()-1].frequencies[chordIdxL] == 0.f) {
+            optimizedNotesL.erase(optimizedNotesL.begin()+optimizedNotesL.size()-1);
         }
     }
 
-    return num_notes;
+    // Optimize Notes in Right Channel
+    if (voices.count(voiceStrR)) {
+        // Collect notes into single vector
+        for (uint32_t meas_idx = meas_start_idx; meas_idx <= meas_end_idx; meas_idx++) {
+            Measure& meas = voices[voiceStrR].measures[meas_idx];
+            for (uint32_t notes_idx = 0; notes_idx < meas.notes.size(); notes_idx++) {
+                optimizedNotesR.push_back(meas.notes[notes_idx]);
+            }
+        }
+
+        // Combine ties
+        for (uint32_t notes_idx = optimizedNotesR.size()-1; notes_idx-- > 0; ) {
+            Note& note = optimizedNotesR[notes_idx];
+
+            if (note.tied && notes_idx < optimizedNotesR.size()-1) {
+                Note& tie = optimizedNotesR[notes_idx+1];
+
+                float note_frequency = note.frequencies.back();
+                float tie_frequency = tie.frequencies.back();
+                if (chordIdxR < note.frequencies.size()) {
+                    note_frequency = note.frequencies[chordIdxR];
+                }
+                if (chordIdxR < tie.frequencies.size()) {
+                    tie_frequency = tie.frequencies[chordIdxR];
+                }
+
+                if (note_frequency == tie_frequency) {
+                    note.length += tie.length;
+                    optimizedNotesR.erase(optimizedNotesR.begin()+notes_idx+1);
+                    removed_notes++;
+                }
+            }
+        }
+
+        // Remove trailing the trailing rest (should only be one max)
+        if (optimizedNotesR[optimizedNotesR.size()-1].frequencies[chordIdxR] == 0.f) {
+            optimizedNotesR.erase(optimizedNotesR.begin()+optimizedNotesR.size()-1);
+            removed_notes++;
+        }
+    }
+
+    // Remove leading silence
+    if (optimizedNotesL.size() && optimizedNotesR.size()) {
+        Note& leftFirst = optimizedNotesL[0];
+        Note& rightFirst = optimizedNotesR[0];
+        if (leftFirst.frequencies[chordIdxL] == 0.f && rightFirst.frequencies[chordIdxR] == 0.f) {
+            if (leftFirst.length == rightFirst.length) {
+                optimizedNotesL.erase(optimizedNotesL.begin());
+                optimizedNotesR.erase(optimizedNotesR.begin());
+                removed_notes += 2;
+            } else if (leftFirst.length > rightFirst.length) {
+                leftFirst.length -= rightFirst.length;
+                optimizedNotesR.erase(optimizedNotesR.begin());
+                removed_notes++;
+            } else {
+                rightFirst.length -= leftFirst.length;
+                optimizedNotesL.erase(optimizedNotesL.begin());
+                removed_notes++;
+            }
+        }
+    } else if (optimizedNotesL.size()) {
+        if (optimizedNotesL[0].frequencies[chordIdxL] == 0.f) {
+            optimizedNotesL.erase(optimizedNotesL.begin());
+            removed_notes++;
+        }
+    } else if (optimizedNotesR.size()) {
+        if (optimizedNotesR[0].frequencies[chordIdxR] == 0.f) {
+            optimizedNotesR.erase(optimizedNotesR.begin());
+            removed_notes++;
+        }
+    }
+
+    qDebug() << "Saved " << (6*removed_notes) << " bytes.";
 }
