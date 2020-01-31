@@ -207,6 +207,8 @@ public:
 
     uint32_t getMemUsage();
 
+    void optimizeNotes();
+
 private:
     /**
      * @brief The Note struct stores data relating to frequency and duration
@@ -216,11 +218,13 @@ private:
         Note()
             : frequencies(0)
             , length(0.f)
+            , tied(false)
         {}
         std::vector<float> frequencies; // Frequency of note in Hz. Could be multiple
             // frequencies in case of chord. Frequencies to be sorted into descending
             // order at end of parse.
         float length; // Number of beats that Note/Chord lasts for
+        bool tied; // Whether or not this note tries to be tied to the next.
     };
 
     /**
@@ -265,6 +269,8 @@ private:
         // The QString Key is of the Form "Part {n} Voice {m}" where n is the Part {n} is the
         // part id (with {n} changing for different parts) and Voice {m} designates
         // which voice within the part we are referring to.
+    std::vector<Note> optimizedNotesL;
+    std::vector<Note> optimizedNotesR;
 
     uint32_t currDivisions; // Current conversion factor for Note duration to Number of beats.
     uint32_t bpm; // Beats per minute. Tempo for playback of compostion.
