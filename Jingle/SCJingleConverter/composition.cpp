@@ -712,11 +712,9 @@ Composition::ErrorCode Composition::setVoice(Channel chan, QString voiceStr) {
  * @return String that is associated with Voice configured for given channel.
  */
 const QString& Composition::getVoice(Channel chan) {
-    switch (chan) {
-    case RIGHT:
+    if(chan == RIGHT) {
         return voiceStrR;
-
-    case LEFT:
+    } else {
         return voiceStrL;
     }
 }
@@ -805,11 +803,9 @@ Composition::ErrorCode Composition::setChordIdx(Channel chan, uint32_t chordIdx)
  * @return An index referring to which frequency in chords will be played for this channel.
  */
 uint32_t Composition::getChordIdx(Channel chan) {
-    switch (chan) {
-    case RIGHT:
+    if(chan == RIGHT) {
         return chordIdxR;
-
-    case LEFT:
+    } else {
         return chordIdxL;
     }
 }
