@@ -158,8 +158,9 @@ int eepromCmdFnc(int argc, const char* argv[]) {
 		uint32_t num_words = strtol(argv[4], NULL, 0);
 		retval = eepromReadToConsole(word_size, addr, num_words);
 	} else if (!strcmp("write", argv[1])) {
-		//TODO: imeplement this
-		printf("eeprom writing not implemented yet\n");
+		printf("experimental eeprom write\n");
+		uint32_t arr[1] = { strtol(argv[4], NULL, 16) };
+		eepromWrite(addr, arr, 1);
 		return -1;
 	} else {
 		printf("Invalid argument \"%s\"\n", argv[1]);
