@@ -5,6 +5,24 @@ The purpose of this document is to track information regarding the software that
  is a 32-bit processor ARMv6-M architecture with 16-bit Thumb ISA and includes 
  Thumb-2 technology.
 
+## Firmware primer
+
+The LPC11U37F binary is split into two parts: The first 0x2000 bytes contain
+the bootloader, while the rest contains the firmware. You can find the version
+of each component in Steam's controller "Support" screen, next to "bootloader
+revision" and "firmware revision".
+
+The bootloader's job is simple: If the firmware at 0x2000 looks correct (has the
+right magic at offset 0x30) and GPREG1 of the CPU isn't set to a magic value,
+the bootloader will simply jump to the firmware's entrypoint. However, if the
+firmware doesn't have the right magic or GPREG1 has a magic value, the
+bootloader will enter programming mode, exposing a HID device that the Steam
+desktop software can communicate with to flash a new firmware.
+
+The firmware's job is basically everything else, from playing the starting
+jingle to getting button input and turning them into a HID stream to send over
+USB/to the nRF chip.
+
 
 # Reverse Engineering Artifacts
 
@@ -32,6 +50,10 @@ This file tracks unique functions called in vcf_wired_controller_d0g_57bf5c10.c
 The file tracks memory usage and attempts to identify how different section of 
  memory are used by the firmware. 
 
+## vcf_wired_controller_d0g_57bf5c10.bootloader.gzf
+
+This file is a complete reverse engineering of the bootloader section of the
+binary, using [Ghidra].
 
 # Resources 
 
@@ -219,3 +241,4 @@ Have not need to look into this much yet.
 
 * Worth looking into?
 
+[Ghidra]: https://github.com/NationalSecurityAgency/ghidra
