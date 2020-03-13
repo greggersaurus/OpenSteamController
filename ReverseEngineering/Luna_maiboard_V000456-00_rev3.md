@@ -213,15 +213,20 @@ This is a 6-axis motion tracking device (i.e. accelerometer, gyroscope).
 |            24	| SDA/SDI               | I2C SDA       | Connected to Pin 21 on LPC11U37F |
 
 
-# nRF51822 
+# nRF51822
 
 This is the powerful, highly flexible multiprotocol SoC ideally suited for 
  Bluetooth® low energy and 2.4GHz ultra low-power wireless applications. The
  silkscreen labels this as RADIO.
+ 
+The exact model is a nRF51822-QFAB, giving it 128kB of flash and 16kB of RAM.
 
 ## Resources 
 
-* TODO: datasheet, etc.
+This sections tracks useful documentation related to the processor.
+
+* [Product Specification](https://web.archive.org/web/20191024195637/https://infocenter.nordicsemi.com/pdf/nRF51822_PS_v3.1.pdf)
+* [Series Reference Manual](https://web.archive.org/web/20191025132657/https://infocenter.nordicsemi.com/pdf/nRF51_RM_v3.0.1.pdf)
 
 ## Pinout
 
