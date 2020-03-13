@@ -221,7 +221,10 @@ This is the powerful, highly flexible multiprotocol SoC ideally suited for
 
 ## Resources 
 
+This sections tracks useful documentation related to the processor.
+
 * [Product Specification](https://web.archive.org/web/20191024195637/https://infocenter.nordicsemi.com/pdf/nRF51822_PS_v3.1.pdf)
+* [Series Reference Manual](https://web.archive.org/web/20191025132657/https://infocenter.nordicsemi.com/pdf/nRF51_RM_v3.0.1.pdf)
 
 ## Pinout
 
