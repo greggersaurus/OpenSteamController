@@ -221,7 +221,7 @@ This is the powerful, highly flexible multiprotocol SoC ideally suited for
 
 ## Resources 
 
-* TODO: datasheet, etc.
+* [Product Specification](https://web.archive.org/web/20191024195637/https://infocenter.nordicsemi.com/pdf/nRF51822_PS_v3.1.pdf)
 
 ## Pinout
 
