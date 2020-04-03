@@ -1,13 +1,16 @@
 # USB Interface
 
 The purpose of this document is to track details on the USB interface for the
- Steam Controller. This is done so that EP actions on the firmware side, 
+ Steam Controller. This is done so that EP actions on the firmware side,
  observed in simulation, can match up to real-world behavior. This will be
  used to categorize more actions, memory usage, etc.
 
+The steam controller exposes an USB device with VID=0x28de and PID=0x1102. It
+has three different interfaces:
+
 ## EP1 (Keyboard)
 
-This interface mimics a USB keyboard. 
+This interface mimics a USB keyboard.
 
 Below are the messages received via usbmod related to different controller actions:
 
@@ -38,7 +41,7 @@ Below are the messages received via usbmod related to different controller actio
 
 ## EP2 (Mouse)
 
-This interface mimics a USB mouse. 
+This interface mimics a USB mouse.
 
 Below are the messages received via usbmod related to different controller actions:
 
@@ -58,15 +61,14 @@ Below are the messages received via usbmod related to different controller actio
 
 ## EP3 (Controller)
 
-This does not produce output by default (since custom HID only steam knows how
- to interact??).
 
-TODO: Map out messages with Steam running and controller in EP3 mode, or look online for people who mapped this all out already
+
+See the [valve_protocol.md](./valve_protocol.md) file for more information on
 
 # Booting
 
 This section details booting the controller via USB connection, with the focus
- being on what may be causing the jingle to play. 
+ being on what may be causing the jingle to play.
 
 * Connecting to wall adaptor (i.e. no OS interaction)
     * LED illuminates, but no jingle and Right Trackpad is not in mouse mode (not haptic feedback)

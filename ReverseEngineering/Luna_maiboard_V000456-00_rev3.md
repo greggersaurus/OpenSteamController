@@ -10,9 +10,9 @@ Note that this [Teardown of Steam Controller](https://www.ifixit.com/Teardown/St
 
 # LPC11U37F/501
 
-This is an ARM Cortex-M0, and seems to be the main/master processor of the Steam Controller. 
+This is an ARM Cortex-M0, and seems to be the main/master processor of the Steam Controller.
 
-## Resources 
+## Resources
 
 This sections tracks useful documentation related to the processor.
 
@@ -43,7 +43,7 @@ This sections details how the pins of the process are configured and (potentiall
 |            13 | PIO0_2                | PIO0_2           | In            | Interrupt (PINT1) setup to monitor if this changes (trace leads to C56, continues to...). Seems to have something to do with Brown Out Detection. |
 |            14 | PIO1_26               | PIO1_26          | In            | S2 - Left trackpad click |
 |            15 | PIO1_27               | PIO1_27          | In            | S3 - LT (Left trigger digital) |
-|            16 | PIO1_4                | PIO1_4           | In            | S8 - LB (Left bumper) | 
+|            16 | PIO1_4                | PIO1_4           | In            | S8 - LB (Left bumper) |
 |            17 | PIO1_1                | PIO1_1           | Out           | Active low enable for analog triggers (Left = AD0, Right = AD2) |
 |            18 | PIO1_20               | PIO1_20          | In            | S17 - FRONT_L (Front left arrow button) |
 |            19 | PIO0_3                | USB_VBUS         | In            | Monitors the presence of USB bus power. Interrupt (PINT0) set to monitor if this changes. |
@@ -55,13 +55,13 @@ This sections details how the pins of the process are configured and (potentiall
 |            25 | USB_DM                |                  |               | |
 |            26 | USB_DP                |                  |               | |
 |            27 | PIO1_24               | PIO1_24          | In?           | Related to PIO1_8. Related to USART maybe? TODO |
-|            28 | PIO1_18               | TXD (USART)      | Out           | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
+|            28 | PIO1_18               | TXD (USART)      | Out           | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 |
 |            29 | PIO0_6                | not(USB_CONNECT) | Out           | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
 |            30 | PIO0_7                | PIO0_7           | Out           | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)). Related/similar to GPIO1_28? Any other purpose? More details? TODO|
 |            31 | PIO1_28               | PIO1_28          | Out           | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)). Related/similar to GPIO0_7? Any other purpose? More details? TODO |
 |            32 | PIO1_5                | PIO1_5           | In            | USART/Radio Chip Related. PINT2 setup to monitor change. Trace leads to TODO|
 |            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
-|            34 | PIO1_2                | PIO1_2           | In            | S19 - FRONT_R (Front right arrow button) | 
+|            34 | PIO1_2                | PIO1_2           | In            | S19 - FRONT_R (Front right arrow button) |
 |            35 | PIO1_21               | PIO1_21          | In            | S5 - Right trackpad click  |
 |            36 | PIO0_8                | MISO0            | In            | Master In Slave Out for SSP0. Connected to MISO on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            37 | PIO0_9                | MOSI0            | Out           | Master Out Slave In for SSP0. Connected to MOSI on Right Trackpad/Haptic and Left Trackpad/Haptic. |
@@ -77,10 +77,10 @@ This sections details how the pins of the process are configured and (potentiall
 |            47 | PIO1_13               | PIO1_13          | In            | S6 - RT (Right trigger digital) |
 |            48 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            49 | PIO1_14               | PIO1_14          | In            | S10 - RB (Right bumper) |
-|            50 | PIO1_3                | PIO1_3           | In            | S16 - Right inner grip button | 
+|            50 | PIO1_3                | PIO1_3           | In            | S16 - Right inner grip button |
 |            51 | PIO1_22               | PIO1_22          | In            | S4 - B Button |
 |            52 | SWDIO/PIO0_15         | SWDIO?           |               | Connected to DEBUG interface for LPC11U37F |
-|            53 | PIO0_16               |                  |               | | 
+|            53 | PIO0_16               |                  |               | |
 |            54 | V<sub>SS</sub>        | V<sub>SS</sub>   | In            | V<sub>SS</sub> |
 |            55 | PIO1_9                | PIO1_9           | In            | S7 - X Button |
 |            56 | PIO0_23               | PIO0_23          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Right Trackpad/Haptic. |
@@ -88,7 +88,7 @@ This sections details how the pins of the process are configured and (potentiall
 |            58 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            59 | PIO1_12               | PIO1_12          | Out           | Right Haptic Activate. Toggle to generate vibrations (TODO: need better details on this). Initially input. Read during init to check if it is logic low or not. (trace leads to VDD on Trackpad/Haptics). If low PIO0_18 is checked. Later set to output and driven low (before PIO0_18 is set to output and driven low). |
 |            60 | PIO0_17               | PIO0_17          | In            | S1 - A Button |
-|            61 | PIO0_18               | PIO0_18          | Out           | Left Haptic Activate. Toggle to generate vibrations (TODO: need better details on this). Initially input (If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB))? Later output related to haptics? | 
+|            61 | PIO0_18               | PIO0_18          | Out           | Left Haptic Activate. Toggle to generate vibrations (TODO: need better details on this). Initially input (If PIO1_12 is low this is read during init to check if it is logic low or not. (trace leads to R43 on front of PCB))? Later output related to haptics? |
 |            62 | PIO0_19               | PIO0_19          | Out           | Active high enable for powering Joystick to produce X and Y position ADC values. |
 |            63 | PIO1_16               | PIO1_16          | In            | Input with pull-down resistor enabled. Connected to Data Ready on Left Trackpad/Haptic. |
 |            64 | PIO1_6                | PIO1_6           | Out           | Chip Select/SS for Left Trackpad/Haptic (active low) |
@@ -98,7 +98,7 @@ This sections details how the pins of the process are configured and (potentiall
 This section details what peripherals are used for on this processor.
 
 * I2C Bus
-    * Interface to MPU-6650?
+    * Interface to MPU-6500?
     * TODO: Not confirmed yet.
 * WWDT
     * TODO: unknown.
@@ -179,7 +179,7 @@ This section details what peripherals are used for on this processor.
 
 This is a 6-axis motion tracking device (i.e. accelerometer, gyroscope).
 
-## Resources 
+## Resources
 
 * TODO: datasheet, etc.
 
@@ -213,13 +213,13 @@ This is a 6-axis motion tracking device (i.e. accelerometer, gyroscope).
 |            24	| SDA/SDI               | I2C SDA       | Connected to Pin 21 on LPC11U37F |
 
 
-# nRF51822 
+# nRF51822
 
-This is the powerful, highly flexible multiprotocol SoC ideally suited for 
+This is the powerful, highly flexible multiprotocol SoC ideally suited for
  Bluetooth® low energy and 2.4GHz ultra low-power wireless applications. The
  silkscreen labels this as RADIO.
 
-## Resources 
+## Resources
 
 * TODO: datasheet, etc.
 
@@ -277,16 +277,16 @@ This is the powerful, highly flexible multiprotocol SoC ideally suited for
 |            48 |                       |               | |
 
 
-# Cirque 1CA027 
+# Cirque 1CA027
 
-This is the processor on the haptics board, which seems to be a custom design 
+This is the processor on the haptics board, which seems to be a custom design
  similar to the [GlidePoint TM040040](http://www.cirque.com/glidepoint-circle-trackpads).
 
-## Resources 
+## Resources
 
 * TODO: datasheet, etc.
 
-## Pinout 
+## Pinout
 
 | Pin Number 	| Datasheet Name	| Pin Function	| Notes 	|
 |--------------:|-----------------------|---------------|---------------|
@@ -309,11 +309,11 @@ This is the processor on the haptics board, which seems to be a custom design
 |            17 |                       |               | |
 |            18 |                       |               | |
 |            19 |                       |               | |
-|            20 |                       |               | | 
-|            21 |                       |               | | 
+|            20 |                       |               | |
+|            21 |                       |               | |
 |            22 |                       |               | |
-|            23 |                       |               | | 
-|            24 |                       |               | | 
+|            23 |                       |               | |
+|            24 |                       |               | |
 |            25 |                       |               | |
 |            26 |                       |               | |
 |            26 |                       |               | |
