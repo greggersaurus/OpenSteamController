@@ -1077,8 +1077,12 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 		transition_state = POS_INVALID;
 	}
 
+	int32_t max_amplitude_x = 0;
+
 	for (int idx = 0; idx < 11; idx++) {
 		int32_t diff = adc_vals_x[idx+1] - adc_vals_x[idx];
+		max_amplitude_x = diff > max_amplitude_x ? diff : max_amplitude_x;
+
 		if (transition_state == WAIT_FOR_0_TO_P) {
 			if (diff > 0) {
 				transition_state = WAIT_FOR_P_TO_N;
@@ -1129,8 +1133,24 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 	while (tpadAdcIdxs[trackpad] < NUM_ANYMEAS_ADCS) {
 	}
 
+	// Empirically-determined value. See
+	// https://github.com/greggersaurus/OpenSteamController/issues/7. This
+	// can be adjusted if you find that the trackpad is not accurately
+	// detecting the finger being down.
+	//
+	// The relative distance of the finger from the touchpad is determined by
+	// examining the amplitude of the sine wave. Higher values mean that the
+	// finger is closer. I got best results at around ~500, so I set this value
+	// to the closest power of 2.
+	//
+	// - If this threshold is too low, then the finger being close to (but not
+	//   touching) the trackpad will register.
+	// - If this threshold is too high, then only heavier touches will
+	//   register.
+	const int FINGER_DOWN_REQUIRED_AMPLITUDE = 512;
+
 	// Early exit if no finger down detected in X position calculation
-	if (x_pos < 0) {
+	if (x_pos < 0 || max_amplitude_x < FINGER_DOWN_REQUIRED_AMPLITUDE) {
 		return;
 	}
 
