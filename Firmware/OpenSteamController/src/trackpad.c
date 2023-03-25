@@ -1272,7 +1272,7 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 			dividend += factor * adc_vals_y[idx];
 			divisor += adc_vals_y[idx];
 			factor += 100;
-		}
+			}
 
 		if (divisor) {
 			y_pos = dividend / divisor;	
@@ -1280,10 +1280,43 @@ void trackpadGetLastXY(Trackpad trackpad, uint16_t* xLoc, uint16_t* yLoc) {
 	}
 
 	// Update outputs if finger was down (i.e. x_pos and y_pos are both valid)
-	if (x_pos > 0 && y_pos > 0)  {
+	if (x_pos > 0 && y_pos > 0) {
+
+		// the entire input is offset by about 15 degrees or so
+		// here we try to compensate for those invalid values by just
+		// increasing/decreasing them to make it roughly accurate
+		bool left = x_pos > 600;
+		bool right = x_pos < 600;
+		bool over = y_pos > 300;
+
+		if (left) {
+			y_pos += (y_pos / 6);
+			if (y_pos > 600) {
+				y_pos = 600;
+			}
+		} else if (right) {
+			y_pos -= (y_pos / 5);
+			if (y_pos < 1) {
+				y_pos = 0;
+			}
+		}
+
+		if (over) {
+			x_pos -= (x_pos / 6);
+			if (x_pos < 1) {
+				x_pos = 0;
+			}
+		}
+
 		*xLoc = x_pos;
 		*yLoc = y_pos;
-	}
+	} else if (y_pos == -1) {
+		// there's a mysterious deadzone at the top of the pad,
+		// this edge-case seems to only be hit when that deadzone is hit.
+		// so; we work around the deadzone by just maxing the Y
+		*xLoc = x_pos;
+		*yLoc = TPAD_MAX_Y;
+    }
 }
 
 /**
