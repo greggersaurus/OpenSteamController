@@ -51,7 +51,7 @@ Second, the controller was left fairly accessible. Being able to upload
  firmware much lower. There was still a considerable challenge to get even
  a "Hello World" (i.e. blink the Steam Button LED) working. However, this was
  not nearly as tough as I imagine doing something similar on a controller 
- that is designed to be more temper resistant would be. I really appreciate 
+ that is designed to be more tamper resistant would be. I really appreciate 
  the fact that Valve left this hardware as accessible as they did and do 
  not discourage people from trying to hack it. 
 
