@@ -50,23 +50,23 @@ This sections details how the pins of the process are configured and (potentiall
 |            20 | PIO0_4                | I2C SCL          | In/Out        | Connected to MPU-6500 I2C SCL |
 |            21 | PIO0_5                | I2C SDA          | In/Out        | Connected to MPU-6500 I2C SDA |
 |            22 | PIO0_21               | CT16B1_MAT0      | Out           | Control Steam Button LED (LED1) |
-|            23 | PIO1_17               | RXD (USART)      | In            | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 21 |
+|            23 | PIO1_17               | RXD (USART)      | In            | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 (P0.14, radio TXD). See [RadioLink.md](RadioLink.md) |
 |            24 | PIO1_23               |                  |               | Connected to MPU-6500 Pin 12 (INT) |
 |            25 | USB_DM                |                  |               | |
 |            26 | USB_DP                |                  |               | |
-|            27 | PIO1_24               | PIO1_24          | In?           | Related to PIO1_8. Related to USART maybe? TODO |
-|            28 | PIO1_18               | TXD (USART)      | Out           | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 20 | 
+|            27 | PIO1_24               | PIO1_24          | Out           | Radio SWDIO/nRESET (nRF51822 pin 23). The LPC uses it with PIO1_8 to program the radio over SWD. See [RadioLink.md](RadioLink.md) |
+|            28 | PIO1_18               | TXD (USART)      | Out           | Connected to Nordic Semiconductor nRF51822 Bluetooth Smart and 2.4GHz proprietary SoC Pin 21 (P0.15, radio RXD). Also sampled by the radio at boot as a mode strap. See [RadioLink.md](RadioLink.md) | 
 |            29 | PIO0_6                | not(USB_CONNECT) | Out           | Signal used to switch an external 1.5 k resistor under software control. Used with the SoftConnect USB feature. |
 |            30 | PIO0_7                | PIO0_7           | Out           | Set as output GPIO and driven low during init (trace leads to R9 (no-pop)). Related/similar to GPIO1_28? Any other purpose? More details? TODO|
 |            31 | PIO1_28               | PIO1_28          | Out           | Set as output GPIO and driven low during init (trace leads to R8 (no-pop)). Related/similar to GPIO0_7? Any other purpose? More details? TODO |
-|            32 | PIO1_5                | PIO1_5           | In            | USART/Radio Chip Related. PINT2 setup to monitor change. Trace leads to TODO|
+|            32 | PIO1_5                | PIO1_5           | In            | Most likely the radio's P0.11, a flow-control line: each falling edge lets the LPC load the next 4 bytes into the UART FIFO. See [RadioLink.md](RadioLink.md) |
 |            33 | V<sub>DD</sub>        | V<sub>DD</sub>   | In            | V<sub>DD</sub> |
 |            34 | PIO1_2                | PIO1_2           | In            | S19 - FRONT_R (Front right arrow button) | 
 |            35 | PIO1_21               | PIO1_21          | In            | S5 - Right trackpad click  |
 |            36 | PIO0_8                | MISO0            | In            | Master In Slave Out for SSP0. Connected to MISO on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            37 | PIO0_9                | MOSI0            | Out           | Master Out Slave In for SSP0. Connected to MOSI on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            38 | SWCLK/PIO0_10         | SWCLK?           |               | Connected to DEBUG interface for LPC11U37F |
-|            39 | PIO1_8                | PIO1_8           | In?           | Related to PIO1_24. Related to USART maybe? TODO|
+|            39 | PIO1_8                | PIO1_8           | Out           | Radio SWDCLK (nRF51822 pin 24). See PIO1_24 and [RadioLink.md](RadioLink.md) |
 |            40 | PIO0_22               | AD6              | In            | Measures voltage that matters when no USB power is present? (trace leads to C6, continues to R10 near power...) |
 |            41 | PIO1_29               | SCK0             | Out           | Serial clock for SSP0. Connected to SCLK on Right Trackpad/Haptic and Left Trackpad/Haptic. |
 |            42 | TDI/PIO0_11           | AD0              | In            | Measures Left Analog trigger position (when PIO1_1 is low) (Note: Functions as TDI for short time during initialization) |
